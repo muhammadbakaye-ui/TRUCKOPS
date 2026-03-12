@@ -60,7 +60,9 @@ export default function StatementBuilder() {
   const handlePrint = () => {
     const company = carrierCompany[0] || {};
     const allLines = [...tripLines, ...deductionLines, ...fuelLines];
-    printStatement({ company, statement: form, allLines });
+    const driver = drivers.find(d => d.id === form.driver_id);
+    const statementWithGross = { ...form, gross_total: (driver?.ytd_gross_legacy || 0) + (tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0)) };
+    printStatement({ company, statement: statementWithGross, allLines });
   };
 
   // Load existing statement
