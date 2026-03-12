@@ -62,6 +62,27 @@ export default function Invoices() {
     { header: 'Due Date', render: (r) => r.due_date ? format(new Date(r.due_date), 'MMM d, yyyy') : '—' },
     { header: 'Amount', render: (r) => r.total ? <span className="font-medium">${r.total.toLocaleString()}</span> : '—' },
     { header: 'Status', render: (r) => <StatusBadge status={r.status} /> },
+    {
+      header: '', render: (r) => (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={e => e.stopPropagation()}>
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Invoice?</AlertDialogTitle>
+              <AlertDialogDescription>Invoice #{r.invoice_number} will be moved to Deleted Items and kept for 30 days.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteMutation.mutate(r)}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )
+    },
   ];
 
   return (
