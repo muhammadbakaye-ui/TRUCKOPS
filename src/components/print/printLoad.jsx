@@ -102,7 +102,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
       </div>
     </div>
     <div class="header-right">
-      <div class="title">LOAD SHEET</div>
+      <div class="title">LOAD INVOICE</div>
       <div class="load-num">Load # ${load.internal_load_number || '—'}</div>
       ${load.external_load_number ? `<div style="font-size:10px;color:#555;margin-top:2px;">Broker Load #: ${load.external_load_number}</div>` : ''}
       <div><span class="status-badge">${(load.dispatch_status || load.status || 'DRAFT').toUpperCase().replace(/_/g, ' ')}</span></div>
