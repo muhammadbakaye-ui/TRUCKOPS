@@ -135,11 +135,16 @@ export default function StatementBuilder() {
     if (!form.period_start || !form.period_end) return toast.error('Select a statement date first');
     setLoadingFuel(true);
     try {
-       const txs = await base44.entities.FuelTransaction.filter({ matched_driver_id: form.driver_id }, '-created_date', 500);
+      const txs = await base44.entities.FuelTransaction.filter({ matched_driver_id: form.driver_id }, '-created_date', 500);
       const filteredTxs = txs.filter(tx => {
         return tx.transaction_date && tx.transaction_date >= form.period_start && tx.transaction_date <= form.period_end;
       });
-      const newLines = filteredTxs.map(tx => {
+      
+      // Dedupe by fuel transaction ID
+      const existingIds = new Set(fuelLines.map(l => l.source_id));
+      const toAdd = filteredTxs.filter(tx => !existingIds.has(tx.id));
+      
+      const newLines = toAdd.map(tx => {
         const city = (tx.city && tx.city !== 'null') ? tx.city : '';
         const state = (tx.state && tx.state !== 'null') ? tx.state : '';
         const gallons = (tx.gallons && tx.gallons !== 'null') ? tx.gallons : '';
@@ -158,8 +163,8 @@ export default function StatementBuilder() {
           amount: tx.total_amount || tx.fuel_amount || 0,
         };
       });
-      setFuelLines(newLines);
-      toast.success(`Loaded ${newLines.length} fuel transactions`);
+      setFuelLines(prev => [...prev, ...newLines]);
+      toast.success(`Loaded ${newLines.length} fuel transaction${newLines.length !== 1 ? 's' : ''}`);
     } catch (err) {
       toast.error('Failed to load fuel');
     } finally {
