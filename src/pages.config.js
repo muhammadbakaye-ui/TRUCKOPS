@@ -59,6 +59,10 @@ import Invoices from './pages/Invoices';
 import DriverStatements from './pages/DriverStatements';
 import Reports from './pages/Reports';
 import FuelImport from './pages/FuelImport';
+import UploadDocument from './pages/UploadDocument';
+import LoadDetail from './pages/LoadDetail';
+import StatementBuilder from './pages/StatementBuilder';
+import InvoiceDetail from './pages/InvoiceDetail';
 import __Layout from './Layout.jsx';
 
 
@@ -75,6 +79,10 @@ export const PAGES = {
     "DriverStatements": DriverStatements,
     "Reports": Reports,
     "FuelImport": FuelImport,
+    "UploadDocument": UploadDocument,
+    "LoadDetail": LoadDetail,
+    "StatementBuilder": StatementBuilder,
+    "InvoiceDetail": InvoiceDetail,
 }
 
 export const pagesConfig = {
