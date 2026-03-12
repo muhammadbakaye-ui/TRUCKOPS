@@ -239,7 +239,7 @@ export default function StatementBuilder() {
           {/* Header */}
           <Card>
             <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Statement Header</CardTitle></CardHeader>
-            <CardContent className="px-4 pb-4 grid grid-cols-3 gap-3">
+            <CardContent className="px-5 pb-5 grid grid-cols-4 gap-4">
               <div>
                 <Label className="text-xs">Driver</Label>
                 <Select value={form.driver_id || ''} onValueChange={(v) => {
