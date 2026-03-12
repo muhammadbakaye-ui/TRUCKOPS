@@ -57,6 +57,7 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      <Route path="/DeletedItems" element={<LayoutWrapper currentPageName="DeletedItems"><DeletedItems /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
