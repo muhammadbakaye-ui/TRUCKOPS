@@ -98,9 +98,12 @@ export default function InvoiceDetail() {
         </Button>
         <h2 className="text-sm font-semibold">Invoice {form.invoice_number}</h2>
         <StatusBadge status={form.status} />
-        <div className="ml-auto">
+        <div className="ml-auto flex gap-2">
           <Button size="sm" className="h-8 gap-1" onClick={handleSave} disabled={saving}>
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Save
+          </Button>
+          <Button variant="outline" size="sm" className="h-8 gap-1" onClick={handlePrint}>
+            <Printer className="w-3.5 h-3.5" /> Print / PDF
           </Button>
         </div>
       </div>
