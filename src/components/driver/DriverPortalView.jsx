@@ -345,6 +345,77 @@ export default function DriverPortalView() {
                           </p>
                         </div>
                       </div>
+
+                      {/* Detailed Breakdown */}
+                      <div className="pt-4 border-t space-y-4">
+                        {linesLoading ? (
+                          <div className="flex items-center justify-center py-8">
+                            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                          </div>
+                        ) : (
+                          <>
+                            {/* Trips */}
+                            {statementLines.filter(l => l.line_type === 'trip' || l.line_type === 'adjustment').length > 0 && (
+                              <div>
+                                <p className="text-xs font-semibold text-muted-foreground mb-2">Trips</p>
+                                <div className="space-y-1 text-xs">
+                                  {statementLines.filter(l => l.line_type === 'trip' || l.line_type === 'adjustment').map((line) => (
+                                    <div key={line.id} className="flex justify-between p-2 bg-muted/30 rounded">
+                                      <span>{line.description || line.route || '—'}</span>
+                                      <span className="font-medium">${(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Credits */}
+                            {statementLines.filter(l => l.line_type === 'credit').length > 0 && (
+                              <div>
+                                <p className="text-xs font-semibold text-muted-foreground mb-2">Credits</p>
+                                <div className="space-y-1 text-xs">
+                                  {statementLines.filter(l => l.line_type === 'credit').map((line) => (
+                                    <div key={line.id} className="flex justify-between p-2 bg-green-50/50 rounded">
+                                      <span>{line.description || '—'}</span>
+                                      <span className="font-medium text-green-600">${(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Deductions */}
+                            {statementLines.filter(l => l.line_type === 'deduction' || l.line_type === 'advance').length > 0 && (
+                              <div>
+                                <p className="text-xs font-semibold text-muted-foreground mb-2">Deductions</p>
+                                <div className="space-y-1 text-xs">
+                                  {statementLines.filter(l => l.line_type === 'deduction' || l.line_type === 'advance').map((line) => (
+                                    <div key={line.id} className="flex justify-between p-2 bg-red-50/50 rounded">
+                                      <span>{line.description || '—'}</span>
+                                      <span className="font-medium text-red-600">-${Math.abs(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Fuel */}
+                            {statementLines.filter(l => l.line_type === 'fuel').length > 0 && (
+                              <div>
+                                <p className="text-xs font-semibold text-muted-foreground mb-2">Fuel Card Charges</p>
+                                <div className="space-y-1 text-xs">
+                                  {statementLines.filter(l => l.line_type === 'fuel').map((line) => (
+                                    <div key={line.id} className="flex justify-between p-2 bg-orange-50/50 rounded">
+                                      <span>{line.description || '—'}</span>
+                                      <span className="font-medium text-orange-600">-${Math.abs(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
 
                     <DialogFooter className="flex gap-2 pt-4 border-t">
