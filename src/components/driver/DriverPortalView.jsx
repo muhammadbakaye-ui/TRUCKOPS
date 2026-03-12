@@ -296,7 +296,7 @@ export default function DriverPortalView() {
               {/* Statement View Modal */}
               {viewingStatement && (
                 <Dialog open={!!viewingStatement} onOpenChange={(open) => !open && setViewingStatement(null)}>
-                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-lg md:rounded-xl">
                     <DialogHeader className="flex flex-row items-center justify-between pb-4 border-b">
                       <DialogTitle className="text-sm">Statement Details</DialogTitle>
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setViewingStatement(null)}>
