@@ -37,6 +37,22 @@ export default function DeletedItems() {
     },
   });
 
+  const recoverMutation = useMutation({
+    mutationFn: async (item) => {
+      const originalData = item.original_data ? JSON.parse(item.original_data) : {};
+      const { id, created_date, updated_date, created_by, ...data } = originalData;
+      await base44.entities[item.entity_type].create(data);
+      await base44.entities.DeletedItem.delete(item.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deleted-items'] });
+      toast.success('Item recovered successfully');
+    },
+    onError: (err) => {
+      toast.error('Recovery failed: ' + err.message);
+    },
+  });
+
   const daysLeft = (item) => {
     const deleted = new Date(item.deleted_date || item.created_date);
     return 30 - differenceInDays(new Date(), deleted);
