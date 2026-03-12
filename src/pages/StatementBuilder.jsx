@@ -234,7 +234,7 @@ export default function StatementBuilder() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-5">
-        <div className="lg:col-span-2 space-y-4">
+        <div className="xl:col-span-3 space-y-5">
 
           {/* Header */}
           <Card>
