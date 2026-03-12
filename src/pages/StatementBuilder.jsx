@@ -86,7 +86,7 @@ export default function StatementBuilder() {
         source_id: l.id,
         source_type: 'load',
         date: l.delivery_date || l.pickup_date || '',
-        description: `${l.internal_load_number}${l.external_load_number ? ` / ${l.external_load_number}` : ''}`,
+        description: `Trip #${l.internal_load_number}${l.external_load_number ? ` / ${l.external_load_number}` : ''}`,
         route: `${l.pickup_city || ''}${l.pickup_state ? `, ${l.pickup_state}` : ''} → ${l.delivery_city || ''}${l.delivery_state ? `, ${l.delivery_state}` : ''}`,
         amount: l.invoice_amount || l.freight_rate || 0,
       }));
