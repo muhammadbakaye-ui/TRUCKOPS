@@ -23,6 +23,7 @@ export default function DriverPortalView() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('documents');
   const [uploading, setUploading] = useState(null); // null | 'bol' | 'rate_confirmation'
+  const [viewingStatement, setViewingStatement] = useState(null);
   const bolRef = useRef(null);
   const rcRef = useRef(null);
 
