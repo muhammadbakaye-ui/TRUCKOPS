@@ -82,7 +82,10 @@ export default function StatementBuilder() {
 
   // Auto-calculate totals
   useEffect(() => {
-    const gross = tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0);
+    const driver = drivers.find(d => d.id === form.driver_id);
+    const legacyGross = driver?.ytd_gross_legacy || 0;
+    const newGross = tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0);
+    const gross = legacyGross + newGross;
     const deductions = deductionLines.reduce((s, l) => s + Math.abs(Number(l.amount) || 0), 0);
     const fuel = fuelLines.reduce((s, l) => s + Math.abs(Number(l.amount) || 0), 0);
     setForm(prev => ({
@@ -92,7 +95,7 @@ export default function StatementBuilder() {
       fuel_total: fuel,
       final_check_amount: gross - deductions - fuel,
     }));
-  }, [tripLines, deductionLines, fuelLines]);
+  }, [tripLines, deductionLines, fuelLines, form.driver_id, drivers]);
 
   const loadDriverTrips = async () => {
     if (!form.driver_id) return toast.error('Select a driver first');
@@ -474,7 +477,14 @@ export default function StatementBuilder() {
               <div className="border-t my-2" />
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Gross ({tripLines.length} trips)</span>
-                <span className="font-medium text-green-600">${(form.gross_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                <div className="text-right">
+                  <span className="font-medium text-green-600">${(form.gross_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                  {drivers.find(d => d.id === form.driver_id)?.ytd_gross_legacy > 0 && (
+                    <div className="text-[10px] text-muted-foreground">
+                      Legacy: ${(drivers.find(d => d.id === form.driver_id).ytd_gross_legacy || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} + New: ${(tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Deductions</span>
