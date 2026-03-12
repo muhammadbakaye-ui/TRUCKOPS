@@ -89,11 +89,16 @@ If a field is missing, use null. Return only the JSON array.`,
         const trucks = await base44.entities.Truck.list();
 
         const matchedDriver = drivers.find(d =>
-          tx.driver_name_raw && d.full_name.toLowerCase().includes(tx.driver_name_raw.toLowerCase().split(' ')[0])
+          tx.driver_name_raw && d.full_name.toLowerCase().includes(tx.driver_name_raw.toLowerCase().trim())
         );
-        const matchedTruck = trucks.find(t =>
-          tx.truck_number_raw && t.unit_number.toLowerCase().includes(tx.truck_number_raw.toLowerCase())
-        );
+        const matchedTruck = matchedDriver && tx.truck_number_raw
+          ? trucks.find(t =>
+            matchedDriver?.assigned_truck_id === t.id || 
+            (tx.truck_number_raw && t.unit_number.toLowerCase().includes(tx.truck_number_raw.toLowerCase()))
+          )
+          : trucks.find(t =>
+            tx.truck_number_raw && t.unit_number.toLowerCase().includes(tx.truck_number_raw.toLowerCase())
+          );
 
         const importStatus = matchedDriver && matchedTruck ? 'matched' : 'exception';
         if (importStatus === 'exception') exceptions++;

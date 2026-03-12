@@ -14,6 +14,7 @@ export function printStatement({ company, statement, allLines }) {
   const deductionsTotal = deductionLines.reduce((s, l) => s + Math.abs(Number(l.amount) || 0), 0);
   const fuelTotal = fuelLines.reduce((s, l) => s + Math.abs(Number(l.amount) || 0), 0);
   const checkAmount = tripsTotal + creditsTotal - deductionsTotal - fuelTotal;
+  const ytdAmount = statement.gross_total || tripsTotal;
 
   const tableSection = (title, headers, rows, totalLabel, totalValue) => {
     if (rows.length === 0) return '';
@@ -118,7 +119,7 @@ export function printStatement({ company, statement, allLines }) {
   )}
 
   <div class="footer">
-    <div>Total Gross Year-To-Date : <span class="ytd">${fmt(tripsTotal)}</span></div>
+    <div>Total Gross Year-To-Date : <span class="ytd">${fmt(ytdAmount)}</span></div>
     <div class="check">Check Amount: <span class="ytd">${fmt(checkAmount)}</span></div>
   </div>
 
