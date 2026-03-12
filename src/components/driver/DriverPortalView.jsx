@@ -39,6 +39,12 @@ export default function DriverPortalView() {
     enabled: !!session?.driver_id,
   });
 
+  const { data: statementLines = [], isLoading: linesLoading } = useQuery({
+    queryKey: ['statement-lines', viewingStatement?.id],
+    queryFn: () => base44.entities.StatementLine.filter({ statement_id: viewingStatement.id }, 'date', 500),
+    enabled: !!viewingStatement?.id,
+  });
+
   const handleUpload = async (file, docType) => {
     if (!file) return;
     setUploading(docType);
