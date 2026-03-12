@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -17,9 +17,6 @@ import { toast } from 'sonner';
 import { printStatement } from '../components/print/printStatement';
 import { addDays, startOfWeek, endOfWeek, format, parse } from 'date-fns';
 
-const urlParams = new URLSearchParams(window.location.search);
-const statementId = urlParams.get('id');
-
 const DEFAULT_DEDUCTIONS = [
   { description: 'Insurance', amount: 425 },
   { description: 'IFTA', amount: 50 },
@@ -28,6 +25,8 @@ const DEFAULT_DEDUCTIONS = [
 
 export default function StatementBuilder() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const statementId = searchParams.get('id');
   const queryClient = useQueryClient();
   const [form, setForm] = useState({ status: 'draft', gross_total: 0, deductions_total: 0, fuel_total: 0, final_check_amount: 0 });
   const [tripLines, setTripLines] = useState([]);
