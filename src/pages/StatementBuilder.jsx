@@ -289,20 +289,22 @@ export default function StatementBuilder() {
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addTripLine}><Plus className="w-3 h-3" /> Add</Button>
               </div>
             </CardHeader>
-            <CardContent className="px-4 pb-4">
+            <CardContent className="px-5 pb-5">
               {colHeaders}
-              <div className="space-y-1">
+              <div className="space-y-0">
                 {tripLines.map((line, i) => (
                   <LineRow key={i} line={line}
                     onChange={(k, v) => setTripLines(prev => prev.map((l, idx) => idx === i ? { ...l, [k]: v } : l))}
                     onRemove={() => setTripLines(prev => prev.filter((_, idx) => idx !== i))}
                   />
                 ))}
-                {tripLines.length === 0 && <p className="text-xs text-muted-foreground text-center py-3">No trips. Select a driver and click "Load Trips" or add manually.</p>}
+                {tripLines.length === 0 && <p className="text-xs text-muted-foreground text-center py-5">No trips. Select a driver and click "Load Trips" or add manually.</p>}
               </div>
               {tripLines.length > 0 && (
-                <div className="flex justify-end mt-2 text-xs font-semibold text-green-700">
-                  Gross: ${tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                <div className="flex justify-end mt-3 pt-2 border-t">
+                  <span className="text-sm font-bold text-green-700">
+                    Gross: ${tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
                 </div>
               )}
             </CardContent>
@@ -310,9 +312,9 @@ export default function StatementBuilder() {
 
           {/* Deductions */}
           <Card>
-            <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Deductions ({deductionLines.length})</CardTitle>
-              <div className="flex gap-1 flex-wrap justify-end">
+            <CardHeader className="py-3.5 px-5 flex flex-row items-center justify-between border-b">
+              <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Deductions ({deductionLines.length})</CardTitle>
+              <div className="flex gap-1.5 flex-wrap justify-end">
                 {DEFAULT_DEDUCTIONS.map(def => (
                   <Button key={def.description} variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => addDefaultDeduction(def)}>
                     <Plus className="w-3 h-3" /> {def.description} ${def.amount}
@@ -321,20 +323,22 @@ export default function StatementBuilder() {
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addCustomDeduction}><Plus className="w-3 h-3" /> Custom</Button>
               </div>
             </CardHeader>
-            <CardContent className="px-4 pb-4">
+            <CardContent className="px-5 pb-5">
               {colHeaders}
-              <div className="space-y-1">
+              <div className="space-y-0">
                 {deductionLines.map((line, i) => (
                   <LineRow key={i} line={line}
                     onChange={(k, v) => setDeductionLines(prev => prev.map((l, idx) => idx === i ? { ...l, [k]: v } : l))}
                     onRemove={() => setDeductionLines(prev => prev.filter((_, idx) => idx !== i))}
                   />
                 ))}
-                {deductionLines.length === 0 && <p className="text-xs text-muted-foreground text-center py-3">No deductions. Use the quick-add buttons above.</p>}
+                {deductionLines.length === 0 && <p className="text-xs text-muted-foreground text-center py-5">No deductions. Use the quick-add buttons above.</p>}
               </div>
               {deductionLines.length > 0 && (
-                <div className="flex justify-end mt-2 text-xs font-semibold text-red-600">
-                  Total Deductions: -${deductionLines.reduce((s, l) => s + Math.abs(Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                <div className="flex justify-end mt-3 pt-2 border-t">
+                  <span className="text-sm font-bold text-red-600">
+                    Deductions: -${deductionLines.reduce((s, l) => s + Math.abs(Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
                 </div>
               )}
             </CardContent>
@@ -342,26 +346,28 @@ export default function StatementBuilder() {
 
           {/* Fuel */}
           <Card>
-            <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Fuel ({fuelLines.length})</CardTitle>
+            <CardHeader className="py-3.5 px-5 flex flex-row items-center justify-between border-b">
+              <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Fuel ({fuelLines.length})</CardTitle>
               <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={loadDriverFuel} disabled={loadingFuel || !form.driver_id}>
                 {loadingFuel ? <Loader2 className="w-3 h-3 animate-spin" /> : <Fuel className="w-3 h-3" />} Load Fuel
               </Button>
             </CardHeader>
-            <CardContent className="px-4 pb-4">
+            <CardContent className="px-5 pb-5">
               {colHeaders}
-              <div className="space-y-1">
+              <div className="space-y-0">
                 {fuelLines.map((line, i) => (
                   <LineRow key={i} line={line}
                     onChange={(k, v) => setFuelLines(prev => prev.map((l, idx) => idx === i ? { ...l, [k]: v } : l))}
                     onRemove={() => setFuelLines(prev => prev.filter((_, idx) => idx !== i))}
                   />
                 ))}
-                {fuelLines.length === 0 && <p className="text-xs text-muted-foreground text-center py-3">No fuel. Select a driver and click "Load Fuel".</p>}
+                {fuelLines.length === 0 && <p className="text-xs text-muted-foreground text-center py-5">No fuel. Select a driver and click "Load Fuel".</p>}
               </div>
               {fuelLines.length > 0 && (
-                <div className="flex justify-end mt-2 text-xs font-semibold text-orange-600">
-                  Total Fuel: -${fuelLines.reduce((s, l) => s + Math.abs(Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                <div className="flex justify-end mt-3 pt-2 border-t">
+                  <span className="text-sm font-bold text-orange-600">
+                    Fuel: -${fuelLines.reduce((s, l) => s + Math.abs(Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
                 </div>
               )}
             </CardContent>
