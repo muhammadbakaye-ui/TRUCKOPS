@@ -78,7 +78,7 @@ export default function LoadDetail() {
   const { data: carrierCompany = [] } = useQuery({ queryKey: ['settings-company'], queryFn: () => base44.entities.Company.filter({ company_type: 'carrier' }, '-created_date', 1) });
 
   const handlePrint = () => {
-    printLoad({ company: carrierCompany[0] || {}, load: form, stops, drivers, trucks, trailers });
+    printLoad({ company: carrierCompany[0] || {}, load: form, stops, drivers, trucks, trailers: trailers });
   };
 
   // Initialize empty form for new load
