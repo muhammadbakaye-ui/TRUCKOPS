@@ -18,6 +18,7 @@ export default function FuelImport() {
   const [processing, setProcessing] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [selectedTx, setSelectedTx] = useState(new Set());
+  const [selectedBatches, setSelectedBatches] = useState(new Set());
   const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
 
@@ -152,6 +153,35 @@ If a field is missing, use null. Return only the JSON array.`,
   };
 
   const batchColumns = [
+    {
+      header: (
+        <Checkbox
+          checked={selectedBatches.size > 0 && selectedBatches.size === batches.length}
+          onCheckedChange={(checked) => {
+            if (checked) {
+              setSelectedBatches(new Set(batches.map(b => b.id)));
+            } else {
+              setSelectedBatches(new Set());
+            }
+          }}
+        />
+      ),
+      render: (r) => (
+        <Checkbox
+          checked={selectedBatches.has(r.id)}
+          onCheckedChange={(checked) => {
+            const newSelected = new Set(selectedBatches);
+            if (checked) {
+              newSelected.add(r.id);
+            } else {
+              newSelected.delete(r.id);
+            }
+            setSelectedBatches(newSelected);
+          }}
+          onClick={(e) => e.stopPropagation()}
+        />
+      )
+    },
     { header: 'File', render: (r) => <span className="font-medium text-xs">{r.file_name}</span> },
     { header: 'Date', render: (r) => r.import_date ? format(new Date(r.import_date), 'MMM d, yyyy') : '—' },
     { header: 'Total', render: (r) => r.total_records || 0 },
@@ -366,6 +396,24 @@ If a field is missing, use null. Return only the JSON array.`,
           <CardTitle className="text-sm">Import History</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
+          {selectedBatches.size > 0 && (
+            <div className="p-3 border-b">
+              <BulkDeleteBar
+                selectedCount={selectedBatches.size}
+                allCount={batches.length}
+                onSelectAll={() => setSelectedBatches(new Set(batches.map(b => b.id)))}
+                onClearSelection={() => setSelectedBatches(new Set())}
+                onConfirmDelete={() => {
+                  const batchesToDelete = batches.filter(b => selectedBatches.has(b.id));
+                  Promise.all(batchesToDelete.map(b => handleDeleteBatch(b))).then(() => {
+                    setSelectedBatches(new Set());
+                  });
+                }}
+                isDeleting={false}
+                isAllSelected={selectedBatches.size === batches.length}
+              />
+            </div>
+          )}
           <DataTable columns={batchColumns} data={batches} isLoading={batchesLoading} onRowClick={(r) => setSelectedBatch(r.id)} emptyMessage="No imports yet" />
         </CardContent>
       </Card>
