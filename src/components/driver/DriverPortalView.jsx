@@ -133,12 +133,12 @@ export default function DriverPortalView() {
             <>
               {/* Upload buttons */}
               <Card>
-                <CardHeader className="py-4 px-5 border-b">
-                  <CardTitle className="text-sm font-semibold">Upload Documents</CardTitle>
-                  <p className="text-xs text-muted-foreground mt-0.5">Select the type of document to upload. Accepted formats: PDF, JPG, PNG, DOC.</p>
+                <CardHeader className="py-3 px-4 md:py-4 md:px-5 border-b">
+                  <CardTitle className="text-xs md:text-sm font-semibold">Upload Documents</CardTitle>
+                  <p className="text-xs text-muted-foreground mt-0.5">Select document type. Formats: PDF, JPG, PNG, DOC.</p>
                 </CardHeader>
-                <CardContent className="px-5 py-5">
-                  <div className="grid grid-cols-2 gap-4">
+                <CardContent className="px-4 md:px-5 py-4 md:py-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                     <input ref={bolRef} type="file" className="hidden"
                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                       onChange={(e) => handleUpload(e.target.files[0], 'bol')} />
