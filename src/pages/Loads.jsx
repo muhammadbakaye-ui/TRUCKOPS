@@ -8,10 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import DataTable from '../components/shared/DataTable';
 import StatusBadge from '../components/shared/StatusBadge';
 import PageHeader from '../components/shared/PageHeader';
+import BulkDeleteBar from '../components/shared/BulkDeleteBar';
 
 export default function Loads() {
   const navigate = useNavigate();
@@ -22,6 +24,7 @@ export default function Loads() {
   });
   const [statusFilter, setStatusFilter] = useState('all');
   const [invoiceFilter, setInvoiceFilter] = useState('all');
+  const [selected, setSelected] = useState(new Set());
 
   const { data: loads = [], isLoading } = useQuery({
     queryKey: ['loads'],
@@ -29,19 +32,24 @@ export default function Loads() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (load) => {
-      await base44.entities.DeletedItem.create({
-        entity_type: 'Load',
-        entity_id: load.id,
-        entity_label: `Load #${load.internal_load_number} — ${load.customer_name || ''}`,
-        deleted_date: new Date().toISOString().split('T')[0],
-        original_data: JSON.stringify(load),
-      });
-      await base44.entities.Load.delete(load.id);
+    mutationFn: async (loads) => {
+      const loadsArray = Array.isArray(loads) ? loads : [loads];
+      for (const load of loadsArray) {
+        await base44.entities.DeletedItem.create({
+          entity_type: 'Load',
+          entity_id: load.id,
+          entity_label: `Load #${load.internal_load_number} — ${load.customer_name || ''}`,
+          deleted_date: new Date().toISOString().split('T')[0],
+          original_data: JSON.stringify(load),
+        });
+        await base44.entities.Load.delete(load.id);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['loads'] });
-      toast.success('Load moved to deleted items');
+      const count = selected.size;
+      toast.success(`${count} load${count === 1 ? '' : 's'} moved to deleted items`);
+      setSelected(new Set());
     },
   });
 
@@ -57,6 +65,35 @@ export default function Loads() {
   });
 
   const columns = [
+    {
+      header: (
+        <Checkbox
+          checked={selected.size > 0 && selected.size === filtered.length}
+          onCheckedChange={(checked) => {
+            if (checked) {
+              setSelected(new Set(filtered.map(l => l.id)));
+            } else {
+              setSelected(new Set());
+            }
+          }}
+        />
+      ),
+      render: (r) => (
+        <Checkbox
+          checked={selected.has(r.id)}
+          onCheckedChange={(checked) => {
+            const newSelected = new Set(selected);
+            if (checked) {
+              newSelected.add(r.id);
+            } else {
+              newSelected.delete(r.id);
+            }
+            setSelected(newSelected);
+          }}
+          onClick={(e) => e.stopPropagation()}
+        />
+      )
+    },
     { header: 'Load #', render: (r) => <span className="font-mono font-semibold text-primary">{r.internal_load_number}</span> },
     { header: 'Customer', render: (r) => <span className="font-medium">{r.customer_name || '—'}</span> },
     { header: 'Route', render: (r) => r.pickup_city
@@ -142,6 +179,21 @@ export default function Loads() {
           </SelectContent>
         </Select>
       </div>
+
+      {selected.size > 0 && (
+        <BulkDeleteBar
+          selectedCount={selected.size}
+          allCount={filtered.length}
+          onSelectAll={() => setSelected(new Set(filtered.map(l => l.id)))}
+          onClearSelection={() => setSelected(new Set())}
+          onConfirmDelete={() => {
+            const loadsToDelete = filtered.filter(l => selected.has(l.id));
+            deleteMutation.mutate(loadsToDelete);
+          }}
+          isDeleting={deleteMutation.isPending}
+          isAllSelected={selected.size === filtered.length}
+        />
+      )}
 
       <DataTable
         columns={columns}
