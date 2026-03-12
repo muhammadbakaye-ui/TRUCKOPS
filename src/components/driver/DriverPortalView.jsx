@@ -245,20 +245,23 @@ export default function DriverPortalView() {
                       const dueDate = getDueDate(stmt.period_end);
                       const overdue = checkOverdue(stmt.period_end, stmt.status);
                       const cfg = statusConfig[stmt.status] || statusConfig.draft;
+                      // period_start is Monday, so Sunday is one day before
+                      const sundayStart = stmt.period_start ? subDays(new Date(stmt.period_start), 1) : null;
                       return (
-                        <div
+                        <button
                           key={stmt.id}
-                          className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${
+                          onClick={() => setViewingStatement(stmt)}
+                          className={`w-full flex items-center justify-between p-4 rounded-xl border transition-colors text-left ${
                             overdue
-                              ? 'border-red-200 bg-red-50/60'
-                              : 'border-border bg-muted/10 hover:bg-muted/30'
+                              ? 'border-red-200 bg-red-50/60 hover:bg-red-50'
+                              : 'border-border bg-muted/10 hover:bg-muted/20'
                           }`}
                         >
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
                               <p className="text-sm font-semibold">
-                                {stmt.period_start && stmt.period_end
-                                  ? `${format(new Date(stmt.period_start), 'MMM d')} – ${format(new Date(stmt.period_end), 'MMM d, yyyy')}`
+                                {sundayStart && stmt.period_end
+                                  ? `${format(sundayStart, 'MMM d')} – ${format(new Date(stmt.period_end), 'MMM d, yyyy')}`
                                   : stmt.statement_date || '—'}
                               </p>
                               {overdue && (
@@ -277,7 +280,7 @@ export default function DriverPortalView() {
                             </p>
                             <Badge variant="outline" className={cfg.cls}>{cfg.label}</Badge>
                           </div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
