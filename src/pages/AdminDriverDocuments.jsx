@@ -117,11 +117,30 @@ export default function AdminDriverDocuments() {
                       </td>
                       <td className="py-3 text-xs font-medium">{doc.file_name}</td>
                       <td className="py-3 text-right">
-                        <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
-                          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5">
-                            <Download className="w-3 h-3" /> Download
-                          </Button>
-                        </a>
+                        <div className="flex items-center justify-end gap-1">
+                          <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
+                            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5">
+                              <Download className="w-3 h-3" /> Download
+                            </Button>
+                          </a>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Document?</AlertDialogTitle>
+                                <AlertDialogDescription>"{doc.file_name}" will be moved to Deleted Items and kept for 30 days.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteMutation.mutate(doc)}>Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       </td>
                     </tr>
                   ))}
