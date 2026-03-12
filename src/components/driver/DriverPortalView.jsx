@@ -32,7 +32,7 @@ export default function DriverPortalView() {
 
   const { data: statements = [], isLoading: stmtsLoading } = useQuery({
     queryKey: ['driver-statements-portal', session?.driver_id],
-    queryFn: () => base44.entities.DriverStatement.filter({ driver_id: session.driver_id }, '-period_start', 52),
+    queryFn: () => base44.entities.DriverStatement.filter({ driver_id: session.driver_id, published: true }, '-period_start', 52),
     enabled: !!session?.driver_id,
   });
 
