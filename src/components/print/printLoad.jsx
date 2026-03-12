@@ -13,7 +13,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
   };
   const tripNum = extractTripNum(load.external_load_number) || extractTripNum(load.customer_reference_number) || extractTripNum(load.internal_load_number);
 
-  // Auto-fill truck/trailer from driver info if not on load
+  // Auto-fill truck from driver if not on load
   let truckNum = load.truck_number;
   let trailerNum = load.trailer_number;
   if (!truckNum && load.driver_1_id) {
@@ -21,13 +21,6 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
     if (driver?.assigned_truck_id) {
       const truck = trucks.find(t => t.id === driver.assigned_truck_id);
       if (truck) truckNum = truck.unit_number;
-    }
-  }
-  if (!trailerNum && truckNum) {
-    const truck = trucks.find(t => t.unit_number === truckNum || t.id === load.truck_id);
-    if (truck) {
-      const trailer = trailers.find(t => t.id === truck.assigned_trailer_id);
-      if (trailer) trailerNum = trailer.unit_number;
     }
   }
 
