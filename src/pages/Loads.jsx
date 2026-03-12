@@ -16,6 +16,7 @@ import PageHeader from '../components/shared/PageHeader';
 
 export default function Loads() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('search') || '';
@@ -26,6 +27,23 @@ export default function Loads() {
   const { data: loads = [], isLoading } = useQuery({
     queryKey: ['loads'],
     queryFn: () => base44.entities.Load.list('-created_date', 500),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (load) => {
+      await base44.entities.DeletedItem.create({
+        entity_type: 'Load',
+        entity_id: load.id,
+        entity_label: `Load #${load.internal_load_number} — ${load.customer_name || ''}`,
+        deleted_date: new Date().toISOString().split('T')[0],
+        original_data: JSON.stringify(load),
+      });
+      await base44.entities.Load.delete(load.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['loads'] });
+      toast.success('Load moved to deleted items');
+    },
   });
 
   const filtered = loads.filter(l => {
