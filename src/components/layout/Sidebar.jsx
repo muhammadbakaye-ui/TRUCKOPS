@@ -27,6 +27,7 @@ const navItems = [
   { type: 'divider', label: 'SYSTEM' },
   { label: 'Reports', icon: BarChart3, page: 'Reports' },
   { label: 'Audit Log', icon: History, page: 'AuditLogPage' },
+  { label: 'Deleted Items', icon: Trash2, page: 'DeletedItems' },
   { label: 'Settings', icon: Settings, page: 'SettingsPage' },
 ];
 
@@ -46,6 +47,11 @@ export default function Sidebar({ currentPage, collapsed, onToggle }) {
         )}
         {collapsed && <Truck className="w-6 h-6 text-sidebar-primary mx-auto" />}
       </div>
+      {!collapsed && (
+        <div className="px-4 pb-2 border-b border-sidebar-border">
+          <span className="text-[9px] text-sidebar-foreground/40 font-medium tracking-widest uppercase">Unity Transportation LLC</span>
+        </div>
+      )}
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-2 px-2">
