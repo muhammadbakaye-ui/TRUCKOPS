@@ -149,10 +149,10 @@ export default function DriverPortalView() {
                     <button
                       onClick={() => bolRef.current?.click()}
                       disabled={!!uploading}
-                      className="h-20 rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 hover:border-primary/60 transition-all flex flex-col items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                      {uploading === 'bol' ? <Loader2 className="w-6 h-6 animate-spin text-primary" /> : <Upload className="w-6 h-6 text-primary" />}
-                      <span className="text-sm font-semibold text-primary">Upload BOL</span>
+                      className="h-16 md:h-20 rounded-lg md:rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 hover:border-primary/60 transition-all flex flex-col items-center justify-center gap-1 md:gap-2 disabled:opacity-50"
+                      >
+                      {uploading === 'bol' ? <Loader2 className="w-5 md:w-6 h-5 md:h-6 animate-spin text-primary" /> : <Upload className="w-5 md:w-6 h-5 md:h-6 text-primary" />}
+                      <span className="text-xs md:text-sm font-semibold text-primary text-center">Upload BOL</span>
                     </button>
 
                     <button
