@@ -6,7 +6,10 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Trash2 } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 import DataTable from '../components/shared/DataTable';
 import StatusBadge from '../components/shared/StatusBadge';
 import PageHeader from '../components/shared/PageHeader';
@@ -14,12 +17,30 @@ import { format } from 'date-fns';
 
 export default function DriverStatements() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
   const { data: statements = [], isLoading } = useQuery({
     queryKey: ['statements'],
     queryFn: () => base44.entities.DriverStatement.list('-created_date', 300),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (stmt) => {
+      await base44.entities.DeletedItem.create({
+        entity_type: 'DriverStatement',
+        entity_id: stmt.id,
+        entity_label: `${stmt.driver_name} — ${stmt.period_start} to ${stmt.period_end}`,
+        deleted_date: new Date().toISOString().split('T')[0],
+        original_data: JSON.stringify(stmt),
+      });
+      await base44.entities.DriverStatement.delete(stmt.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['statements'] });
+      toast.success('Statement moved to deleted items');
+    },
   });
 
   const filtered = statements.filter(s => {
