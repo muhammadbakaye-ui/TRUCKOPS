@@ -98,6 +98,7 @@ export default function StatementBuilder() {
 
   const loadDriverTrips = async () => {
     if (!form.driver_id) return toast.error('Select a driver first');
+    if (!form.period_start || !form.period_end) return toast.error('Select a statement date first');
     setLoadingTrips(true);
     try {
       const loads = await base44.entities.Load.filter({ driver_1_id: form.driver_id });
@@ -106,7 +107,11 @@ export default function StatementBuilder() {
         const match = desc.match(/_(\d{3})_/);
         return match ? match[1] : null;
       };
-      const newLines = loads.map(l => {
+      const filteredLoads = loads.filter(l => {
+        const loadDate = l.delivery_date || l.pickup_date;
+        return loadDate && loadDate >= form.period_start && loadDate <= form.period_end;
+      });
+      const newLines = filteredLoads.map(l => {
         const tripNum = l.trip_number || extractTripNum(l.external_load_number) || extractTripNum(l.customer_reference_number) || extractTripNum(l.internal_load_number);
         return {
           line_type: 'trip',
@@ -129,10 +134,14 @@ export default function StatementBuilder() {
 
   const loadDriverFuel = async () => {
     if (!form.driver_id) return toast.error('Select a driver first');
+    if (!form.period_start || !form.period_end) return toast.error('Select a statement date first');
     setLoadingFuel(true);
     try {
       const txs = await base44.entities.FuelTransaction.filter({ matched_driver_id: form.driver_id });
-      const newLines = txs.map(tx => {
+      const filteredTxs = txs.filter(tx => {
+        return tx.transaction_date && tx.transaction_date >= form.period_start && tx.transaction_date <= form.period_end;
+      });
+      const newLines = filteredTxs.map(tx => {
         const city = (tx.city && tx.city !== 'null') ? tx.city : '';
         const state = (tx.state && tx.state !== 'null') ? tx.state : '';
         const gallons = (tx.gallons && tx.gallons !== 'null') ? tx.gallons : '';
@@ -163,7 +172,7 @@ export default function StatementBuilder() {
   const addDefaultDeduction = (def) => {
     setDeductionLines(prev => [...prev, {
       line_type: 'deduction',
-      date: new Date().toISOString().split('T')[0],
+      date: form.statement_date || new Date().toISOString().split('T')[0],
       description: def.description,
       amount: def.amount,
     }]);
