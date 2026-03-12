@@ -238,7 +238,7 @@ export default function StatementBuilder() {
 
           {/* Header */}
           <Card>
-            <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Statement Header</CardTitle></CardHeader>
+            <CardHeader className="py-3.5 px-5 border-b"><CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Statement Header</CardTitle></CardHeader>
             <CardContent className="px-5 pb-5 grid grid-cols-4 gap-4">
               <div>
                 <Label className="text-xs">Driver</Label>
@@ -280,8 +280,8 @@ export default function StatementBuilder() {
 
           {/* Settlement Items / Trips */}
           <Card>
-            <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Settlement Items ({tripLines.length})</CardTitle>
+            <CardHeader className="py-3.5 px-5 flex flex-row items-center justify-between border-b">
+              <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Settlement Items ({tripLines.length})</CardTitle>
               <div className="flex gap-1">
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={loadDriverTrips} disabled={loadingTrips || !form.driver_id}>
                   {loadingTrips ? <Loader2 className="w-3 h-3 animate-spin" /> : <Truck className="w-3 h-3" />} Load Trips
@@ -377,8 +377,8 @@ export default function StatementBuilder() {
         {/* Summary */}
         <div>
           <Card className="sticky top-4">
-            <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Summary</CardTitle></CardHeader>
-            <CardContent className="px-4 pb-4 space-y-2">
+            <CardHeader className="py-3.5 px-5 border-b"><CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Summary</CardTitle></CardHeader>
+            <CardContent className="px-5 pb-5 space-y-3">
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Driver</span>
                 <span className="font-medium">{form.driver_name || '—'}</span>
