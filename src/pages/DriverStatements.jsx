@@ -65,6 +65,12 @@ export default function DriverStatements() {
       : '—'
     },
     { header: 'Status', render: (r) => <StatusBadge status={r.status} /> },
+    { 
+      header: 'Published', 
+      render: (r) => r.published 
+        ? <span className="text-xs font-medium text-green-600">✓ Published</span>
+        : <span className="text-xs text-muted-foreground">Draft</span>
+    },
     {
       header: '', render: (r) => (
         <AlertDialog>
