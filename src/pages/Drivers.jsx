@@ -25,6 +25,7 @@ const DRIVER_FIELDS = [
     { value: 'flat_rate', label: 'Flat Rate' }, { value: 'custom', label: 'Custom' }
   ]},
   { name: 'pay_rate', label: 'Pay Rate', type: 'number' },
+  { name: 'ytd_gross_legacy', label: 'YTD Gross Legacy (from old system)', type: 'number', placeholder: 'e.g., 24462.38' },
   { name: 'status', label: 'Status', type: 'select', options: [
     { value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' },
     { value: 'terminated', label: 'Terminated' }
