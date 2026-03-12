@@ -94,7 +94,7 @@ export default function AdminDriverDocuments() {
                     <th className="text-left pb-2 font-semibold w-44">Date Sent</th>
                     <th className="text-left pb-2 font-semibold w-44">Type</th>
                     <th className="text-left pb-2 font-semibold">File Name</th>
-                    <th className="text-right pb-2 font-semibold w-28">Download</th>
+                    <th className="text-right pb-2 font-semibold w-28">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
