@@ -72,12 +72,13 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 
     /* FINANCIALS */
     .fin-section { margin-top: 14px; display: flex; justify-content: flex-end; }
-    table.fin-table { border-collapse: collapse; font-size: 11px; width: 300px; }
-    table.fin-table th { background: #1a3a6b; color: #fff; padding: 5px 12px; text-align: left; }
+    table.fin-table { border-collapse: collapse; font-size: 11px; width: 300px; border: 3px solid #1a3a6b; }
+    table.fin-table th { background: #fff; color: #000; padding: 5px 12px; text-align: left; border-bottom: 2px solid #1a3a6b; font-weight: bold; }
     table.fin-table th:last-child { text-align: right; }
-    table.fin-table td { border: 1px solid #d1d5db; padding: 5px 12px; }
+    table.fin-table td { border: none; padding: 5px 12px; background: #fff; }
     table.fin-table td:last-child { text-align: right; font-weight: 600; }
-    table.fin-table .total-row td { background: #1a3a6b; color: #fff; font-weight: bold; border-color: #1a3a6b; }
+    table.fin-table .subtotal-row td { border-top: 1px solid #000; border-bottom: 3px double #000; font-weight: bold; }
+    table.fin-table .total-row td { background: #fff; color: #000; font-weight: bold; border-top: 2px solid #1a3a6b; }
 
     /* NOTES */
     .notes-section { margin-top: 14px; border: 1px solid #d1d5db; border-radius: 4px; padding: 8px 12px; font-size: 11px; min-height: 50px; }
@@ -173,7 +174,14 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
     <table class="fin-table">
       <thead><tr><th>Description</th><th>Amount</th></tr></thead>
       <tbody>
-        <tr class="total-row"><td>TOTAL</td><td>${fmt(total)}</td></tr>
+        <tr><td>Freight Income</td><td>${fmt(load.freight_rate)}</td></tr>
+        <tr class="subtotal-row"><td>Sub Total :</td><td>${fmt(load.freight_rate)}</td></tr>
+      </tbody>
+    </table>
+    <div style="height: 16px;"></div>
+    <table class="fin-table">
+      <tbody>
+        <tr class="total-row"><td>Total Due:</td><td>${fmt(total)}</td></tr>
       </tbody>
     </table>
   </div>
