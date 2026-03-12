@@ -156,6 +156,11 @@ export default function LoadDetail() {
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             Save
           </Button>
+          {!isNew && (
+            <Button variant="outline" size="sm" className="h-8 gap-1" onClick={handlePrint}>
+              <Printer className="w-3.5 h-3.5" /> Print / PDF
+            </Button>
+          )}
         </div>
       </div>
 
