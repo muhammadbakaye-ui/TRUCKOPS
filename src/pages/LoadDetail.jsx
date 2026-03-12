@@ -62,12 +62,12 @@ export default function LoadDetail() {
   const { data: loadStops = [] } = useQuery({
     queryKey: ['load-stops', loadId],
     queryFn: async () => {
-      if (!loadId) return [];
+      if (!loadId || isNew) return [];
       const s = await base44.entities.LoadStop.filter({ load_id: loadId }, 'stop_order', 20);
       setStops(s);
       return s;
     },
-    enabled: !!loadId,
+    enabled: !!loadId && !isNew,
   });
 
   const { data: drivers = [] } = useQuery({ queryKey: ['drivers'], queryFn: () => base44.entities.Driver.list() });
