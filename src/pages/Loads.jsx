@@ -28,7 +28,7 @@ export default function Loads() {
 
   const { data: loads = [], isLoading } = useQuery({
     queryKey: ['loads'],
-    queryFn: () => base44.entities.Load.filter({}, '-created_date', 1000),
+    queryFn: () => base44.entities.Load.list('-created_date', 1000),
   });
 
   const deleteMutation = useMutation({
@@ -145,7 +145,7 @@ export default function Loads() {
     <div className="p-4">
       <PageHeader
         title="Loads"
-        description={`${filtered.length} of ${loads.length} loads`}
+        description={`${filtered.length} of ${loads.length}${loads.length >= 1000 ? '+' : ''} loads`}
         actions={
           <Button size="sm" className="h-8 text-xs gap-1" onClick={() => navigate(createPageUrl('LoadDetail?new=1'))}>
             <Plus className="w-3.5 h-3.5" /> New Load
