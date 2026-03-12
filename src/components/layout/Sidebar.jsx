@@ -4,7 +4,7 @@ import { createPageUrl } from '@/utils';
 import {
   LayoutDashboard, Truck, Users, Building2, Container,
   FileText, Receipt, Fuel, ClipboardList, BarChart3,
-  Settings, History, Upload, ChevronLeft, ChevronRight
+  Settings, History, Upload, ChevronLeft, ChevronRight, FolderOpen
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -22,6 +22,8 @@ const navItems = [
   { label: 'Invoices', icon: Receipt, page: 'Invoices' },
   { label: 'Fuel Import', icon: Fuel, page: 'FuelImport' },
   { label: 'Statements', icon: ClipboardList, page: 'DriverStatements' },
+  { type: 'divider', label: 'ADMIN' },
+  { label: 'Driver Docs', icon: FileText, page: 'AdminDriverDocuments' },
   { type: 'divider', label: 'SYSTEM' },
   { label: 'Reports', icon: BarChart3, page: 'Reports' },
   { label: 'Audit Log', icon: History, page: 'AuditLogPage' },
