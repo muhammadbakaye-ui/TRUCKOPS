@@ -120,12 +120,16 @@ export default function Loads() {
       </div>
     )},
     { header: 'Customer', render: (r) => <span className="font-medium text-sm">{r.customer_name || '—'}</span> },
-    { header: 'Route', render: (r) => r.pickup_city
-      ? <span className="text-xs">{r.pickup_city}, {r.pickup_state} → {r.delivery_city}, {r.delivery_state}</span>
-      : '—'
-    },
-    { header: 'Pickup', render: (r) => r.pickup_date ? r.pickup_date : '—' },
-    { header: 'Delivery', render: (r) => r.delivery_date ? r.delivery_date : '—' },
+    { header: 'Route', render: (r) => {
+      const pickup = r.pickup_city ? `${r.pickup_city}${r.pickup_state ? ', ' + r.pickup_state : ''}` : null;
+      const delivery = r.delivery_city ? `${r.delivery_city}${r.delivery_state ? ', ' + r.delivery_state : ''}` : null;
+      if (pickup && delivery) return <span className="text-xs">{pickup} → {delivery}</span>;
+      if (pickup) return <span className="text-xs">{pickup}</span>;
+      if (delivery) return <span className="text-xs">{delivery}</span>;
+      return '—';
+    }},
+    { header: 'Pickup', render: (r) => r.pickup_date || '—' },
+    { header: 'Delivery', render: (r) => r.delivery_date || '—' },
     { header: 'Drivers', render: (r) => (
       <div className="flex flex-col gap-1">
         {r.driver_1_name && <span className="text-sm">{r.driver_1_name}</span>}
