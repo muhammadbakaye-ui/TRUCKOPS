@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, FileText, Loader2, CheckCircle, AlertTriangle, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import DataTable from '../components/shared/DataTable';
+import BulkDeleteBar from '../components/shared/BulkDeleteBar';
 import StatusBadge from '../components/shared/StatusBadge';
 import PageHeader from '../components/shared/PageHeader';
 import { format } from 'date-fns';
@@ -15,6 +17,7 @@ export default function FuelImport() {
   const [dragging, setDragging] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState(null);
+  const [selectedTx, setSelectedTx] = useState(new Set());
   const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
 
@@ -232,13 +235,65 @@ If a field is missing, use null. Return only the JSON array.`,
       queryClient.invalidateQueries({ queryKey: ['fuel-batches'] });
       queryClient.invalidateQueries({ queryKey: ['fuel-transactions'] });
       setSelectedBatch(null);
+      setSelectedTx(new Set());
       toast.success(`Deleted batch and ${batchTransactions.length} transactions`);
     } catch (err) {
       toast.error('Batch delete failed: ' + err.message);
     }
   };
 
+  const handleBulkDeleteTx = async (txList) => {
+    try {
+      for (const tx of txList) {
+        const entityLabel = `${tx.matched_driver_name || tx.driver_name_raw} - ${tx.transaction_date}`;
+        await base44.entities.DeletedItem.create({
+          entity_type: 'FuelTransaction',
+          entity_id: tx.id,
+          entity_label: entityLabel,
+          deleted_by: 'system',
+          deleted_date: new Date().toISOString(),
+          original_data: JSON.stringify(tx),
+        });
+        await base44.entities.FuelTransaction.delete(tx.id);
+      }
+      queryClient.invalidateQueries({ queryKey: ['fuel-transactions'] });
+      setSelectedTx(new Set());
+      toast.success(`${txList.length} transaction${txList.length === 1 ? '' : 's'} deleted`);
+    } catch (err) {
+      toast.error('Delete failed: ' + err.message);
+    }
+  };
+
   const txColumns = [
+    {
+      header: (
+        <Checkbox
+          checked={selectedTx.size > 0 && selectedTx.size === transactions.length}
+          onCheckedChange={(checked) => {
+            if (checked) {
+              setSelectedTx(new Set(transactions.map(t => t.id)));
+            } else {
+              setSelectedTx(new Set());
+            }
+          }}
+        />
+      ),
+      render: (r) => (
+        <Checkbox
+          checked={selectedTx.has(r.id)}
+          onCheckedChange={(checked) => {
+            const newSelected = new Set(selectedTx);
+            if (checked) {
+              newSelected.add(r.id);
+            } else {
+              newSelected.delete(r.id);
+            }
+            setSelectedTx(newSelected);
+          }}
+          onClick={(e) => e.stopPropagation()}
+        />
+      )
+    },
     { header: 'Date', render: (r) => r.transaction_date || '—' },
     { header: 'Location', render: (r) => r.location_name || '—' },
     { header: 'Driver (Raw)', accessor: 'driver_name_raw' },
@@ -323,7 +378,23 @@ If a field is missing, use null. Return only the JSON array.`,
             <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setSelectedBatch(null)}>Close</Button>
           </CardHeader>
           <CardContent className="p-0">
-            <DataTable columns={txColumns} data={transactions} isLoading={txLoading} emptyMessage="No transactions in this batch" />
+           {selectedTx.size > 0 && (
+             <div className="p-3 border-b">
+               <BulkDeleteBar
+                 selectedCount={selectedTx.size}
+                 allCount={transactions.length}
+                 onSelectAll={() => setSelectedTx(new Set(transactions.map(t => t.id)))}
+                 onClearSelection={() => setSelectedTx(new Set())}
+                 onConfirmDelete={() => {
+                   const txToDelete = transactions.filter(t => selectedTx.has(t.id));
+                   handleBulkDeleteTx(txToDelete);
+                 }}
+                 isDeleting={false}
+                 isAllSelected={selectedTx.size === transactions.length}
+               />
+             </div>
+           )}
+           <DataTable columns={txColumns} data={transactions} isLoading={txLoading} emptyMessage="No transactions in this batch" />
           </CardContent>
         </Card>
       )}
