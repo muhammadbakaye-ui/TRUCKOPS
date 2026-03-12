@@ -132,7 +132,6 @@ Return a structured JSON with the following fields (use null if not found):
         weight: extracted.weight,
         equipment_type: extracted.equipment_type,
         hazmat: extracted.hazmat || false,
-        special_instructions: extracted.special_instructions,
         source_document_id: doc.id,
         extraction_status: 'extracted',
         status: 'draft',

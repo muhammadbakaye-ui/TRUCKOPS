@@ -20,7 +20,10 @@ export default function TopBar({ pageTitle }) {
 
   return (
     <div className="h-14 border-b border-border bg-card flex items-center justify-between px-4 flex-shrink-0">
-      <h1 className="text-sm font-semibold text-foreground">{pageTitle}</h1>
+      <div>
+        <p className="text-[10px] text-muted-foreground font-medium tracking-wide leading-none mb-0.5">Unity Transportation LLC</p>
+        <h1 className="text-sm font-semibold text-foreground leading-none">{pageTitle}</h1>
+      </div>
 
       <div className="flex items-center gap-3">
         <form onSubmit={handleSearch} className="relative">
