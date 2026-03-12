@@ -38,6 +38,9 @@ function Sel({ value, onChange, options }) {
 
 export default function LoadDetail() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const loadId = searchParams.get('id');
+  const isNew = searchParams.get('new') === '1';
   const queryClient = useQueryClient();
   const [form, setForm] = useState(null);
   const [stops, setStops] = useState([]);

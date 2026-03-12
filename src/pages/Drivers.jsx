@@ -15,6 +15,7 @@ const DRIVER_FIELDS = [
   { name: 'phone', label: 'Phone' },
   { name: 'email', label: 'Email' },
   { name: 'cdl_number', label: 'CDL Number' },
+  { name: 'assigned_truck_id', label: 'Truck ID / Unit #', placeholder: 'Enter truck unit number or ID' },
   { name: 'address', label: 'Address' },
   { name: 'city', label: 'City' },
   { name: 'state', label: 'State' },
