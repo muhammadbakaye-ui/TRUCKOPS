@@ -11,9 +11,28 @@ import { toast } from 'sonner';
 import PageHeader from '../components/shared/PageHeader';
 
 export default function AdminDriverDocuments() {
+  const queryClient = useQueryClient();
+
   const { data: docs = [], isLoading } = useQuery({
     queryKey: ['all-driver-docs'],
     queryFn: () => base44.entities.DriverDocument.list('-created_date', 1000),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (doc) => {
+      await base44.entities.DeletedItem.create({
+        entity_type: 'DriverDocument',
+        entity_id: doc.id,
+        entity_label: `${doc.driver_name || 'Unknown'} — ${doc.file_name}`,
+        deleted_date: new Date().toISOString().split('T')[0],
+        original_data: JSON.stringify(doc),
+      });
+      await base44.entities.DriverDocument.delete(doc.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-driver-docs'] });
+      toast.success('Document moved to deleted items');
+    },
   });
 
   // Group by driver_id, keeping newest docs first (already sorted by API)
