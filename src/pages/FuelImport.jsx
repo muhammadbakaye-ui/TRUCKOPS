@@ -90,7 +90,7 @@ If a field is missing, use null. Return only the JSON array.`,
 
         const matchedDriver = drivers.find(d => {
           if (!tx.driver_name_raw || !d.full_name) return false;
-          const raw = tx.driver_name_raw.toLowerCase().trim();
+          const raw = tx.driver_name_raw.toLowerCase().trim().replace(/^n-/, '').trim();
           const full = d.full_name.toLowerCase();
           // Exact substring match or any word match (handles name variations)
           if (full.includes(raw) || raw.includes(full)) return true;
