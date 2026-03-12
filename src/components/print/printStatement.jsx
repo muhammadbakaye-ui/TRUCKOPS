@@ -52,10 +52,10 @@ export function printStatement({ company, statement, allLines }) {
 <body>
   <div class="header">
     <div class="company-info">
-      <strong>${company.company_name || ''}</strong><br>
-      ${company.address_1 || ''}<br>
-      ${company.city || ''}${company.state ? ', ' + company.state : ''} ${company.zip || ''}<br>
-      ${company.phone ? 'Phone #: ' + company.phone : ''}
+      UNITY TRANSPORTATION LLC<br>
+      P.O BOX 56521<br>
+      SAINT LOUIS, MO 63156<br>
+      Phone #: (573)742-8547
     </div>
     <div class="statement-title">
       Statement<br>
@@ -97,9 +97,10 @@ export function printStatement({ company, statement, allLines }) {
     `<td colspan="2" style="text-align:right">Total:</td>`, fmt(creditsTotal)
   )}
 
-  ${tableSection('Fuel Card', ['Fuel Card#','Description','City, State','Advance ($)','Advance Fee ($)','Misc. ($)','Date','Amount'],
+  ${tableSection('Fuel Card', ['Fuel Card#','Location','Description','City, State','Advance ($)','Advance Fee ($)','Misc. ($)','Date','Amount'],
     fuelLines.map(l => `<tr>
       <td>${l.card_number || ''}</td>
+      <td>${l.location_name || ''}</td>
       <td>${l.description || ''}</td>
       <td style="text-align:center">${l.city_state || ''}</td>
       <td style="text-align:right">$0.00</td>
@@ -108,7 +109,7 @@ export function printStatement({ company, statement, allLines }) {
       <td style="text-align:center">${l.date || ''}</td>
       <td style="text-align:right">${fmtNeg(l.amount)}</td>
     </tr>`).join(''),
-    `<td colspan="7" style="text-align:right">Total:</td>`, fmtNeg(fuelTotal)
+    `<td colspan="8" style="text-align:right">Total:</td>`, fmtNeg(fuelTotal)
   )}
 
   <div class="footer">
