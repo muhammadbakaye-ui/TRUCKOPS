@@ -125,8 +125,8 @@ export default function DriverPortalView() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-3xl mx-auto space-y-5">
+      <div className="flex-1 overflow-auto p-4 md:p-6">
+        <div className="max-w-3xl mx-auto space-y-3 md:space-y-5">
 
           {/* DOCUMENTS TAB */}
           {activeTab === 'documents' && (
