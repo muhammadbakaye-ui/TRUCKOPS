@@ -231,13 +231,13 @@ export default function DriverPortalView() {
           {/* STATEMENTS TAB */}
           {activeTab === 'statements' && (
             <Card>
-              <CardHeader className="py-4 px-5 border-b">
-                <CardTitle className="text-sm font-semibold">My Weekly Statements</CardTitle>
+              <CardHeader className="py-3 px-4 md:py-4 md:px-5 border-b">
+                <CardTitle className="text-xs md:text-sm font-semibold">My Weekly Statements</CardTitle>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Each statement covers Sunday–Saturday. Statements are due the following Tuesday.
+                  Sunday–Saturday periods. Due following Tuesday.
                 </p>
               </CardHeader>
-              <CardContent className="px-5 py-4">
+              <CardContent className="px-4 md:px-5 py-3 md:py-4">
                 {stmtsLoading ? (
                   <div className="flex items-center justify-center py-10">
                     <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
