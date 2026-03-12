@@ -173,6 +173,7 @@ export default function LoadDetail() {
             <CardContent className="px-4 pb-4 grid grid-cols-3 gap-3">
               <Field label="Internal Load #"><TextInput value={form.internal_load_number} onChange={(v) => set('internal_load_number', v)} /></Field>
               <Field label="External / Broker Load #"><TextInput value={form.external_load_number} onChange={(v) => set('external_load_number', v)} /></Field>
+              <Field label="Trip #"><TextInput value={form.trip_number} onChange={(v) => set('trip_number', v)} /></Field>
               <Field label="Customer Ref #"><TextInput value={form.customer_reference_number} onChange={(v) => set('customer_reference_number', v)} /></Field>
               <Field label="Customer">
                 <Select value={form.customer_id || ''} onValueChange={(v) => {

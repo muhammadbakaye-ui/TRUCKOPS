@@ -126,7 +126,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
       <div class="info-box-body">
         <div class="row"><span class="lbl">Customer:</span><span class="val">${load.customer_name || '—'}</span></div>
         ${load.external_load_number ? `<div class="row"><span class="lbl">Load #:</span><span class="val">${load.external_load_number}</span></div>` : ''}
-        ${tripNum ? `<div class="row"><span class="lbl">Trip #:</span><span class="val">${tripNum}</span></div>` : ''}
+        ${load.trip_number || tripNum ? `<div class="row"><span class="lbl">Trip #:</span><span class="val">${load.trip_number || tripNum}</span></div>` : ''}
         ${load.customer_reference_number ? `<div class="row"><span class="lbl">Ref #:</span><span class="val">${load.customer_reference_number}</span></div>` : ''}
         ${load.billable_miles ? `<div class="row"><span class="lbl">Miles:</span><span class="val">${load.billable_miles.toLocaleString()}</span></div>` : ''}
       </div>
