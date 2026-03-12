@@ -45,7 +45,7 @@ export default function FuelImport() {
       const extracted = await base44.integrations.Core.InvokeLLM({
         prompt: `Extract all fuel transaction records from this file. The file is a fuel card transaction report.
 Return a JSON array of transaction objects with these fields:
-card_number, driver_name_raw, truck_number_raw, city, state, transaction_date (YYYY-MM-DD), gallons (number), fuel_amount (number), transaction_fee (number), advance_amount (number), advance_fee (number), misc_amount (number), invoice_amount (number), total_amount (number).
+card_number, driver_name_raw, truck_number_raw, location_name (full location name like "LOVES #481 TRAVEL STOP"), city, state, transaction_date (YYYY-MM-DD), gallons (number), fuel_amount (number), transaction_fee (number), advance_amount (number), advance_fee (number), misc_amount (number), invoice_amount (number), total_amount (number).
 If a field is missing, use null. Return only the JSON array.`,
         file_urls: [file_url],
         response_json_schema: {
@@ -59,6 +59,7 @@ If a field is missing, use null. Return only the JSON array.`,
                   card_number: { type: 'string' },
                   driver_name_raw: { type: 'string' },
                   truck_number_raw: { type: 'string' },
+                  location_name: { type: 'string' },
                   city: { type: 'string' },
                   state: { type: 'string' },
                   transaction_date: { type: 'string' },
@@ -144,6 +145,7 @@ If a field is missing, use null. Return only the JSON array.`,
 
   const txColumns = [
     { header: 'Date', render: (r) => r.transaction_date || '—' },
+    { header: 'Location', render: (r) => r.location_name || '—' },
     { header: 'Driver (Raw)', accessor: 'driver_name_raw' },
     { header: 'Matched Driver', render: (r) => r.matched_driver_name || <span className="text-muted-foreground">—</span> },
     { header: 'Truck', render: (r) => r.matched_truck_number || r.truck_number_raw || '—' },
