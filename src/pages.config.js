@@ -47,42 +47,42 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
-import Dashboard from './pages/Dashboard';
-import Companies from './pages/Companies';
-import Drivers from './pages/Drivers';
-import Trucks from './pages/Trucks';
-import Loads from './pages/Loads';
-import Trailers from './pages/Trailers';
 import AuditLogPage from './pages/AuditLogPage';
-import SettingsPage from './pages/SettingsPage';
-import Invoices from './pages/Invoices';
+import Companies from './pages/Companies';
+import Dashboard from './pages/Dashboard';
 import DriverStatements from './pages/DriverStatements';
-import Reports from './pages/Reports';
+import Drivers from './pages/Drivers';
 import FuelImport from './pages/FuelImport';
-import UploadDocument from './pages/UploadDocument';
-import LoadDetail from './pages/LoadDetail';
-import StatementBuilder from './pages/StatementBuilder';
 import InvoiceDetail from './pages/InvoiceDetail';
+import Invoices from './pages/Invoices';
+import LoadDetail from './pages/LoadDetail';
+import Loads from './pages/Loads';
+import Reports from './pages/Reports';
+import SettingsPage from './pages/SettingsPage';
+import StatementBuilder from './pages/StatementBuilder';
+import Trailers from './pages/Trailers';
+import Trucks from './pages/Trucks';
+import UploadDocument from './pages/UploadDocument';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Dashboard": Dashboard,
-    "Companies": Companies,
-    "Drivers": Drivers,
-    "Trucks": Trucks,
-    "Loads": Loads,
-    "Trailers": Trailers,
     "AuditLogPage": AuditLogPage,
-    "SettingsPage": SettingsPage,
-    "Invoices": Invoices,
+    "Companies": Companies,
+    "Dashboard": Dashboard,
     "DriverStatements": DriverStatements,
-    "Reports": Reports,
+    "Drivers": Drivers,
     "FuelImport": FuelImport,
-    "UploadDocument": UploadDocument,
-    "LoadDetail": LoadDetail,
-    "StatementBuilder": StatementBuilder,
     "InvoiceDetail": InvoiceDetail,
+    "Invoices": Invoices,
+    "LoadDetail": LoadDetail,
+    "Loads": Loads,
+    "Reports": Reports,
+    "SettingsPage": SettingsPage,
+    "StatementBuilder": StatementBuilder,
+    "Trailers": Trailers,
+    "Trucks": Trucks,
+    "UploadDocument": UploadDocument,
 }
 
 export const pagesConfig = {

@@ -1,85 +1,145 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Save, ArrowLeft, Plus, Trash2, CheckCircle } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, Plus, Trash2, CheckCircle, Fuel, Truck, Download } from 'lucide-react';
 import { logAudit } from '../components/shared/AuditLogger';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
 
 const urlParams = new URLSearchParams(window.location.search);
 const statementId = urlParams.get('id');
 
-const LINE_TYPES = ['trip','deduction','credit','fuel','advance','adjustment'];
+const DEFAULT_DEDUCTIONS = [
+  { description: 'Insurance', amount: 425 },
+  { description: 'IFTA', amount: 50 },
+  { description: 'ELD', amount: 15 },
+];
 
 export default function StatementBuilder() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [form, setForm] = useState({ status: 'draft', gross_total: 0, deductions_total: 0, credits_total: 0, fuel_total: 0, final_check_amount: 0 });
-  const [lines, setLines] = useState([]);
+  const [form, setForm] = useState({ status: 'draft', gross_total: 0, deductions_total: 0, fuel_total: 0, final_check_amount: 0 });
+  const [tripLines, setTripLines] = useState([]);
+  const [deductionLines, setDeductionLines] = useState([]);
+  const [fuelLines, setFuelLines] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [loadingTrips, setLoadingTrips] = useState(false);
+  const [loadingFuel, setLoadingFuel] = useState(false);
 
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
 
-  const { data: statement } = useQuery({
+  const { data: drivers = [] } = useQuery({ queryKey: ['drivers'], queryFn: () => base44.entities.Driver.list() });
+  const { data: trucks = [] } = useQuery({ queryKey: ['trucks'], queryFn: () => base44.entities.Truck.list() });
+
+  // Load existing statement
+  useQuery({
     queryKey: ['statement', statementId],
     queryFn: async () => {
       if (!statementId) return null;
       const s = await base44.entities.DriverStatement.get(statementId);
       setForm(s);
+      // Load existing lines
+      const lines = await base44.entities.StatementLine.filter({ statement_id: statementId }, 'date', 200);
+      setTripLines(lines.filter(l => l.line_type === 'trip' || l.line_type === 'credit' || l.line_type === 'adjustment'));
+      setDeductionLines(lines.filter(l => l.line_type === 'deduction' || l.line_type === 'advance'));
+      setFuelLines(lines.filter(l => l.line_type === 'fuel'));
       return s;
     },
     enabled: !!statementId,
   });
 
-  const { data: statementLines = [] } = useQuery({
-    queryKey: ['statement-lines', statementId],
-    queryFn: async () => {
-      if (!statementId) return [];
-      const l = await base44.entities.StatementLine.filter({ statement_id: statementId }, 'date', 100);
-      setLines(l);
-      return l;
-    },
-    enabled: !!statementId,
-  });
-
-  const { data: drivers = [] } = useQuery({ queryKey: ['drivers'], queryFn: () => base44.entities.Driver.list() });
-  const { data: trucks = [] } = useQuery({ queryKey: ['trucks'], queryFn: () => base44.entities.Truck.list() });
-
   // Auto-calculate totals
   useEffect(() => {
-    const gross = lines.filter(l => l.line_type === 'trip' || l.line_type === 'credit').reduce((s, l) => s + (l.amount || 0), 0);
-    const deductions = lines.filter(l => l.line_type === 'deduction' || l.line_type === 'advance').reduce((s, l) => s + Math.abs(l.amount || 0), 0);
-    const fuel = lines.filter(l => l.line_type === 'fuel').reduce((s, l) => s + Math.abs(l.amount || 0), 0);
-    const net = gross - deductions - fuel;
+    const gross = tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0);
+    const deductions = deductionLines.reduce((s, l) => s + Math.abs(Number(l.amount) || 0), 0);
+    const fuel = fuelLines.reduce((s, l) => s + Math.abs(Number(l.amount) || 0), 0);
     setForm(prev => ({
       ...prev,
       gross_total: gross,
       deductions_total: deductions,
       fuel_total: fuel,
-      final_check_amount: net,
+      final_check_amount: gross - deductions - fuel,
     }));
-  }, [lines]);
+  }, [tripLines, deductionLines, fuelLines]);
 
-  const addLine = () => setLines(prev => [...prev, { line_type: 'trip', description: '', amount: 0, date: new Date().toISOString().split('T')[0] }]);
-  const removeLine = (i) => setLines(prev => prev.filter((_, idx) => idx !== i));
-  const setLine = (i, key, val) => setLines(prev => prev.map((l, idx) => idx === i ? { ...l, [key]: val } : l));
+  const loadDriverTrips = async () => {
+    if (!form.driver_id) return toast.error('Select a driver first');
+    setLoadingTrips(true);
+    try {
+      const loads = await base44.entities.Load.filter({ driver_1_id: form.driver_id });
+      const newLines = loads.map(l => ({
+        line_type: 'trip',
+        source_id: l.id,
+        source_type: 'load',
+        date: l.delivery_date || l.pickup_date || '',
+        description: `${l.internal_load_number}${l.external_load_number ? ` / ${l.external_load_number}` : ''}`,
+        route: `${l.pickup_city || ''}${l.pickup_state ? `, ${l.pickup_state}` : ''} → ${l.delivery_city || ''}${l.delivery_state ? `, ${l.delivery_state}` : ''}`,
+        amount: l.invoice_amount || l.freight_rate || 0,
+      }));
+      setTripLines(newLines);
+      toast.success(`Loaded ${newLines.length} trips`);
+    } catch (err) {
+      toast.error('Failed to load trips');
+    } finally {
+      setLoadingTrips(false);
+    }
+  };
+
+  const loadDriverFuel = async () => {
+    if (!form.driver_id) return toast.error('Select a driver first');
+    setLoadingFuel(true);
+    try {
+      const txs = await base44.entities.FuelTransaction.filter({ matched_driver_id: form.driver_id });
+      const newLines = txs.map(tx => ({
+        line_type: 'fuel',
+        source_id: tx.id,
+        source_type: 'fuel_transaction',
+        date: tx.transaction_date || '',
+        description: `Fuel - ${tx.city || ''}${tx.state ? `, ${tx.state}` : ''}${tx.gallons ? ` (${tx.gallons} gal)` : ''}`,
+        amount: tx.total_amount || tx.fuel_amount || 0,
+      }));
+      setFuelLines(newLines);
+      toast.success(`Loaded ${newLines.length} fuel transactions`);
+    } catch (err) {
+      toast.error('Failed to load fuel');
+    } finally {
+      setLoadingFuel(false);
+    }
+  };
+
+  const addDefaultDeduction = (def) => {
+    setDeductionLines(prev => [...prev, {
+      line_type: 'deduction',
+      date: new Date().toISOString().split('T')[0],
+      description: def.description,
+      amount: def.amount,
+    }]);
+  };
+
+  const addCustomDeduction = () => {
+    setDeductionLines(prev => [...prev, { line_type: 'deduction', date: new Date().toISOString().split('T')[0], description: '', amount: 0 }]);
+  };
+
+  const addTripLine = () => setTripLines(prev => [...prev, { line_type: 'trip', date: new Date().toISOString().split('T')[0], description: '', route: '', amount: 0 }]);
 
   const handleSave = async (finalize = false) => {
     setSaving(true);
     try {
+      const driver = drivers.find(d => d.id === form.driver_id);
+      const truck = trucks.find(t => t.id === form.truck_id);
       const payload = {
         ...form,
         status: finalize ? 'finalized' : form.status,
-        driver_name: drivers.find(d => d.id === form.driver_id)?.full_name || form.driver_name,
-        truck_number: trucks.find(t => t.id === form.truck_id)?.unit_number || form.truck_number,
+        driver_name: driver?.full_name || form.driver_name,
+        truck_number: truck?.unit_number || form.truck_number,
       };
+
       let savedId = statementId;
       if (!statementId) {
         const s = await base44.entities.DriverStatement.create(payload);
@@ -88,16 +148,18 @@ export default function StatementBuilder() {
       } else {
         await base44.entities.DriverStatement.update(statementId, payload);
       }
-      // Save lines
-      const existingLines = statementId ? await base44.entities.StatementLine.filter({ statement_id: savedId }, 'date', 100) : [];
+
+      // Delete old lines and recreate
+      const existingLines = savedId ? await base44.entities.StatementLine.filter({ statement_id: savedId }, 'date', 200) : [];
       for (const el of existingLines) {
-        if (!lines.find(l => l.id === el.id)) await base44.entities.StatementLine.delete(el.id);
+        await base44.entities.StatementLine.delete(el.id);
       }
-      for (const line of lines) {
-        const linePayload = { ...line, statement_id: savedId };
-        if (line.id) await base44.entities.StatementLine.update(line.id, linePayload);
-        else await base44.entities.StatementLine.create(linePayload);
+      const allLines = [...tripLines, ...deductionLines, ...fuelLines];
+      for (const line of allLines) {
+        const { id, ...lineData } = line;
+        await base44.entities.StatementLine.create({ ...lineData, statement_id: savedId });
       }
+
       if (finalize) await logAudit({ action_type: 'finalize', entity_type: 'DriverStatement', entity_id: savedId });
       queryClient.invalidateQueries({ queryKey: ['statements'] });
       toast.success(finalize ? 'Statement finalized' : 'Statement saved');
@@ -109,8 +171,39 @@ export default function StatementBuilder() {
     }
   };
 
+  const LineRow = ({ line, onChange, onRemove }) => (
+    <div className="grid grid-cols-12 gap-1 items-center">
+      <div className="col-span-2">
+        <Input type="date" value={line.date || ''} onChange={(e) => onChange('date', e.target.value)} className="h-7 text-xs" />
+      </div>
+      <div className="col-span-5">
+        <Input value={line.description || ''} onChange={(e) => onChange('description', e.target.value)} className="h-7 text-xs" placeholder="Description" />
+      </div>
+      <div className="col-span-3">
+        <Input value={line.route || ''} onChange={(e) => onChange('route', e.target.value)} className="h-7 text-xs" placeholder="Route" />
+      </div>
+      <div className="col-span-1">
+        <Input type="number" value={line.amount || ''} onChange={(e) => onChange('amount', Number(e.target.value))} className="h-7 text-xs text-right" placeholder="0.00" />
+      </div>
+      <div className="col-span-1 flex justify-center">
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onRemove}><Trash2 className="w-3 h-3 text-destructive" /></Button>
+      </div>
+    </div>
+  );
+
+  const colHeaders = (
+    <div className="grid grid-cols-12 gap-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide px-1 mb-1">
+      <div className="col-span-2">Date</div>
+      <div className="col-span-5">Description</div>
+      <div className="col-span-3">Route</div>
+      <div className="col-span-1 text-right">Amount</div>
+      <div className="col-span-1"></div>
+    </div>
+  );
+
   return (
     <div className="p-4 space-y-4 max-w-5xl">
+      {/* Top bar */}
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => navigate(createPageUrl('DriverStatements'))}>
           <ArrowLeft className="w-3.5 h-3.5" /> Statements
@@ -121,7 +214,7 @@ export default function StatementBuilder() {
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             Save Draft
           </Button>
-          {form.status === 'draft' && (
+          {form.status !== 'finalized' && (
             <Button size="sm" className="h-8 gap-1" onClick={() => handleSave(true)} disabled={saving}>
               <CheckCircle className="w-3.5 h-3.5" /> Finalize
             </Button>
@@ -130,14 +223,24 @@ export default function StatementBuilder() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Lines */}
         <div className="lg:col-span-2 space-y-4">
+
+          {/* Header */}
           <Card>
-            <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Header</CardTitle></CardHeader>
+            <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Statement Header</CardTitle></CardHeader>
             <CardContent className="px-4 pb-4 grid grid-cols-3 gap-3">
               <div>
                 <Label className="text-xs">Driver</Label>
-                <Select value={form.driver_id || ''} onValueChange={(v) => { const d = drivers.find(d => d.id === v); set('driver_id', v); set('driver_name', d?.full_name || ''); }}>
+                <Select value={form.driver_id || ''} onValueChange={(v) => {
+                  const d = drivers.find(d => d.id === v);
+                  set('driver_id', v);
+                  set('driver_name', d?.full_name || '');
+                  // Auto-set truck from driver's assigned truck
+                  if (d?.assigned_truck_id) {
+                    const t = trucks.find(t => t.id === d.assigned_truck_id);
+                    if (t) { set('truck_id', t.id); set('truck_number', t.unit_number); }
+                  }
+                }}>
                   <SelectTrigger className="h-8 text-xs mt-1"><SelectValue placeholder="Select driver" /></SelectTrigger>
                   <SelectContent>{drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}</SelectContent>
                 </Select>
@@ -164,72 +267,134 @@ export default function StatementBuilder() {
             </CardContent>
           </Card>
 
+          {/* Settlement Items / Trips */}
           <Card>
             <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Line Items</CardTitle>
-              <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addLine}><Plus className="w-3 h-3" /> Add Line</Button>
+              <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Settlement Items ({tripLines.length})</CardTitle>
+              <div className="flex gap-1">
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={loadDriverTrips} disabled={loadingTrips || !form.driver_id}>
+                  {loadingTrips ? <Loader2 className="w-3 h-3 animate-spin" /> : <Truck className="w-3 h-3" />} Load Trips
+                </Button>
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addTripLine}><Plus className="w-3 h-3" /> Add</Button>
+              </div>
             </CardHeader>
             <CardContent className="px-4 pb-4">
-              <div className="space-y-2">
-                <div className="grid grid-cols-12 gap-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide px-1">
-                  <div className="col-span-2">Type</div>
-                  <div className="col-span-1">Date</div>
-                  <div className="col-span-4">Description</div>
-                  <div className="col-span-2">Route</div>
-                  <div className="col-span-2">Amount</div>
-                  <div className="col-span-1"></div>
-                </div>
-                {lines.map((line, i) => (
-                  <div key={i} className="grid grid-cols-12 gap-1 items-center">
-                    <div className="col-span-2">
-                      <Select value={line.line_type} onValueChange={(v) => setLine(i, 'line_type', v)}>
-                        <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
-                        <SelectContent>{LINE_TYPES.map(t => <SelectItem key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                    <div className="col-span-1">
-                      <Input type="date" value={line.date || ''} onChange={(e) => setLine(i, 'date', e.target.value)} className="h-7 text-xs" />
-                    </div>
-                    <div className="col-span-4">
-                      <Input value={line.description || ''} onChange={(e) => setLine(i, 'description', e.target.value)} className="h-7 text-xs" placeholder="Description" />
-                    </div>
-                    <div className="col-span-2">
-                      <Input value={line.route || ''} onChange={(e) => setLine(i, 'route', e.target.value)} className="h-7 text-xs" placeholder="Route" />
-                    </div>
-                    <div className="col-span-2">
-                      <Input type="number" value={line.amount || ''} onChange={(e) => setLine(i, 'amount', Number(e.target.value))} className="h-7 text-xs" placeholder="0.00" />
-                    </div>
-                    <div className="col-span-1 flex justify-center">
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeLine(i)}><Trash2 className="w-3 h-3 text-destructive" /></Button>
-                    </div>
-                  </div>
+              {colHeaders}
+              <div className="space-y-1">
+                {tripLines.map((line, i) => (
+                  <LineRow key={i} line={line}
+                    onChange={(k, v) => setTripLines(prev => prev.map((l, idx) => idx === i ? { ...l, [k]: v } : l))}
+                    onRemove={() => setTripLines(prev => prev.filter((_, idx) => idx !== i))}
+                  />
                 ))}
-                {lines.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">No lines yet. Click "Add Line" to start.</p>}
+                {tripLines.length === 0 && <p className="text-xs text-muted-foreground text-center py-3">No trips. Select a driver and click "Load Trips" or add manually.</p>}
               </div>
+              {tripLines.length > 0 && (
+                <div className="flex justify-end mt-2 text-xs font-semibold text-green-700">
+                  Gross: ${tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Deductions */}
+          <Card>
+            <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
+              <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Deductions ({deductionLines.length})</CardTitle>
+              <div className="flex gap-1 flex-wrap justify-end">
+                {DEFAULT_DEDUCTIONS.map(def => (
+                  <Button key={def.description} variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => addDefaultDeduction(def)}>
+                    <Plus className="w-3 h-3" /> {def.description} ${def.amount}
+                  </Button>
+                ))}
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addCustomDeduction}><Plus className="w-3 h-3" /> Custom</Button>
+              </div>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              {colHeaders}
+              <div className="space-y-1">
+                {deductionLines.map((line, i) => (
+                  <LineRow key={i} line={line}
+                    onChange={(k, v) => setDeductionLines(prev => prev.map((l, idx) => idx === i ? { ...l, [k]: v } : l))}
+                    onRemove={() => setDeductionLines(prev => prev.filter((_, idx) => idx !== i))}
+                  />
+                ))}
+                {deductionLines.length === 0 && <p className="text-xs text-muted-foreground text-center py-3">No deductions. Use the quick-add buttons above.</p>}
+              </div>
+              {deductionLines.length > 0 && (
+                <div className="flex justify-end mt-2 text-xs font-semibold text-red-600">
+                  Total Deductions: -${deductionLines.reduce((s, l) => s + Math.abs(Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Fuel */}
+          <Card>
+            <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
+              <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Fuel ({fuelLines.length})</CardTitle>
+              <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={loadDriverFuel} disabled={loadingFuel || !form.driver_id}>
+                {loadingFuel ? <Loader2 className="w-3 h-3 animate-spin" /> : <Fuel className="w-3 h-3" />} Load Fuel
+              </Button>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              {colHeaders}
+              <div className="space-y-1">
+                {fuelLines.map((line, i) => (
+                  <LineRow key={i} line={line}
+                    onChange={(k, v) => setFuelLines(prev => prev.map((l, idx) => idx === i ? { ...l, [k]: v } : l))}
+                    onRemove={() => setFuelLines(prev => prev.filter((_, idx) => idx !== i))}
+                  />
+                ))}
+                {fuelLines.length === 0 && <p className="text-xs text-muted-foreground text-center py-3">No fuel. Select a driver and click "Load Fuel".</p>}
+              </div>
+              {fuelLines.length > 0 && (
+                <div className="flex justify-end mt-2 text-xs font-semibold text-orange-600">
+                  Total Fuel: -${fuelLines.reduce((s, l) => s + Math.abs(Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
 
         {/* Summary */}
         <div>
-          <Card>
+          <Card className="sticky top-4">
             <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Summary</CardTitle></CardHeader>
-            <CardContent className="px-4 pb-4 space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-xs">Gross Earnings</span>
+            <CardContent className="px-4 pb-4 space-y-2">
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Driver</span>
+                <span className="font-medium">{form.driver_name || '—'}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Truck #</span>
+                <span className="font-medium font-mono">{form.truck_number || '—'}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Period</span>
+                <span>{form.period_start && form.period_end ? `${form.period_start} – ${form.period_end}` : '—'}</span>
+              </div>
+              <div className="border-t my-2" />
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Gross ({tripLines.length} trips)</span>
                 <span className="font-medium text-green-600">${(form.gross_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-xs">Deductions</span>
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Deductions</span>
                 <span className="font-medium text-red-600">-${(form.deductions_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground text-xs">Fuel</span>
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Fuel</span>
                 <span className="font-medium text-orange-600">-${(form.fuel_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="border-t pt-2 flex justify-between items-center">
-                <span className="font-semibold text-xs">Net Pay</span>
-                <span className="text-xl font-bold text-primary">${(form.final_check_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                <span className="font-semibold text-sm">Net Pay</span>
+                <span className="text-2xl font-bold text-primary">${(form.final_check_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+              </div>
+              <div className="pt-1">
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${form.status === 'finalized' ? 'bg-green-100 text-green-700' : form.status === 'paid' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                  {form.status?.toUpperCase()}
+                </span>
               </div>
             </CardContent>
           </Card>

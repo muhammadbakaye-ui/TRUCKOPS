@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -13,10 +13,6 @@ import { Loader2, Save, ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import StatusBadge from '../components/shared/StatusBadge';
 import { logAudit } from '../components/shared/AuditLogger';
 import { toast } from 'sonner';
-
-const urlParams = new URLSearchParams(window.location.search);
-const loadId = urlParams.get('id');
-const isNew = urlParams.get('new') === '1';
 
 function Field({ label, children }) {
   return (
