@@ -210,7 +210,7 @@ export default function StatementBuilder() {
   );
 
   return (
-    <div className="p-4 space-y-4 max-w-5xl">
+    <div className="p-4 space-y-4 max-w-7xl">
       {/* Top bar */}
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => navigate(createPageUrl('DriverStatements'))}>
