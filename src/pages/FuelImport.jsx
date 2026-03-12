@@ -90,9 +90,13 @@ If a field is missing, use null. Return only the JSON array.`,
 
         const matchedDriver = drivers.find(d => {
           if (!tx.driver_name_raw || !d.full_name) return false;
-          const rawWords = tx.driver_name_raw.toLowerCase().trim().split(/\s+/);
-          const fullWords = d.full_name.toLowerCase().split(/\s+/);
-          return rawWords.some(rw => fullWords.some(fw => fw.includes(rw) || rw.includes(fw)));
+          const raw = tx.driver_name_raw.toLowerCase().trim();
+          const full = d.full_name.toLowerCase();
+          // Exact substring match or any word match (handles name variations)
+          if (full.includes(raw) || raw.includes(full)) return true;
+          const rawWords = raw.split(/\s+/);
+          const fullWords = full.split(/\s+/);
+          return rawWords.length > 0 && rawWords.some(rw => fullWords.some(fw => fw === rw || fw.startsWith(rw) || rw.startsWith(fw)));
         });
         const matchedTruck = matchedDriver && tx.truck_number_raw
           ? trucks.find(t =>
