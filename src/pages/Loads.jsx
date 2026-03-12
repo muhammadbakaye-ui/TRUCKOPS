@@ -74,9 +74,12 @@ export default function Loads() {
     ].some(v => v && v.toLowerCase().includes(q));
     const matchesStatus = statusFilter === 'all' || l.status === statusFilter;
     const matchesInvoice = invoiceFilter === 'all' || l.invoice_status === invoiceFilter;
-    const matchesDriver = driverFilter === 'all' || l.driver_1_name === driverFilter || l.driver_2_name === driverFilter;
-    const matchesTruck = truckFilter === 'all' || l.truck_number === truckFilter;
-    const matchesTrip = tripFilter === 'all' || l.trip_number === tripFilter;
+    const matchesDriver = driverFilter === 'all' || 
+      (driverFilter === 'unselected' ? (!l.driver_1_name && !l.driver_2_name) : (l.driver_1_name === driverFilter || l.driver_2_name === driverFilter));
+    const matchesTruck = truckFilter === 'all' || 
+      (truckFilter === 'unselected' ? !l.truck_number : l.truck_number === truckFilter);
+    const matchesTrip = tripFilter === 'all' || 
+      (tripFilter === 'unselected' ? !l.trip_number : l.trip_number === tripFilter);
     return matchesSearch && matchesStatus && matchesInvoice && matchesDriver && matchesTruck && matchesTrip;
   });
 
@@ -211,6 +214,7 @@ export default function Loads() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Drivers</SelectItem>
+            <SelectItem value="unselected">Unselected</SelectItem>
             {uniqueDrivers.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -220,6 +224,7 @@ export default function Loads() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Trucks</SelectItem>
+            <SelectItem value="unselected">Unselected</SelectItem>
             {uniqueTrucks.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -229,6 +234,7 @@ export default function Loads() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Trips</SelectItem>
+            <SelectItem value="unselected">Unselected</SelectItem>
             {uniqueTrips.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
           </SelectContent>
         </Select>
