@@ -350,15 +350,21 @@ export default function DriverPortalView() {
                         </div>
                       </div>
 
-                      {/* Detailed Breakdown */}
+                      {/* Load Details */}
+                      <div className="pt-3 md:pt-4 border-t space-y-2">
+                       <p className="text-xs font-semibold text-muted-foreground">Trip Details</p>
+                       <StatementLoadDetails statementId={viewingStatement.id} driverId={session.driver_id} />
+                      </div>
+
+                      {/* Statement Summary */}
                       <div className="pt-3 md:pt-4 border-t space-y-2 md:space-y-3">
-                        {linesLoading ? (
-                          <div className="flex items-center justify-center py-6 md:py-8">
-                            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                          </div>
-                        ) : (
-                          <>
-                            {/* Trips */}
+                       {linesLoading ? (
+                         <div className="flex items-center justify-center py-6 md:py-8">
+                           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                         </div>
+                       ) : (
+                         <>
+                           {/* Trips */}
                             {statementLines.filter(l => l.line_type === 'trip' || l.line_type === 'adjustment').length > 0 && (
                               <div>
                                 <p className="text-xs font-semibold text-muted-foreground mb-1.5">Trips</p>
