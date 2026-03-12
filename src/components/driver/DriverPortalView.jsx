@@ -239,61 +239,61 @@ export default function DriverPortalView() {
               </CardHeader>
               <CardContent className="px-4 md:px-5 py-3 md:py-4">
                 {stmtsLoading ? (
-                  <div className="flex items-center justify-center py-10">
-                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                  </div>
-                ) : statements.length === 0 ? (
-                  <div className="text-center py-10 text-muted-foreground">
-                    <Calendar className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                    <p className="text-sm">No statements available yet.</p>
-                    <p className="text-xs mt-1">Your statements will appear here once created by your dispatcher.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2.5">
-                    {statements.map((stmt) => {
-                      const dueDate = getDueDate(stmt.period_end);
-                      const overdue = checkOverdue(stmt.period_end, stmt.status);
-                      const cfg = statusConfig[stmt.status] || statusConfig.draft;
-                      // period_start is Monday, so Sunday is one day before
-                      const sundayStart = stmt.period_start ? subDays(new Date(stmt.period_start), 1) : null;
-                      return (
-                        <button
-                          key={stmt.id}
-                          onClick={() => setViewingStatement(stmt)}
-                          className={`w-full flex items-center justify-between p-4 rounded-xl border transition-colors text-left ${
-                            overdue
-                              ? 'border-red-200 bg-red-50/60 hover:bg-red-50'
-                              : 'border-border bg-muted/10 hover:bg-muted/20'
-                          }`}
-                        >
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm font-semibold">
-                                {sundayStart && stmt.period_end
-                                  ? `${format(sundayStart, 'MMM d')} – ${format(new Date(stmt.period_end), 'MMM d, yyyy')}`
-                                  : stmt.statement_date || '—'}
-                              </p>
-                              {overdue && (
-                                <span className="flex items-center gap-1 text-[11px] font-bold text-red-600">
-                                  <AlertCircle className="w-3 h-3" /> OVERDUE
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              Due: {dueDate ? format(dueDate, 'EEEE, MMM d, yyyy') : '—'}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <p className="text-lg font-bold text-primary">
-                              ${(stmt.final_check_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                            </p>
-                            <Badge variant="outline" className={cfg.cls}>{cfg.label}</Badge>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+                   <div className="flex items-center justify-center py-8 md:py-10">
+                     <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                   </div>
+                 ) : statements.length === 0 ? (
+                   <div className="text-center py-8 md:py-10 text-muted-foreground">
+                     <Calendar className="w-6 md:w-8 h-6 md:h-8 mx-auto mb-2 opacity-30" />
+                     <p className="text-xs md:text-sm">No statements available yet.</p>
+                     <p className="text-xs mt-1">Statements appear here once created by dispatcher.</p>
+                   </div>
+                 ) : (
+                   <div className="space-y-2 md:space-y-2.5">
+                     {statements.map((stmt) => {
+                       const dueDate = getDueDate(stmt.period_end);
+                       const overdue = checkOverdue(stmt.period_end, stmt.status);
+                       const cfg = statusConfig[stmt.status] || statusConfig.draft;
+                       // period_start is Monday, so Sunday is one day before
+                       const sundayStart = stmt.period_start ? subDays(new Date(stmt.period_start), 1) : null;
+                       return (
+                         <button
+                           key={stmt.id}
+                           onClick={() => setViewingStatement(stmt)}
+                           className={`w-full flex flex-col md:flex-row md:items-center md:justify-between p-3 md:p-4 rounded-lg md:rounded-xl border transition-colors text-left gap-3 md:gap-0 ${
+                             overdue
+                               ? 'border-red-200 bg-red-50/60 hover:bg-red-50'
+                               : 'border-border bg-muted/10 hover:bg-muted/20'
+                           }`}
+                         >
+                           <div className="space-y-1 flex-1">
+                             <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 gap-1">
+                               <p className="text-xs md:text-sm font-semibold">
+                                 {sundayStart && stmt.period_end
+                                   ? `${format(sundayStart, 'MMM d')} – ${format(new Date(stmt.period_end), 'MMM d')}`
+                                   : stmt.statement_date || '—'}
+                               </p>
+                               {overdue && (
+                                 <span className="flex items-center gap-1 text-[10px] md:text-[11px] font-bold text-red-600">
+                                   <AlertCircle className="w-3 h-3" /> OVERDUE
+                                 </span>
+                               )}
+                             </div>
+                             <p className="text-[10px] md:text-xs text-muted-foreground">
+                               Due: {dueDate ? format(dueDate, 'MMM d') : '—'}
+                             </p>
+                           </div>
+                           <div className="flex items-center gap-2 md:gap-4 justify-between md:justify-end">
+                             <p className="text-base md:text-lg font-bold text-primary">
+                               ${(stmt.final_check_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                             </p>
+                             <Badge variant="outline" className={`text-xs ${cfg.cls}`}>{cfg.label}</Badge>
+                           </div>
+                         </button>
+                       );
+                     })}
+                   </div>
+                 )}
               </CardContent>
 
               {/* Statement View Modal */}
