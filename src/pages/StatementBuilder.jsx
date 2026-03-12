@@ -112,17 +112,25 @@ export default function StatementBuilder() {
     setLoadingFuel(true);
     try {
       const txs = await base44.entities.FuelTransaction.filter({ matched_driver_id: form.driver_id });
-      const newLines = txs.map(tx => ({
-        line_type: 'fuel',
-        source_id: tx.id,
-        source_type: 'fuel_transaction',
-        date: tx.transaction_date || '',
-        description: `Fuel - ${tx.city || ''}${tx.state ? `, ${tx.state}` : ''}${tx.gallons ? ` (${tx.gallons} gal)` : ''}`,
-        card_number: tx.card_number || '',
-        location_name: tx.location_name || '',
-        city_state: `${tx.city || ''}${tx.state ? ', ' + tx.state : ''}`,
-        amount: tx.total_amount || tx.fuel_amount || 0,
-      }));
+      const newLines = txs.map(tx => {
+        const city = (tx.city && tx.city !== 'null') ? tx.city : '';
+        const state = (tx.state && tx.state !== 'null') ? tx.state : '';
+        const gallons = (tx.gallons && tx.gallons !== 'null') ? tx.gallons : '';
+        const cityState = [city, state].filter(Boolean).join(', ');
+        const gallonsPart = gallons ? ` (${gallons} gal)` : '';
+        const descParts = ['Fuel', cityState, gallonsPart].filter(Boolean);
+        return {
+          line_type: 'fuel',
+          source_id: tx.id,
+          source_type: 'fuel_transaction',
+          date: tx.transaction_date || '',
+          description: descParts.join(' - '),
+          card_number: (tx.card_number && tx.card_number !== 'null') ? tx.card_number : '',
+          location_name: (tx.location_name && tx.location_name !== 'null') ? tx.location_name : '',
+          city_state: cityState,
+          amount: tx.total_amount || tx.fuel_amount || 0,
+        };
+      });
       setFuelLines(newLines);
       toast.success(`Loaded ${newLines.length} fuel transactions`);
     } catch (err) {
