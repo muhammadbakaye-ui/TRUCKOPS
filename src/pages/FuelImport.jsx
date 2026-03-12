@@ -215,11 +215,23 @@ If a field is missing, use null. Return only the JSON array.`,
         });
         await base44.entities.FuelTransaction.delete(tx.id);
       }
+
+      // Delete the batch itself
+      const batchLabel = batch.file_name;
+      await base44.entities.DeletedItem.create({
+        entity_type: 'FuelBatch',
+        entity_id: batch.id,
+        entity_label: batchLabel,
+        deleted_by: 'system',
+        deleted_date: new Date().toISOString(),
+        original_data: JSON.stringify(batch),
+      });
+      await base44.entities.FuelBatch.delete(batch.id);
       
       queryClient.invalidateQueries({ queryKey: ['fuel-batches'] });
       queryClient.invalidateQueries({ queryKey: ['fuel-transactions'] });
       setSelectedBatch(null);
-      toast.success(`Deleted ${batchTransactions.length} transactions from batch`);
+      toast.success(`Deleted batch and ${batchTransactions.length} transactions`);
     } catch (err) {
       toast.error('Batch delete failed: ' + err.message);
     }
