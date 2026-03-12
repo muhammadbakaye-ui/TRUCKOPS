@@ -88,9 +88,12 @@ If a field is missing, use null. Return only the JSON array.`,
         const drivers = await base44.entities.Driver.list();
         const trucks = await base44.entities.Truck.list();
 
-        const matchedDriver = drivers.find(d =>
-          tx.driver_name_raw && d.full_name.toLowerCase().includes(tx.driver_name_raw.toLowerCase().trim())
-        );
+        const matchedDriver = drivers.find(d => {
+          if (!tx.driver_name_raw || !d.full_name) return false;
+          const rawWords = tx.driver_name_raw.toLowerCase().trim().split(/\s+/);
+          const fullWords = d.full_name.toLowerCase().split(/\s+/);
+          return rawWords.some(rw => fullWords.some(fw => fw.includes(rw) || rw.includes(fw)));
+        });
         const matchedTruck = matchedDriver && tx.truck_number_raw
           ? trucks.find(t =>
             matchedDriver?.assigned_truck_id === t.id || 
