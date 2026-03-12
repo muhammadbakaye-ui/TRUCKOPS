@@ -81,15 +81,23 @@ export default function StatementBuilder() {
     setLoadingTrips(true);
     try {
       const loads = await base44.entities.Load.filter({ driver_1_id: form.driver_id });
-      const newLines = loads.map(l => ({
-        line_type: 'trip',
-        source_id: l.id,
-        source_type: 'load',
-        date: l.delivery_date || l.pickup_date || '',
-        description: `Trip #${l.internal_load_number}${l.external_load_number ? ` / ${l.external_load_number}` : ''}`,
-        route: `${l.pickup_city || ''}${l.pickup_state ? `, ${l.pickup_state}` : ''} → ${l.delivery_city || ''}${l.delivery_state ? `, ${l.delivery_state}` : ''}`,
-        amount: l.invoice_amount || l.freight_rate || 0,
-      }));
+      const extractTripNum = (desc) => {
+        if (!desc) return null;
+        const match = desc.match(/_(\d{3})_/);
+        return match ? match[1] : null;
+      };
+      const newLines = loads.map(l => {
+        const tripNum = l.trip_number || extractTripNum(l.external_load_number) || extractTripNum(l.customer_reference_number) || extractTripNum(l.internal_load_number);
+        return {
+          line_type: 'trip',
+          source_id: l.id,
+          source_type: 'load',
+          date: l.delivery_date || l.pickup_date || '',
+          description: tripNum ? `${tripNum} / ${l.external_load_number || l.internal_load_number}` : `${l.external_load_number || l.internal_load_number}`,
+          route: `${l.pickup_city || ''}${l.pickup_state ? `, ${l.pickup_state}` : ''} → ${l.delivery_city || ''}${l.delivery_state ? `, ${l.delivery_state}` : ''}`,
+          amount: l.invoice_amount || l.freight_rate || 0,
+        };
+      });
       setTripLines(newLines);
       toast.success(`Loaded ${newLines.length} trips`);
     } catch (err) {
@@ -110,6 +118,9 @@ export default function StatementBuilder() {
         source_type: 'fuel_transaction',
         date: tx.transaction_date || '',
         description: `Fuel - ${tx.city || ''}${tx.state ? `, ${tx.state}` : ''}${tx.gallons ? ` (${tx.gallons} gal)` : ''}`,
+        card_number: tx.card_number || '',
+        location_name: tx.location_name || '',
+        city_state: `${tx.city || ''}${tx.state ? ', ' + tx.state : ''}`,
         amount: tx.total_amount || tx.fuel_amount || 0,
       }));
       setFuelLines(newLines);
