@@ -8,9 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Save, ArrowLeft, Plus, Trash2, CheckCircle, Fuel, Truck, Download } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, Plus, Trash2, CheckCircle, Fuel, Truck, Printer } from 'lucide-react';
 import { logAudit } from '../components/shared/AuditLogger';
 import { toast } from 'sonner';
+import { printStatement } from '../components/print/printStatement';
 
 const urlParams = new URLSearchParams(window.location.search);
 const statementId = urlParams.get('id');
