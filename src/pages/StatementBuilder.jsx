@@ -227,6 +227,9 @@ export default function StatementBuilder() {
               <CheckCircle className="w-3.5 h-3.5" /> Finalize
             </Button>
           )}
+          <Button variant="outline" size="sm" className="h-8 gap-1" onClick={handlePrint}>
+            <Printer className="w-3.5 h-3.5" /> Print / PDF
+          </Button>
         </div>
       </div>
 
