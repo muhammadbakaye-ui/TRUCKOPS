@@ -5,6 +5,14 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
   const pickups = allStops.filter(s => s.stop_type === 'pickup');
   const deliveries = allStops.filter(s => s.stop_type === 'delivery');
 
+  // Extract Trip # from description pattern (e.g., "63247_803_030126_1" -> "803")
+  const extractTripNum = (desc) => {
+    if (!desc) return null;
+    const match = desc.match(/_(\d{3})_/);
+    return match ? match[1] : null;
+  };
+  const tripNum = extractTripNum(load.external_load_number) || extractTripNum(load.customer_reference_number) || extractTripNum(load.internal_load_number);
+
   // Auto-fill truck/trailer from driver info if not on load
   let truckNum = load.truck_number;
   let trailerNum = load.trailer_number;
@@ -125,6 +133,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
       <div class="info-box-body">
         <div class="row"><span class="lbl">Customer:</span><span class="val">${load.customer_name || '—'}</span></div>
         ${load.external_load_number ? `<div class="row"><span class="lbl">Load #:</span><span class="val">${load.external_load_number}</span></div>` : ''}
+        ${tripNum ? `<div class="row"><span class="lbl">Trip #:</span><span class="val">${tripNum}</span></div>` : ''}
         ${load.customer_reference_number ? `<div class="row"><span class="lbl">Ref #:</span><span class="val">${load.customer_reference_number}</span></div>` : ''}
         ${load.billable_miles ? `<div class="row"><span class="lbl">Miles:</span><span class="val">${load.billable_miles.toLocaleString()}</span></div>` : ''}
       </div>
