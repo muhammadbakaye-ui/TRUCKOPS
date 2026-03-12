@@ -16,12 +16,30 @@ import { format } from 'date-fns';
 
 export default function Invoices() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ['invoices'],
     queryFn: () => base44.entities.Invoice.list('-created_date', 500),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (inv) => {
+      await base44.entities.DeletedItem.create({
+        entity_type: 'Invoice',
+        entity_id: inv.id,
+        entity_label: `Invoice #${inv.invoice_number} — ${inv.customer_name || ''}`,
+        deleted_date: new Date().toISOString().split('T')[0],
+        original_data: JSON.stringify(inv),
+      });
+      await base44.entities.Invoice.delete(inv.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      toast.success('Invoice moved to deleted items');
+    },
   });
 
   const filtered = invoices.filter(inv => {
