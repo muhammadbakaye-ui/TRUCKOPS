@@ -169,57 +169,59 @@ export default function DriverPortalView() {
 
               {/* Document list */}
               <Card>
-                <CardHeader className="py-4 px-5 border-b">
-                  <CardTitle className="text-sm font-semibold">Uploaded Documents
+                <CardHeader className="py-3 px-4 md:py-4 md:px-5 border-b">
+                  <CardTitle className="text-xs md:text-sm font-semibold">Uploaded Documents
                     <span className="ml-2 text-xs font-normal text-muted-foreground">({documents.length})</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="px-5 py-4">
+                <CardContent className="px-4 md:px-5 py-3 md:py-4">
                   {docsLoading ? (
-                    <div className="flex items-center justify-center py-10">
+                    <div className="flex items-center justify-center py-8 md:py-10">
                       <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                     </div>
                   ) : documents.length === 0 ? (
-                    <div className="text-center py-10 text-muted-foreground">
-                      <FileText className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                      <p className="text-sm">No documents uploaded yet.</p>
+                    <div className="text-center py-8 md:py-10 text-muted-foreground">
+                      <FileText className="w-6 md:w-8 h-6 md:h-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-xs md:text-sm">No documents uploaded yet.</p>
                     </div>
                   ) : (
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b text-[11px] text-muted-foreground uppercase tracking-wide">
-                          <th className="text-left pb-2 font-semibold">Date Sent</th>
-                          <th className="text-left pb-2 font-semibold">Type</th>
-                          <th className="text-left pb-2 font-semibold">File Name</th>
-                          <th className="text-right pb-2 font-semibold">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {documents.map((doc) => (
-                          <tr key={doc.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                            <td className="py-3 text-xs text-muted-foreground">
-                              {doc.created_date ? format(new Date(doc.created_date), 'MMM d, yyyy') : '—'}
-                            </td>
-                            <td className="py-3">
-                              <Badge variant="outline" className={doc.document_type === 'bol'
-                                ? 'text-blue-600 border-blue-300 bg-blue-50'
-                                : 'text-purple-600 border-purple-300 bg-purple-50'
-                              }>
-                                {doc.document_type === 'bol' ? 'BOL' : 'Rate Confirmation'}
-                              </Badge>
-                            </td>
-                            <td className="py-3 text-xs font-medium max-w-[180px] truncate">{doc.file_name}</td>
-                            <td className="py-3 text-right">
-                              <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
-                                <Button variant="ghost" size="sm" className="h-7 text-xs gap-1">
-                                  <Download className="w-3 h-3" /> View
-                                </Button>
-                              </a>
-                            </td>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs md:text-sm">
+                        <thead>
+                          <tr className="border-b text-[10px] md:text-[11px] text-muted-foreground uppercase tracking-wide">
+                            <th className="text-left pb-2 font-semibold px-1">Date</th>
+                            <th className="text-left pb-2 font-semibold px-1">Type</th>
+                            <th className="text-left pb-2 font-semibold px-1">File</th>
+                            <th className="text-center pb-2 font-semibold px-1">View</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {documents.map((doc) => (
+                            <tr key={doc.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                              <td className="py-2 md:py-3 text-[10px] md:text-xs text-muted-foreground px-1">
+                                {doc.created_date ? format(new Date(doc.created_date), 'MMM d') : '—'}
+                              </td>
+                              <td className="py-2 md:py-3 px-1">
+                                <Badge variant="outline" className={`text-[10px] md:text-xs ${doc.document_type === 'bol'
+                                  ? 'text-blue-600 border-blue-300 bg-blue-50'
+                                  : 'text-purple-600 border-purple-300 bg-purple-50'
+                                }`}>
+                                  {doc.document_type === 'bol' ? 'BOL' : 'RC'}
+                                </Badge>
+                              </td>
+                              <td className="py-2 md:py-3 text-[10px] md:text-xs font-medium max-w-[100px] md:max-w-[180px] truncate px-1">{doc.file_name}</td>
+                              <td className="py-2 md:py-3 text-center px-1">
+                                <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
+                                  <Button variant="ghost" size="sm" className="h-6 md:h-7 text-[10px] md:text-xs gap-0.5 px-2">
+                                    <Download className="w-3 h-3" />
+                                  </Button>
+                                </a>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   )}
                 </CardContent>
               </Card>
