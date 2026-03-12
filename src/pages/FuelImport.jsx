@@ -142,6 +142,30 @@ If a field is missing, use null. Return only the JSON array.`,
     { header: 'Matched', render: (r) => <span className="text-green-600">{r.successful_records || 0}</span> },
     { header: 'Exceptions', render: (r) => <span className="text-orange-600">{r.exception_records || 0}</span> },
     { header: 'Status', render: (r) => <StatusBadge status={r.status} /> },
+    {
+      header: '',
+      render: (r) => (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10">
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Entire Import Batch?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will delete all {r.total_records} transactions from "{r.file_name}". They can be recovered within 30 days.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={() => handleDeleteBatch(r)}>Delete All</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )
+    },
   ];
 
   const handleDelete = async (tx) => {
@@ -160,6 +184,32 @@ If a field is missing, use null. Return only the JSON array.`,
       toast.success('Fuel transaction deleted');
     } catch (err) {
       toast.error('Delete failed: ' + err.message);
+    }
+  };
+
+  const handleDeleteBatch = async (batch) => {
+    try {
+      const batchTransactions = await base44.entities.FuelTransaction.filter({ batch_id: batch.id });
+      
+      for (const tx of batchTransactions) {
+        const entityLabel = `${tx.matched_driver_name || tx.driver_name_raw} - ${tx.transaction_date}`;
+        await base44.entities.DeletedItem.create({
+          entity_type: 'FuelTransaction',
+          entity_id: tx.id,
+          entity_label: entityLabel,
+          deleted_by: 'system',
+          deleted_date: new Date().toISOString(),
+          original_data: JSON.stringify(tx),
+        });
+        await base44.entities.FuelTransaction.delete(tx.id);
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ['fuel-batches'] });
+      queryClient.invalidateQueries({ queryKey: ['fuel-transactions'] });
+      setSelectedBatch(null);
+      toast.success(`Deleted ${batchTransactions.length} transactions from batch`);
+    } catch (err) {
+      toast.error('Batch delete failed: ' + err.message);
     }
   };
 
