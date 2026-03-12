@@ -4,7 +4,7 @@ import { createPageUrl } from '@/utils';
 import {
   LayoutDashboard, Truck, Users, Building2, Container,
   FileText, Receipt, Fuel, ClipboardList, BarChart3,
-  Settings, History, Upload, ChevronLeft, ChevronRight, FolderOpen
+  Settings, History, Upload, ChevronLeft, ChevronRight, FolderOpen, Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
