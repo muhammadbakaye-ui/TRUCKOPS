@@ -29,9 +29,10 @@ function TextInput({ value, onChange, placeholder }) {
 }
 
 function Sel({ value, onChange, options }) {
+  const label = options.find(o => o.value === value)?.label || '';
   return (
     <Select value={value || ''} onValueChange={onChange}>
-      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder={label || 'Select...'} /></SelectTrigger>
       <SelectContent>{options.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
     </Select>
   );
@@ -85,7 +86,7 @@ export default function LoadDetail() {
   React.useEffect(() => {
     if (isNew && !form) {
       setForm({
-        status: 'draft', invoice_status: 'not_invoiced', dispatch_status: 'pending',
+        status: 'draft', invoice_status: 'not_invoiced', dispatch_status: 'delivered',
         load_type: 'FTL', hazmat: false, sealed: false, tonu: false, canceled: false,
       });
       setStops([
