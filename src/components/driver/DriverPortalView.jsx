@@ -5,9 +5,11 @@ import { useSession } from '../shared/AppSession';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Truck, Upload, FileText, LogOut, Download, Loader2, FileCheck, Calendar, AlertCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Truck, Upload, FileText, LogOut, Download, Loader2, FileCheck, Calendar, AlertCircle, X, Printer } from 'lucide-react';
 import { toast } from 'sonner';
-import { format, addDays, isPast } from 'date-fns';
+import { format, addDays, isPast, subDays } from 'date-fns';
+import { printStatement } from './printStatement';
 
 const statusConfig = {
   draft:     { label: 'Pending',   cls: 'bg-yellow-100 text-yellow-700 border-yellow-300' },
