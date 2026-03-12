@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/toaster"
+import DeletedItems from './pages/DeletedItems';
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { pagesConfig } from './pages.config'
