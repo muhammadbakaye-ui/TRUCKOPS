@@ -118,7 +118,16 @@ export default function DeletedItems() {
                           {days} day{days !== 1 ? 's' : ''}
                         </span>
                       </td>
-                      <td className="py-3 px-5 text-right">
+                      <td className="py-3 px-5 text-right flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs gap-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          onClick={() => recoverMutation.mutate(item)}
+                          disabled={recoverMutation.isPending}
+                        >
+                          <RotateCcw className="w-3 h-3" /> Recover
+                        </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10">
