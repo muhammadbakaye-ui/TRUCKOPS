@@ -98,17 +98,20 @@ export function printStatement({ company, statement, allLines }) {
   )}
 
   ${tableSection('Fuel Card', ['Fuel Card#','Location','Description','City, State','Advance ($)','Advance Fee ($)','Misc. ($)','Date','Amount'],
-    fuelLines.map(l => `<tr>
-      <td>${l.card_number || ''}</td>
-      <td>${l.location_name || ''}</td>
-      <td>${l.description || ''}</td>
-      <td style="text-align:center">${l.city_state || ''}</td>
+    fuelLines.map(l => {
+      const cleanVal = (v) => (v && v !== 'null') ? v : '';
+      return `<tr>
+      <td>${cleanVal(l.card_number)}</td>
+      <td>${cleanVal(l.location_name)}</td>
+      <td>${cleanVal(l.description)}</td>
+      <td style="text-align:center">${cleanVal(l.city_state)}</td>
       <td style="text-align:right">$0.00</td>
       <td style="text-align:right">$0.00</td>
       <td style="text-align:right">$0.00</td>
-      <td style="text-align:center">${l.date || ''}</td>
+      <td style="text-align:center">${cleanVal(l.date)}</td>
       <td style="text-align:right">${fmtNeg(l.amount)}</td>
-    </tr>`).join(''),
+    </tr>`;
+    }).join(''),
     `<td colspan="8" style="text-align:right">Total:</td>`, fmtNeg(fuelTotal)
   )}
 
