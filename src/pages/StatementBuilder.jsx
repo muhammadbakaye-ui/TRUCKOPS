@@ -99,7 +99,7 @@ export default function StatementBuilder() {
     if (!form.period_start || !form.period_end) return toast.error('Select a statement date first');
     setLoadingTrips(true);
     try {
-      const loads = await base44.entities.Load.filter({ driver_1_id: form.driver_id });
+       const loads = await base44.entities.Load.filter({ driver_1_id: form.driver_id }, '-created_date', 500);
       const extractTripNum = (desc) => {
         if (!desc) return null;
         const match = desc.match(/_(\d{3})_/);
@@ -135,7 +135,7 @@ export default function StatementBuilder() {
     if (!form.period_start || !form.period_end) return toast.error('Select a statement date first');
     setLoadingFuel(true);
     try {
-      const txs = await base44.entities.FuelTransaction.filter({ matched_driver_id: form.driver_id });
+       const txs = await base44.entities.FuelTransaction.filter({ matched_driver_id: form.driver_id }, '-created_date', 500);
       const filteredTxs = txs.filter(tx => {
         return tx.transaction_date && tx.transaction_date >= form.period_start && tx.transaction_date <= form.period_end;
       });
