@@ -208,7 +208,7 @@ export function printInvoice({ company, invoice, lineItems, stops }) {
     <div class="stop-row">
       <span>${stopTypeLabel[s.stop_type] || s.stop_type || ''}</span>
       <span>${s.city || ''}${s.state ? ', ' + s.state : ''} ${s.zip || ''}</span>
-      <span>${s.reference_number || s.bol_number || ''}</span>
+      <span>${s.reference_number || s.bol_number || s.po_number || ''}</span>
     </div>`).join('')}
   </div>` : '<div style="margin-bottom:24px"></div>'}
 
