@@ -9,10 +9,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Save, ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, Plus, Trash2, Printer } from 'lucide-react';
 import StatusBadge from '../components/shared/StatusBadge';
 import { logAudit } from '../components/shared/AuditLogger';
 import { toast } from 'sonner';
+import { printLoad } from '../components/print/printLoad';
 
 function Field({ label, children }) {
   return (
