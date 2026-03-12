@@ -1,3 +1,5 @@
+import { format } from 'date-fns';
+
 export function printStatement({ company, statement, allLines }) {
   const tripLines = allLines.filter(l => l.line_type === 'trip' || l.line_type === 'adjustment');
   const creditLines = allLines.filter(l => l.line_type === 'credit');
@@ -59,8 +61,8 @@ export function printStatement({ company, statement, allLines }) {
     </div>
     <div class="statement-title">
       Statement<br>
+      ${statement.statement_date ? format(new Date(statement.statement_date), 'M-d-yyyy') : ''}<br>
       ${statement.driver_name || ''}<br>
-      ${statement.statement_date || ''}<br>
       Unit #${statement.truck_number || ''}<br>
       (${statement.driver_name || ''})
     </div>

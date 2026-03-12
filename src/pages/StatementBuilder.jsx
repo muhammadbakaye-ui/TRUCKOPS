@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { CalendarIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Save, ArrowLeft, Plus, Trash2, CheckCircle, Fuel, Truck, Printer, Eye, EyeOff } from 'lucide-react';
 import { logAudit } from '../components/shared/AuditLogger';
@@ -40,24 +43,19 @@ export default function StatementBuilder() {
   const { data: trucks = [] } = useQuery({ queryKey: ['trucks'], queryFn: () => base44.entities.Truck.list() });
   const { data: carrierCompany = [] } = useQuery({ queryKey: ['settings-company'], queryFn: () => base44.entities.Company.filter({ company_type: 'carrier' }, '-created_date', 1) });
 
-  // Generate Tuesday statement dates (next 52 weeks)
-  const tuesdayOptions = useMemo(() => {
-    const options = [];
-    const today = new Date();
-    for (let i = 0; i < 52; i++) {
-      const weekStart = addDays(today, i * 7);
-      const tuesday = addDays(startOfWeek(weekStart, { weekStartsOn: 0 }), 2); // 0=Sunday, +2=Tuesday
-      const prevSunday = addDays(tuesday, -9); // Previous week Sunday
-      const prevSaturday = addDays(tuesday, -3); // Previous week Saturday
-      options.push({
-        tuesday: format(tuesday, 'yyyy-MM-dd'),
-        tuesdayLabel: format(tuesday, 'MMM d, yyyy'),
-        periodStart: format(prevSunday, 'yyyy-MM-dd'),
-        periodEnd: format(prevSaturday, 'yyyy-MM-dd'),
-      });
+  const handleDateSelect = (date) => {
+    if (!date) return;
+    const dayOfWeek = date.getDay();
+    if (dayOfWeek !== 2) {
+      toast.error('Please select a Tuesday');
+      return;
     }
-    return options;
-  }, []);
+    const prevSunday = addDays(date, -9);
+    const prevSaturday = addDays(date, -3);
+    set('statement_date', format(date, 'yyyy-MM-dd'));
+    set('period_start', format(prevSunday, 'yyyy-MM-dd'));
+    set('period_end', format(prevSaturday, 'yyyy-MM-dd'));
+  };
 
   const handlePrint = () => {
     const company = carrierCompany[0] || {};
@@ -322,23 +320,27 @@ export default function StatementBuilder() {
               </div>
               <div>
                 <Label className="text-xs">Statement Date (Tuesday)</Label>
-                <Select value={form.statement_date || ''} onValueChange={(v) => {
-                  const option = tuesdayOptions.find(o => o.tuesday === v);
-                  if (option) {
-                    set('statement_date', option.tuesday);
-                    set('period_start', option.periodStart);
-                    set('period_end', option.periodEnd);
-                  }
-                }}>
-                  <SelectTrigger className="h-8 text-xs mt-1"><SelectValue placeholder="Select Tuesday" /></SelectTrigger>
-                  <SelectContent>
-                    {tuesdayOptions.slice(0, 12).map(opt => (
-                      <SelectItem key={opt.tuesday} value={opt.tuesday}>
-                        {opt.tuesdayLabel}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="h-8 text-xs mt-1 w-full justify-start font-normal">
+                      <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                      {form.statement_date ? format(parse(form.statement_date, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy') : 'Select Tuesday'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={form.statement_date ? parse(form.statement_date, 'yyyy-MM-dd', new Date()) : undefined}
+                      onSelect={handleDateSelect}
+                      modifiers={{
+                        tuesday: (date) => date.getDay() === 2
+                      }}
+                      modifiersClassNames={{
+                        tuesday: 'bg-primary/10 font-bold text-primary'
+                      }}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
               <div>
                 <Label className="text-xs">Period Start</Label>
