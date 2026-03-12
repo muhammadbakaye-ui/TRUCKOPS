@@ -73,6 +73,7 @@ export default function Drivers() {
     { header: 'Name', render: (r) => <span className="font-medium">{r.full_name}</span> },
     { header: 'Phone', accessor: 'phone' },
     { header: 'CDL', accessor: 'cdl_number' },
+    { header: 'Truck ID/#', render: (r) => r.assigned_truck_id ? <span className="font-mono text-xs">{r.assigned_truck_id}</span> : '—' },
     { header: 'Pay Type', render: (r) => r.pay_type ? r.pay_type.replace(/_/g, ' ') : '—' },
     { header: 'Pay Rate', render: (r) => r.pay_rate || '—' },
     { header: 'Status', render: (r) => <StatusBadge status={r.status} /> },
