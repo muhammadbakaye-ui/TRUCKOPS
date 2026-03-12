@@ -25,7 +25,7 @@ export default function Loads() {
 
   const { data: loads = [], isLoading } = useQuery({
     queryKey: ['loads'],
-    queryFn: () => base44.entities.Load.list('-created_date', 500),
+    queryFn: () => base44.entities.Load.filter({}, '-created_date', 1000),
   });
 
   const deleteMutation = useMutation({
