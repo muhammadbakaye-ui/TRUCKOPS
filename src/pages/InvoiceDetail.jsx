@@ -38,6 +38,26 @@ export default function InvoiceDetail() {
     enabled: !!invoiceId,
   });
 
+  const { data: invoiceStops = [] } = useQuery({
+    queryKey: ['load-stops-invoice', form?.load_id],
+    queryFn: () => base44.entities.LoadStop.filter({ load_id: form.load_id }, 'stop_order', 20),
+    enabled: !!form?.load_id,
+  });
+
+  const { data: carrierCompany = [] } = useQuery({
+    queryKey: ['settings-company'],
+    queryFn: () => base44.entities.Company.filter({ company_type: 'carrier' }, '-created_date', 1),
+  });
+
+  const handlePrint = () => {
+    printInvoice({
+      company: carrierCompany[0] || {},
+      invoice: form,
+      lineItems,
+      stops: invoiceStops,
+    });
+  };
+
   const addLine = () => setLineItems(prev => [...prev, { description: '', quantity: 1, rate: 0, amount: 0 }]);
   const removeLine = (i) => setLineItems(prev => prev.filter((_, idx) => idx !== i));
   const setLineItem = (i, key, val) => {
