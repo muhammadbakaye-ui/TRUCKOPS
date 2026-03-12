@@ -9,10 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Search, Trash2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import DataTable from '../components/shared/DataTable';
 import StatusBadge from '../components/shared/StatusBadge';
 import PageHeader from '../components/shared/PageHeader';
+import BulkDeleteBar from '../components/shared/BulkDeleteBar';
 import { format } from 'date-fns';
 
 export default function DriverStatements() {
@@ -20,6 +22,7 @@ export default function DriverStatements() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selected, setSelected] = useState(new Set());
 
   const { data: statements = [], isLoading } = useQuery({
     queryKey: ['statements'],
@@ -27,19 +30,24 @@ export default function DriverStatements() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (stmt) => {
-      await base44.entities.DeletedItem.create({
-        entity_type: 'DriverStatement',
-        entity_id: stmt.id,
-        entity_label: `${stmt.driver_name} — ${stmt.period_start} to ${stmt.period_end}`,
-        deleted_date: new Date().toISOString().split('T')[0],
-        original_data: JSON.stringify(stmt),
-      });
-      await base44.entities.DriverStatement.delete(stmt.id);
+    mutationFn: async (stmts) => {
+      const stmtsArray = Array.isArray(stmts) ? stmts : [stmts];
+      for (const stmt of stmtsArray) {
+        await base44.entities.DeletedItem.create({
+          entity_type: 'DriverStatement',
+          entity_id: stmt.id,
+          entity_label: `${stmt.driver_name} — ${stmt.period_start} to ${stmt.period_end}`,
+          deleted_date: new Date().toISOString().split('T')[0],
+          original_data: JSON.stringify(stmt),
+        });
+        await base44.entities.DriverStatement.delete(stmt.id);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['statements'] });
-      toast.success('Statement moved to deleted items');
+      const count = selected.size;
+      toast.success(`${count} statement${count === 1 ? '' : 's'} moved to deleted items`);
+      setSelected(new Set());
     },
   });
 
@@ -52,6 +60,35 @@ export default function DriverStatements() {
   });
 
   const columns = [
+    {
+      header: (
+        <Checkbox
+          checked={selected.size > 0 && selected.size === filtered.length}
+          onCheckedChange={(checked) => {
+            if (checked) {
+              setSelected(new Set(filtered.map(s => s.id)));
+            } else {
+              setSelected(new Set());
+            }
+          }}
+        />
+      ),
+      render: (r) => (
+        <Checkbox
+          checked={selected.has(r.id)}
+          onCheckedChange={(checked) => {
+            const newSelected = new Set(selected);
+            if (checked) {
+              newSelected.add(r.id);
+            } else {
+              newSelected.delete(r.id);
+            }
+            setSelected(newSelected);
+          }}
+          onClick={(e) => e.stopPropagation()}
+        />
+      )
+    },
     { header: 'Driver', render: (r) => <span className="font-medium">{r.driver_name || '—'}</span> },
     { header: 'Truck', render: (r) => r.truck_number ? <span className="font-mono">{r.truck_number}</span> : '—' },
     { header: 'Period', render: (r) => r.period_start && r.period_end
@@ -123,6 +160,20 @@ export default function DriverStatements() {
           </SelectContent>
         </Select>
       </div>
+      {selected.size > 0 && (
+        <BulkDeleteBar
+          selectedCount={selected.size}
+          allCount={filtered.length}
+          onSelectAll={() => setSelected(new Set(filtered.map(s => s.id)))}
+          onClearSelection={() => setSelected(new Set())}
+          onConfirmDelete={() => {
+            const stmtsToDelete = filtered.filter(s => selected.has(s.id));
+            deleteMutation.mutate(stmtsToDelete);
+          }}
+          isDeleting={deleteMutation.isPending}
+          isAllSelected={selected.size === filtered.length}
+        />
+      )}
       <DataTable
         columns={columns}
         data={filtered}
