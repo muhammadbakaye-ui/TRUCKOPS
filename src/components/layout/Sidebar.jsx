@@ -23,7 +23,7 @@ const navItems = [
   { label: 'Fuel Import', icon: Fuel, page: 'FuelImport' },
   { label: 'Statements', icon: ClipboardList, page: 'DriverStatements' },
   { type: 'divider', label: 'ADMIN' },
-  { label: 'Driver Docs', icon: FileText, page: 'AdminDriverDocuments' },
+  { label: 'Driver Docs', icon: FolderOpen, page: 'AdminDriverDocuments' },
   { type: 'divider', label: 'SYSTEM' },
   { label: 'Reports', icon: BarChart3, page: 'Reports' },
   { label: 'Audit Log', icon: History, page: 'AuditLogPage' },
