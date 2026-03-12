@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useSession } from './AppSession';
-import { Truck, Shield, User, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Shield, User, Loader2, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import Logo from './Logo';
 
 const ADMIN_USER = 'administrator';
 const ADMIN_PASS = 'Enow2018#';
@@ -57,15 +58,7 @@ export default function LoginScreen() {
     <div className="min-h-screen bg-sidebar flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         {/* Branding */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-3">
-            <div className="h-14 w-14 bg-sidebar-accent rounded-2xl flex items-center justify-center shadow-lg">
-              <Truck className="w-8 h-8 text-sidebar-primary" />
-            </div>
-          </div>
-          <h1 className="text-2xl font-bold text-sidebar-primary-foreground tracking-widest">TRUCKOPS</h1>
-          <p className="text-sidebar-foreground/50 text-xs mt-1.5 tracking-wide">OPERATIONS & ACCOUNTING PLATFORM</p>
-        </div>
+        <Logo className="mb-8" showCompanyName={true} />
 
         {/* Card */}
         <div className="bg-card rounded-2xl shadow-2xl border border-border overflow-hidden">

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, Bell, LogOut, Shield } from 'lucide-react';
 import { useSession } from '../shared/AppSession';
+import Logo from '../shared/Logo';
 
 export default function TopBar({ pageTitle }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,8 +21,8 @@ export default function TopBar({ pageTitle }) {
 
   return (
     <div className="h-14 border-b border-border bg-card flex items-center justify-between px-4 flex-shrink-0">
-      <div>
-        <p className="text-[10px] text-muted-foreground font-medium tracking-wide leading-none mb-0.5">Unity Transportation LLC</p>
+      <div className="flex items-center gap-3">
+        <Logo className="flex-shrink-0" showCompanyName={false} />
         <h1 className="text-sm font-semibold text-foreground leading-none">{pageTitle}</h1>
       </div>
 
