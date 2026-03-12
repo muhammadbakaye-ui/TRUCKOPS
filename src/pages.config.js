@@ -63,6 +63,7 @@ import StatementBuilder from './pages/StatementBuilder';
 import Trailers from './pages/Trailers';
 import Trucks from './pages/Trucks';
 import UploadDocument from './pages/UploadDocument';
+import AdminDriverDocuments from './pages/AdminDriverDocuments';
 import __Layout from './Layout.jsx';
 
 
@@ -83,6 +84,7 @@ export const PAGES = {
     "Trailers": Trailers,
     "Trucks": Trucks,
     "UploadDocument": UploadDocument,
+    "AdminDriverDocuments": AdminDriverDocuments,
 }
 
 export const pagesConfig = {

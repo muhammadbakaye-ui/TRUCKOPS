@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
+import { SessionProvider, useSession } from './components/shared/AppSession';
 import Sidebar from './components/layout/Sidebar';
 import TopBar from './components/layout/TopBar';
+import LoginScreen from './components/shared/LoginScreen';
+import DriverPortalView from './components/driver/DriverPortalView';
 
 const pageTitles = {
   Dashboard: 'Dashboard',
@@ -21,10 +24,20 @@ const pageTitles = {
   Reports: 'Reports',
   AuditLogPage: 'Audit Log',
   SettingsPage: 'Settings',
+  AdminDriverDocuments: 'Driver Documents',
 };
 
-export default function Layout({ children, currentPageName }) {
+function AppShell({ children, currentPageName }) {
+  const { session } = useSession();
   const [collapsed, setCollapsed] = useState(false);
+
+  if (!session) {
+    return <LoginScreen />;
+  }
+
+  if (session.role === 'driver') {
+    return <DriverPortalView />;
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -40,5 +53,13 @@ export default function Layout({ children, currentPageName }) {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function Layout({ children, currentPageName }) {
+  return (
+    <SessionProvider>
+      <AppShell currentPageName={currentPageName}>{children}</AppShell>
+    </SessionProvider>
   );
 }
