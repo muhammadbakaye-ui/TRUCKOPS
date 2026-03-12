@@ -24,6 +24,9 @@ export default function Loads() {
   });
   const [statusFilter, setStatusFilter] = useState('all');
   const [invoiceFilter, setInvoiceFilter] = useState('all');
+  const [driverFilter, setDriverFilter] = useState('all');
+  const [truckFilter, setTruckFilter] = useState('all');
+  const [tripFilter, setTripFilter] = useState('all');
   const [selected, setSelected] = useState(new Set());
 
   const { data: loads = [], isLoading } = useQuery({
@@ -53,6 +56,16 @@ export default function Loads() {
     },
   });
 
+  const uniqueDrivers = [...new Set(loads
+    .filter(l => l.driver_1_name)
+    .map(l => l.driver_1_name))].sort();
+  const uniqueTrucks = [...new Set(loads
+    .filter(l => l.truck_number)
+    .map(l => l.truck_number))].sort();
+  const uniqueTrips = [...new Set(loads
+    .filter(l => l.trip_number)
+    .map(l => l.trip_number))].sort();
+
   const filtered = loads.filter(l => {
     const q = search.toLowerCase();
     const matchesSearch = !search || [
@@ -61,7 +74,10 @@ export default function Loads() {
     ].some(v => v && v.toLowerCase().includes(q));
     const matchesStatus = statusFilter === 'all' || l.status === statusFilter;
     const matchesInvoice = invoiceFilter === 'all' || l.invoice_status === invoiceFilter;
-    return matchesSearch && matchesStatus && matchesInvoice;
+    const matchesDriver = driverFilter === 'all' || l.driver_1_name === driverFilter || l.driver_2_name === driverFilter;
+    const matchesTruck = truckFilter === 'all' || l.truck_number === truckFilter;
+    const matchesTrip = tripFilter === 'all' || l.trip_number === tripFilter;
+    return matchesSearch && matchesStatus && matchesInvoice && matchesDriver && matchesTruck && matchesTrip;
   });
 
   const columns = [
@@ -187,6 +203,33 @@ export default function Loads() {
             <SelectItem value="partial">Partial</SelectItem>
             <SelectItem value="paid">Paid</SelectItem>
             <SelectItem value="overdue">Overdue</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={driverFilter} onValueChange={setDriverFilter}>
+          <SelectTrigger className="h-8 text-xs w-36">
+            <SelectValue placeholder="Driver" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Drivers</SelectItem>
+            {uniqueDrivers.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={truckFilter} onValueChange={setTruckFilter}>
+          <SelectTrigger className="h-8 text-xs w-32">
+            <SelectValue placeholder="Truck" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Trucks</SelectItem>
+            {uniqueTrucks.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={tripFilter} onValueChange={setTripFilter}>
+          <SelectTrigger className="h-8 text-xs w-32">
+            <SelectValue placeholder="Trip #" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Trips</SelectItem>
+            {uniqueTrips.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
