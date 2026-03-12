@@ -37,6 +37,13 @@ export default function StatementBuilder() {
 
   const { data: drivers = [] } = useQuery({ queryKey: ['drivers'], queryFn: () => base44.entities.Driver.list() });
   const { data: trucks = [] } = useQuery({ queryKey: ['trucks'], queryFn: () => base44.entities.Truck.list() });
+  const { data: carrierCompany = [] } = useQuery({ queryKey: ['settings-company'], queryFn: () => base44.entities.Company.filter({ company_type: 'carrier' }, '-created_date', 1) });
+
+  const handlePrint = () => {
+    const company = carrierCompany[0] || {};
+    const allLines = [...tripLines, ...deductionLines, ...fuelLines];
+    printStatement({ company, statement: form, allLines });
+  };
 
   // Load existing statement
   useQuery({
