@@ -9,11 +9,21 @@ export function printInvoice({ company, invoice, lineItems, stops }) {
     ? `${pickups[0].city || ''}, ${pickups[0].state || ''} - ${deliveries[deliveries.length - 1].city || ''}, ${deliveries[deliveries.length - 1].state || ''}`
     : (invoice.route_summary || '');
 
-  const effectiveItems = lineItems.length > 0 ? lineItems : [
-    { description: 'Freight Income', amount: invoice.freight_rate || invoice.invoice_amount || invoice.total || 0 },
-    ...(invoice.fuel_surcharge ? [{ description: 'Fuel Surcharge', amount: invoice.fuel_surcharge }] : []),
-    ...(invoice.extra_charges ? [{ description: 'Extra Charges', amount: invoice.extra_charges }] : []),
-  ];
+  // Build line items - use stop reference numbers as descriptions when available
+  const stopRefDescriptions = allStops
+    .filter(s => s.reference_number || s.bol_number)
+    .map(s => ({ description: s.reference_number || s.bol_number || '', amount: null }));
+  
+  const effectiveItems = lineItems.length > 0 ? lineItems : (() => {
+    const freightDesc = stopRefDescriptions.length > 0
+      ? stopRefDescriptions.map(r => r.description).join(', ')
+      : 'Freight Income';
+    return [
+      { description: freightDesc, amount: invoice.freight_rate || invoice.invoice_amount || invoice.total || 0 },
+      ...(invoice.fuel_surcharge ? [{ description: 'Fuel Surcharge', amount: invoice.fuel_surcharge }] : []),
+      ...(invoice.extra_charges ? [{ description: 'Extra Charges', amount: invoice.extra_charges }] : []),
+    ];
+  })();
   const subTotal = effectiveItems.reduce((s, l) => s + (Number(l.amount) || 0), 0);
 
   const stopTypeLabel = { pickup: 'PickUp', delivery: 'Delivery', stop: 'Stop' };
