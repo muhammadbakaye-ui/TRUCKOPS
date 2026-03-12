@@ -350,9 +350,9 @@ export default function DriverPortalView() {
                       </div>
 
                       {/* Detailed Breakdown */}
-                      <div className="pt-4 border-t space-y-4">
+                      <div className="pt-3 md:pt-4 border-t space-y-2 md:space-y-3">
                         {linesLoading ? (
-                          <div className="flex items-center justify-center py-8">
+                          <div className="flex items-center justify-center py-6 md:py-8">
                             <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                           </div>
                         ) : (
@@ -360,12 +360,12 @@ export default function DriverPortalView() {
                             {/* Trips */}
                             {statementLines.filter(l => l.line_type === 'trip' || l.line_type === 'adjustment').length > 0 && (
                               <div>
-                                <p className="text-xs font-semibold text-muted-foreground mb-2">Trips</p>
+                                <p className="text-xs font-semibold text-muted-foreground mb-1.5">Trips</p>
                                 <div className="space-y-1 text-xs">
                                   {statementLines.filter(l => l.line_type === 'trip' || l.line_type === 'adjustment').map((line) => (
-                                    <div key={line.id} className="flex justify-between p-2 bg-muted/30 rounded">
-                                      <span>{line.description || line.route || '—'}</span>
-                                      <span className="font-medium">${(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    <div key={line.id} className="flex justify-between p-1.5 md:p-2 bg-muted/30 rounded text-xs md:text-sm gap-2">
+                                      <span className="truncate">{line.description || line.route || '—'}</span>
+                                      <span className="font-medium whitespace-nowrap">${(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                   ))}
                                 </div>
@@ -375,12 +375,12 @@ export default function DriverPortalView() {
                             {/* Credits */}
                             {statementLines.filter(l => l.line_type === 'credit').length > 0 && (
                               <div>
-                                <p className="text-xs font-semibold text-muted-foreground mb-2">Credits</p>
+                                <p className="text-xs font-semibold text-muted-foreground mb-1.5">Credits</p>
                                 <div className="space-y-1 text-xs">
                                   {statementLines.filter(l => l.line_type === 'credit').map((line) => (
-                                    <div key={line.id} className="flex justify-between p-2 bg-green-50/50 rounded">
-                                      <span>{line.description || '—'}</span>
-                                      <span className="font-medium text-green-600">${(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    <div key={line.id} className="flex justify-between p-1.5 md:p-2 bg-green-50/50 rounded text-xs md:text-sm gap-2">
+                                      <span className="truncate">{line.description || '—'}</span>
+                                      <span className="font-medium text-green-600 whitespace-nowrap">${(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                   ))}
                                 </div>
@@ -390,12 +390,12 @@ export default function DriverPortalView() {
                             {/* Deductions */}
                             {statementLines.filter(l => l.line_type === 'deduction' || l.line_type === 'advance').length > 0 && (
                               <div>
-                                <p className="text-xs font-semibold text-muted-foreground mb-2">Deductions</p>
+                                <p className="text-xs font-semibold text-muted-foreground mb-1.5">Deductions</p>
                                 <div className="space-y-1 text-xs">
                                   {statementLines.filter(l => l.line_type === 'deduction' || l.line_type === 'advance').map((line) => (
-                                    <div key={line.id} className="flex justify-between p-2 bg-red-50/50 rounded">
-                                      <span>{line.description || '—'}</span>
-                                      <span className="font-medium text-red-600">-${Math.abs(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    <div key={line.id} className="flex justify-between p-1.5 md:p-2 bg-red-50/50 rounded text-xs md:text-sm gap-2">
+                                      <span className="truncate">{line.description || '—'}</span>
+                                      <span className="font-medium text-red-600 whitespace-nowrap">-${Math.abs(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                   ))}
                                 </div>
@@ -405,12 +405,12 @@ export default function DriverPortalView() {
                             {/* Fuel */}
                             {statementLines.filter(l => l.line_type === 'fuel').length > 0 && (
                               <div>
-                                <p className="text-xs font-semibold text-muted-foreground mb-2">Fuel Card Charges</p>
+                                <p className="text-xs font-semibold text-muted-foreground mb-1.5">Fuel Card Charges</p>
                                 <div className="space-y-1 text-xs">
                                   {statementLines.filter(l => l.line_type === 'fuel').map((line) => (
-                                    <div key={line.id} className="flex justify-between p-2 bg-orange-50/50 rounded">
-                                      <span>{line.description || '—'}</span>
-                                      <span className="font-medium text-orange-600">-${Math.abs(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                    <div key={line.id} className="flex justify-between p-1.5 md:p-2 bg-orange-50/50 rounded text-xs md:text-sm gap-2">
+                                      <span className="truncate">{line.description || '—'}</span>
+                                      <span className="font-medium text-orange-600 whitespace-nowrap">-${Math.abs(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                   ))}
                                 </div>
