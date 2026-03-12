@@ -80,48 +80,49 @@ If a field is missing, use null. Return only the JSON array.`,
       });
 
       const txList = extracted?.transactions || [];
-      let successful = 0;
-      let exceptions = 0;
+       let successful = 0;
+       let exceptions = 0;
 
-      for (const tx of txList) {
-        // Try to match driver and truck
-        const drivers = await base44.entities.Driver.list();
-        const trucks = await base44.entities.Truck.list();
+       // Fetch drivers and trucks once
+       const drivers = await base44.entities.Driver.list();
+       const trucks = await base44.entities.Truck.list();
 
-        const matchedDriver = drivers.find(d => {
-          if (!tx.driver_name_raw || !d.full_name) return false;
-          const raw = tx.driver_name_raw.toLowerCase().trim().replace(/^n-/, '').trim();
-          const full = d.full_name.toLowerCase();
-          // Exact substring match or any word match (handles name variations)
-          if (full.includes(raw) || raw.includes(full)) return true;
-          const rawWords = raw.split(/\s+/);
-          const fullWords = full.split(/\s+/);
-          return rawWords.length > 0 && rawWords.some(rw => fullWords.some(fw => fw === rw || fw.startsWith(rw) || rw.startsWith(fw)));
-        });
-        const matchedTruck = matchedDriver && tx.truck_number_raw
-          ? trucks.find(t =>
-            matchedDriver?.assigned_truck_id === t.id || 
-            (tx.truck_number_raw && t.unit_number.toLowerCase().includes(tx.truck_number_raw.toLowerCase()))
-          )
-          : trucks.find(t =>
-            tx.truck_number_raw && t.unit_number.toLowerCase().includes(tx.truck_number_raw.toLowerCase())
-          );
+       for (const tx of txList) {
+         // Try to match driver and truck
+         const matchedDriver = drivers.find(d => {
+           if (!tx.driver_name_raw || !d.full_name) return false;
+           const raw = tx.driver_name_raw.toLowerCase().trim().replace(/^n-/, '').trim();
+           const full = d.full_name.toLowerCase();
+           // Exact substring match or any word match (handles name variations)
+           if (full.includes(raw) || raw.includes(full)) return true;
+           const rawWords = raw.split(/\s+/);
+           const fullWords = full.split(/\s+/);
+           return rawWords.length > 0 && rawWords.some(rw => fullWords.some(fw => fw === rw || fw.startsWith(rw) || rw.startsWith(fw)));
+         });
+         const matchedTruck = matchedDriver && tx.truck_number_raw
+           ? trucks.find(t =>
+             matchedDriver?.assigned_truck_id === t.id || 
+             (tx.truck_number_raw && t.unit_number.toLowerCase().includes(tx.truck_number_raw.toLowerCase()))
+           )
+           : trucks.find(t =>
+             tx.truck_number_raw && t.unit_number.toLowerCase().includes(tx.truck_number_raw.toLowerCase())
+           );
 
-        const importStatus = matchedDriver && matchedTruck ? 'matched' : 'exception';
-        if (importStatus === 'exception') exceptions++;
-        else successful++;
+         const importStatus = matchedDriver && matchedTruck ? 'matched' : 'exception';
+         if (importStatus === 'exception') exceptions++;
+         else successful++;
 
-        await base44.entities.FuelTransaction.create({
-          ...tx,
-          batch_id: batch.id,
-          matched_driver_id: matchedDriver?.id || null,
-          matched_driver_name: matchedDriver?.full_name || null,
-          matched_truck_id: matchedTruck?.id || null,
-          matched_truck_number: matchedTruck?.unit_number || null,
-          import_status: importStatus,
-          exception_reason: importStatus === 'exception' ? 'Could not match driver or truck' : null,
-        });
-      }
+         await base44.entities.FuelTransaction.create({
+           ...tx,
+           batch_id: batch.id,
+           matched_driver_id: matchedDriver?.id || null,
+           matched_driver_name: matchedDriver?.full_name || null,
+           matched_truck_id: matchedTruck?.id || null,
+           matched_truck_number: matchedTruck?.unit_number || null,
+           import_status: importStatus,
+           exception_reason: importStatus === 'exception' ? 'Could not match driver or truck' : null,
+         });
+       }
 
       await base44.entities.FuelBatch.update(batch.id, {
         status: 'completed',
