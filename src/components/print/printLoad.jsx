@@ -173,9 +173,6 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
     <table class="fin-table">
       <thead><tr><th>Description</th><th>Amount</th></tr></thead>
       <tbody>
-        <tr><td>Freight Income</td><td>${fmt(load.freight_rate)}</td></tr>
-        ${load.fuel_surcharge ? `<tr><td>Fuel Surcharge</td><td>${fmt(load.fuel_surcharge)}</td></tr>` : ''}
-        ${load.extra_charges ? `<tr><td>Extra Charges</td><td>${fmt(load.extra_charges)}</td></tr>` : ''}
         <tr class="total-row"><td>TOTAL</td><td>${fmt(total)}</td></tr>
       </tbody>
     </table>
