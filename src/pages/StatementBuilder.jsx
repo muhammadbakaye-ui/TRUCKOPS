@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Save, ArrowLeft, Plus, Trash2, CheckCircle, Fuel, Truck, Printer } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, Plus, Trash2, CheckCircle, Fuel, Truck, Printer, Eye, EyeOff } from 'lucide-react';
 import { logAudit } from '../components/shared/AuditLogger';
 import { toast } from 'sonner';
 import { printStatement } from '../components/print/printStatement';
@@ -218,6 +218,15 @@ export default function StatementBuilder() {
         </Button>
         <h2 className="text-sm font-semibold">{statementId ? `Statement — ${form.driver_name || ''}` : 'New Driver Statement'}</h2>
         <div className="ml-auto flex gap-2">
+          <Button 
+            variant={form.published ? "default" : "outline"} 
+            size="sm" 
+            className="h-8 gap-1" 
+            onClick={() => set('published', !form.published)}
+          >
+            {form.published ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+            {form.published ? 'Published' : 'Unpublished'}
+          </Button>
           <Button variant="outline" size="sm" className="h-8" onClick={() => handleSave(false)} disabled={saving}>
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             Save Draft
@@ -408,10 +417,20 @@ export default function StatementBuilder() {
                 <span className="font-semibold text-sm">Net Pay</span>
                 <span className="text-2xl font-bold text-primary">${(form.final_check_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
               </div>
-              <div className="pt-1">
+              <div className="pt-1 space-y-2">
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${form.status === 'finalized' ? 'bg-green-100 text-green-700' : form.status === 'paid' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>
                   {form.status?.toUpperCase()}
                 </span>
+                {form.published && (
+                  <div className="flex items-center gap-1 text-xs text-green-600">
+                    <Eye className="w-3 h-3" /> Visible to driver
+                  </div>
+                )}
+                {!form.published && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <EyeOff className="w-3 h-3" /> Hidden from driver
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
