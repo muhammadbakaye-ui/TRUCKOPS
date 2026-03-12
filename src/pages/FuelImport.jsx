@@ -143,6 +143,25 @@ If a field is missing, use null. Return only the JSON array.`,
     { header: 'Status', render: (r) => <StatusBadge status={r.status} /> },
   ];
 
+  const handleDelete = async (tx) => {
+    try {
+      const entityLabel = `${tx.matched_driver_name || tx.driver_name_raw} - ${tx.transaction_date}`;
+      await base44.entities.DeletedItem.create({
+        entity_type: 'FuelTransaction',
+        entity_id: tx.id,
+        entity_label: entityLabel,
+        deleted_by: 'system',
+        deleted_date: new Date().toISOString(),
+        original_data: JSON.stringify(tx),
+      });
+      await base44.entities.FuelTransaction.delete(tx.id);
+      queryClient.invalidateQueries({ queryKey: ['fuel-transactions'] });
+      toast.success('Fuel transaction deleted');
+    } catch (err) {
+      toast.error('Delete failed: ' + err.message);
+    }
+  };
+
   const txColumns = [
     { header: 'Date', render: (r) => r.transaction_date || '—' },
     { header: 'Location', render: (r) => r.location_name || '—' },
@@ -154,6 +173,30 @@ If a field is missing, use null. Return only the JSON array.`,
     { header: 'Fuel $', render: (r) => r.fuel_amount ? `$${r.fuel_amount.toFixed(2)}` : '—' },
     { header: 'Total $', render: (r) => r.total_amount ? `$${r.total_amount.toFixed(2)}` : '—' },
     { header: 'Status', render: (r) => <StatusBadge status={r.import_status} /> },
+    { 
+      header: '', 
+      render: (r) => (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10">
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Fuel Transaction?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will move the transaction to deleted items. You can recover it within 30 days.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={() => handleDelete(r)}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )
+    },
   ];
 
   return (
