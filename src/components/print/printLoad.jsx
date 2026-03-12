@@ -1,5 +1,11 @@
 export function printLoad({ company, load, stops, drivers = [], trucks = [], trailers = [] }) {
-  // Auto-resolve truck/trailer from driver's assigned info if not on load
+  const fmt = (n) => `$${(Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const allStops = [...stops].sort((a, b) => (a.stop_order || 0) - (b.stop_order || 0));
+  const total = (load.freight_rate || 0) + (load.fuel_surcharge || 0) + (load.extra_charges || 0);
+  const pickups = allStops.filter(s => s.stop_type === 'pickup');
+  const deliveries = allStops.filter(s => s.stop_type === 'delivery');
+
+  // Auto-fill truck/trailer from driver info if not on load
   let truckNum = load.truck_number;
   let trailerNum = load.trailer_number;
   if (!truckNum && load.driver_1_id) {
@@ -9,11 +15,13 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
       if (truck) truckNum = truck.unit_number;
     }
   }
-  const fmt = (n) => `$${(Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  const allStops = [...stops].sort((a, b) => (a.stop_order || 0) - (b.stop_order || 0));
-  const total = (load.freight_rate || 0) + (load.fuel_surcharge || 0) + (load.extra_charges || 0);
-  const pickups = allStops.filter(s => s.stop_type === 'pickup');
-  const deliveries = allStops.filter(s => s.stop_type === 'delivery');
+  if (!trailerNum && truckNum) {
+    const truck = trucks.find(t => t.unit_number === truckNum || t.id === load.truck_id);
+    if (truck) {
+      const trailer = trailers.find(t => t.id === truck.assigned_trailer_id);
+      if (trailer) trailerNum = trailer.unit_number;
+    }
+  }
 
   const stopColor = { pickup: '#1a3a6b', delivery: '#166534', stop: '#7c3aed' };
   const stopLabel = { pickup: 'PICKUP', delivery: 'DELIVERY', stop: 'STOP' };
@@ -116,8 +124,9 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
       <div class="info-box-header">Load Information</div>
       <div class="info-box-body">
         <div class="row"><span class="lbl">Customer:</span><span class="val">${load.customer_name || '—'}</span></div>
-        ${load.customer_reference_number ? `<div class="row"><span class="lbl">Ref #:</span><span class="val">${load.customer_reference_number}</span></div>` : ''}
         ${load.external_load_number ? `<div class="row"><span class="lbl">Broker Load #:</span><span class="val">${load.external_load_number}</span></div>` : ''}
+        ${load.customer_reference_number ? `<div class="row"><span class="lbl">Ref #:</span><span class="val">${load.customer_reference_number}</span></div>` : ''}
+        ${load.billable_miles ? `<div class="row"><span class="lbl">Miles:</span><span class="val">${load.billable_miles.toLocaleString()}</span></div>` : ''}
       </div>
     </div>
     <div class="info-box">
@@ -126,7 +135,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
         <div class="row"><span class="lbl">Driver:</span><span class="val">${load.driver_1_name || '—'}</span></div>
         ${load.driver_2_name ? `<div class="row"><span class="lbl">Driver 2:</span><span class="val">${load.driver_2_name}</span></div>` : ''}
         <div class="row"><span class="lbl">Truck #:</span><span class="val">${truckNum || '—'}</span></div>
-        <div class="row"><span class="lbl">Trailer #:</span><span class="val">${trailerNum || load.trailer_number || '—'}</span></div>
+        <div class="row"><span class="lbl">Trailer #:</span><span class="val">${trailerNum || '—'}</span></div>
       </div>
     </div>
   </div>
