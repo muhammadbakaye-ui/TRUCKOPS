@@ -1,4 +1,14 @@
 export function printLoad({ company, load, stops, drivers = [], trucks = [], trailers = [] }) {
+  // Auto-resolve truck/trailer from driver's assigned info if not on load
+  let truckNum = load.truck_number;
+  let trailerNum = load.trailer_number;
+  if (!truckNum && load.driver_1_id) {
+    const driver = drivers.find(d => d.id === load.driver_1_id);
+    if (driver?.assigned_truck_id) {
+      const truck = trucks.find(t => t.id === driver.assigned_truck_id);
+      if (truck) truckNum = truck.unit_number;
+    }
+  }
   const fmt = (n) => `$${(Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const allStops = [...stops].sort((a, b) => (a.stop_order || 0) - (b.stop_order || 0));
   const total = (load.freight_rate || 0) + (load.fuel_surcharge || 0) + (load.extra_charges || 0);
@@ -117,8 +127,8 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
       <div class="info-box-body">
         <div class="row"><span class="lbl">Driver:</span><span class="val">${load.driver_1_name || '—'}</span></div>
         ${load.driver_2_name ? `<div class="row"><span class="lbl">Driver 2:</span><span class="val">${load.driver_2_name}</span></div>` : ''}
-        <div class="row"><span class="lbl">Truck #:</span><span class="val">${load.truck_number || '—'}</span></div>
-        <div class="row"><span class="lbl">Trailer #:</span><span class="val">${load.trailer_number || '—'}</span></div>
+        <div class="row"><span class="lbl">Truck #:</span><span class="val">${truckNum || '—'}</span></div>
+        <div class="row"><span class="lbl">Trailer #:</span><span class="val">${trailerNum || load.trailer_number || '—'}</span></div>
         ${load.customer_reference_number ? `<div class="row"><span class="lbl">Ref #:</span><span class="val">${load.customer_reference_number}</span></div>` : ''}
       </div>
     </div>
