@@ -55,6 +55,10 @@ import Loads from './pages/Loads';
 import Trailers from './pages/Trailers';
 import AuditLogPage from './pages/AuditLogPage';
 import SettingsPage from './pages/SettingsPage';
+import Invoices from './pages/Invoices';
+import DriverStatements from './pages/DriverStatements';
+import Reports from './pages/Reports';
+import FuelImport from './pages/FuelImport';
 import __Layout from './Layout.jsx';
 
 
@@ -67,6 +71,10 @@ export const PAGES = {
     "Trailers": Trailers,
     "AuditLogPage": AuditLogPage,
     "SettingsPage": SettingsPage,
+    "Invoices": Invoices,
+    "DriverStatements": DriverStatements,
+    "Reports": Reports,
+    "FuelImport": FuelImport,
 }
 
 export const pagesConfig = {
