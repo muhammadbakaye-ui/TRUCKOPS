@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Truck, Upload, FileText, LogOut, Download, Loader2, FileCheck, Calendar, AlertCircle, X, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, addDays, isPast, subDays } from 'date-fns';
-import { printStatement } from './printStatement';
+import { printStatement } from '../print/printStatement';
 
 const statusConfig = {
   draft:     { label: 'Pending',   cls: 'bg-yellow-100 text-yellow-700 border-yellow-300' },
