@@ -25,6 +25,7 @@ const pageTitles = {
   AuditLogPage: 'Audit Log',
   SettingsPage: 'Settings',
   AdminDriverDocuments: 'Driver Documents',
+  DeletedItems: 'Deleted Items',
 };
 
 function AppShell({ children, currentPageName }) {
