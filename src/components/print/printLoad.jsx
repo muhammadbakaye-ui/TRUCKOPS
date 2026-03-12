@@ -1,4 +1,14 @@
-export function printLoad({ company, load, stops }) {
+export function printLoad({ company, load, stops, drivers = [], trucks = [], trailers = [] }) {
+  // Auto-resolve truck/trailer from driver's assigned info if not on load
+  let truckNum = load.truck_number;
+  let trailerNum = load.trailer_number;
+  if (!truckNum && load.driver_1_id) {
+    const driver = drivers.find(d => d.id === load.driver_1_id);
+    if (driver?.assigned_truck_id) {
+      const truck = trucks.find(t => t.id === driver.assigned_truck_id);
+      if (truck) truckNum = truck.unit_number;
+    }
+  }
   const fmt = (n) => `$${(Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const allStops = [...stops].sort((a, b) => (a.stop_order || 0) - (b.stop_order || 0));
   const total = (load.freight_rate || 0) + (load.fuel_surcharge || 0) + (load.extra_charges || 0);
