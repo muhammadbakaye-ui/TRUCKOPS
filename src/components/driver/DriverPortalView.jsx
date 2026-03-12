@@ -286,11 +286,80 @@ export default function DriverPortalView() {
                   </div>
                 )}
               </CardContent>
-            </Card>
-          )}
+              </Card>
 
-        </div>
-      </div>
-    </div>
-  );
-}
+              {/* Statement View Modal */}
+              {viewingStatement && (
+              <Dialog open={!!viewingStatement} onOpenChange={(open) => !open && setViewingStatement(null)}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader className="flex flex-row items-center justify-between pb-4 border-b">
+                    <DialogTitle className="text-sm">Statement Details</DialogTitle>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setViewingStatement(null)}>
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </DialogHeader>
+
+                  <div className="space-y-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Period</p>
+                        <p className="text-sm font-semibold">
+                          {viewingStatement.period_start && viewingStatement.period_end
+                            ? `${format(subDays(new Date(viewingStatement.period_start), 1), 'MMM d')} – ${format(new Date(viewingStatement.period_end), 'MMM d, yyyy')}`
+                            : '—'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Status</p>
+                        <Badge variant="outline" className={statusConfig[viewingStatement.status]?.cls}>
+                          {statusConfig[viewingStatement.status]?.label}
+                        </Badge>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Gross Total</p>
+                        <p className="text-sm font-semibold text-green-600">
+                          ${(viewingStatement.gross_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Deductions</p>
+                        <p className="text-sm font-semibold text-red-600">
+                          -${(viewingStatement.deductions_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Fuel</p>
+                        <p className="text-sm font-semibold text-orange-600">
+                          -${(viewingStatement.fuel_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Net Pay (Final Check)</p>
+                        <p className="text-lg font-bold text-primary">
+                          ${(viewingStatement.final_check_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <DialogFooter className="flex gap-2 pt-4 border-t">
+                    <Button variant="outline" size="sm" onClick={() => setViewingStatement(null)}>
+                      Close
+                    </Button>
+                    <Button size="sm" className="gap-1" onClick={() => {
+                      printStatement({ company: {}, statement: viewingStatement, allLines: [] });
+                      setViewingStatement(null);
+                    }}>
+                      <Printer className="w-3.5 h-3.5" /> Download PDF
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              )}
+              )}
+
+              </div>
+              </div>
+              </div>
+              );
+              }
