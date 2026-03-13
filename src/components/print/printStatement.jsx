@@ -102,7 +102,7 @@ export function printStatement({ company, statement, allLines }) {
 
   ${tableSection('Fuel Card', ['Fuel Card#','Location','Description','City, State','Advance ($)','Advance Fee ($)','Misc. ($)','Date','Amount'],
     fuelLines.map(l => {
-      const cleanVal = (v) => (v && v !== 'null') ? v : '';
+      const cleanVal = (v) => (v && v !== 'null' && v !== '') ? v : '';
       return `<tr>
       <td>${cleanVal(l.card_number)}</td>
       <td>${cleanVal(l.location_name)}</td>
