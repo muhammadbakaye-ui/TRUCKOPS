@@ -103,7 +103,8 @@ export default function StatementBuilder() {
     if (!form.period_start || !form.period_end) return toast.error('Select a statement date first');
     setLoadingTrips(true);
     try {
-       const loads = await base44.entities.Load.filter({ driver_1_id: form.driver_id }, '-created_date', 500);
+      const driver = drivers.find(d => d.id === form.driver_id);
+      const loads = await base44.entities.Load.filter({ driver_1_id: form.driver_id }, '-created_date', 500);
       const extractTripNum = (desc) => {
         if (!desc) return null;
         const match = desc.match(/_(\d{3})_/);
@@ -113,8 +114,23 @@ export default function StatementBuilder() {
         const loadDate = l.delivery_date || l.pickup_date;
         return loadDate && loadDate >= form.period_start && loadDate <= form.period_end;
       });
+      
       const newLines = filteredLoads.map(l => {
         const tripNum = l.trip_number || extractTripNum(l.external_load_number) || extractTripNum(l.customer_reference_number) || extractTripNum(l.internal_load_number);
+        const loadRevenue = l.invoice_amount || l.freight_rate || 0;
+        
+        // Calculate driver pay based on pay type
+        let driverPay = loadRevenue;
+        if (driver?.pay_type && driver?.pay_rate) {
+          if (driver.pay_type === 'percentage') {
+            driverPay = loadRevenue * (driver.pay_rate / 100);
+          } else if (driver.pay_type === 'per_mile' && l.billable_miles) {
+            driverPay = l.billable_miles * driver.pay_rate;
+          } else if (driver.pay_type === 'flat_rate') {
+            driverPay = driver.pay_rate;
+          }
+        }
+        
         return {
           line_type: 'trip',
           source_id: l.id,
@@ -122,7 +138,7 @@ export default function StatementBuilder() {
           date: l.delivery_date || l.pickup_date || '',
           description: tripNum ? `${tripNum} / ${l.external_load_number || l.internal_load_number}` : `${l.external_load_number || l.internal_load_number}`,
           route: `${l.pickup_city || ''}${l.pickup_state ? `, ${l.pickup_state}` : ''} → ${l.delivery_city || ''}${l.delivery_state ? `, ${l.delivery_state}` : ''}`,
-          amount: l.invoice_amount || l.freight_rate || 0,
+          amount: driverPay,
         };
       });
       setTripLines(newLines);
