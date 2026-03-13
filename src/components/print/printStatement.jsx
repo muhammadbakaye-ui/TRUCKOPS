@@ -127,13 +127,20 @@ export function printStatement({ company, statement, allLines }) {
 </body>
 </html>`;
 
-  // Open window and trigger print dialog immediately (which allows Save as PDF)
+  // Open preview window with download button (no auto-print)
   const w = window.open('', '_blank', 'width=900,height=1200');
   w.document.write(html);
   w.document.close();
   
-  // Wait for content to load, then auto-trigger print dialog
+  // Add download button overlay
   w.onload = () => {
-    setTimeout(() => w.print(), 250);
+    const overlay = w.document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;';
+    overlay.innerHTML = `
+      <button onclick="window.print()" style="background:#0055bb;color:#fff;border:none;padding:12px 24px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+        Download PDF
+      </button>
+    `;
+    w.document.body.appendChild(overlay);
   };
 }
