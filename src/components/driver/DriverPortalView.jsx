@@ -255,8 +255,6 @@ export default function DriverPortalView() {
                        const dueDate = getDueDate(stmt.period_end);
                        const overdue = checkOverdue(stmt.period_end, stmt.status);
                        const cfg = statusConfig[stmt.status] || statusConfig.draft;
-                       // period_start is Monday, so Sunday is one day before
-                       const sundayStart = stmt.period_start ? subDays(new Date(stmt.period_start), 1) : null;
                        return (
                          <button
                            key={stmt.id}
@@ -270,8 +268,8 @@ export default function DriverPortalView() {
                            <div className="space-y-1 flex-1">
                              <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 gap-1">
                                <p className="text-xs md:text-sm font-semibold">
-                                 {sundayStart && stmt.period_end
-                                   ? `${format(sundayStart, 'MMM d')} – ${format(new Date(stmt.period_end), 'MMM d')}`
+                                 {stmt.period_start && stmt.period_end
+                                   ? `${format(new Date(stmt.period_start), 'MMM d')} – ${format(new Date(stmt.period_end), 'MMM d')}`
                                    : stmt.statement_date || '—'}
                                </p>
                                {overdue && (
@@ -314,7 +312,7 @@ export default function DriverPortalView() {
                           <p className="text-xs text-muted-foreground">Period</p>
                           <p className="text-sm font-semibold">
                             {viewingStatement.period_start && viewingStatement.period_end
-                              ? `${format(subDays(new Date(viewingStatement.period_start), 1), 'MMM d')} – ${format(new Date(viewingStatement.period_end), 'MMM d, yyyy')}`
+                              ? `${format(new Date(viewingStatement.period_start), 'MMM d')} – ${format(new Date(viewingStatement.period_end), 'MMM d, yyyy')}`
                               : '—'}
                           </p>
                         </div>
