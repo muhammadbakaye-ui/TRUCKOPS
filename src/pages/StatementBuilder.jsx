@@ -49,8 +49,10 @@ export default function StatementBuilder() {
       toast.error('Please select a Tuesday');
       return;
     }
-    const prevSunday = addDays(date, -9);
-    const prevSaturday = addDays(date, -3);
+    // Calculate Sunday (2 days before the prior Monday)
+    const prevSunday = addDays(date, -2);
+    // Calculate Saturday (1 day before the Tuesday)  
+    const prevSaturday = addDays(date, -4);
     set('statement_date', format(date, 'yyyy-MM-dd'));
     set('period_start', format(prevSunday, 'yyyy-MM-dd'));
     set('period_end', format(prevSaturday, 'yyyy-MM-dd'));
