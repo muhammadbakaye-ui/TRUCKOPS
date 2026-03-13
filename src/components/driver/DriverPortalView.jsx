@@ -325,7 +325,7 @@ export default function DriverPortalView() {
                           </Badge>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Gross Total</p>
+                          <p className="text-xs text-muted-foreground">Total Gross Year-To-Date</p>
                           <p className="text-sm font-semibold text-green-600">
                             ${(viewingStatement.gross_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </p>
@@ -343,7 +343,7 @@ export default function DriverPortalView() {
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Net Pay (Final Check)</p>
+                          <p className="text-xs text-muted-foreground">Net Pay (This Week)</p>
                           <p className="text-lg font-bold text-primary">
                             ${(viewingStatement.final_check_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </p>
@@ -365,64 +365,96 @@ export default function DriverPortalView() {
                        ) : (
                          <>
                            {/* Trips */}
-                            {statementLines.filter(l => l.line_type === 'trip' || l.line_type === 'adjustment').length > 0 && (
-                              <div>
-                                <p className="text-xs font-semibold text-muted-foreground mb-1.5">Trips</p>
-                                <div className="space-y-1 text-xs">
-                                  {statementLines.filter(l => l.line_type === 'trip' || l.line_type === 'adjustment').map((line) => (
-                                    <div key={line.id} className="flex justify-between p-1.5 md:p-2 bg-muted/30 rounded text-xs md:text-sm gap-2">
-                                      <span className="truncate">{line.description || line.route || '—'}</span>
-                                      <span className="font-medium whitespace-nowrap">${(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                            {(() => {
+                              const tripLines = statementLines.filter(l => l.line_type === 'trip' || l.line_type === 'adjustment');
+                              const tripTotal = tripLines.reduce((sum, l) => sum + (l.amount || 0), 0);
+                              return tripLines.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-semibold text-muted-foreground mb-1.5">Trips</p>
+                                  <div className="space-y-1 text-xs">
+                                    {tripLines.map((line) => (
+                                      <div key={line.id} className="flex justify-between p-1.5 md:p-2 bg-muted/30 rounded text-xs md:text-sm gap-2">
+                                        <span className="truncate">{line.description || line.route || '—'}</span>
+                                        <span className="font-medium whitespace-nowrap">${(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                      </div>
+                                    ))}
+                                    <div className="flex justify-between p-1.5 md:p-2 bg-muted/50 rounded text-xs md:text-sm gap-2 border-t-2 border-border">
+                                      <span className="font-bold">Total Trips</span>
+                                      <span className="font-bold whitespace-nowrap">${tripTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
-                                  ))}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              );
+                            })()}
 
                             {/* Credits */}
-                            {statementLines.filter(l => l.line_type === 'credit').length > 0 && (
-                              <div>
-                                <p className="text-xs font-semibold text-muted-foreground mb-1.5">Credits</p>
-                                <div className="space-y-1 text-xs">
-                                  {statementLines.filter(l => l.line_type === 'credit').map((line) => (
-                                    <div key={line.id} className="flex justify-between p-1.5 md:p-2 bg-green-50/50 rounded text-xs md:text-sm gap-2">
-                                      <span className="truncate">{line.description || '—'}</span>
-                                      <span className="font-medium text-green-600 whitespace-nowrap">${(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                            {(() => {
+                              const creditLines = statementLines.filter(l => l.line_type === 'credit');
+                              const creditTotal = creditLines.reduce((sum, l) => sum + (l.amount || 0), 0);
+                              return creditLines.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-semibold text-muted-foreground mb-1.5">Credits</p>
+                                  <div className="space-y-1 text-xs">
+                                    {creditLines.map((line) => (
+                                      <div key={line.id} className="flex justify-between p-1.5 md:p-2 bg-green-50/50 rounded text-xs md:text-sm gap-2">
+                                        <span className="truncate">{line.description || '—'}</span>
+                                        <span className="font-medium text-green-600 whitespace-nowrap">${(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                      </div>
+                                    ))}
+                                    <div className="flex justify-between p-1.5 md:p-2 bg-green-50 rounded text-xs md:text-sm gap-2 border-t-2 border-green-200">
+                                      <span className="font-bold text-green-700">Total Credits</span>
+                                      <span className="font-bold text-green-600 whitespace-nowrap">${creditTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
-                                  ))}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              );
+                            })()}
 
                             {/* Deductions */}
-                            {statementLines.filter(l => l.line_type === 'deduction' || l.line_type === 'advance').length > 0 && (
-                              <div>
-                                <p className="text-xs font-semibold text-muted-foreground mb-1.5">Deductions</p>
-                                <div className="space-y-1 text-xs">
-                                  {statementLines.filter(l => l.line_type === 'deduction' || l.line_type === 'advance').map((line) => (
-                                    <div key={line.id} className="flex justify-between p-1.5 md:p-2 bg-red-50/50 rounded text-xs md:text-sm gap-2">
-                                      <span className="truncate">{line.description || '—'}</span>
-                                      <span className="font-medium text-red-600 whitespace-nowrap">-${Math.abs(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                            {(() => {
+                              const deductionLines = statementLines.filter(l => l.line_type === 'deduction' || l.line_type === 'advance');
+                              const deductionTotal = deductionLines.reduce((sum, l) => sum + Math.abs(l.amount || 0), 0);
+                              return deductionLines.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-semibold text-muted-foreground mb-1.5">Deductions</p>
+                                  <div className="space-y-1 text-xs">
+                                    {deductionLines.map((line) => (
+                                      <div key={line.id} className="flex justify-between p-1.5 md:p-2 bg-red-50/50 rounded text-xs md:text-sm gap-2">
+                                        <span className="truncate">{line.description || '—'}</span>
+                                        <span className="font-medium text-red-600 whitespace-nowrap">-${Math.abs(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                      </div>
+                                    ))}
+                                    <div className="flex justify-between p-1.5 md:p-2 bg-red-50 rounded text-xs md:text-sm gap-2 border-t-2 border-red-200">
+                                      <span className="font-bold text-red-700">Total Deductions</span>
+                                      <span className="font-bold text-red-600 whitespace-nowrap">-${deductionTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
-                                  ))}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              );
+                            })()}
 
                             {/* Fuel */}
-                            {statementLines.filter(l => l.line_type === 'fuel').length > 0 && (
-                              <div>
-                                <p className="text-xs font-semibold text-muted-foreground mb-1.5">Fuel Card Charges</p>
-                                <div className="space-y-1 text-xs">
-                                  {statementLines.filter(l => l.line_type === 'fuel').map((line) => (
-                                    <div key={line.id} className="flex justify-between p-1.5 md:p-2 bg-orange-50/50 rounded text-xs md:text-sm gap-2">
-                                      <span className="truncate">{line.description || '—'}</span>
-                                      <span className="font-medium text-orange-600 whitespace-nowrap">-${Math.abs(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                            {(() => {
+                              const fuelLines = statementLines.filter(l => l.line_type === 'fuel');
+                              const fuelTotal = fuelLines.reduce((sum, l) => sum + Math.abs(l.amount || 0), 0);
+                              return fuelLines.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-semibold text-muted-foreground mb-1.5">Fuel Card Charges</p>
+                                  <div className="space-y-1 text-xs">
+                                    {fuelLines.map((line) => (
+                                      <div key={line.id} className="flex justify-between p-1.5 md:p-2 bg-orange-50/50 rounded text-xs md:text-sm gap-2">
+                                        <span className="truncate">{line.description || '—'}</span>
+                                        <span className="font-medium text-orange-600 whitespace-nowrap">-${Math.abs(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                      </div>
+                                    ))}
+                                    <div className="flex justify-between p-1.5 md:p-2 bg-orange-50 rounded text-xs md:text-sm gap-2 border-t-2 border-orange-200">
+                                      <span className="font-bold text-orange-700">Total Fuel</span>
+                                      <span className="font-bold text-orange-600 whitespace-nowrap">-${fuelTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
-                                  ))}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              );
+                            })()}
                           </>
                         )}
                       </div>
