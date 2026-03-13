@@ -47,9 +47,11 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import AdminDriverDocuments from './pages/AdminDriverDocuments';
 import AuditLogPage from './pages/AuditLogPage';
 import Companies from './pages/Companies';
 import Dashboard from './pages/Dashboard';
+import DeletedItems from './pages/DeletedItems';
 import DriverStatements from './pages/DriverStatements';
 import Drivers from './pages/Drivers';
 import FuelImport from './pages/FuelImport';
@@ -63,14 +65,15 @@ import StatementBuilder from './pages/StatementBuilder';
 import Trailers from './pages/Trailers';
 import Trucks from './pages/Trucks';
 import UploadDocument from './pages/UploadDocument';
-import AdminDriverDocuments from './pages/AdminDriverDocuments';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AdminDriverDocuments": AdminDriverDocuments,
     "AuditLogPage": AuditLogPage,
     "Companies": Companies,
     "Dashboard": Dashboard,
+    "DeletedItems": DeletedItems,
     "DriverStatements": DriverStatements,
     "Drivers": Drivers,
     "FuelImport": FuelImport,
@@ -84,7 +87,6 @@ export const PAGES = {
     "Trailers": Trailers,
     "Trucks": Trucks,
     "UploadDocument": UploadDocument,
-    "AdminDriverDocuments": AdminDriverDocuments,
 }
 
 export const pagesConfig = {

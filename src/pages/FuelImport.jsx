@@ -92,30 +92,53 @@ If a field is missing, use null. Return only the JSON array.`,
        const trucks = await base44.entities.Truck.list();
 
        for (const tx of txList) {
-         // Try to match driver and truck
-         const matchedDriver = drivers.find(d => {
-           if (!tx.driver_name_raw || !d.full_name) return false;
-           const raw = tx.driver_name_raw.toLowerCase().trim().replace(/^n-/, '').trim();
-           const full = d.full_name.toLowerCase();
-           // Exact full name match
-           if (full === raw) return true;
-           // First name match (at least 4 chars to avoid false positives)
-           const rawWords = raw.split(/\s+/);
-           const fullWords = full.split(/\s+/);
-           if (rawWords.length === 0 || fullWords.length === 0) return false;
-           // Match first names if >= 4 chars, or exact word match
-           const rawFirst = rawWords[0];
-           const fullFirst = fullWords[0];
-           return (rawFirst.length >= 4 && fullFirst.startsWith(rawFirst)) || rawFirst === fullFirst;
-         });
-         const matchedTruck = matchedDriver && tx.truck_number_raw
-           ? trucks.find(t =>
-             matchedDriver?.assigned_truck_id === t.id || 
-             (tx.truck_number_raw && t.unit_number.toLowerCase().includes(tx.truck_number_raw.toLowerCase()))
-           )
-           : trucks.find(t =>
-             tx.truck_number_raw && t.unit_number.toLowerCase().includes(tx.truck_number_raw.toLowerCase())
+         // Try to match truck first (more reliable)
+         let matchedTruck = null;
+         let matchedDriver = null;
+         
+         if (tx.truck_number_raw) {
+           matchedTruck = trucks.find(t => 
+             t.unit_number && t.unit_number.toLowerCase().includes(tx.truck_number_raw.toLowerCase())
            );
+           // If truck matched, get its assigned driver
+           if (matchedTruck && matchedTruck.assigned_driver_id) {
+             matchedDriver = drivers.find(d => d.id === matchedTruck.assigned_driver_id);
+           }
+         }
+         
+         // If no match via truck, try matching by driver name (fuzzy)
+         if (!matchedDriver && tx.driver_name_raw) {
+           matchedDriver = drivers.find(d => {
+             if (!d.full_name) return false;
+             const raw = tx.driver_name_raw.toLowerCase().trim().replace(/^n-/, '').trim();
+             const full = d.full_name.toLowerCase();
+             // Exact full name match
+             if (full === raw) return true;
+             // Fuzzy match: split and compare words
+             const rawWords = raw.split(/\s+/);
+             const fullWords = full.split(/\s+/);
+             if (rawWords.length === 0 || fullWords.length === 0) return false;
+             // Match if at least 2 words match or first+last match
+             let matches = 0;
+             for (const rawWord of rawWords) {
+               for (const fullWord of fullWords) {
+                 if (rawWord.length >= 4 && fullWord.startsWith(rawWord)) {
+                   matches++;
+                   break;
+                 }
+                 if (rawWord === fullWord) {
+                   matches++;
+                   break;
+                 }
+               }
+             }
+             return matches >= 2 || (matches >= 1 && rawWords.length === 1);
+           });
+           // If driver matched, get their assigned truck
+           if (matchedDriver && matchedDriver.assigned_truck_id) {
+             matchedTruck = trucks.find(t => t.id === matchedDriver.assigned_truck_id);
+           }
+         }
 
          const importStatus = matchedDriver && matchedTruck ? 'matched' : 'exception';
          if (importStatus === 'exception') exceptions++;
