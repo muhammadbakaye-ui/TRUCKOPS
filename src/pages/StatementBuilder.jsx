@@ -483,7 +483,7 @@ export default function StatementBuilder() {
               <div className="flex justify-between text-xs">
                 <span className="text-muted-foreground">Gross ({tripLines.length} trips)</span>
                 <div className="text-right">
-                  <span className="font-medium text-green-600">${(form.gross_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                  <span className="font-medium text-green-600">${(tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                   {drivers.find(d => d.id === form.driver_id)?.ytd_gross_legacy > 0 && (
                     <div className="text-[10px] text-muted-foreground">
                       Legacy: ${(drivers.find(d => d.id === form.driver_id).ytd_gross_legacy || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} + New: ${(tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
