@@ -262,6 +262,14 @@ export default function LoadDetail() {
                 <Select value={form.driver_1_id || ''} onValueChange={(v) => {
                   const d = drivers.find(d => d.id === v);
                   set('driver_1_id', v); set('driver_1_name', d?.full_name || '');
+                  // Auto-select truck if driver has assigned truck
+                  if (d?.assigned_truck_id) {
+                    const t = trucks.find(t => t.id === d.assigned_truck_id);
+                    if (t) {
+                      set('truck_id', t.id);
+                      set('truck_number', t.unit_number);
+                    }
+                  }
                 }}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select driver" /></SelectTrigger>
                   <SelectContent>{drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}</SelectContent>
@@ -280,6 +288,14 @@ export default function LoadDetail() {
                 <Select value={form.truck_id || ''} onValueChange={(v) => {
                   const t = trucks.find(t => t.id === v);
                   set('truck_id', v); set('truck_number', t?.unit_number || '');
+                  // Auto-select driver if truck has assigned driver
+                  if (t?.assigned_driver_id) {
+                    const d = drivers.find(d => d.id === t.assigned_driver_id);
+                    if (d && !form.driver_1_id) {
+                      set('driver_1_id', d.id);
+                      set('driver_1_name', d.full_name);
+                    }
+                  }
                 }}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select truck" /></SelectTrigger>
                   <SelectContent>{trucks.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number} {t.make} {t.model}</SelectItem>)}</SelectContent>
