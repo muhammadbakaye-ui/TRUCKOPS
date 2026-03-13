@@ -206,6 +206,18 @@ export default function StatementBuilder() {
   };
 
   const addTripLine = () => setTripLines(prev => [...prev, { line_type: 'trip', date: new Date().toISOString().split('T')[0], description: '', route: '', amount: 0 }]);
+  
+  const addCustomFuel = () => {
+    setFuelLines(prev => [...prev, {
+      line_type: 'fuel',
+      date: form.statement_date || new Date().toISOString().split('T')[0],
+      description: '',
+      card_number: '',
+      location_name: '',
+      city_state: '',
+      amount: 0
+    }]);
+  };
 
   const handleSave = async (finalize = false) => {
     setSaving(true);
@@ -459,9 +471,14 @@ export default function StatementBuilder() {
           <Card>
             <CardHeader className="py-3.5 px-5 flex flex-row items-center justify-between border-b">
               <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Fuel ({fuelLines.length})</CardTitle>
-              <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={loadDriverFuel} disabled={loadingFuel || !form.driver_id}>
-                {loadingFuel ? <Loader2 className="w-3 h-3 animate-spin" /> : <Fuel className="w-3 h-3" />} Load Fuel
-              </Button>
+              <div className="flex gap-1">
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={loadDriverFuel} disabled={loadingFuel || !form.driver_id}>
+                  {loadingFuel ? <Loader2 className="w-3 h-3 animate-spin" /> : <Fuel className="w-3 h-3" />} Load Fuel
+                </Button>
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addCustomFuel}>
+                  <Plus className="w-3 h-3" /> Add
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="px-5 pb-5">
               {colHeaders}
