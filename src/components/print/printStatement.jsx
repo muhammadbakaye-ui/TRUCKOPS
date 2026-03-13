@@ -42,7 +42,7 @@ export function printStatement({ company, statement, allLines }) {
     .statement-title{text-align:center;font-size:13px;font-weight:bold;line-height:1.9}
     .section-title{font-weight:bold;font-size:11.5px;margin:12px 0 3px 0}
     table{width:100%;border-collapse:collapse;margin-bottom:8px}
-    th{background:#3a6bbf;color:#fff;padding:4px 6px;text-align:center;font-size:9.5px;border:1px solid #2a5baf}
+    th{background:#f0f0f0;color:#000;padding:4px 6px;text-align:center;font-size:9.5px;border:1px solid #ccc;font-weight:normal}
     td{border:1px solid #ccc;padding:3px 6px;font-size:10px}
     .total-row td{font-weight:bold;background:#eee}
     .footer{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:8px;border-top:2px solid #000;font-size:12px;font-weight:bold}
