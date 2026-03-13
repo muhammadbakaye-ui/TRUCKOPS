@@ -136,6 +136,7 @@ Return a structured JSON with the following fields (use null if not found):
             source_document_id: doc.id,
             extraction_status: 'extracted',
             status: 'draft',
+            dispatch_status: 'delivered',
             invoice_status: 'not_invoiced',
             pickup_city: firstStop?.city,
             pickup_state: firstStop?.state,
