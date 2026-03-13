@@ -131,5 +131,30 @@ export function printStatement({ company, statement, allLines }) {
   w.document.write(html);
   w.document.close();
   w.focus();
-  setTimeout(() => w.print(), 600);
+  
+  // Add download button overlay
+  const style = w.document.createElement('style');
+  style.textContent = `
+    .download-overlay { position: fixed; top: 0; left: 0; right: 0; z-index: 9999; background: rgba(0,0,0,0.85); padding: 12px; display: flex; justify-content: center; align-items: center; gap: 12px; }
+    .download-btn { background: #2563eb; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .download-btn:hover { background: #1d4ed8; }
+    .print-btn { background: #6b7280; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .print-btn:hover { background: #4b5563; }
+    @media print { .download-overlay { display: none !important; } }
+  `;
+  w.document.head.appendChild(style);
+  
+  const overlay = w.document.createElement('div');
+  overlay.className = 'download-overlay';
+  overlay.innerHTML = `
+    <button class="download-btn" onclick="window.print()">
+      <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+      Download PDF
+    </button>
+    <button class="print-btn" onclick="window.print()">
+      <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
+      Print
+    </button>
+  `;
+  w.document.body.insertBefore(overlay, w.document.body.firstChild);
 }
