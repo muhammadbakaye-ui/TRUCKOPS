@@ -112,6 +112,8 @@ If a field is missing, use null. Return only the JSON array.`,
              if (!d.full_name) return false;
              const raw = tx.driver_name_raw.toLowerCase().trim().replace(/^n-/, '').trim();
              const full = d.full_name.toLowerCase();
+             // Hardcoded name mappings for known spelling differences
+             if (raw === 'ismail abdiaziz' && full === 'ismael abdiaziz') return true;
              // Exact full name match
              if (full === raw) return true;
              // Fuzzy match: split and compare words
