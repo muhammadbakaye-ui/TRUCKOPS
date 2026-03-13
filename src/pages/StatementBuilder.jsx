@@ -296,8 +296,8 @@ export default function StatementBuilder() {
           <Button size="sm" className="h-8 gap-1" onClick={() => handleSave(true)} disabled={saving}>
             <CheckCircle className="w-3.5 h-3.5" /> Finalize
           </Button>
-          <Button variant="outline" size="sm" className="h-8 gap-1" onClick={handlePrint}>
-            <Printer className="w-3.5 h-3.5" /> Print / PDF
+          <Button variant="outline" size="sm" className="h-8 gap-1" onClick={() => setShowPDFPreview(true)}>
+            <FileText className="w-3.5 h-3.5" /> Download PDF
           </Button>
         </div>
       </div>
