@@ -73,9 +73,9 @@ export default function StatementBuilder() {
       setForm(s);
       // Load existing lines
       const lines = await base44.entities.StatementLine.filter({ statement_id: statementId }, 'date', 200);
-      setTripLines(lines.filter(l => l.line_type === 'trip' || l.line_type === 'credit' || l.line_type === 'adjustment'));
-      setDeductionLines(lines.filter(l => l.line_type === 'deduction' || l.line_type === 'advance'));
-      setFuelLines(lines.filter(l => l.line_type === 'fuel'));
+      setTripLines(lines.filter(l => l.line_type === 'trip' || l.line_type === 'credit' || l.line_type === 'adjustment').sort((a, b) => (a.date || '').localeCompare(b.date || '')));
+      setDeductionLines(lines.filter(l => l.line_type === 'deduction' || l.line_type === 'advance').sort((a, b) => (a.date || '').localeCompare(b.date || '')));
+      setFuelLines(lines.filter(l => l.line_type === 'fuel').sort((a, b) => (a.date || '').localeCompare(b.date || '')));
       return s;
     },
     enabled: !!statementId,
@@ -115,7 +115,11 @@ export default function StatementBuilder() {
         return loadDate && loadDate >= form.period_start && loadDate <= form.period_end;
       });
       
-      const newLines = filteredLoads.map(l => {
+      const newLines = filteredLoads.sort((a, b) => {
+        const dateA = a.delivery_date || a.pickup_date || '';
+        const dateB = b.delivery_date || b.pickup_date || '';
+        return dateA.localeCompare(dateB);
+      }).map(l => {
         const tripNum = l.trip_number || extractTripNum(l.external_load_number) || extractTripNum(l.customer_reference_number) || extractTripNum(l.internal_load_number);
         const loadRevenue = l.invoice_amount || l.freight_rate || 0;
         
@@ -164,7 +168,7 @@ export default function StatementBuilder() {
       const existingIds = new Set(fuelLines.map(l => l.source_id));
       const toAdd = filteredTxs.filter(tx => !existingIds.has(tx.id));
       
-      const newLines = toAdd.map(tx => {
+      const newLines = toAdd.sort((a, b) => (a.transaction_date || '').localeCompare(b.transaction_date || '')).map(tx => {
         const city = (tx.city && tx.city !== 'null') ? tx.city : '';
         const state = (tx.state && tx.state !== 'null') ? tx.state : '';
         const gallons = (tx.gallons && tx.gallons !== 'null') ? tx.gallons : '';
