@@ -123,7 +123,10 @@ export default function DriverStatements() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteMutation.mutate(r)}>Delete</AlertDialogAction>
+              <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={(e) => {
+                e.stopPropagation();
+                deleteMutation.mutate(r);
+              }}>Delete</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
