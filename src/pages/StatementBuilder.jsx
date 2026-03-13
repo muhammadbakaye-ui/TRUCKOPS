@@ -15,6 +15,8 @@ import { Loader2, Save, ArrowLeft, Plus, Trash2, CheckCircle, Fuel, Truck, Print
 import { logAudit } from '../components/shared/AuditLogger';
 import { toast } from 'sonner';
 import { printStatement } from '../components/print/printStatement';
+import PDFPreviewModal from '../components/shared/PDFPreviewModal';
+import { generateStatementPDF } from '../components/print/generateStatementPDF';
 import { addDays, startOfWeek, endOfWeek, format, parse } from 'date-fns';
 
 const DEFAULT_DEDUCTIONS = [
@@ -33,6 +35,7 @@ export default function StatementBuilder() {
   const [deductionLines, setDeductionLines] = useState([]);
   const [fuelLines, setFuelLines] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [loadingTrips, setLoadingTrips] = useState(false);
   const [loadingFuel, setLoadingFuel] = useState(false);
 
@@ -529,6 +532,18 @@ export default function StatementBuilder() {
           </Card>
         </div>
       </div>
+
+      <PDFPreviewModal
+        open={showPDFPreview}
+        onClose={() => setShowPDFPreview(false)}
+        title={`Statement - ${form.driver_name || 'Driver'}`}
+        generatePDFContent={async () => {
+          const driver = drivers.find(d => d.id === form.driver_id);
+          const truck = trucks.find(t => t.id === form.truck_id);
+          const allLines = [...tripLines, ...deductionLines, ...fuelLines];
+          return await generateStatementPDF(form, allLines, driver, truck);
+        }}
+      />
     </div>
   );
 }

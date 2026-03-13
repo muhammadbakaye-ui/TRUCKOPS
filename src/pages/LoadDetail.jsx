@@ -14,6 +14,8 @@ import StatusBadge from '../components/shared/StatusBadge';
 import { logAudit } from '../components/shared/AuditLogger';
 import { toast } from 'sonner';
 import { printLoad } from '../components/print/printLoad';
+import PDFPreviewModal from '../components/shared/PDFPreviewModal';
+import { generateLoadPDF } from '../components/print/generateLoadPDF';
 
 function Field({ label, children }) {
   return (
@@ -336,6 +338,15 @@ export default function LoadDetail() {
           </Card>
         </div>
       </div>
+
+      <PDFPreviewModal
+        open={showPDFPreview}
+        onClose={() => setShowPDFPreview(false)}
+        title={`Load ${form.internal_load_number || 'Details'}`}
+        generatePDFContent={async () => {
+          return await generateLoadPDF(form, stops);
+        }}
+      />
     </div>
   );
 }
