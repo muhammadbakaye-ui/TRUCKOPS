@@ -132,10 +132,15 @@ export function printStatement({ company, statement, allLines }) {
   w.document.write(html);
   w.document.close();
   
-  // Add download button overlay
+  // Add download button overlay (hidden during print)
   w.onload = () => {
+    const style = w.document.createElement('style');
+    style.textContent = '@media print { .pdf-download-btn { display: none !important; } }';
+    w.document.head.appendChild(style);
+    
     const overlay = w.document.createElement('div');
-    overlay.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;';
+    overlay.className = 'pdf-download-btn';
+    overlay.style.cssText = 'position:fixed;bottom:40px;right:40px;z-index:9999;';
     overlay.innerHTML = `
       <button onclick="window.print()" style="background:#0055bb;color:#fff;border:none;padding:12px 24px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.15);">
         Download PDF
