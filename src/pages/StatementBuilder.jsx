@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Save, ArrowLeft, Plus, Trash2, CheckCircle, Fuel, Truck, Printer, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, Plus, Trash2, CheckCircle, Fuel, Truck, Printer, Eye, EyeOff, FileText } from 'lucide-react';
 import { logAudit } from '../components/shared/AuditLogger';
 import { toast } from 'sonner';
 import { printStatement } from '../components/print/printStatement';
