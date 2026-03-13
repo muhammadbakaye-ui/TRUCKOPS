@@ -86,15 +86,15 @@ export default function StatementBuilder() {
     const driver = drivers.find(d => d.id === form.driver_id);
     const legacyGross = driver?.ytd_gross_legacy || 0;
     const newGross = tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0);
-    const gross = legacyGross + newGross;
+    const ytdGross = legacyGross + newGross;
     const deductions = deductionLines.reduce((s, l) => s + Math.abs(Number(l.amount) || 0), 0);
     const fuel = fuelLines.reduce((s, l) => s + Math.abs(Number(l.amount) || 0), 0);
     setForm(prev => ({
       ...prev,
-      gross_total: gross,
+      gross_total: ytdGross,
       deductions_total: deductions,
       fuel_total: fuel,
-      final_check_amount: gross - deductions - fuel,
+      final_check_amount: newGross - deductions - fuel,
     }));
   }, [tripLines, deductionLines, fuelLines, form.driver_id, drivers]);
 
@@ -311,14 +311,23 @@ export default function StatementBuilder() {
               <div>
                 <Label className="text-xs">Driver</Label>
                 <Select value={form.driver_id || ''} onValueChange={(v) => {
-                  const d = drivers.find(d => d.id === v);
-                  set('driver_id', v);
-                  set('driver_name', d?.full_name || '');
-                  // Auto-set truck from driver's assigned truck
-                  if (d?.assigned_truck_id) {
-                    const t = trucks.find(t => t.id === d.assigned_truck_id);
-                    if (t) { set('truck_id', t.id); set('truck_number', t.unit_number); }
-                  }
+                  const d = drivers.find(dr => dr.id === v);
+                  setForm(prev => {
+                    const updates = {
+                      ...prev,
+                      driver_id: v,
+                      driver_name: d?.full_name || '',
+                    };
+                    // Auto-set truck from driver's assigned truck
+                    if (d?.assigned_truck_id) {
+                      const t = trucks.find(tr => tr.id === d.assigned_truck_id);
+                      if (t) {
+                        updates.truck_id = t.id;
+                        updates.truck_number = t.unit_number;
+                      }
+                    }
+                    return updates;
+                  });
                 }}>
                   <SelectTrigger className="h-8 text-xs mt-1"><SelectValue placeholder="Select driver" /></SelectTrigger>
                   <SelectContent>{drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}</SelectContent>
