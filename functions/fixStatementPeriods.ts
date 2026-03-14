@@ -74,34 +74,31 @@ Deno.serve(async (req) => {
 
     for (const stmt of statements) {
       try {
-        // Skip if missing critical data
-        if (!stmt.period_end && !stmt.period_start && !stmt.statement_date) {
+        // Skip if missing statement_date (the Tuesday due date is required)
+        if (!stmt.statement_date) {
           skipped++;
           continue;
         }
 
-        // Use any available date to find the correct period from the calendar
-        const lookupDate = stmt.period_end || stmt.period_start || stmt.statement_date;
-        const correctPeriod = getPeriodForDate(lookupDate);
+        // Look up the correct period using the statement_date (Tuesday due date)
+        const correctPeriod = getPeriodByDueDate(stmt.statement_date);
         
         if (!correctPeriod) {
-          errors.push({ id: stmt.id, driver: stmt.driver_name, error: 'Date outside 2026 calendar range' });
+          errors.push({ id: stmt.id, driver: stmt.driver_name, error: `No period found for due date ${stmt.statement_date}` });
           continue;
         }
 
         // Check if already correct
         if (stmt.period_start === correctPeriod.start && 
-            stmt.period_end === correctPeriod.end && 
-            stmt.statement_date === correctPeriod.due) {
+            stmt.period_end === correctPeriod.end) {
           skipped++;
           continue;
         }
 
-        // Update the statement with exact calendar values
+        // Update the statement with the correct period dates based on the due date
         await base44.asServiceRole.entities.DriverStatement.update(stmt.id, {
           period_start: correctPeriod.start,
           period_end: correctPeriod.end,
-          statement_date: correctPeriod.due,
         });
 
         fixed++;
