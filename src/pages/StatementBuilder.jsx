@@ -75,9 +75,9 @@ export default function StatementBuilder() {
       setForm(s);
       // Load existing lines
       const lines = await base44.entities.StatementLine.filter({ statement_id: statementId }, 'date', 200);
-      setTripLines(lines.filter(l => l.line_type === 'trip' || l.line_type === 'credit' || l.line_type === 'adjustment').sort((a, b) => (a.date || '').localeCompare(b.date || '')));
-      setDeductionLines(lines.filter(l => l.line_type === 'deduction' || l.line_type === 'advance').sort((a, b) => (a.date || '').localeCompare(b.date || '')));
-      setFuelLines(lines.filter(l => l.line_type === 'fuel').sort((a, b) => (a.date || '').localeCompare(b.date || '')));
+      setTripLines(lines.filter(l => l.line_type === 'trip' || l.line_type === 'credit' || l.line_type === 'adjustment').sort((a, b) => (a.date || '').localeCompare(b.date || '')).map((l, i) => ({ ...l, _key: l.id || `trip_${i}` })));
+      setDeductionLines(lines.filter(l => l.line_type === 'deduction' || l.line_type === 'advance').sort((a, b) => (a.date || '').localeCompare(b.date || '')).map((l, i) => ({ ...l, _key: l.id || `deduction_${i}` })));
+      setFuelLines(lines.filter(l => l.line_type === 'fuel').sort((a, b) => (a.date || '').localeCompare(b.date || '')).map((l, i) => ({ ...l, _key: l.id || `fuel_${i}` })));
       return s;
     },
     enabled: !!statementId,
@@ -121,7 +121,7 @@ export default function StatementBuilder() {
         const dateA = a.delivery_date || a.pickup_date || '';
         const dateB = b.delivery_date || b.pickup_date || '';
         return dateA.localeCompare(dateB);
-      }).map(l => {
+      }).map((l, idx) => {
         const tripNum = l.trip_number || extractTripNum(l.external_load_number) || extractTripNum(l.customer_reference_number) || extractTripNum(l.internal_load_number);
         const loadRevenue = l.invoice_amount || l.freight_rate || 0;
         
@@ -138,6 +138,7 @@ export default function StatementBuilder() {
         }
         
         return {
+          _key: l.id || `trip_${Date.now()}_${idx}`,
           line_type: 'trip',
           source_id: l.id,
           source_type: 'load',
@@ -182,6 +183,7 @@ export default function StatementBuilder() {
         const fuelCost = (tx.fuel_amount && tx.fuel_amount > 0) ? tx.fuel_amount : (tx.total_amount || 0);
         
         return {
+          _key: tx.id || `fuel_${Date.now()}_${Math.random()}`,
           line_type: 'fuel',
           source_id: tx.id,
           source_type: 'fuel_transaction',
@@ -204,6 +206,7 @@ export default function StatementBuilder() {
 
   const addDefaultDeduction = (def) => {
     setDeductionLines(prev => [...prev, {
+      _key: `deduction_${Date.now()}_${Math.random()}`,
       line_type: 'deduction',
       date: form.statement_date || new Date().toISOString().split('T')[0],
       description: def.description,
@@ -212,13 +215,14 @@ export default function StatementBuilder() {
   };
 
   const addCustomDeduction = () => {
-    setDeductionLines(prev => [...prev, { line_type: 'deduction', date: new Date().toISOString().split('T')[0], description: '', amount: 0 }]);
+    setDeductionLines(prev => [...prev, { _key: `deduction_${Date.now()}_${Math.random()}`, line_type: 'deduction', date: new Date().toISOString().split('T')[0], description: '', amount: 0 }]);
   };
 
-  const addTripLine = () => setTripLines(prev => [...prev, { line_type: 'trip', date: new Date().toISOString().split('T')[0], description: '', route: '', amount: 0 }]);
+  const addTripLine = () => setTripLines(prev => [...prev, { _key: `trip_${Date.now()}_${Math.random()}`, line_type: 'trip', date: new Date().toISOString().split('T')[0], description: '', route: '', amount: 0 }]);
   
   const addCustomFuel = () => {
     setFuelLines(prev => [...prev, {
+      _key: `fuel_${Date.now()}_${Math.random()}`,
       line_type: 'fuel',
       date: form.statement_date || new Date().toISOString().split('T')[0],
       description: '',
@@ -257,7 +261,7 @@ export default function StatementBuilder() {
       }
       const allLines = [...tripLines, ...deductionLines, ...fuelLines];
       for (const line of allLines) {
-        const { id, ...lineData } = line;
+        const { id, _key, ...lineData } = line;
         await base44.entities.StatementLine.create({ ...lineData, statement_id: savedId });
       }
 
@@ -426,7 +430,7 @@ export default function StatementBuilder() {
               {colHeaders}
               <div className="space-y-0">
                 {tripLines.map((line, i) => (
-                  <LineRow key={i} line={line}
+                  <LineRow key={line._key || i} line={line}
                     onChange={(k, v) => setTripLines(prev => prev.map((l, idx) => idx === i ? { ...l, [k]: v } : l))}
                     onRemove={() => setTripLines(prev => prev.filter((_, idx) => idx !== i))}
                   />
@@ -460,7 +464,7 @@ export default function StatementBuilder() {
               {colHeaders}
               <div className="space-y-0">
                 {deductionLines.map((line, i) => (
-                  <LineRow key={i} line={line}
+                  <LineRow key={line._key || i} line={line}
                     onChange={(k, v) => setDeductionLines(prev => prev.map((l, idx) => idx === i ? { ...l, [k]: v } : l))}
                     onRemove={() => setDeductionLines(prev => prev.filter((_, idx) => idx !== i))}
                   />
@@ -494,7 +498,7 @@ export default function StatementBuilder() {
               {colHeaders}
               <div className="space-y-0">
                 {fuelLines.map((line, i) => (
-                  <LineRow key={i} line={line}
+                  <LineRow key={line._key || i} line={line}
                     onChange={(k, v) => setFuelLines(prev => prev.map((l, idx) => idx === i ? { ...l, [k]: v } : l))}
                     onRemove={() => setFuelLines(prev => prev.filter((_, idx) => idx !== i))}
                   />
