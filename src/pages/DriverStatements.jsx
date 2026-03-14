@@ -6,7 +6,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Trash2, ChevronDown, ChevronRight, X, RefreshCw } from 'lucide-react';
+import { Plus, Search, Trash2, ChevronDown, ChevronRight, X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -67,19 +67,7 @@ export default function DriverStatements() {
     },
   });
 
-  const [fixingPeriods, setFixingPeriods] = useState(false);
-  const handleFixPeriods = async () => {
-    setFixingPeriods(true);
-    try {
-      const result = await base44.functions.invoke('fixStatementPeriods', {});
-      toast.success(result.data.message);
-      queryClient.invalidateQueries({ queryKey: ['statements'] });
-    } catch (err) {
-      toast.error('Failed to fix periods: ' + err.message);
-    } finally {
-      setFixingPeriods(false);
-    }
-  };
+
 
   const filtered = statements.filter(s => {
     const q = search.toLowerCase();
@@ -124,21 +112,9 @@ export default function DriverStatements() {
         title="Driver Statements"
         description={`${statements.length} total statements`}
         actions={
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 text-xs gap-1" 
-              onClick={handleFixPeriods}
-              disabled={fixingPeriods}
-            >
-              {fixingPeriods ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-              Fix Old Periods
-            </Button>
-            <Button size="sm" className="h-8 text-xs gap-1" onClick={() => navigate(createPageUrl('StatementBuilder'))}>
-              <Plus className="w-3.5 h-3.5" /> New Statement
-            </Button>
-          </div>
+          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => navigate(createPageUrl('StatementBuilder'))}>
+            <Plus className="w-3.5 h-3.5" /> New Statement
+          </Button>
         }
       />
       <div className="flex gap-2 mb-3">
