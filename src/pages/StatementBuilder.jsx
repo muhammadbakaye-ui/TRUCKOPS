@@ -70,16 +70,18 @@ export default function StatementBuilder() {
     if (!date) return;
     const dayOfWeek = date.getDay();
     if (dayOfWeek !== 2) {
-      toast.error('Please select a Tuesday');
+      toast.error('Please select a Tuesday (the due date)');
       return;
     }
-    // Tuesday represents the end of the pay period
-    // Period: previous Sunday through previous Saturday (7 days ending the Saturday before Tuesday)
-    const prevSaturday = addDays(date, -3);  // Saturday before Tuesday
-    const prevSunday = addDays(prevSaturday, -6);  // Sunday 6 days before that Saturday
-    set('statement_date', format(date, 'yyyy-MM-dd'));
-    set('period_start', format(prevSunday, 'yyyy-MM-dd'));
-    set('period_end', format(prevSaturday, 'yyyy-MM-dd'));
+    // Tuesday is the DUE DATE (3 days after the period ends on Saturday)
+    // Work backwards: Tuesday - 3 days = Saturday (period end)
+    // Then: Saturday - 6 days = Sunday (period start)
+    const periodEndSaturday = addDays(date, -3);  // Saturday before the Tuesday due date
+    const periodStartSunday = addDays(periodEndSaturday, -6);  // Sunday, 6 days before Saturday
+    
+    set('statement_date', format(date, 'yyyy-MM-dd'));  // Tuesday due date
+    set('period_start', format(periodStartSunday, 'yyyy-MM-dd'));  // Sunday
+    set('period_end', format(periodEndSaturday, 'yyyy-MM-dd'));  // Saturday
   };
 
   const handlePrint = () => {
@@ -405,12 +407,12 @@ export default function StatementBuilder() {
                 </Select>
               </div>
               <div>
-                <Label className="text-xs">Statement Date (Tuesday)</Label>
+                <Label className="text-xs">Due Date (Tuesday)</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="h-8 text-xs mt-1 w-full justify-start font-normal">
                       <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                      {form.statement_date ? format(parse(form.statement_date, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy') : 'Select Tuesday'}
+                      {form.statement_date ? format(parse(form.statement_date, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy') : 'Select Tuesday Due Date'}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -429,12 +431,12 @@ export default function StatementBuilder() {
                 </Popover>
               </div>
               <div>
-                <Label className="text-xs">Period Start</Label>
-                <Input type="text" value={form.period_start || ''} readOnly className="h-8 text-xs mt-1 bg-muted" />
+                <Label className="text-xs">Period Start (Sunday)</Label>
+                <Input type="text" value={form.period_start ? `${format(parse(form.period_start, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy')} (Sun)` : ''} readOnly className="h-8 text-xs mt-1 bg-muted" />
               </div>
               <div>
-                <Label className="text-xs">Period End</Label>
-                <Input type="text" value={form.period_end || ''} readOnly className="h-8 text-xs mt-1 bg-muted" />
+                <Label className="text-xs">Period End (Saturday)</Label>
+                <Input type="text" value={form.period_end ? `${format(parse(form.period_end, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy')} (Sat)` : ''} readOnly className="h-8 text-xs mt-1 bg-muted" />
               </div>
             </CardContent>
           </Card>

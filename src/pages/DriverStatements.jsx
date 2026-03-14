@@ -75,8 +75,9 @@ export default function DriverStatements() {
     return matchesSearch && matchesStatus;
   });
 
-  // Group statements by period
+  // Group statements by period (Sunday-Saturday week)
   const groupedByPeriod = filtered.reduce((acc, stmt) => {
+    if (!stmt.period_start || !stmt.period_end) return acc;
     const periodKey = `${stmt.period_start} – ${stmt.period_end}`;
     if (!acc[periodKey]) {
       acc[periodKey] = [];
@@ -176,7 +177,7 @@ export default function DriverStatements() {
                   <div className="flex items-center gap-2">
                     {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                     <CardTitle className="text-sm font-semibold">
-                      {format(new Date(startDate), 'MMM d')} – {format(new Date(endDate), 'MMM d, yyyy')}
+                      {format(new Date(startDate), 'MMM d')} – {format(new Date(endDate), 'MMM d, yyyy')} (Sun–Sat)
                     </CardTitle>
                     <span className="text-xs text-muted-foreground">({periodStatements.length} statement{periodStatements.length === 1 ? '' : 's'})</span>
                   </div>
