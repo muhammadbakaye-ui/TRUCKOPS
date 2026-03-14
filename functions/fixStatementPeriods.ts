@@ -52,8 +52,8 @@ const STATEMENT_PERIODS_2026 = [
   { start: '2026-12-27', end: '2027-01-02', due: '2027-01-05' },
 ];
 
-function getPeriodForDate(dateStr) {
-  return STATEMENT_PERIODS_2026.find(p => dateStr >= p.start && dateStr <= p.end) || null;
+function getPeriodByDueDate(dueDate) {
+  return STATEMENT_PERIODS_2026.find(p => p.due === dueDate) || null;
 }
 
 Deno.serve(async (req) => {
