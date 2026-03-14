@@ -110,7 +110,7 @@ If a field is missing, use null. Return only the JSON array.`,
            }
          }
          
-         // If no match via truck, try matching by driver name (strict)
+         // If no match via truck, try matching by driver name (strict - exact match only)
          if (!matchedDriver && tx.driver_name_raw) {
            matchedDriver = drivers.find(d => {
              if (!d.full_name) return false;
@@ -119,24 +119,8 @@ If a field is missing, use null. Return only the JSON array.`,
              // Hardcoded name mappings for known spelling differences (bidirectional)
              if ((raw === 'ismail abdiaziz' && full === 'ismael abdiaziz') || 
                  (raw === 'ismael abdiaziz' && full === 'ismail abdiaziz')) return true;
-             // Exact full name match
-             if (full === raw) return true;
-             // Strict match: require BOTH first name AND last name to match
-             const rawWords = raw.split(/\s+/).filter(Boolean);
-             const fullWords = full.split(/\s+/).filter(Boolean);
-             if (rawWords.length < 2 || fullWords.length < 2) return false;
-
-             // Check if first and last name both match (order-independent)
-             const rawFirst = rawWords[0];
-             const rawLast = rawWords[rawWords.length - 1];
-             const fullFirst = fullWords[0];
-             const fullLast = fullWords[fullWords.length - 1];
-
-             // Both first and last must match exactly or start with the same prefix (4+ chars)
-             const firstMatch = rawFirst === fullFirst || (rawFirst.length >= 4 && fullFirst.startsWith(rawFirst)) || (fullFirst.length >= 4 && rawFirst.startsWith(fullFirst));
-             const lastMatch = rawLast === fullLast || (rawLast.length >= 4 && fullLast.startsWith(rawLast)) || (fullLast.length >= 4 && rawLast.startsWith(fullLast));
-
-             return firstMatch && lastMatch;
+             // Only exact full name match - no fuzzy matching to prevent mismatches
+             return full === raw;
            });
            // If driver matched, get their assigned truck
            if (matchedDriver && matchedDriver.assigned_truck_id) {
