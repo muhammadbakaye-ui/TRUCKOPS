@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
@@ -16,11 +16,19 @@ import { toast } from 'sonner';
 export default function FuelImport() {
   const [dragging, setDragging] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [selectedBatch, setSelectedBatch] = useState(null);
+  const [selectedBatch, setSelectedBatch] = useState(() => localStorage.getItem('fuel_selected_batch') || null);
   const [selectedTx, setSelectedTx] = useState(new Set());
   const [selectedBatches, setSelectedBatches] = useState(new Set());
   const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (selectedBatch) {
+      localStorage.setItem('fuel_selected_batch', selectedBatch);
+    } else {
+      localStorage.removeItem('fuel_selected_batch');
+    }
+  }, [selectedBatch]);
 
   const { data: batches = [], isLoading: batchesLoading } = useQuery({
     queryKey: ['fuel-batches'],
