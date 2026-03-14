@@ -51,12 +51,22 @@ export default function DriverPortalView() {
     setUploading(docType);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      await base44.entities.DriverDocument.create({
+      const doc = await base44.entities.DriverDocument.create({
         driver_id: session.driver_id,
         driver_name: session.driver_name,
         document_type: docType,
         file_name: file.name,
         file_url,
+      });
+      // Create notification for admins
+      await base44.entities.Notification.create({
+        notification_type: 'driver_document_upload',
+        title: `New ${docType === 'bol' ? 'BOL' : 'Rate Confirmation'} uploaded`,
+        message: `${session.driver_name} uploaded a ${docType === 'bol' ? 'Bill of Lading' : 'Rate Confirmation'}: ${file.name}`,
+        related_entity_type: 'driver_document',
+        related_entity_id: doc.id,
+        link_url: '/AdminDriverDocuments',
+        read: false,
       });
       toast.success(`${docType === 'bol' ? 'BOL' : 'Rate Confirmation'} uploaded successfully`);
       queryClient.invalidateQueries({ queryKey: ['driver-docs', session.driver_id] });
