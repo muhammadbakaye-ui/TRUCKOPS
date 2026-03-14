@@ -35,9 +35,28 @@ export default function FuelImport() {
     enabled: !!selectedBatch,
   });
 
-  const handleFile = async (file) => {
-    if (!file) return;
+  const handleFiles = async (files) => {
+    if (!files || files.length === 0) return;
     setProcessing(true);
+    
+    const fileArray = Array.from(files);
+    let totalImported = 0;
+    let totalExceptions = 0;
+    
+    try {
+      for (const file of fileArray) {
+        await processFile(file);
+      }
+      queryClient.invalidateQueries({ queryKey: ['fuel-batches'] });
+      toast.success(`Imported ${fileArray.length} file${fileArray.length > 1 ? 's' : ''}`);
+    } catch (err) {
+      toast.error('Import failed: ' + err.message);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const processFile = async (file) => {
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       const batch = await base44.entities.FuelBatch.create({
@@ -205,21 +224,18 @@ Return only the JSON with the transactions array.`,
         exception_records: exceptions,
       });
 
-      queryClient.invalidateQueries({ queryKey: ['fuel-batches'] });
+      // Don't invalidate here, will be done after all files processed
       setSelectedBatch(batch.id);
-      toast.success(`Imported ${txList.length} transactions (${exceptions} exceptions)`);
     } catch (err) {
-      toast.error('Import failed: ' + err.message);
-    } finally {
-      setProcessing(false);
+      throw err;
     }
   };
 
   const onDrop = (e) => {
     e.preventDefault();
     setDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) handleFiles(files);
   };
 
   const batchColumns = [
@@ -452,11 +468,11 @@ Return only the JSON with the transactions array.`,
           ) : (
             <>
               <Upload className="w-10 h-10 text-muted-foreground" />
-              <p className="text-sm font-medium">Drop fuel card file here or click to browse</p>
-              <p className="text-xs text-muted-foreground">Supports PDF, CSV, Excel — AI will extract all transactions</p>
+              <p className="text-sm font-medium">Drop fuel card files here or click to browse</p>
+              <p className="text-xs text-muted-foreground">Upload multiple files at once — AI will extract all transactions</p>
             </>
           )}
-          <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.csv,.xlsx,.xls" onChange={(e) => handleFile(e.target.files[0])} />
+          <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.csv,.xlsx,.xls" multiple onChange={(e) => handleFiles(e.target.files)} />
         </CardContent>
       </Card>
 
