@@ -81,7 +81,7 @@ export default function DriverPortalView() {
 
   const getDueDate = (period_end) => {
     if (!period_end) return null;
-    // Period ends on Saturday, due date is the following Tuesday (+3 days)
+    // RULE: Week ends on Saturday, due date is following Tuesday (+3 days)
     return addDays(new Date(period_end), 3);
   };
   const checkOverdue = (period_end, status) => {

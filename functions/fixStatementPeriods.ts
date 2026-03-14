@@ -27,24 +27,31 @@ Deno.serve(async (req) => {
         const periodEnd = new Date(stmt.period_end);
         const dayOfWeek = periodEnd.getDay();
         
-        // If period_end is already Saturday (day 6), skip
-        if (dayOfWeek === 6) {
-          skipped++;
-          continue;
+        // RULE: Weeks are Sunday (0) - Saturday (6), due date is following Tuesday (2)
+        // If period_end is already Saturday and period_start is 6 days before, skip
+        if (dayOfWeek === 6 && stmt.period_start) {
+          const periodStart = new Date(stmt.period_start);
+          if (periodStart.getDay() === 0) {
+            const daysDiff = Math.round((periodEnd - periodStart) / (1000 * 60 * 60 * 24));
+            if (daysDiff === 6) {
+              skipped++;
+              continue;
+            }
+          }
         }
 
-        // Calculate correct Sunday-Saturday period
-        // Find the Saturday of the week containing period_end
-        const daysUntilSaturday = (6 - dayOfWeek + 7) % 7;
-        const daysFromSunday = dayOfWeek === 0 ? 0 : dayOfWeek;
+        // Calculate the Sunday-Saturday week containing period_end
+        // Find the Sunday at or before period_end
+        let correctSunday = new Date(periodEnd);
+        while (correctSunday.getDay() !== 0) {
+          correctSunday.setDate(correctSunday.getDate() - 1);
+        }
         
-        const correctSaturday = new Date(periodEnd);
-        correctSaturday.setDate(correctSaturday.getDate() + daysUntilSaturday);
+        // Saturday is 6 days after Sunday
+        const correctSaturday = new Date(correctSunday);
+        correctSaturday.setDate(correctSunday.getDate() + 6);
         
-        const correctSunday = new Date(correctSaturday);
-        correctSunday.setDate(correctSaturday.getDate() - 6);
-        
-        // Calculate Tuesday due date (3 days after Saturday)
+        // Tuesday due date is 3 days after Saturday
         const correctTuesday = new Date(correctSaturday);
         correctTuesday.setDate(correctSaturday.getDate() + 3);
 

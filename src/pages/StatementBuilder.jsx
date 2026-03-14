@@ -73,11 +73,10 @@ export default function StatementBuilder() {
       toast.error('Please select a Tuesday (the due date)');
       return;
     }
-    // Tuesday is the DUE DATE (3 days after the period ends on Saturday)
-    // Work backwards: Tuesday - 3 days = Saturday (period end)
-    // Then: Saturday - 6 days = Sunday (period start)
-    const periodEndSaturday = addDays(date, -3);  // Saturday before the Tuesday due date
-    const periodStartSunday = addDays(periodEndSaturday, -6);  // Sunday, 6 days before Saturday
+    // RULE: Week is Sunday-Saturday, due date is following Tuesday
+    // Work backwards from Tuesday: Tue - 3 days = Sat (period end), Sat - 6 days = Sun (period start)
+    const periodEndSaturday = addDays(date, -3);  // Saturday (day 6)
+    const periodStartSunday = addDays(periodEndSaturday, -6);  // Sunday (day 0)
     
     set('statement_date', format(date, 'yyyy-MM-dd'));  // Tuesday due date
     set('period_start', format(periodStartSunday, 'yyyy-MM-dd'));  // Sunday
