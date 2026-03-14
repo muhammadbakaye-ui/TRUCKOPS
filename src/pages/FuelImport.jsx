@@ -116,10 +116,19 @@ If a field is missing, use null. Return only the JSON array.`,
              if (!d.full_name) return false;
              const raw = tx.driver_name_raw.toLowerCase().trim().replace(/^n-/, '').trim();
              const full = d.full_name.toLowerCase();
+
              // Hardcoded name mappings for known spelling differences (bidirectional)
              if ((raw === 'ismail abdiaziz' && full === 'ismael abdiaziz') || 
                  (raw === 'ismael abdiaziz' && full === 'ismail abdiaziz')) return true;
-             // Only exact full name match - no fuzzy matching to prevent mismatches
+
+             if ((raw === 'abdiweli hassan' && full === 'abdiweli hassan') ||
+                 (raw === 'abdiweli' && full === 'abdiweli hassan') ||
+                 (raw === 'abdiweli h' && full === 'abdiweli hassan')) return true;
+
+             if ((raw === 'ismael' && full === 'ismael abdiaziz') ||
+                 (raw === 'ismael a' && full === 'ismael abdiaziz')) return true;
+
+             // Exact full name match (case-insensitive)
              return full === raw;
            });
            // If driver matched, get their assigned truck
