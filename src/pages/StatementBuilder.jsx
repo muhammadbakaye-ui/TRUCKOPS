@@ -177,6 +177,10 @@ export default function StatementBuilder() {
         const cityState = [city, state].filter(Boolean).join(', ');
         const gallonsPart = gallons ? ` (${gallons} gal)` : '';
         const descParts = ['Fuel', cityState, gallonsPart].filter(Boolean);
+        
+        // Use fuel_amount (which should be GROSS AMT from the import), fallback to total_amount
+        const fuelCost = tx.fuel_amount || tx.total_amount || 0;
+        
         return {
           line_type: 'fuel',
           source_id: tx.id,
@@ -186,7 +190,7 @@ export default function StatementBuilder() {
           card_number: (tx.card_number && tx.card_number !== 'null') ? tx.card_number : '',
           location_name: (tx.location_name && tx.location_name !== 'null') ? tx.location_name : '',
           city_state: cityState,
-          amount: tx.total_amount || tx.fuel_amount || 0,
+          amount: fuelCost,
         };
       });
       setFuelLines(prev => [...prev, ...newLines]);
