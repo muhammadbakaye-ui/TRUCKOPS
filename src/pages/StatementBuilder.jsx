@@ -16,7 +16,7 @@ import { logAudit } from '../components/shared/AuditLogger';
 import { toast } from 'sonner';
 import { printStatement } from '../components/print/printStatement';
 import { addDays, startOfWeek, endOfWeek, format, parse } from 'date-fns';
-import { getPeriodByDueDate, getAllDueDates } from '../lib/statementCalendar';
+import { getPeriodByDueDate, getAllDueDates } from '../components/shared/statementCalendar';
 
 const DEFAULT_DEDUCTIONS = [
   { description: 'Insurance', amount: 425 },

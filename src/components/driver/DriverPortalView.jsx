@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Truck, Upload, FileText, LogOut, Download, Loader2, FileCheck, Calendar, AlertCircle, X, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, addDays, isPast, subDays } from 'date-fns';
-import { getPeriodForDate } from '../lib/statementCalendar';
+import { getPeriodForDate } from './statementCalendar';
 import { printStatement } from '../print/printStatement';
 import StatementLoadDetails from './StatementLoadDetails';
 
