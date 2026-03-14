@@ -48,13 +48,35 @@ export default function FuelImport() {
       });
       // Use LLM to extract fuel transaction data
       const extracted = await base44.integrations.Core.InvokeLLM({
-        prompt: `Extract all fuel transaction records from this file. The file is a fuel card transaction report.
-Return a JSON array of transaction objects with these fields:
-card_number, driver_name_raw, truck_number_raw, location_name (full location name like "LOVES #481 TRAVEL STOP"), city, state, transaction_date (YYYY-MM-DD), gallons (number), fuel_amount (number), transaction_fee (number), advance_amount (number), advance_fee (number), misc_amount (number), invoice_amount (number), total_amount (number), gross_amount (number).
+        prompt: `Extract all fuel transaction records from this fuel card report.
 
-IMPORTANT: For fuel_amount, use the GROSS AMT column if it exists. If GROSS AMT is available, use it for fuel_amount. Only use other fuel-related amounts if GROSS AMT is not present.
+CRITICAL INSTRUCTIONS FOR DRIVER NAMES:
+- Driver names are often split across lines or have weird spacing (e.g., "N-ABDIWE  LI HASSAN" should be "ABDIWELI HASSAN")
+- Remove any "N-" prefix before names
+- If you see a name split like "ABDIWE" on one line and "LI HASSAN" below it, or "ABDIWE  LI HASSAN" with extra spaces, combine them into the full name removing extra spaces
+- Common patterns: "N-ABDIWELI", "ABDIWE LI HASSAN", "N-ISMA EL", "ISMA EL ABDIAZIZ"
+- Join split parts and normalize to proper format: "ABDIWELI HASSAN", "ISMAEL ABDIAZIZ", etc.
+- Return the full clean name in driver_name_raw
 
-If a field is missing, use null. Return only the JSON array.`,
+Extract these fields for each transaction:
+- card_number: fuel card number
+- driver_name_raw: FULL driver name (cleaned and joined if split, no "N-" prefix)
+- truck_number_raw: truck/unit number
+- location_name: full location name like "LOVES #481 TRAVEL STOP"
+- city: city name
+- state: state abbreviation
+- transaction_date: date in YYYY-MM-DD format
+- gallons: number of gallons (from QTY column)
+- fuel_amount: use GROSS AMT column if available, otherwise use fuel purchase amount
+- transaction_fee: transaction fees if any
+- advance_amount: cash advance amount
+- advance_fee: advance fees
+- misc_amount: misc charges
+- invoice_amount: invoice amount
+- total_amount: total dollar amount for the transaction
+- gross_amount: gross amount if available
+
+Return only the JSON with the transactions array.`,
         file_urls: [file_url],
         response_json_schema: {
           type: 'object',
@@ -110,26 +132,49 @@ If a field is missing, use null. Return only the JSON array.`,
            }
          }
          
-         // If no match via truck, try matching by driver name (strict - exact match only)
+         // If no match via truck, try matching by driver name
          if (!matchedDriver && tx.driver_name_raw) {
            matchedDriver = drivers.find(d => {
              if (!d.full_name) return false;
-             const raw = tx.driver_name_raw.toLowerCase().trim().replace(/^n-/, '').trim();
-             const full = d.full_name.toLowerCase();
 
-             // Hardcoded name mappings for known spelling differences (bidirectional)
+             // Normalize raw name: remove N- prefix, collapse extra spaces, lowercase
+             const raw = tx.driver_name_raw
+               .toLowerCase()
+               .trim()
+               .replace(/^n-/, '')
+               .replace(/\s+/g, ' ') // collapse multiple spaces to single
+               .trim();
+
+             const full = d.full_name.toLowerCase().trim();
+
+             // Exact match (most reliable)
+             if (full === raw) return true;
+
+             // Hardcoded mappings for known spelling variations
              if ((raw === 'ismail abdiaziz' && full === 'ismael abdiaziz') || 
                  (raw === 'ismael abdiaziz' && full === 'ismail abdiaziz')) return true;
 
-             if ((raw === 'abdiweli hassan' && full === 'abdiweli hassan') ||
-                 (raw === 'abdiweli' && full === 'abdiweli hassan') ||
-                 (raw === 'abdiweli h' && full === 'abdiweli hassan')) return true;
+             // Check if raw is a substring at the start (for truncated names like "abdiweli" matching "abdiweli hassan")
+             // Only match if it's at least the first name fully
+             const rawParts = raw.split(' ');
+             const fullParts = full.split(' ');
 
-             if ((raw === 'ismael' && full === 'ismael abdiaziz') ||
-                 (raw === 'ismael a' && full === 'ismael abdiaziz')) return true;
+             // If raw has at least first name and it matches the start of full name
+             if (rawParts.length >= 1 && rawParts[0].length >= 4) {
+               // Match if first name is exact and last name either matches or is abbreviated
+               if (rawParts[0] === fullParts[0]) {
+                 // If only first name provided, match
+                 if (rawParts.length === 1) return true;
+                 // If last name provided, check if it matches or is an abbreviation
+                 if (rawParts.length >= 2 && fullParts.length >= 2) {
+                   if (fullParts[1].startsWith(rawParts[1]) || rawParts[1].startsWith(fullParts[1])) {
+                     return true;
+                   }
+                 }
+               }
+             }
 
-             // Exact full name match (case-insensitive)
-             return full === raw;
+             return false;
            });
            // If driver matched, get their assigned truck
            if (matchedDriver && matchedDriver.assigned_truck_id) {
