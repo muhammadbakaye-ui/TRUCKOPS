@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useQuery } from '@tanstack/react-query';
@@ -6,7 +6,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Search, Trash2, ChevronDown, ChevronRight, X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -20,10 +20,25 @@ import { format } from 'date-fns';
 export default function DriverStatements() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [search, setSearch] = useState(() => localStorage.getItem('statements_search') || '');
+  const [statusFilter, setStatusFilter] = useState(() => localStorage.getItem('statements_status') || 'all');
   const [selected, setSelected] = useState(new Set());
-  const [expandedPeriods, setExpandedPeriods] = useState(new Set());
+  const [expandedPeriods, setExpandedPeriods] = useState(() => {
+    const saved = localStorage.getItem('statements_expanded');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+
+  useEffect(() => {
+    localStorage.setItem('statements_search', search);
+  }, [search]);
+
+  useEffect(() => {
+    localStorage.setItem('statements_status', statusFilter);
+  }, [statusFilter]);
+
+  useEffect(() => {
+    localStorage.setItem('statements_expanded', JSON.stringify([...expandedPeriods]));
+  }, [expandedPeriods]);
 
   const { data: statements = [], isLoading } = useQuery({
     queryKey: ['statements'],
@@ -116,6 +131,19 @@ export default function DriverStatements() {
             <SelectItem value="void">Void</SelectItem>
           </SelectContent>
         </Select>
+        {(search || statusFilter !== 'all') && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 text-xs gap-1" 
+            onClick={() => {
+              setSearch('');
+              setStatusFilter('all');
+            }}
+          >
+            <X className="w-3.5 h-3.5" /> Clear Filters
+          </Button>
+        )}
       </div>
       {selected.size > 0 && (
         <BulkDeleteBar
