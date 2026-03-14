@@ -121,6 +121,7 @@ Return only the JSON with the transactions array.`,
                   invoice_amount: { type: 'number' },
                   total_amount: { type: 'number' },
                   gross_amount: { type: 'number' },
+                  gross_amt: { type: 'number' },
                 }
               }
             }

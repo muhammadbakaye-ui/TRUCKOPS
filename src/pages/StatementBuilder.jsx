@@ -178,8 +178,8 @@ export default function StatementBuilder() {
         const gallonsPart = gallons ? ` (${gallons} gal)` : '';
         const descParts = ['Fuel', cityState, gallonsPart].filter(Boolean);
         
-        // Use fuel_amount (which should be GROSS AMT from the import), fallback to total_amount
-        const fuelCost = tx.fuel_amount || tx.total_amount || 0;
+        // Use fuel_amount if it exists (GROSS AMT), otherwise use total_amount
+        const fuelCost = (tx.fuel_amount && tx.fuel_amount > 0) ? tx.fuel_amount : (tx.total_amount || 0);
         
         return {
           line_type: 'fuel',
