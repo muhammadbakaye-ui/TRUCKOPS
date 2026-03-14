@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -6,7 +6,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Trash2 } from 'lucide-react';
+import { Plus, Search, Trash2, X } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
@@ -20,14 +20,38 @@ export default function Loads() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState(() => {
     const params = new URLSearchParams(window.location.search);
-    return params.get('search') || '';
+    return params.get('search') || localStorage.getItem('loads_search') || '';
   });
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [invoiceFilter, setInvoiceFilter] = useState('all');
-  const [driverFilter, setDriverFilter] = useState('all');
-  const [truckFilter, setTruckFilter] = useState('all');
-  const [tripFilter, setTripFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState(() => localStorage.getItem('loads_status') || 'all');
+  const [invoiceFilter, setInvoiceFilter] = useState(() => localStorage.getItem('loads_invoice') || 'all');
+  const [driverFilter, setDriverFilter] = useState(() => localStorage.getItem('loads_driver') || 'all');
+  const [truckFilter, setTruckFilter] = useState(() => localStorage.getItem('loads_truck') || 'all');
+  const [tripFilter, setTripFilter] = useState(() => localStorage.getItem('loads_trip') || 'all');
   const [selected, setSelected] = useState(new Set());
+
+  useEffect(() => {
+    localStorage.setItem('loads_search', search);
+  }, [search]);
+
+  useEffect(() => {
+    localStorage.setItem('loads_status', statusFilter);
+  }, [statusFilter]);
+
+  useEffect(() => {
+    localStorage.setItem('loads_invoice', invoiceFilter);
+  }, [invoiceFilter]);
+
+  useEffect(() => {
+    localStorage.setItem('loads_driver', driverFilter);
+  }, [driverFilter]);
+
+  useEffect(() => {
+    localStorage.setItem('loads_truck', truckFilter);
+  }, [truckFilter]);
+
+  useEffect(() => {
+    localStorage.setItem('loads_trip', tripFilter);
+  }, [tripFilter]);
 
   const { data: loads = [], isLoading } = useQuery({
     queryKey: ['loads'],
@@ -242,6 +266,23 @@ export default function Loads() {
             {uniqueTrips.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
           </SelectContent>
         </Select>
+        {(search || statusFilter !== 'all' || invoiceFilter !== 'all' || driverFilter !== 'all' || truckFilter !== 'all' || tripFilter !== 'all') && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 text-xs gap-1" 
+            onClick={() => {
+              setSearch('');
+              setStatusFilter('all');
+              setInvoiceFilter('all');
+              setDriverFilter('all');
+              setTruckFilter('all');
+              setTripFilter('all');
+            }}
+          >
+            <X className="w-3.5 h-3.5" /> Clear Filters
+          </Button>
+        )}
       </div>
 
       {selected.size > 0 && (
