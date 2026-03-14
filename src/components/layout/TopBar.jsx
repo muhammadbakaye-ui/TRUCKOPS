@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Bell, LogOut, Shield } from 'lucide-react';
+import { Search, LogOut, Shield } from 'lucide-react';
 import { useSession } from '../shared/AppSession';
+import NotificationBell from './NotificationBell';
 
 export default function TopBar({ pageTitle }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,9 +36,7 @@ export default function TopBar({ pageTitle }) {
             className="w-64 h-8 pl-8 text-xs bg-muted border-0"
           />
         </form>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <Bell className="w-4 h-4 text-muted-foreground" />
-        </Button>
+        <NotificationBell />
         <div className="flex items-center gap-2 pl-2 border-l border-border">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Shield className="w-3.5 h-3.5" />
