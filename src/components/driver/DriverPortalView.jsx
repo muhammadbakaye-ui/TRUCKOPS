@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Truck, Upload, FileText, LogOut, Download, Loader2, FileCheck, Calendar, AlertCircle, X, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, addDays, isPast, subDays } from 'date-fns';
+import { getPeriodForDate } from '../lib/statementCalendar';
 import { printStatement } from '../print/printStatement';
 import StatementLoadDetails from './StatementLoadDetails';
 
@@ -81,8 +82,9 @@ export default function DriverPortalView() {
 
   const getDueDate = (period_end) => {
     if (!period_end) return null;
-    // RULE: Week ends on Saturday, due date is following Tuesday (+3 days)
-    return addDays(new Date(period_end), 3);
+    // Look up the due date from the hardcoded calendar
+    const period = getPeriodForDate(period_end);
+    return period ? new Date(period.due) : null;
   };
   const checkOverdue = (period_end, status) => {
     const due = getDueDate(period_end);

@@ -1,5 +1,61 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
+// 2026 Statement Period Calendar
+const STATEMENT_PERIODS_2026 = [
+  { start: '2026-02-01', end: '2026-02-07', due: '2026-02-10' },
+  { start: '2026-02-08', end: '2026-02-14', due: '2026-02-17' },
+  { start: '2026-02-15', end: '2026-02-21', due: '2026-02-24' },
+  { start: '2026-02-22', end: '2026-02-28', due: '2026-03-03' },
+  { start: '2026-03-01', end: '2026-03-07', due: '2026-03-10' },
+  { start: '2026-03-08', end: '2026-03-14', due: '2026-03-17' },
+  { start: '2026-03-15', end: '2026-03-21', due: '2026-03-24' },
+  { start: '2026-03-22', end: '2026-03-28', due: '2026-03-31' },
+  { start: '2026-03-29', end: '2026-04-04', due: '2026-04-07' },
+  { start: '2026-04-05', end: '2026-04-11', due: '2026-04-14' },
+  { start: '2026-04-12', end: '2026-04-18', due: '2026-04-21' },
+  { start: '2026-04-19', end: '2026-04-25', due: '2026-04-28' },
+  { start: '2026-04-26', end: '2026-05-02', due: '2026-05-05' },
+  { start: '2026-05-03', end: '2026-05-09', due: '2026-05-12' },
+  { start: '2026-05-10', end: '2026-05-16', due: '2026-05-19' },
+  { start: '2026-05-17', end: '2026-05-23', due: '2026-05-26' },
+  { start: '2026-05-24', end: '2026-05-30', due: '2026-06-02' },
+  { start: '2026-05-31', end: '2026-06-06', due: '2026-06-09' },
+  { start: '2026-06-07', end: '2026-06-13', due: '2026-06-16' },
+  { start: '2026-06-14', end: '2026-06-20', due: '2026-06-23' },
+  { start: '2026-06-21', end: '2026-06-27', due: '2026-06-30' },
+  { start: '2026-06-28', end: '2026-07-04', due: '2026-07-07' },
+  { start: '2026-07-05', end: '2026-07-11', due: '2026-07-14' },
+  { start: '2026-07-12', end: '2026-07-18', due: '2026-07-21' },
+  { start: '2026-07-19', end: '2026-07-25', due: '2026-07-28' },
+  { start: '2026-07-26', end: '2026-08-01', due: '2026-08-04' },
+  { start: '2026-08-02', end: '2026-08-08', due: '2026-08-11' },
+  { start: '2026-08-09', end: '2026-08-15', due: '2026-08-18' },
+  { start: '2026-08-16', end: '2026-08-22', due: '2026-08-25' },
+  { start: '2026-08-23', end: '2026-08-29', due: '2026-09-01' },
+  { start: '2026-08-30', end: '2026-09-05', due: '2026-09-08' },
+  { start: '2026-09-06', end: '2026-09-12', due: '2026-09-15' },
+  { start: '2026-09-13', end: '2026-09-19', due: '2026-09-22' },
+  { start: '2026-09-20', end: '2026-09-26', due: '2026-09-29' },
+  { start: '2026-09-27', end: '2026-10-03', due: '2026-10-06' },
+  { start: '2026-10-04', end: '2026-10-10', due: '2026-10-13' },
+  { start: '2026-10-11', end: '2026-10-17', due: '2026-10-20' },
+  { start: '2026-10-18', end: '2026-10-24', due: '2026-10-27' },
+  { start: '2026-10-25', end: '2026-10-31', due: '2026-11-03' },
+  { start: '2026-11-01', end: '2026-11-07', due: '2026-11-10' },
+  { start: '2026-11-08', end: '2026-11-14', due: '2026-11-17' },
+  { start: '2026-11-15', end: '2026-11-21', due: '2026-11-24' },
+  { start: '2026-11-22', end: '2026-11-28', due: '2026-12-01' },
+  { start: '2026-11-29', end: '2026-12-05', due: '2026-12-08' },
+  { start: '2026-12-06', end: '2026-12-12', due: '2026-12-15' },
+  { start: '2026-12-13', end: '2026-12-19', due: '2026-12-22' },
+  { start: '2026-12-20', end: '2026-12-26', due: '2026-12-29' },
+  { start: '2026-12-27', end: '2027-01-02', due: '2027-01-05' },
+];
+
+function getPeriodForDate(dateStr) {
+  return STATEMENT_PERIODS_2026.find(p => dateStr >= p.start && dateStr <= p.end) || null;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -19,47 +75,33 @@ Deno.serve(async (req) => {
     for (const stmt of statements) {
       try {
         // Skip if missing critical data
-        if (!stmt.period_end) {
+        if (!stmt.period_end && !stmt.period_start && !stmt.statement_date) {
           skipped++;
           continue;
         }
 
-        const periodEnd = new Date(stmt.period_end);
-        const dayOfWeek = periodEnd.getDay();
+        // Use any available date to find the correct period from the calendar
+        const lookupDate = stmt.period_end || stmt.period_start || stmt.statement_date;
+        const correctPeriod = getPeriodForDate(lookupDate);
         
-        // RULE: Weeks are Sunday (0) - Saturday (6), due date is following Tuesday (2)
-        // If period_end is already Saturday and period_start is 6 days before, skip
-        if (dayOfWeek === 6 && stmt.period_start) {
-          const periodStart = new Date(stmt.period_start);
-          if (periodStart.getDay() === 0) {
-            const daysDiff = Math.round((periodEnd - periodStart) / (1000 * 60 * 60 * 24));
-            if (daysDiff === 6) {
-              skipped++;
-              continue;
-            }
-          }
+        if (!correctPeriod) {
+          errors.push({ id: stmt.id, driver: stmt.driver_name, error: 'Date outside 2026 calendar range' });
+          continue;
         }
 
-        // Calculate the Sunday-Saturday week containing period_end
-        // Find the Sunday at or before period_end
-        let correctSunday = new Date(periodEnd);
-        while (correctSunday.getDay() !== 0) {
-          correctSunday.setDate(correctSunday.getDate() - 1);
+        // Check if already correct
+        if (stmt.period_start === correctPeriod.start && 
+            stmt.period_end === correctPeriod.end && 
+            stmt.statement_date === correctPeriod.due) {
+          skipped++;
+          continue;
         }
-        
-        // Saturday is 6 days after Sunday
-        const correctSaturday = new Date(correctSunday);
-        correctSaturday.setDate(correctSunday.getDate() + 6);
-        
-        // Tuesday due date is 3 days after Saturday
-        const correctTuesday = new Date(correctSaturday);
-        correctTuesday.setDate(correctSaturday.getDate() + 3);
 
-        // Update the statement
+        // Update the statement with exact calendar values
         await base44.asServiceRole.entities.DriverStatement.update(stmt.id, {
-          period_start: correctSunday.toISOString().split('T')[0],
-          period_end: correctSaturday.toISOString().split('T')[0],
-          statement_date: correctTuesday.toISOString().split('T')[0],
+          period_start: correctPeriod.start,
+          period_end: correctPeriod.end,
+          statement_date: correctPeriod.due,
         });
 
         fixed++;

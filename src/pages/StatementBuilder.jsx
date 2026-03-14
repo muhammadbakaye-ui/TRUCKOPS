@@ -16,6 +16,7 @@ import { logAudit } from '../components/shared/AuditLogger';
 import { toast } from 'sonner';
 import { printStatement } from '../components/print/printStatement';
 import { addDays, startOfWeek, endOfWeek, format, parse } from 'date-fns';
+import { getPeriodByDueDate, getAllDueDates } from '../lib/statementCalendar';
 
 const DEFAULT_DEDUCTIONS = [
   { description: 'Insurance', amount: 425 },
@@ -73,14 +74,19 @@ export default function StatementBuilder() {
       toast.error('Please select a Tuesday (the due date)');
       return;
     }
-    // RULE: Week is Sunday-Saturday, due date is following Tuesday
-    // Work backwards from Tuesday: Tue - 3 days = Sat (period end), Sat - 6 days = Sun (period start)
-    const periodEndSaturday = addDays(date, -3);  // Saturday (day 6)
-    const periodStartSunday = addDays(periodEndSaturday, -6);  // Sunday (day 0)
     
-    set('statement_date', format(date, 'yyyy-MM-dd'));  // Tuesday due date
-    set('period_start', format(periodStartSunday, 'yyyy-MM-dd'));  // Sunday
-    set('period_end', format(periodEndSaturday, 'yyyy-MM-dd'));  // Saturday
+    // Look up the period from the hardcoded 2026 calendar
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const period = getPeriodByDueDate(dateStr);
+    
+    if (!period) {
+      toast.error('This Tuesday is not a valid statement due date');
+      return;
+    }
+    
+    set('statement_date', period.due);
+    set('period_start', period.start);
+    set('period_end', period.end);
   };
 
   const handlePrint = () => {
@@ -420,10 +426,13 @@ export default function StatementBuilder() {
                       selected={form.statement_date ? parse(form.statement_date, 'yyyy-MM-dd', new Date()) : undefined}
                       onSelect={handleDateSelect}
                       modifiers={{
-                        tuesday: (date) => date.getDay() === 2
+                        validTuesday: (date) => {
+                          const dateStr = format(date, 'yyyy-MM-dd');
+                          return getAllDueDates().includes(dateStr);
+                        }
                       }}
                       modifiersClassNames={{
-                        tuesday: 'bg-primary/10 font-bold text-primary'
+                        validTuesday: 'bg-primary/10 font-bold text-primary'
                       }}
                     />
                   </PopoverContent>
