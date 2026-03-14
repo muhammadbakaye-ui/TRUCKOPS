@@ -50,7 +50,10 @@ export default function FuelImport() {
       const extracted = await base44.integrations.Core.InvokeLLM({
         prompt: `Extract all fuel transaction records from this file. The file is a fuel card transaction report.
 Return a JSON array of transaction objects with these fields:
-card_number, driver_name_raw, truck_number_raw, location_name (full location name like "LOVES #481 TRAVEL STOP"), city, state, transaction_date (YYYY-MM-DD), gallons (number), fuel_amount (number), transaction_fee (number), advance_amount (number), advance_fee (number), misc_amount (number), invoice_amount (number), total_amount (number).
+card_number, driver_name_raw, truck_number_raw, location_name (full location name like "LOVES #481 TRAVEL STOP"), city, state, transaction_date (YYYY-MM-DD), gallons (number), fuel_amount (number), transaction_fee (number), advance_amount (number), advance_fee (number), misc_amount (number), invoice_amount (number), total_amount (number), gross_amount (number).
+
+IMPORTANT: For fuel_amount, use the GROSS AMT column if it exists. If GROSS AMT is available, use it for fuel_amount. Only use other fuel-related amounts if GROSS AMT is not present.
+
 If a field is missing, use null. Return only the JSON array.`,
         file_urls: [file_url],
         response_json_schema: {
@@ -76,6 +79,7 @@ If a field is missing, use null. Return only the JSON array.`,
                   misc_amount: { type: 'number' },
                   invoice_amount: { type: 'number' },
                   total_amount: { type: 'number' },
+                  gross_amount: { type: 'number' },
                 }
               }
             }
