@@ -276,7 +276,7 @@ export default function StatementBuilder() {
     }
   };
 
-  const LineRow = ({ line, onChange, onRemove }) => (
+  const LineRow = React.memo(({ line, onChange, onRemove }) => (
     <div className="grid grid-cols-12 gap-2 items-center py-2 border-b last:border-0">
       <div className="col-span-2">
         <Input type="date" value={line.date || ''} onChange={(e) => onChange('date', e.target.value)} className="h-8 text-xs" />
@@ -294,7 +294,7 @@ export default function StatementBuilder() {
         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onRemove}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
       </div>
     </div>
-  );
+  ));
 
   const colHeaders = (
     <div className="grid grid-cols-12 gap-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-0 mb-1 pb-2 border-b">
@@ -431,7 +431,11 @@ export default function StatementBuilder() {
               <div className="space-y-0">
                 {tripLines.map((line, i) => (
                   <LineRow key={line._key || i} line={line}
-                    onChange={(k, v) => setTripLines(prev => prev.map((l, idx) => idx === i ? { ...l, [k]: v } : l))}
+                    onChange={(k, v) => {
+                      const newLines = [...tripLines];
+                      newLines[i] = { ...newLines[i], [k]: v };
+                      setTripLines(newLines);
+                    }}
                     onRemove={() => setTripLines(prev => prev.filter((_, idx) => idx !== i))}
                   />
                 ))}
@@ -465,7 +469,11 @@ export default function StatementBuilder() {
               <div className="space-y-0">
                 {deductionLines.map((line, i) => (
                   <LineRow key={line._key || i} line={line}
-                    onChange={(k, v) => setDeductionLines(prev => prev.map((l, idx) => idx === i ? { ...l, [k]: v } : l))}
+                    onChange={(k, v) => {
+                      const newLines = [...deductionLines];
+                      newLines[i] = { ...newLines[i], [k]: v };
+                      setDeductionLines(newLines);
+                    }}
                     onRemove={() => setDeductionLines(prev => prev.filter((_, idx) => idx !== i))}
                   />
                 ))}
@@ -499,7 +507,11 @@ export default function StatementBuilder() {
               <div className="space-y-0">
                 {fuelLines.map((line, i) => (
                   <LineRow key={line._key || i} line={line}
-                    onChange={(k, v) => setFuelLines(prev => prev.map((l, idx) => idx === i ? { ...l, [k]: v } : l))}
+                    onChange={(k, v) => {
+                      const newLines = [...fuelLines];
+                      newLines[i] = { ...newLines[i], [k]: v };
+                      setFuelLines(newLines);
+                    }}
                     onRemove={() => setFuelLines(prev => prev.filter((_, idx) => idx !== i))}
                   />
                 ))}
