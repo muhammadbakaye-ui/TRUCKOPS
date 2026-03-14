@@ -32,6 +32,30 @@ export default function StatementBuilder() {
   const [tripLines, setTripLines] = useState([]);
   const [deductionLines, setDeductionLines] = useState([]);
   const [fuelLines, setFuelLines] = useState([]);
+  
+  const updateTripLine = React.useCallback((index, key, value) => {
+    setTripLines(prev => {
+      const newLines = [...prev];
+      newLines[index] = { ...newLines[index], [key]: value };
+      return newLines;
+    });
+  }, []);
+  
+  const updateDeductionLine = React.useCallback((index, key, value) => {
+    setDeductionLines(prev => {
+      const newLines = [...prev];
+      newLines[index] = { ...newLines[index], [key]: value };
+      return newLines;
+    });
+  }, []);
+  
+  const updateFuelLine = React.useCallback((index, key, value) => {
+    setFuelLines(prev => {
+      const newLines = [...prev];
+      newLines[index] = { ...newLines[index], [key]: value };
+      return newLines;
+    });
+  }, []);
   const [saving, setSaving] = useState(false);
   const [loadingTrips, setLoadingTrips] = useState(false);
   const [loadingFuel, setLoadingFuel] = useState(false);
@@ -49,10 +73,10 @@ export default function StatementBuilder() {
       toast.error('Please select a Tuesday');
       return;
     }
-    // Tuesday - 9 days = previous Sunday (start of week)
-    // Tuesday - 3 days = previous Saturday (end of week)
-    const prevSunday = addDays(date, -9);
-    const prevSaturday = addDays(date, -3);
+    // Tuesday represents the end of the pay period
+    // Period: previous Sunday through previous Saturday (7 days ending the Saturday before Tuesday)
+    const prevSaturday = addDays(date, -3);  // Saturday before Tuesday
+    const prevSunday = addDays(prevSaturday, -6);  // Sunday 6 days before that Saturday
     set('statement_date', format(date, 'yyyy-MM-dd'));
     set('period_start', format(prevSunday, 'yyyy-MM-dd'));
     set('period_end', format(prevSaturday, 'yyyy-MM-dd'));
@@ -431,11 +455,7 @@ export default function StatementBuilder() {
               <div className="space-y-0">
                 {tripLines.map((line, i) => (
                   <LineRow key={line._key || i} line={line}
-                    onChange={(k, v) => {
-                      const newLines = [...tripLines];
-                      newLines[i] = { ...newLines[i], [k]: v };
-                      setTripLines(newLines);
-                    }}
+                    onChange={(k, v) => updateTripLine(i, k, v)}
                     onRemove={() => setTripLines(prev => prev.filter((_, idx) => idx !== i))}
                   />
                 ))}
@@ -469,11 +489,7 @@ export default function StatementBuilder() {
               <div className="space-y-0">
                 {deductionLines.map((line, i) => (
                   <LineRow key={line._key || i} line={line}
-                    onChange={(k, v) => {
-                      const newLines = [...deductionLines];
-                      newLines[i] = { ...newLines[i], [k]: v };
-                      setDeductionLines(newLines);
-                    }}
+                    onChange={(k, v) => updateDeductionLine(i, k, v)}
                     onRemove={() => setDeductionLines(prev => prev.filter((_, idx) => idx !== i))}
                   />
                 ))}
@@ -507,11 +523,7 @@ export default function StatementBuilder() {
               <div className="space-y-0">
                 {fuelLines.map((line, i) => (
                   <LineRow key={line._key || i} line={line}
-                    onChange={(k, v) => {
-                      const newLines = [...fuelLines];
-                      newLines[i] = { ...newLines[i], [k]: v };
-                      setFuelLines(newLines);
-                    }}
+                    onChange={(k, v) => updateFuelLine(i, k, v)}
                     onRemove={() => setFuelLines(prev => prev.filter((_, idx) => idx !== i))}
                   />
                 ))}
