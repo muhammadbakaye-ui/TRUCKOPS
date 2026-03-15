@@ -188,11 +188,9 @@ export default function StatementBuilder() {
           }
         }
         
-        const internalNum = l.internal_load_number || '';
         const externalNum = l.external_load_number || '';
-        const loadRef = tripNum ? `${tripNum} / ${externalNum || internalNum}` : (externalNum || internalNum);
-        const loadNumPart = internalNum && externalNum ? `${internalNum} · ${loadRef}` : loadRef;
-        const description = l.customer_name ? `${loadNumPart} — ${l.customer_name}` : loadNumPart;
+        const loadRef = tripNum ? `${tripNum} / ${externalNum || l.internal_load_number}` : (externalNum || l.internal_load_number || '');
+        const description = l.customer_name ? `${loadRef} — ${l.customer_name}` : loadRef;
         return {
           _key: l.id || `trip_${Date.now()}_${idx}`,
           line_type: 'trip',
