@@ -18,6 +18,26 @@ import { printStatement } from '../components/print/printStatement';
 import { addDays, startOfWeek, endOfWeek, format, parse } from 'date-fns';
 import { getPeriodByDueDate, getAllDueDates } from '@/components/shared/statementCalendar';
 
+const LineRow = React.memo(({ line, onChange, onRemove }) => (
+  <div className="grid grid-cols-12 gap-2 items-center py-2 border-b last:border-0">
+    <div className="col-span-2">
+      <Input type="date" value={line.date || ''} onChange={(e) => onChange('date', e.target.value)} className="h-8 text-xs" />
+    </div>
+    <div className="col-span-4">
+      <Input value={line.description || ''} onChange={(e) => onChange('description', e.target.value)} className="h-8 text-xs" placeholder="Description / Load #" />
+    </div>
+    <div className="col-span-3">
+      <Input value={line.route || ''} onChange={(e) => onChange('route', e.target.value)} className="h-8 text-xs" placeholder="Origin → Dest" />
+    </div>
+    <div className="col-span-2">
+      <Input type="number" value={line.amount || ''} onChange={(e) => onChange('amount', Number(e.target.value))} className="h-8 text-xs text-right font-mono font-semibold" placeholder="0.00" />
+    </div>
+    <div className="col-span-1 flex justify-center">
+      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onRemove}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
+    </div>
+  </div>
+));
+
 const DEFAULT_DEDUCTIONS = [
   { description: 'Insurance', amount: 425 },
   { description: 'IFTA', amount: 50 },
