@@ -31,7 +31,7 @@ export default function Loads() {
   const [selected, setSelected] = useState(new Set());
   const [expandedDates, setExpandedDates] = useState(() => {
     const saved = localStorage.getItem('loads_expanded_dates');
-    return saved ? new Set(JSON.parse(saved)) : new Set();
+    return saved ? new Set(JSON.parse(saved)) : null; // null = all open by default
   });
 
   const toggleDate = (dateKey) => {
