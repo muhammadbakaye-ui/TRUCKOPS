@@ -200,6 +200,7 @@ export default function StatementBuilder() {
           description,
           route: `${l.pickup_city || ''}${l.pickup_state ? `, ${l.pickup_state}` : ''} → ${l.delivery_city || ''}${l.delivery_state ? `, ${l.delivery_state}` : ''}`,
           amount: driverPay,
+          internal_load_number: l.internal_load_number || '',
         };
       });
       setTripLines(newLines);
