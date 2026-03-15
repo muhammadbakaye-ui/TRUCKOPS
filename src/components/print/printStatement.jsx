@@ -68,15 +68,14 @@ export function printStatement({ company, statement, allLines }) {
     </div>
   </div>
 
-  ${tableSection('Trips', ['Date','Trip #','Route','Description','Amount'],
+  ${tableSection('Trips', ['Date','Load #','Route','Amount'],
     tripLines.map(l => `<tr>
       <td style="text-align:center">${l.date || ''}</td>
-      <td style="text-align:center">${l.description?.split('/')[0]?.trim() || ''}</td>
-      <td style="text-align:center">${l.route || ''}</td>
       <td style="text-align:center">${l.description || ''}</td>
+      <td style="text-align:center">${l.route || ''}</td>
       <td style="text-align:right">${fmt(l.amount)}</td>
     </tr>`).join(''),
-    `<td colspan="4" style="text-align:right">Total:</td>`, fmt(tripsTotal)
+    `<td colspan="3" style="text-align:right">Total:</td>`, fmt(tripsTotal)
   )}
 
   ${tableSection('Deductions', ['Description','Date','Amount'],
