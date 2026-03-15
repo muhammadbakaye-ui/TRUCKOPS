@@ -125,6 +125,11 @@ export default function Loads() {
     const matchesTrip = tripFilter === 'all' || 
       (tripFilter === 'unselected' ? !l.trip_number : l.trip_number === tripFilter);
     return matchesSearch && matchesStatus && matchesInvoice && matchesDriver && matchesTruck && matchesTrip;
+  }).sort((a, b) => {
+    const aVal = a[sortField] || '';
+    const bVal = b[sortField] || '';
+    const cmp = aVal.localeCompare(bVal);
+    return sortDir === 'asc' ? cmp : -cmp;
   });
 
   const columns = [
