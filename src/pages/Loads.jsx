@@ -36,10 +36,12 @@ export default function Loads() {
 
   const toggleDate = (dateKey) => {
     setExpandedDates(prev => {
-      const next = new Set(prev);
-      if (next.has(dateKey)) { next.delete(dateKey); } else { next.add(dateKey); }
-      localStorage.setItem('loads_expanded_dates', JSON.stringify([...next]));
-      return next;
+      // If null (all open), initialize with all keys except this one (collapsed)
+      const allKeys = sortedDateKeys || [];
+      const current = prev === null ? new Set(allKeys) : new Set(prev);
+      if (current.has(dateKey)) { current.delete(dateKey); } else { current.add(dateKey); }
+      localStorage.setItem('loads_expanded_dates', JSON.stringify([...current]));
+      return current;
     });
   };
 
