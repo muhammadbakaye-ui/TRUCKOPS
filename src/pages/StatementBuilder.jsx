@@ -168,8 +168,11 @@ export default function StatementBuilder() {
           }
         }
         
-        const loadNum = tripNum ? `${tripNum} / ${l.external_load_number || l.internal_load_number}` : `${l.external_load_number || l.internal_load_number}`;
-        const description = l.customer_name ? `${loadNum} — ${l.customer_name}` : loadNum;
+        const internalNum = l.internal_load_number || '';
+        const externalNum = l.external_load_number || '';
+        const loadRef = tripNum ? `${tripNum} / ${externalNum || internalNum}` : (externalNum || internalNum);
+        const loadNumPart = internalNum && externalNum ? `${internalNum} · ${loadRef}` : loadRef;
+        const description = l.customer_name ? `${loadNumPart} — ${l.customer_name}` : loadNumPart;
         return {
           _key: l.id || `trip_${Date.now()}_${idx}`,
           line_type: 'trip',
