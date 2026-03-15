@@ -168,13 +168,15 @@ export default function StatementBuilder() {
           }
         }
         
+        const loadNum = tripNum ? `${tripNum} / ${l.external_load_number || l.internal_load_number}` : `${l.external_load_number || l.internal_load_number}`;
+        const description = l.customer_name ? `${loadNum} — ${l.customer_name}` : loadNum;
         return {
           _key: l.id || `trip_${Date.now()}_${idx}`,
           line_type: 'trip',
           source_id: l.id,
           source_type: 'load',
           date: l.delivery_date || l.pickup_date || '',
-          description: tripNum ? `${tripNum} / ${l.external_load_number || l.internal_load_number}` : `${l.external_load_number || l.internal_load_number}`,
+          description,
           route: `${l.pickup_city || ''}${l.pickup_state ? `, ${l.pickup_state}` : ''} → ${l.delivery_city || ''}${l.delivery_state ? `, ${l.delivery_state}` : ''}`,
           amount: driverPay,
         };
