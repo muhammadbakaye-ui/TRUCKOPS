@@ -29,25 +29,18 @@ export default function Loads() {
   const [truckFilter, setTruckFilter] = useState(() => localStorage.getItem('loads_truck') || 'all');
   const [tripFilter, setTripFilter] = useState(() => localStorage.getItem('loads_trip') || 'all');
   const [selected, setSelected] = useState(new Set());
-  const [sortField, setSortField] = useState(() => localStorage.getItem('loads_sort_field') || 'delivery_date');
-  const [sortDir, setSortDir] = useState(() => localStorage.getItem('loads_sort_dir') || 'desc');
+  const [expandedDates, setExpandedDates] = useState(() => {
+    const saved = localStorage.getItem('loads_expanded_dates');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
 
-  const handleSort = (field) => {
-    if (sortField === field) {
-      const newDir = sortDir === 'asc' ? 'desc' : 'asc';
-      setSortDir(newDir);
-      localStorage.setItem('loads_sort_dir', newDir);
-    } else {
-      setSortField(field);
-      setSortDir('desc');
-      localStorage.setItem('loads_sort_field', field);
-      localStorage.setItem('loads_sort_dir', 'desc');
-    }
-  };
-
-  const SortIcon = ({ field }) => {
-    if (sortField !== field) return <ArrowUpDown className="w-3 h-3 ml-1 text-muted-foreground" />;
-    return sortDir === 'asc' ? <ArrowUp className="w-3 h-3 ml-1 text-primary" /> : <ArrowDown className="w-3 h-3 ml-1 text-primary" />;
+  const toggleDate = (dateKey) => {
+    setExpandedDates(prev => {
+      const next = new Set(prev);
+      if (next.has(dateKey)) { next.delete(dateKey); } else { next.add(dateKey); }
+      localStorage.setItem('loads_expanded_dates', JSON.stringify([...next]));
+      return next;
+    });
   };
 
   useEffect(() => {
