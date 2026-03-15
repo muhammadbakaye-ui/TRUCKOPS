@@ -119,93 +119,21 @@ export default function Loads() {
     const matchesTrip = tripFilter === 'all' || 
       (tripFilter === 'unselected' ? !l.trip_number : l.trip_number === tripFilter);
     return matchesSearch && matchesStatus && matchesInvoice && matchesDriver && matchesTruck && matchesTrip;
-  }).sort((a, b) => {
-    const aVal = a[sortField] || '';
-    const bVal = b[sortField] || '';
-    const cmp = aVal.localeCompare(bVal);
-    return sortDir === 'asc' ? cmp : -cmp;
   });
 
-  const columns = [
-    {
-      header: (
-        <Checkbox
-          checked={selected.size > 0 && selected.size === filtered.length}
-          onCheckedChange={(checked) => {
-            if (checked) {
-              setSelected(new Set(filtered.map(l => l.id)));
-            } else {
-              setSelected(new Set());
-            }
-          }}
-        />
-      ),
-      render: (r) => (
-        <Checkbox
-          checked={selected.has(r.id)}
-          onCheckedChange={(checked) => {
-            const newSelected = new Set(selected);
-            if (checked) {
-              newSelected.add(r.id);
-            } else {
-              newSelected.delete(r.id);
-            }
-            setSelected(newSelected);
-          }}
-          onClick={(e) => e.stopPropagation()}
-        />
-      )
-    },
-    { header: 'Load #', render: (r) => (
-      <div className="flex flex-col gap-0.5">
-        <span className="font-mono font-semibold text-primary text-sm">{r.internal_load_number}</span>
-        {r.trip_number && <span className="text-xs text-muted-foreground">Trip: {r.trip_number}</span>}
-      </div>
-    )},
-    { header: 'Customer', render: (r) => <span className="font-medium text-sm">{r.customer_name || '—'}</span> },
-    { header: 'Route', render: (r) => {
-      const pickup = r.pickup_city ? `${r.pickup_city}${r.pickup_state ? ', ' + r.pickup_state : ''}` : null;
-      const delivery = r.delivery_city ? `${r.delivery_city}${r.delivery_state ? ', ' + r.delivery_state : ''}` : null;
-      if (pickup && delivery) return <span className="text-xs">{pickup} → {delivery}</span>;
-      if (pickup) return <span className="text-xs">{pickup}</span>;
-      if (delivery) return <span className="text-xs">{delivery}</span>;
-      return '—';
-    }},
-    { header: <button className="flex items-center font-medium" onClick={() => handleSort('pickup_date')}>Pickup <SortIcon field="pickup_date" /></button>, render: (r) => r.pickup_date || '—' },
-    { header: <button className="flex items-center font-medium" onClick={() => handleSort('delivery_date')}>Delivery <SortIcon field="delivery_date" /></button>, render: (r) => r.delivery_date || '—' },
-    { header: 'Drivers', render: (r) => (
-      <div className="flex flex-col gap-1">
-        {r.driver_1_name && <span className="text-sm">{r.driver_1_name}</span>}
-        {r.driver_2_name && <span className="text-sm">{r.driver_2_name}</span>}
-        {!r.driver_1_name && !r.driver_2_name && <span>—</span>}
-      </div>
-    )},
-    { header: 'Truck', render: (r) => r.truck_number ? <span className="font-mono text-sm">{r.truck_number}</span> : '—' },
-    { header: 'Amount', render: (r) => r.invoice_amount ? `$${r.invoice_amount.toLocaleString()}` : '—' },
-    { header: 'Status', render: (r) => <StatusBadge status={r.status} /> },
-    { header: 'Invoice', render: (r) => <StatusBadge status={r.invoice_status} /> },
-    {
-      header: '', render: (r) => (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={e => e.stopPropagation()}>
-              <Trash2 className="w-3.5 h-3.5" />
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Load?</AlertDialogTitle>
-              <AlertDialogDescription>Load #{r.internal_load_number} will be moved to Deleted Items and kept for 30 days.</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteMutation.mutate(r)}>Delete</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )
-    },
-  ];
+  // Group by pickup_date
+  const groupedByDate = filtered.reduce((acc, l) => {
+    const key = l.pickup_date || 'No Pickup Date';
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(l);
+    return acc;
+  }, {});
+
+  const sortedDateKeys = Object.keys(groupedByDate).sort((a, b) => {
+    if (a === 'No Pickup Date') return 1;
+    if (b === 'No Pickup Date') return -1;
+    return b.localeCompare(a); // most recent first
+  });
 
   return (
     <div className="p-4">
