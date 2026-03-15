@@ -64,12 +64,9 @@ export function printStatement({ company, statement, allLines }) {
       Statement<br>
       ${statement.statement_date ? format(new Date(statement.statement_date), 'M-d-yyyy') : ''}<br>
       ${statement.driver_name || ''}<br>
-      Unit #${statement.truck_number || ''}<br>
-      (${statement.driver_name || ''})
+      Unit #${statement.truck_number || ''}
     </div>
   </div>
-
-  <div style="margin-bottom:20px;font-size:11px"><strong>${statement.driver_name || ''}</strong></div>
 
   ${tableSection('Trips', ['Date','Trip #','Route','Description','Amount'],
     tripLines.map(l => `<tr>
