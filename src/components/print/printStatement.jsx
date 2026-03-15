@@ -64,18 +64,22 @@ export function printStatement({ company, statement, allLines }) {
       Statement<br>
       ${statement.statement_date ? format(new Date(statement.statement_date), 'M-d-yyyy') : ''}<br>
       ${statement.driver_name || ''}<br>
-      Unit #${statement.truck_number || ''}
+      Unit #${statement.truck_number || ''}<br>
+      (${statement.driver_name || ''})
     </div>
   </div>
 
-  ${tableSection('Trips', ['Date','Load #','Route','Amount'],
+  <div style="margin-bottom:20px;font-size:11px"><strong>${statement.driver_name || ''}</strong></div>
+
+  ${tableSection('Trips', ['Date','Trip #','Route','Description','Amount'],
     tripLines.map(l => `<tr>
       <td style="text-align:center">${l.date || ''}</td>
-      <td style="text-align:center">${l.description || ''}</td>
+      <td style="text-align:center">${l.description?.split('/')[0]?.trim() || ''}</td>
       <td style="text-align:center">${l.route || ''}</td>
+      <td style="text-align:center">${l.description || ''}</td>
       <td style="text-align:right">${fmt(l.amount)}</td>
     </tr>`).join(''),
-    `<td colspan="3" style="text-align:right">Total:</td>`, fmt(tripsTotal)
+    `<td colspan="4" style="text-align:right">Total:</td>`, fmt(tripsTotal)
   )}
 
   ${tableSection('Deductions', ['Description','Date','Amount'],
