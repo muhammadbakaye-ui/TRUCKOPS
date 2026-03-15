@@ -252,7 +252,7 @@ export default function Loads() {
       <div className="space-y-3">
         {sortedDateKeys.map(dateKey => {
           const dateLoads = groupedByDate[dateKey];
-          const isExpanded = expandedDates.has(dateKey);
+          const isExpanded = expandedDates === null || expandedDates.has(dateKey);
           const totalAmount = dateLoads.reduce((sum, l) => sum + (l.invoice_amount || 0), 0);
           const label = dateKey === 'No Pickup Date' ? 'No Pickup Date' : format(parseISO(dateKey), 'EEEE, MMM d, yyyy');
 
