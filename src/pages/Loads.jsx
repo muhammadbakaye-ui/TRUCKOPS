@@ -177,8 +177,8 @@ export default function Loads() {
       if (delivery) return <span className="text-xs">{delivery}</span>;
       return '—';
     }},
-    { header: 'Pickup', render: (r) => r.pickup_date || '—' },
-    { header: 'Delivery', render: (r) => r.delivery_date || '—' },
+    { header: <button className="flex items-center font-medium" onClick={() => handleSort('pickup_date')}>Pickup <SortIcon field="pickup_date" /></button>, render: (r) => r.pickup_date || '—' },
+    { header: <button className="flex items-center font-medium" onClick={() => handleSort('delivery_date')}>Delivery <SortIcon field="delivery_date" /></button>, render: (r) => r.delivery_date || '—' },
     { header: 'Drivers', render: (r) => (
       <div className="flex flex-col gap-1">
         {r.driver_1_name && <span className="text-sm">{r.driver_1_name}</span>}
