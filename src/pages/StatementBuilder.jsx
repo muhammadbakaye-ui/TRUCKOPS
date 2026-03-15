@@ -23,8 +23,11 @@ const LineRow = React.memo(({ line, onChange, onRemove }) => (
     <div className="col-span-2">
       <Input type="date" value={line.date || ''} onChange={(e) => onChange('date', e.target.value)} className="h-8 text-xs" />
     </div>
-    <div className="col-span-4">
-      <Input value={line.description || ''} onChange={(e) => onChange('description', e.target.value)} className="h-8 text-xs" placeholder="Description / Load #" />
+    <div className="col-span-4 flex items-center gap-1">
+      <Input value={line.description || ''} onChange={(e) => onChange('description', e.target.value)} className="h-8 text-xs flex-1" placeholder="Description / Load #" />
+      {line.internal_load_number && (
+        <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded whitespace-nowrap">{line.internal_load_number}</span>
+      )}
     </div>
     <div className="col-span-3">
       <Input value={line.route || ''} onChange={(e) => onChange('route', e.target.value)} className="h-8 text-xs" placeholder="Origin → Dest" />
