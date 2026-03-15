@@ -247,13 +247,128 @@ export default function Loads() {
         />
       )}
 
-      <DataTable
-        columns={columns}
-        data={filtered}
-        isLoading={isLoading}
-        onRowClick={(row) => navigate(createPageUrl(`LoadDetail?id=${row.id}`))}
-        emptyMessage="No loads found. Upload a rate confirmation or create a new load."
-      />
+      <div className="space-y-3">
+        {sortedDateKeys.map(dateKey => {
+          const dateLoads = groupedByDate[dateKey];
+          const isExpanded = expandedDates.has(dateKey);
+          const totalAmount = dateLoads.reduce((sum, l) => sum + (l.invoice_amount || 0), 0);
+          const label = dateKey === 'No Pickup Date' ? 'No Pickup Date' : format(parseISO(dateKey), 'EEEE, MMM d, yyyy');
+
+          return (
+            <Card key={dateKey}>
+              <CardHeader
+                className="py-3 px-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => toggleDate(dateKey)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                    <CardTitle className="text-sm font-semibold">{label}</CardTitle>
+                    <span className="text-xs text-muted-foreground">({dateLoads.length} load{dateLoads.length === 1 ? '' : 's'})</span>
+                  </div>
+                  <div className="text-xs">
+                    Total: <span className="font-semibold">${totalAmount.toLocaleString()}</span>
+                  </div>
+                </div>
+              </CardHeader>
+              {isExpanded && (
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead className="bg-muted/50 border-y">
+                        <tr>
+                          <th className="text-left p-2 font-medium">
+                            <Checkbox
+                              checked={dateLoads.every(l => selected.has(l.id))}
+                              onCheckedChange={(checked) => {
+                                const next = new Set(selected);
+                                dateLoads.forEach(l => checked ? next.add(l.id) : next.delete(l.id));
+                                setSelected(next);
+                              }}
+                            />
+                          </th>
+                          <th className="text-left p-2 font-medium">Load #</th>
+                          <th className="text-left p-2 font-medium">Customer</th>
+                          <th className="text-left p-2 font-medium">Route</th>
+                          <th className="text-left p-2 font-medium">Delivery</th>
+                          <th className="text-left p-2 font-medium">Driver(s)</th>
+                          <th className="text-left p-2 font-medium">Truck</th>
+                          <th className="text-left p-2 font-medium">Amount</th>
+                          <th className="text-left p-2 font-medium">Status</th>
+                          <th className="text-left p-2 font-medium">Invoice</th>
+                          <th className="p-2"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dateLoads.map(l => (
+                          <tr
+                            key={l.id}
+                            className="border-b hover:bg-muted/30 cursor-pointer transition-colors"
+                            onClick={() => navigate(createPageUrl(`LoadDetail?id=${l.id}`))}
+                          >
+                            <td className="p-2">
+                              <Checkbox
+                                checked={selected.has(l.id)}
+                                onCheckedChange={(checked) => {
+                                  const next = new Set(selected);
+                                  checked ? next.add(l.id) : next.delete(l.id);
+                                  setSelected(next);
+                                }}
+                                onClick={e => e.stopPropagation()}
+                              />
+                            </td>
+                            <td className="p-2">
+                              <span className="font-mono font-semibold text-primary">{l.internal_load_number}</span>
+                              {l.trip_number && <div className="text-muted-foreground">Trip: {l.trip_number}</div>}
+                            </td>
+                            <td className="p-2 font-medium">{l.customer_name || '—'}</td>
+                            <td className="p-2">
+                              {l.pickup_city || l.delivery_city
+                                ? `${l.pickup_city || ''}${l.pickup_state ? ', ' + l.pickup_state : ''} → ${l.delivery_city || ''}${l.delivery_state ? ', ' + l.delivery_state : ''}`
+                                : '—'}
+                            </td>
+                            <td className="p-2">{l.delivery_date || '—'}</td>
+                            <td className="p-2">
+                              {l.driver_1_name || '—'}
+                              {l.driver_2_name && <div>{l.driver_2_name}</div>}
+                            </td>
+                            <td className="p-2 font-mono">{l.truck_number || '—'}</td>
+                            <td className="p-2">{l.invoice_amount ? `$${l.invoice_amount.toLocaleString()}` : '—'}</td>
+                            <td className="p-2"><StatusBadge status={l.status} /></td>
+                            <td className="p-2"><StatusBadge status={l.invoice_status} /></td>
+                            <td className="p-2">
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={e => e.stopPropagation()}>
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Load?</AlertDialogTitle>
+                                    <AlertDialogDescription>Load #{l.internal_load_number} will be moved to Deleted Items.</AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteMutation.mutate(l)}>Delete</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+          );
+        })}
+        {sortedDateKeys.length === 0 && !isLoading && (
+          <div className="text-center py-12 text-muted-foreground text-sm">No loads found.</div>
+        )}
+      </div>
     </div>
   );
 }
