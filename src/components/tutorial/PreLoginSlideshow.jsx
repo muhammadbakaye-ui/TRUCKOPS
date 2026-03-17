@@ -1,61 +1,52 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, X, Truck, FileText, Fuel, BarChart3, Calendar, Upload } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const slides = [
   {
-    icon: Truck,
-    color: 'from-blue-600 to-blue-800',
-    iconBg: 'bg-blue-500/20',
+    color: 'from-blue-600 to-blue-900',
+    title: 'Auto-Create Loads from Documents',
+    subtitle: '🚀 The #1 time-saver',
+    description: 'Drop a rate confirmation or BOL and AI instantly extracts everything — customer, rate, stops, dates — and creates a complete load. No manual entry needed.',
+    features: ['Rate confirmations & BOLs', 'AI reads all fields automatically', 'Multi-stop routes extracted', 'Opens load for review immediately'],
+    screenshot: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&q=80',
+    screenshotAlt: 'Document upload interface',
+  },
+  {
+    color: 'from-slate-700 to-slate-900',
     title: 'Load Management',
     subtitle: 'Full dispatch visibility',
     description: 'Track every load from pickup to delivery. Assign drivers and trucks, manage stops, and monitor dispatch status in real time.',
     features: ['Create & manage loads', 'Multi-stop routing', 'Driver & truck assignments', 'Real-time status tracking'],
+    screenshot: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=600&q=80',
+    screenshotAlt: 'Loads dashboard',
   },
   {
-    icon: FileText,
-    color: 'from-purple-600 to-purple-800',
-    iconBg: 'bg-purple-500/20',
+    color: 'from-purple-600 to-purple-900',
     title: 'Driver Statements',
     subtitle: 'Weekly settlement builder',
     description: 'Build weekly pay statements for each driver. Auto-pull trips and fuel, add deductions, and publish directly to the driver portal.',
     features: ['Auto-load trips by period', 'Pull fuel card charges', 'Quick deduction buttons', 'One-click publish to driver'],
+    screenshot: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&q=80',
+    screenshotAlt: 'Driver statement builder',
   },
   {
-    icon: Fuel,
-    color: 'from-orange-600 to-orange-800',
-    iconBg: 'bg-orange-500/20',
+    color: 'from-orange-600 to-orange-900',
     title: 'Fuel Card Import',
     subtitle: 'Automated matching',
     description: 'Import fuel card files and automatically match transactions to drivers and trucks. Review exceptions and attach charges to statements.',
     features: ['Bulk CSV import', 'Auto driver matching', 'Exception review', 'Statement integration'],
+    screenshot: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=600&q=80',
+    screenshotAlt: 'Fuel import dashboard',
   },
   {
-    icon: Calendar,
-    color: 'from-green-600 to-green-800',
-    iconBg: 'bg-green-500/20',
+    color: 'from-green-600 to-green-900',
     title: 'Driver Portal',
     subtitle: 'Self-service for drivers',
     description: 'Drivers log in with their name and truck ID. They can view published statements, download pay stubs, and upload BOLs & rate confirmations.',
-    features: ['Weekly statement view', 'PDF download', 'BOL upload', 'Rate confirmation upload'],
-  },
-  {
-    icon: BarChart3,
-    color: 'from-cyan-600 to-cyan-800',
-    iconBg: 'bg-cyan-500/20',
-    title: 'Invoices & Reports',
-    subtitle: 'Financials at a glance',
-    description: 'Generate customer invoices, track payment status, and view revenue reports. Keep your accounting organized in one place.',
-    features: ['Customer invoicing', 'Payment tracking', 'Revenue reporting', 'Export & print'],
-  },
-  {
-    icon: Upload,
-    color: 'from-rose-600 to-rose-800',
-    iconBg: 'bg-rose-500/20',
-    title: 'Document Management',
-    subtitle: 'All files in one place',
-    description: 'Attach BOLs, rate confirmations, and other documents to loads. Drivers can upload directly from the portal for instant admin visibility.',
-    features: ['File uploads', 'Document types (BOL, RC)', 'Admin review queue', 'Driver submissions'],
+    features: ['Weekly statement view', 'PDF download', 'BOL & RC upload', 'Instant dispatcher notification'],
+    screenshot: 'https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=600&q=80',
+    screenshotAlt: 'Driver portal view',
   },
 ];
 
@@ -88,38 +79,56 @@ export default function PreLoginSlideshow({ onClose }) {
   }, [current, animating]);
 
   const slide = slides[current];
-  const Icon = slide.icon;
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}
+      style={{ background: 'rgba(0,0,0,0.80)', backdropFilter: 'blur(6px)' }}
     >
       <div
         className="relative w-full max-w-lg bg-card rounded-2xl shadow-2xl overflow-hidden"
         style={{ animation: 'slideUp 0.3s ease-out' }}
       >
-        {/* Gradient header */}
-        <div className={`bg-gradient-to-br ${slide.color} p-8 relative overflow-hidden`}
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 z-10 w-7 h-7 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white transition-colors"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+
+        {/* Screenshot header */}
+        <div
+          className={`relative bg-gradient-to-br ${slide.color} overflow-hidden`}
           style={{
             opacity: animating ? 0 : 1,
             transform: animating ? `translateX(${direction === 'right' ? '40px' : '-40px'})` : 'translateX(0)',
             transition: 'opacity 0.25s ease, transform 0.25s ease',
+            height: 180,
           }}
         >
+          {/* Decorative circles */}
           <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
           <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-white/5 translate-y-8 -translate-x-6" />
 
-          <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl ${slide.iconBg} mb-4`}>
-            <Icon className="w-7 h-7 text-white" />
+          {/* Screenshot image overlay */}
+          <img
+            src={slide.screenshot}
+            alt={slide.screenshotAlt}
+            className="absolute inset-0 w-full h-full object-cover opacity-25"
+            style={{ mixBlendMode: 'luminosity' }}
+          />
+
+          {/* Title overlay */}
+          <div className="absolute inset-0 flex flex-col justify-end p-5">
+            <p className="text-white/70 text-xs font-semibold tracking-wider uppercase mb-1">{slide.subtitle}</p>
+            <h2 className="text-xl font-bold text-white leading-tight">{slide.title}</h2>
           </div>
-          <h2 className="text-2xl font-bold text-white">{slide.title}</h2>
-          <p className="text-white/60 text-sm mt-1 font-medium">{slide.subtitle}</p>
         </div>
 
         {/* Content */}
         <div
-          className="p-6 space-y-4"
+          className="p-5 space-y-4"
           style={{
             opacity: animating ? 0 : 1,
             transform: animating ? `translateX(${direction === 'right' ? '40px' : '-40px'})` : 'translateX(0)',
@@ -128,7 +137,7 @@ export default function PreLoginSlideshow({ onClose }) {
         >
           <p className="text-sm text-muted-foreground leading-relaxed">{slide.description}</p>
 
-          <ul className="space-y-2">
+          <ul className="space-y-1.5">
             {slide.features.map((f, i) => (
               <li key={i} className="flex items-center gap-2.5 text-sm">
                 <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
@@ -138,7 +147,7 @@ export default function PreLoginSlideshow({ onClose }) {
           </ul>
 
           {/* Dots */}
-          <div className="flex items-center justify-center gap-1.5 pt-2">
+          <div className="flex items-center justify-center gap-1.5 pt-1">
             {slides.map((_, i) => (
               <button
                 key={i}
@@ -167,14 +176,6 @@ export default function PreLoginSlideshow({ onClose }) {
             )}
           </div>
         </div>
-
-        {/* Close */}
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-        >
-          <X className="w-3.5 h-3.5" />
-        </button>
       </div>
 
       <style>{`

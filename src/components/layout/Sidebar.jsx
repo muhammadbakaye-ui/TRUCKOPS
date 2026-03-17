@@ -12,7 +12,7 @@ const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
   { type: 'divider', label: 'OPERATIONS' },
   { label: 'Loads', icon: Container, page: 'Loads', tourAttr: 'loads-nav' },
-  { label: 'Upload Doc', icon: Upload, page: 'UploadDocument' },
+  { label: 'Upload Doc', icon: Upload, page: 'UploadDocument', tourAttr: 'upload-doc-nav' },
   { type: 'divider', label: 'DIRECTORY' },
   { label: 'Companies', icon: Building2, page: 'Companies' },
   { label: 'Drivers', icon: Users, page: 'Drivers' },

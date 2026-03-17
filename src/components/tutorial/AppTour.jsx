@@ -11,21 +11,27 @@ export const ADMIN_TOUR_STEPS = [
     placement: 'right',
   },
   {
+    target: '[data-tour="upload-doc-nav"]',
+    title: '🚀 Upload Doc — The Star Feature',
+    description: 'Drop a rate confirmation or BOL here and the AI will automatically read it and create a fully populated load — no manual entry needed. This is the fastest way to create loads.',
+    placement: 'right',
+  },
+  {
     target: '[data-tour="loads-nav"]',
     title: 'Loads',
-    description: 'Create and manage freight loads. Assign drivers, trucks, stops, and track dispatch status from start to finish.',
+    description: 'View and manage all your freight loads. Assign drivers, trucks, stops, and track dispatch status from start to finish.',
     placement: 'right',
   },
   {
     target: '[data-tour="statements-nav"]',
     title: 'Driver Statements',
-    description: 'Build weekly pay statements. Auto-pull trips and fuel charges, add deductions, and publish to each driver\'s portal.',
+    description: 'Build weekly pay statements. Auto-pull trips and fuel charges, add deductions, and publish directly to each driver\'s portal.',
     placement: 'right',
   },
   {
     target: '[data-tour="fuel-nav"]',
     title: 'Fuel Import',
-    description: 'Import fuel card CSV files. Transactions are automatically matched to drivers and can be attached to pay statements.',
+    description: 'Import fuel card CSV files. Transactions are automatically matched to drivers and attached to pay statements.',
     placement: 'right',
   },
   {
@@ -42,29 +48,39 @@ export const ADMIN_TOUR_STEPS = [
   },
 ];
 
-export const DRIVER_TOUR_STEPS = [
+// Upload page tour — shown when on the UploadDocument page
+export const UPLOAD_TOUR_STEPS = [
   {
-    target: '[data-tour="driver-statements-tab"]',
-    title: 'My Statements',
-    description: 'View your weekly pay statements here. Each statement shows your trips, deductions, fuel charges, and your final net pay.',
+    target: '[data-tour="upload-dropzone"]',
+    title: '🚀 Auto-Create Loads from Documents',
+    description: 'This is the #1 time-saver in the app. Drop a rate confirmation or BOL here and AI will instantly extract all the load details — customer, rate, stops, dates — and create a complete load automatically. No manual entry!',
     placement: 'bottom',
   },
+];
+
+export const DRIVER_TOUR_STEPS = [
   {
     target: '[data-tour="driver-documents-tab"]',
     title: 'My Documents',
-    description: 'Upload your Bills of Lading (BOL) and Rate Confirmations here. Your dispatcher will be notified immediately.',
+    description: 'Upload your Bills of Lading (BOL) and Rate Confirmations here. Your dispatcher will be notified immediately when you upload.',
     placement: 'bottom',
   },
   {
     target: '[data-tour="driver-upload-bol"]',
     title: 'Upload BOL',
-    description: 'Tap here to upload a Bill of Lading. Supports PDF, JPG, PNG, and DOC formats.',
+    description: 'Tap here to upload a Bill of Lading after completing a delivery. Supports PDF, JPG, and PNG formats.',
     placement: 'bottom',
   },
   {
     target: '[data-tour="driver-upload-rc"]',
     title: 'Upload Rate Confirmation',
     description: 'Upload rate confirmations for your loads here. These go directly to your dispatcher for review.',
+    placement: 'bottom',
+  },
+  {
+    target: '[data-tour="driver-statements-tab"]',
+    title: 'My Statements',
+    description: 'View your weekly pay statements here. Each statement shows your trips, deductions, fuel charges, and your final net pay for the week.',
     placement: 'bottom',
   },
 ];
@@ -90,8 +106,8 @@ function TooltipBox({ step, onPrev, onNext, onClose, current, total }) {
   if (!rect) return null;
 
   const pad = 10;
-  const boxW = 280;
-  const boxH = 160;
+  const boxW = 300;
+  const boxH = 180;
 
   let top, left;
   const { placement } = step;

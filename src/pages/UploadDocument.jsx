@@ -192,6 +192,7 @@ Return a structured JSON with the following fields (use null if not found):
       </div>
 
       <Card
+        data-tour="upload-dropzone"
         className={`border-2 border-dashed transition-colors cursor-pointer ${dragging ? 'border-primary bg-primary/5' : 'border-border'} ${files.length > 0 ? 'border-green-500 bg-green-500/5' : ''}`}
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
