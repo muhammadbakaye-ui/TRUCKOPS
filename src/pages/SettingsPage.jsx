@@ -174,6 +174,12 @@ export default function SettingsPage() {
           {saveMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
           Save Settings
         </Button>
+        </>
+        )}
+
+        {activeTab === 'security' && currentUser && (
+          <LoginHistoryTab userEmail={currentUser.email} />
+        )}
       </div>
     </div>
   );
