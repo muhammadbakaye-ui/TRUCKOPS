@@ -351,6 +351,17 @@ export default function Loads() {
             <X className="w-3.5 h-3.5" /> Clear Filters
           </Button>
         )}
+        {loads.some(l => l.status === 'draft') && (
+          <Button 
+            size="sm" 
+            className="h-8 text-xs gap-1" 
+            onClick={handleSaveAllDrafts} 
+            disabled={savingAllDrafts}
+          >
+            {savingAllDrafts ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+            Save All Drafts
+          </Button>
+        )}
       </div>
 
       {selected.size > 0 && (
