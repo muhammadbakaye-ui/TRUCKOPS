@@ -36,6 +36,9 @@ export default function AccountCustomization() {
 
   useEffect(() => {
     if (currentUser) {
+      // Split full_name from auth into first and last name
+      const [firstName = '', lastName = ''] = (currentUser.full_name || '').split(' ');
+      
       // Fetch the admin record to get phone and display_email
       const fetchAdminData = async () => {
         try {
@@ -43,15 +46,32 @@ export default function AccountCustomization() {
           if (admins.length > 0) {
             const admin = admins[0];
             setAccountForm({
-              first_name: admin.first_name || '',
-              last_name: admin.last_name || '',
+              first_name: admin.first_name || firstName || '',
+              last_name: admin.last_name || lastName || '',
               phone: admin.phone || '',
               display_email: admin.display_email || '',
+              email: currentUser.email || '',
+            });
+          } else {
+            // If no admin record exists, use auth data
+            setAccountForm({
+              first_name: firstName,
+              last_name: lastName,
+              phone: '',
+              display_email: currentUser.email || '',
               email: currentUser.email || '',
             });
           }
         } catch (error) {
           console.error('Error fetching admin data:', error);
+          // Fallback to auth data
+          setAccountForm({
+            first_name: firstName,
+            last_name: lastName,
+            phone: '',
+            display_email: currentUser.email || '',
+            email: currentUser.email || '',
+          });
         }
       };
       fetchAdminData();
@@ -67,7 +87,7 @@ export default function AccountCustomization() {
       if (data.phone) updateData.phone = data.phone;
       await base44.auth.updateMe(updateData);
       
-      // Update or create the Admin entity with phone and display_email
+      // Update the Admin entity with phone and display_email if it exists
       const admins = await base44.entities.Admin.filter({ email: data.email });
       if (admins.length > 0) {
         return base44.entities.Admin.update(admins[0].id, {
@@ -75,17 +95,6 @@ export default function AccountCustomization() {
           last_name: data.last_name,
           phone: data.phone || '',
           display_email: data.display_email || '',
-        });
-      } else {
-        // Create Admin record if it doesn't exist
-        return base44.entities.Admin.create({
-          first_name: data.first_name,
-          last_name: data.last_name,
-          email: data.email,
-          phone: data.phone || '',
-          display_email: data.display_email || '',
-          password_hash: '', // Will be set by authAdmin function
-          active: true,
         });
       }
     },
