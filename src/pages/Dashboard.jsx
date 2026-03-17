@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import StatCard from '../components/dashboard/StatCard';
 import StatusBadge from '../components/shared/StatusBadge';
+import RevenueCharts from '../components/dashboard/RevenueCharts';
 import { format } from 'date-fns';
 
 export default function Dashboard() {
