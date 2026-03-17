@@ -101,38 +101,100 @@ export default function LoadDetail() {
     }
   }, [isNew]);
 
-  const handleSave = async () => {
-    setSaving(true);
+  // Auto-save as draft whenever form/stops change
+  const performAutoSave = useCallback(async (currentForm, currentStops) => {
+    if (!currentForm) return;
+    setAutoSaving(true);
     try {
-      let savedLoad;
-      if (isNew) {
+      const currentId = savedLoadIdRef.current;
+      if (!currentId) {
+        // First auto-save: create the record
         const existingLoads = await base44.entities.Load.list('-created_date', 1);
         const lastNum = existingLoads.length > 0
           ? parseInt(existingLoads[0].internal_load_number?.replace(/\D/g, '') || '1000')
           : 1000;
-        const payload = { ...form, internal_load_number: form.internal_load_number || `L-${lastNum + 1}` };
-        savedLoad = await base44.entities.Load.create(payload);
+        const payload = { ...currentForm, status: 'draft', internal_load_number: currentForm.internal_load_number || `L-${lastNum + 1}` };
+        const savedLoad = await base44.entities.Load.create(payload);
+        savedLoadIdRef.current = savedLoad.id;
+        for (let i = 0; i < currentStops.length; i++) {
+          await base44.entities.LoadStop.create({ ...currentStops[i], load_id: savedLoad.id, stop_order: i + 1 });
+        }
+        // Navigate to the new ID without losing the "editing" state
+        window.history.replaceState({}, '', `?id=${savedLoad.id}`);
+      } else {
+        // Subsequent auto-saves: update
+        await base44.entities.Load.update(currentId, { ...currentForm, status: currentForm.status === 'draft' ? 'draft' : currentForm.status });
+        const existingStops = await base44.entities.LoadStop.filter({ load_id: currentId }, 'stop_order', 20);
+        for (const es of existingStops) {
+          if (!currentStops.find(s => s.id === es.id)) await base44.entities.LoadStop.delete(es.id);
+        }
+        for (let i = 0; i < currentStops.length; i++) {
+          const s = { ...currentStops[i], load_id: currentId, stop_order: i + 1 };
+          if (s.id) await base44.entities.LoadStop.update(s.id, s);
+          else await base44.entities.LoadStop.create(s);
+        }
+      }
+      setLastAutoSaved(new Date());
+    } catch (err) {
+      // silent fail for auto-save
+    } finally {
+      setAutoSaving(false);
+    }
+  }, []);
+
+  // Debounce: trigger auto-save 2.5s after last change
+  useEffect(() => {
+    if (initialLoadRef.current) {
+      initialLoadRef.current = false;
+      return;
+    }
+    if (!form) return;
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => {
+      performAutoSave(form, stops);
+    }, 2500);
+    return () => clearTimeout(autoSaveTimerRef.current);
+  }, [form, stops]);
+
+  // Proper save: promote status from draft to active (or keep whatever status user set)
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+      const currentId = savedLoadIdRef.current || loadId;
+      const saveStatus = form.status === 'draft' ? 'active' : form.status;
+      const payload = { ...form, status: saveStatus };
+
+      if (!currentId) {
+        // Never auto-saved yet
+        const existingLoads = await base44.entities.Load.list('-created_date', 1);
+        const lastNum = existingLoads.length > 0
+          ? parseInt(existingLoads[0].internal_load_number?.replace(/\D/g, '') || '1000')
+          : 1000;
+        const finalPayload = { ...payload, internal_load_number: form.internal_load_number || `L-${lastNum + 1}` };
+        const savedLoad = await base44.entities.Load.create(finalPayload);
         for (let i = 0; i < stops.length; i++) {
           await base44.entities.LoadStop.create({ ...stops[i], load_id: savedLoad.id, stop_order: i + 1 });
         }
         await logAudit({ action_type: 'create', entity_type: 'Load', entity_id: savedLoad.id, entity_label: savedLoad.internal_load_number });
         navigate(createPageUrl(`LoadDetail?id=${savedLoad.id}`));
       } else {
-        savedLoad = await base44.entities.Load.update(loadId, form);
-        // Update stops
-        const existingStops = await base44.entities.LoadStop.filter({ load_id: loadId }, 'stop_order', 20);
+        await base44.entities.Load.update(currentId, payload);
+        setForm(prev => ({ ...prev, status: saveStatus }));
+        const existingStops = await base44.entities.LoadStop.filter({ load_id: currentId }, 'stop_order', 20);
         for (const es of existingStops) {
           if (!stops.find(s => s.id === es.id)) await base44.entities.LoadStop.delete(es.id);
         }
         for (let i = 0; i < stops.length; i++) {
-          const s = { ...stops[i], load_id: loadId, stop_order: i + 1 };
+          const s = { ...stops[i], load_id: currentId, stop_order: i + 1 };
           if (s.id) await base44.entities.LoadStop.update(s.id, s);
           else await base44.entities.LoadStop.create(s);
         }
-        await logAudit({ action_type: 'update', entity_type: 'Load', entity_id: loadId, entity_label: form.internal_load_number });
-        queryClient.invalidateQueries({ queryKey: ['load', loadId] });
+        await logAudit({ action_type: 'update', entity_type: 'Load', entity_id: currentId, entity_label: form.internal_load_number });
+        queryClient.invalidateQueries({ queryKey: ['load', currentId] });
+        toast.success('Load saved');
+        if (isNew) navigate(createPageUrl(`LoadDetail?id=${currentId}`));
       }
-      toast.success('Load saved');
     } catch (err) {
       toast.error('Save failed: ' + err.message);
     } finally {
