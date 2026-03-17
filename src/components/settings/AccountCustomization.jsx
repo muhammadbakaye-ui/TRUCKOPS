@@ -13,6 +13,7 @@ export default function AccountCustomization() {
     first_name: '',
     last_name: '',
     phone: '',
+    display_email: '',
     email: '',
   });
   const [passwordForm, setPasswordForm] = useState({
