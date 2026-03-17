@@ -192,6 +192,7 @@ export default function DriverPortalView() {
                     <button
                       onClick={() => rcRef.current?.click()}
                       disabled={!!uploading}
+                      data-tour="driver-upload-rc"
                       className="h-16 md:h-20 rounded-lg md:rounded-xl border-2 border-dashed border-border hover:border-muted-foreground/40 bg-muted/30 hover:bg-muted/50 transition-all flex flex-col items-center justify-center gap-1 md:gap-2 disabled:opacity-50"
                       >
                       {uploading === 'rate_confirmation' ? <Loader2 className="w-5 md:w-6 h-5 md:h-6 animate-spin text-muted-foreground" /> : <FileCheck className="w-5 md:w-6 h-5 md:h-6 text-muted-foreground" />}
