@@ -7,6 +7,12 @@ export async function logAudit({ action_type, entity_type, entity_id, entity_lab
     user_name = user?.full_name || user?.email || 'Unknown';
   } catch {}
   
+  // Check if an admin is logged in and override with admin name
+  const adminName = typeof window !== 'undefined' ? localStorage.getItem('adminName') : null;
+  if (adminName) {
+    user_name = `${adminName} (Admin)`;
+  }
+  
   await base44.entities.AuditLog.create({
     action_type,
     entity_type,
