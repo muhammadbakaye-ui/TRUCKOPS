@@ -108,7 +108,7 @@ export default function LoginScreen() {
               <Label className="text-sm font-medium">{mode === 'admin' ? 'Username' : 'Full Name'}</Label>
               <Input
                 className="mt-1.5 h-11"
-                placeholder={mode === 'admin' ? 'administrator' : 'Enter your full name'}
+                placeholder={mode === 'admin' ? 'Enter username' : 'Enter your full name'}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 autoComplete="username"

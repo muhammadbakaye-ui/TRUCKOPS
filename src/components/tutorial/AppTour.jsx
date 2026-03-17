@@ -97,10 +97,13 @@ function TooltipBox({ step, onPrev, onNext, onClose, current, total }) {
 
   useEffect(() => {
     setVisible(false);
-    const r = getRect(step.target);
-    setRect(r);
-    const t = setTimeout(() => setVisible(true), 80);
-    return () => clearTimeout(t);
+    // Wait a tick for scroll to settle, then measure
+    const t1 = setTimeout(() => {
+      const r = getRect(step.target);
+      setRect(r);
+    }, 120);
+    const t2 = setTimeout(() => setVisible(true), 200);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [step]);
 
   if (!rect) return null;
@@ -259,10 +262,22 @@ export default function AppTour({ steps, onClose }) {
     return () => window.removeEventListener('keydown', handle);
   }, [current]);
 
-  // Try to scroll target into view
+  // Scroll the sidebar nav container (not window) so fixed elements stay tracked correctly
   useEffect(() => {
     const el = document.querySelector(steps[current]?.target);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!el) return;
+    // Find the nearest scrollable ancestor (sidebar nav list) and scroll within it
+    let parent = el.parentElement;
+    while (parent && parent !== document.body) {
+      const { overflowY } = window.getComputedStyle(parent);
+      if (overflowY === 'auto' || overflowY === 'scroll') {
+        const elTop = el.offsetTop - parent.offsetTop;
+        parent.scrollTo({ top: elTop - parent.clientHeight / 2 + el.clientHeight / 2, behavior: 'smooth' });
+        return;
+      }
+      parent = parent.parentElement;
+    }
+    // Fallback: element is not inside a scroll container, no page scroll needed
   }, [current]);
 
   return (
