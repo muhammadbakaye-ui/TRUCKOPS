@@ -27,7 +27,7 @@ const slides = [
     subtitle: 'Weekly settlement builder',
     description: 'Build weekly pay statements for each driver. Auto-pull trips and fuel, add deductions, and publish directly to the driver portal.',
     features: ['Auto-load trips by period', 'Pull fuel card charges', 'Quick deduction buttons', 'One-click publish to driver'],
-    screenshot: 'https://media.base44.com/images/public/69b24502c9911b8d836f6df2/5820822a7_image.png',
+    screenshot: 'https://media.base44.com/images/public/69b24502c9911b8d836f6df2/749b98b28_image.png',
     screenshotAlt: 'Driver Statements page',
   },
   {
@@ -45,7 +45,7 @@ const slides = [
     subtitle: 'Self-service for drivers',
     description: 'Drivers log in with their name and truck ID. They can view published statements, download pay stubs, and upload BOLs & rate confirmations.',
     features: ['Weekly statement view', 'PDF download', 'BOL & RC upload', 'Instant dispatcher notification'],
-    screenshot: null,
+    screenshot: 'https://media.base44.com/images/public/69b24502c9911b8d836f6df2/11a28cf71_image.png',
     screenshotAlt: 'Driver portal view',
   },
 ];
