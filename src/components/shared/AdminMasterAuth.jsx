@@ -24,7 +24,8 @@ export default function AdminMasterAuth({ onLoginSuccess }) {
   const [showConfirmPass, setShowConfirmPass] = useState(false);
 
   // Login fields
-  const [loginEmail, setLoginEmail] = useState('');
+  const [loginFirstName, setLoginFirstName] = useState('');
+  const [loginLastName, setLoginLastName] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [showLoginPass, setShowLoginPass] = useState(false);
 
@@ -97,15 +98,16 @@ export default function AdminMasterAuth({ onLoginSuccess }) {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
-    if (!loginEmail.trim() || !loginPassword.trim()) {
-      setError('Email and password are required.');
+    if (!loginFirstName.trim() || !loginLastName.trim() || !loginPassword.trim()) {
+      setError('First name, last name, and password are required.');
       return;
     }
     setLoading(true);
     try {
       const response = await base44.functions.invoke('authAdmin', {
         action: 'login',
-        email: loginEmail,
+        first_name: loginFirstName,
+        last_name: loginLastName,
         password: loginPassword,
       });
       if (response.data.success) {
@@ -114,7 +116,7 @@ export default function AdminMasterAuth({ onLoginSuccess }) {
         toast.success('Logged in successfully!');
         onLoginSuccess();
       } else {
-        setError('Invalid email or password.');
+        setError('Invalid name or password.');
       }
     } catch (err) {
       setError('Login failed: ' + err.message);
@@ -186,9 +188,194 @@ export default function AdminMasterAuth({ onLoginSuccess }) {
           toast.success('Logged in successfully!');
           onLoginSuccess();
         }}
+        onSelectLogin={() => {
+          setStep('login');
+        }}
+        onSelectCreate={() => {
+          setStep('createAccount');
+        }}
       />
     );
   }
 
+  if (step === 'createAccount') {
+    return (
+      <div className="min-h-screen bg-sidebar flex items-center justify-center p-4">
+        <div className="w-full max-w-sm">
+          <div className="bg-card rounded-2xl shadow-2xl border border-border overflow-hidden">
+            <div className="p-6 space-y-4">
+              <button
+                onClick={() => {
+                  setStep('accountChoice');
+                  setFirstName('');
+                  setLastName('');
+                  setCreatePassword('');
+                  setConfirmPassword('');
+                  setError('');
+                }}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-2"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back
+              </button>
+              <h1 className="text-xl font-bold">Create Admin Account</h1>
+              <form onSubmit={handleCreateAccount} className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium">First Name</Label>
+                  <Input
+                    type="text"
+                    className="h-11 mt-1.5"
+                    placeholder="John"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Last Name</Label>
+                  <Input
+                    type="text"
+                    className="h-11 mt-1.5"
+                    placeholder="Doe"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Password</Label>
+                  <div className="relative mt-1.5">
+                    <Input
+                      type={showCreatePass ? 'text' : 'password'}
+                      className="h-11 pr-10"
+                      placeholder="Password"
+                      value={createPassword}
+                      onChange={(e) => setCreatePassword(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCreatePass(!showCreatePass)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showCreatePass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Confirm Password</Label>
+                  <div className="relative mt-1.5">
+                    <Input
+                      type={showConfirmPass ? 'text' : 'password'}
+                      className="h-11 pr-10"
+                      placeholder="Confirm password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPass(!showConfirmPass)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                {error && (
+                  <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2.5">
+                    {error}
+                  </div>
+                )}
+                <Button
+                  type="submit"
+                  className="w-full h-11 font-semibold text-sm"
+                  disabled={loading || !firstName.trim() || !lastName.trim()}
+                >
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Account'}
+                </Button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 'login') {
+    return (
+      <div className="min-h-screen bg-sidebar flex items-center justify-center p-4">
+        <div className="w-full max-w-sm">
+          <div className="bg-card rounded-2xl shadow-2xl border border-border overflow-hidden">
+            <div className="p-6 space-y-4">
+              <button
+                onClick={() => {
+                  setStep('accountChoice');
+                  setLoginFirstName('');
+                  setLoginLastName('');
+                  setLoginPassword('');
+                  setError('');
+                }}
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-2"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back
+              </button>
+              <h1 className="text-xl font-bold">Admin Login</h1>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium">First Name</Label>
+                  <Input
+                    type="text"
+                    className="h-11 mt-1.5"
+                    placeholder="John"
+                    value={loginFirstName}
+                    onChange={(e) => setLoginFirstName(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Last Name</Label>
+                  <Input
+                    type="text"
+                    className="h-11 mt-1.5"
+                    placeholder="Doe"
+                    value={loginLastName}
+                    onChange={(e) => setLoginLastName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Password</Label>
+                  <div className="relative mt-1.5">
+                    <Input
+                      type={showLoginPass ? 'text' : 'password'}
+                      className="h-11 pr-10"
+                      placeholder="Password"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowLoginPass(!showLoginPass)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showLoginPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                {error && (
+                  <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2.5">
+                    {error}
+                  </div>
+                )}
+                <Button
+                  type="submit"
+                  className="w-full h-11 font-semibold text-sm"
+                  disabled={loading || !loginFirstName.trim() || !loginLastName.trim()}
+                >
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Login'}
+                </Button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
 }
