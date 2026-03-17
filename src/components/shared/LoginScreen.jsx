@@ -80,6 +80,10 @@ export default function LoginScreen() {
     }
   };
 
+  if (adminLoggedIn) {
+    return <AdminLoginFlow onLoginSuccess={() => login({ role: 'admin' })} />;
+  }
+
   return (
     <div className="min-h-screen bg-sidebar flex items-center justify-center p-4">
       {showSlideshow && <PreLoginSlideshow onClose={closeSlideshow} />}
