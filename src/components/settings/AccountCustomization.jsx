@@ -197,22 +197,13 @@ export default function AccountCustomization() {
               />
             </div>
             <div className="col-span-2">
-              <Label className="text-xs">Email (shown to other admins)</Label>
-              <Input
-                value={accountForm.display_email}
-                onChange={(e) => handleAccountChange('display_email', e.target.value)}
-                className="h-8 text-xs mt-1"
-                placeholder="your.email@company.com"
-              />
-            </div>
-            <div className="col-span-2">
-              <Label className="text-xs">Login Email</Label>
+              <Label className="text-xs">Email</Label>
               <Input
                 type="email"
                 value={accountForm.email}
                 onChange={(e) => handleAccountChange('email', e.target.value)}
                 className="h-8 text-xs mt-1"
-                placeholder="login.email@company.com"
+                placeholder="your.email@company.com"
               />
             </div>
           </div>
