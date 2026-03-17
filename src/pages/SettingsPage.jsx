@@ -16,6 +16,12 @@ export default function SettingsPage() {
     company_name: '', address_1: '', address_2: '', city: '', state: '', zip: '',
     phone: '', email: '', mc_number: '', dot_number: '', next_load_number: '1001',
   });
+  const [activeTab, setActiveTab] = useState('company');
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: () => base44.auth.me(),
+  });
 
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ['settings-company'],
