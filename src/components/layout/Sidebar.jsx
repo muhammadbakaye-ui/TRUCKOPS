@@ -69,6 +69,7 @@ export default function Sidebar({ currentPage, collapsed, onToggle }) {
             <Link
               key={item.page}
               to={createPageUrl(item.page)}
+              data-tour={item.tourAttr}
               className={cn(
                 "flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] font-medium transition-colors mb-0.5",
                 isActive
