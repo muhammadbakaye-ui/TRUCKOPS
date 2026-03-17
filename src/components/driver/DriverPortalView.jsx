@@ -252,25 +252,23 @@ export default function DriverPortalView() {
           {/* STATEMENTS TAB */}
           {activeTab === 'statements' && (
             <Card>
-              <CardHeader className="py-3 px-4 md:py-4 md:px-5 border-b">
+              <CardHeader className="py-2.5 px-3 md:py-4 md:px-5 border-b">
                 <CardTitle className="text-xs md:text-sm font-semibold">My Weekly Statements</CardTitle>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Sunday–Saturday periods. Due following Tuesday.
-                </p>
+                <p className="text-[11px] md:text-xs text-muted-foreground mt-0.5">Sun–Sat periods · due following Tuesday</p>
               </CardHeader>
-              <CardContent className="px-4 md:px-5 py-3 md:py-4">
+              <CardContent className="px-0 py-0">
                 {stmtsLoading ? (
-                   <div className="flex items-center justify-center py-8 md:py-10">
+                   <div className="flex items-center justify-center py-8">
                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                    </div>
                  ) : statements.length === 0 ? (
-                   <div className="text-center py-8 md:py-10 text-muted-foreground">
-                     <Calendar className="w-6 md:w-8 h-6 md:h-8 mx-auto mb-2 opacity-30" />
-                     <p className="text-xs md:text-sm">No statements available yet.</p>
-                     <p className="text-xs mt-1">Statements appear here once created by dispatcher.</p>
+                   <div className="text-center py-8 text-muted-foreground">
+                     <Calendar className="w-7 h-7 mx-auto mb-2 opacity-30" />
+                     <p className="text-xs">No statements available yet.</p>
+                     <p className="text-[11px] mt-1 opacity-70">Statements appear here once created by dispatcher.</p>
                    </div>
                  ) : (
-                   <div className="space-y-2 md:space-y-2.5">
+                   <div className="divide-y">
                      {statements.map((stmt) => {
                        const dueDate = getDueDate(stmt.period_end);
                        const overdue = checkOverdue(stmt.period_end, stmt.status);
@@ -279,34 +277,34 @@ export default function DriverPortalView() {
                          <button
                            key={stmt.id}
                            onClick={() => setViewingStatement(stmt)}
-                           className={`w-full flex flex-col md:flex-row md:items-center md:justify-between p-3 md:p-4 rounded-lg md:rounded-xl border transition-colors text-left gap-3 md:gap-0 ${
-                             overdue
-                               ? 'border-red-200 bg-red-50/60 hover:bg-red-50'
-                               : 'border-border bg-muted/10 hover:bg-muted/20'
+                           className={`w-full flex items-center justify-between px-3 md:px-5 py-3 md:py-4 transition-colors text-left active:bg-muted/40 ${
+                             overdue ? 'bg-red-50/60' : ''
                            }`}
                          >
-                           <div className="space-y-1 flex-1">
-                             <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 gap-1">
+                           <div className="space-y-0.5 flex-1 min-w-0">
+                             <div className="flex items-center gap-1.5">
                                <p className="text-xs md:text-sm font-semibold">
-                                   {stmt.period_start && stmt.period_end
-                                     ? `${format(new Date(stmt.period_start + 'T12:00:00'), 'MMM d')} – ${format(new Date(stmt.period_end + 'T12:00:00'), 'MMM d')}`
-                                     : stmt.statement_date || '—'}
-                                 </p>
+                                 {stmt.period_start && stmt.period_end
+                                   ? `${format(new Date(stmt.period_start + 'T12:00:00'), 'MMM d')} – ${format(new Date(stmt.period_end + 'T12:00:00'), 'MMM d')}`
+                                   : stmt.statement_date || '—'}
+                               </p>
                                {overdue && (
-                                 <span className="flex items-center gap-1 text-[10px] md:text-[11px] font-bold text-red-600">
-                                   <AlertCircle className="w-3 h-3" /> OVERDUE
+                                 <span className="flex items-center gap-0.5 text-[10px] font-bold text-red-600">
+                                   <AlertCircle className="w-2.5 h-2.5" /> OVERDUE
                                  </span>
                                )}
                              </div>
                              <p className="text-[10px] md:text-xs text-muted-foreground">
-                               Due: {dueDate ? format(dueDate, 'MMM d') : '—'}
+                               Due {dueDate ? format(dueDate, 'MMM d') : '—'}
                              </p>
                            </div>
-                           <div className="flex items-center gap-2 md:gap-4 justify-between md:justify-end">
-                             <p className="text-base md:text-lg font-bold text-primary">
-                               ${(stmt.final_check_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                             </p>
-                             <Badge variant="outline" className={`text-xs ${cfg.cls}`}>{cfg.label}</Badge>
+                           <div className="flex items-center gap-2 shrink-0 ml-2">
+                             <div className="text-right">
+                               <p className="text-sm md:text-base font-bold text-primary">
+                                 ${(stmt.final_check_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                               </p>
+                               <Badge variant="outline" className={`text-[10px] md:text-xs ${cfg.cls}`}>{cfg.label}</Badge>
+                             </div>
                            </div>
                          </button>
                        );
