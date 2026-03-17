@@ -163,6 +163,17 @@ function TooltipBox({ step, onPrev, onNext, onClose, current, total }) {
 
   return (
     <>
+      {/* Full-screen backdrop — blocks all clicks on the app */}
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 9997,
+          cursor: 'default',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      />
+
       {/* Spotlight ring */}
       <div
         style={{
