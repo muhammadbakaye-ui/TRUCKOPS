@@ -48,7 +48,7 @@ function AppShell({ children, currentPageName }) {
         onToggle={() => setCollapsed(!collapsed)}
       />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <TopBar pageTitle={pageTitles[currentPageName] || currentPageName} />
+        <TopBar pageTitle={pageTitles[currentPageName] || currentPageName} currentPageName={currentPageName} />
         <main className="flex-1 overflow-auto px-2 md:px-0">
           {children}
         </main>
