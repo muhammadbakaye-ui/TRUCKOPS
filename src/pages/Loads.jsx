@@ -42,7 +42,45 @@ function InvoiceStatusSelect({ load, queryClient }) {
 
   const handleChange = async (value) => {
     setSaving(true);
+    // Update load invoice_status
     await base44.entities.Load.update(load.id, { invoice_status: value });
+
+    // If moving away from not_invoiced, ensure an Invoice record exists
+    if (value !== 'not_invoiced') {
+      const existing = await base44.entities.Invoice.filter({ load_id: load.id }, '-created_date', 1);
+      if (existing.length === 0) {
+        // Generate invoice number
+        const allInvoices = await base44.entities.Invoice.list('-created_date', 1);
+        const lastNum = allInvoices.length > 0
+          ? parseInt(allInvoices[0].invoice_number?.replace(/\D/g, '') || '999')
+          : 999;
+        const invoiceNumber = `INV-${lastNum + 1}`;
+        const today = new Date().toISOString().split('T')[0];
+        await base44.entities.Invoice.create({
+          invoice_number: invoiceNumber,
+          load_id: load.id,
+          load_number: load.internal_load_number,
+          customer_id: load.customer_id,
+          customer_name: load.customer_name,
+          invoice_date: today,
+          total: load.invoice_amount || 0,
+          subtotal: load.invoice_amount || 0,
+          status: value === 'paid' ? 'paid' : value === 'sent' ? 'sent' : 'draft',
+          line_items: [
+            { description: 'Line Haul', quantity: 1, rate: load.freight_rate || 0, amount: load.freight_rate || 0 },
+            ...(load.fuel_surcharge ? [{ description: 'Fuel Surcharge', quantity: 1, rate: load.fuel_surcharge, amount: load.fuel_surcharge }] : []),
+            ...(load.extra_charges ? [{ description: 'Extra Charges', quantity: 1, rate: load.extra_charges, amount: load.extra_charges }] : []),
+          ],
+        });
+        queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      } else {
+        // Update existing invoice status to match
+        const invStatus = value === 'paid' ? 'paid' : value === 'sent' ? 'sent' : value === 'partial' ? 'partial' : value === 'overdue' ? 'overdue' : 'draft';
+        await base44.entities.Invoice.update(existing[0].id, { status: invStatus });
+        queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      }
+    }
+
     queryClient.invalidateQueries({ queryKey: ['loads'] });
     setSaving(false);
     toast.success('Invoice status updated');
