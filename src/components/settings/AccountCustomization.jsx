@@ -147,12 +147,7 @@ export default function AccountCustomization() {
             </div>
             <div className="col-span-2">
               <Label className="text-xs">Email</Label>
-              <Input
-                value={accountForm.email}
-                disabled
-                className="h-8 text-xs mt-1 bg-muted"
-              />
-              <p className="text-[10px] text-muted-foreground mt-1">Email cannot be changed</p>
+              <p className="text-xs text-foreground mt-1">{accountForm.email}</p>
             </div>
             <div className="col-span-2">
               <Label className="text-xs">Phone</Label>
