@@ -23,11 +23,6 @@ export default function DriverStatements() {
   const [search, setSearch] = useState(() => localStorage.getItem('statements_search') || '');
   const [statusFilter, setStatusFilter] = useState(() => localStorage.getItem('statements_status') || 'all');
   const [selected, setSelected] = useState(new Set());
-  const [expandedPeriods, setExpandedPeriods] = useState(() => {
-    const saved = localStorage.getItem('statements_expanded');
-    return saved ? new Set(JSON.parse(saved)) : new Set();
-  });
-
   useEffect(() => {
     localStorage.setItem('statements_search', search);
   }, [search]);
@@ -35,10 +30,6 @@ export default function DriverStatements() {
   useEffect(() => {
     localStorage.setItem('statements_status', statusFilter);
   }, [statusFilter]);
-
-  useEffect(() => {
-    localStorage.setItem('statements_expanded', JSON.stringify([...expandedPeriods]));
-  }, [expandedPeriods]);
 
   const { data: statements = [], isLoading } = useQuery({
     queryKey: ['statements'],
