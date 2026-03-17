@@ -81,27 +81,37 @@ export default function SettingsPage() {
       <PageHeader title="Settings" description="Carrier / company information" />
 
       <div className="flex gap-2 mt-4 border-b">
-        <button
-          onClick={() => setActiveTab('company')}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-            activeTab === 'company'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          Company
-        </button>
-        <button
-          onClick={() => setActiveTab('security')}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-            activeTab === 'security'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          Login History
-        </button>
-      </div>
+         <button
+           onClick={() => setActiveTab('account')}
+           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+             activeTab === 'account'
+               ? 'border-primary text-primary'
+               : 'border-transparent text-muted-foreground hover:text-foreground'
+           }`}
+         >
+           Account
+         </button>
+         <button
+           onClick={() => setActiveTab('company')}
+           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+             activeTab === 'company'
+               ? 'border-primary text-primary'
+               : 'border-transparent text-muted-foreground hover:text-foreground'
+           }`}
+         >
+           Company
+         </button>
+         <button
+           onClick={() => setActiveTab('security')}
+           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+             activeTab === 'security'
+               ? 'border-primary text-primary'
+               : 'border-transparent text-muted-foreground hover:text-foreground'
+           }`}
+         >
+           Login History
+         </button>
+       </div>
 
       <div className="space-y-4 mt-4">
         {activeTab === 'company' && (
