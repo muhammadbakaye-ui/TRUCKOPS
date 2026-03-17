@@ -14,6 +14,45 @@ import StatusBadge from '../components/shared/StatusBadge';
 import PageHeader from '../components/shared/PageHeader';
 import { format } from 'date-fns';
 
+const INV_STATUS_STYLES = {
+  draft: 'bg-gray-100 text-gray-600 border-gray-200',
+  sent: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+  partial: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+  paid: 'bg-green-50 text-green-700 border-green-200',
+  overdue: 'bg-red-50 text-red-700 border-red-200',
+  canceled: 'bg-gray-100 text-gray-400 border-gray-200',
+};
+
+function InvoiceStatusSelect({ invoice, queryClient }) {
+  const [saving, setSaving] = useState(false);
+  const handleChange = async (value) => {
+    setSaving(true);
+    await base44.entities.Invoice.update(invoice.id, { status: value });
+    // Sync the load's invoice_status if linked
+    if (invoice.load_id) {
+      const statusMap = { draft: 'invoiced', sent: 'sent', partial: 'partial', paid: 'paid', overdue: 'overdue', canceled: 'canceled' };
+      await base44.entities.Load.update(invoice.load_id, { invoice_status: statusMap[value] || 'invoiced' });
+      queryClient.invalidateQueries({ queryKey: ['loads'] });
+    }
+    queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    setSaving(false);
+    toast.success('Status updated');
+  };
+  const current = invoice.status || 'draft';
+  return (
+    <Select value={current} onValueChange={handleChange} disabled={saving}>
+      <SelectTrigger className={`h-6 text-[11px] px-2 border rounded-md font-medium w-28 ${INV_STATUS_STYLES[current] || ''}`}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {Object.entries(INV_STATUS_STYLES).map(([val]) => (
+          <SelectItem key={val} value={val} className="text-xs capitalize">{val.charAt(0).toUpperCase() + val.slice(1)}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 export default function Invoices() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
