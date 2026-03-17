@@ -51,19 +51,20 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, admins });
     }
 
-    // Login with email and password
+    // Login with first name, last name and password
     if (action === 'login') {
-      if (!email || !password) {
-        return Response.json({ success: false, message: 'Email and password required' }, { status: 400 });
+      const { first_name, last_name } = body;
+      if (!first_name || !last_name || !password) {
+        return Response.json({ success: false, message: 'First name, last name, and password required' }, { status: 400 });
       }
       const admins = await base44.asServiceRole.entities.Admin.list();
-      const admin = admins.find(a => a.email === email && a.active);
+      const admin = admins.find(a => a.first_name === first_name && a.last_name === last_name && a.active);
       if (!admin) {
-        return Response.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
+        return Response.json({ success: false, message: 'Invalid name or password' }, { status: 401 });
       }
       const isValid = await verifyPassword(password, admin.password_hash);
       if (!isValid) {
-        return Response.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
+        return Response.json({ success: false, message: 'Invalid name or password' }, { status: 401 });
       }
       return Response.json({ success: true, admin_id: admin.id, admin_name: `${admin.first_name} ${admin.last_name}` });
     }
