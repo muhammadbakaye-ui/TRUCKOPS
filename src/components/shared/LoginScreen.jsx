@@ -19,6 +19,18 @@ export default function LoginScreen() {
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showSlideshow, setShowSlideshow] = useState(false);
+
+  // Auto-show on first ever visit
+  useEffect(() => {
+    const seen = localStorage.getItem('truckops_slideshow_seen');
+    if (!seen) setShowSlideshow(true);
+  }, []);
+
+  const closeSlideshow = () => {
+    localStorage.setItem('truckops_slideshow_seen', '1');
+    setShowSlideshow(false);
+  };
 
   const switchMode = (m) => { setMode(m); setError(''); setUsername(''); setPassword(''); };
 
