@@ -36,12 +36,25 @@ export default function AccountCustomization() {
 
   useEffect(() => {
     if (currentUser) {
-      setAccountForm({
-        first_name: currentUser.full_name?.split(' ')[0] || '',
-        last_name: currentUser.full_name?.split(' ').slice(1).join(' ') || '',
-        phone: currentUser.phone || '',
-        email: currentUser.email || '',
-      });
+      // Fetch the admin record to get phone and display_email
+      const fetchAdminData = async () => {
+        try {
+          const admins = await base44.entities.Admin.filter({ email: currentUser.email });
+          if (admins.length > 0) {
+            const admin = admins[0];
+            setAccountForm({
+              first_name: admin.first_name || '',
+              last_name: admin.last_name || '',
+              phone: admin.phone || '',
+              display_email: admin.display_email || '',
+              email: currentUser.email || '',
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching admin data:', error);
+        }
+      };
+      fetchAdminData();
     }
   }, [currentUser]);
 
