@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 const statusStyles = {
-  active: 'bg-green-500/10 text-green-600 border-green-500/30',
+  saved: 'bg-green-500/10 text-green-600 border-green-500/30',
   completed: 'bg-green-500/10 text-green-600 border-green-500/30',
   paid: 'bg-green-500/10 text-green-600 border-green-500/30',
   finalized: 'bg-green-500/10 text-green-600 border-green-500/30',
