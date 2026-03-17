@@ -68,7 +68,7 @@ export default function TopBar({ pageTitle }) {
           </Button>
         </div>
       </div>
-    </div>
-    </>
+      </div>
+    </React.Fragment>
   );
 }
