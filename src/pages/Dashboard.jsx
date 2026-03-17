@@ -67,7 +67,7 @@ export default function Dashboard() {
     <div className="p-4 space-y-4">
       {/* Stats row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-        <StatCard label="Active Loads" value={loads.filter(l => l.status === 'active').length} icon={Container} color="text-blue-600" onClick={() => navigate(createPageUrl('Loads'))} />
+        <StatCard label="Loads" value={loads.length} icon={Container} color="text-blue-600" onClick={() => navigate(createPageUrl('Loads'))} />
         <StatCard label="Unpaid Invoices" value={unpaidInvoices.length} icon={Receipt} color="text-orange-600" onClick={() => navigate(createPageUrl('Invoices'))} />
         <StatCard label="Active Drivers" value={activeDrivers.length} icon={Users} color="text-green-600" onClick={() => navigate(createPageUrl('Drivers'))} />
         <StatCard label="Active Trucks" value={activeTrucks.length} icon={Truck} color="text-purple-600" onClick={() => navigate(createPageUrl('Trucks'))} />
