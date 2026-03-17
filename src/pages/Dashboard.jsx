@@ -19,7 +19,7 @@ export default function Dashboard() {
 
   const { data: loads = [] } = useQuery({
     queryKey: ['loads-dash'],
-    queryFn: () => base44.entities.Load.list('-created_date', 100),
+    queryFn: () => base44.entities.Load.list('-delivery_date', 2000),
   });
 
   const { data: invoices = [] } = useQuery({
