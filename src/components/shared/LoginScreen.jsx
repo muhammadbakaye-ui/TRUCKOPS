@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Logo from './Logo';
 import PreLoginSlideshow from '../tutorial/PreLoginSlideshow';
-import AdminMasterAuth from './AdminMasterAuth';
+import AdminMasterAuth from './AdminMasterAuth.jsx';
 
 const ADMIN_USER = 'administrator';
 const ADMIN_PASS = 'Enow2018#';
