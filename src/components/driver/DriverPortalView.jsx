@@ -166,12 +166,12 @@ export default function DriverPortalView() {
             <>
               {/* Upload buttons */}
               <Card>
-                <CardHeader className="py-3 px-4 md:py-4 md:px-5 border-b">
+                <CardHeader className="py-2.5 px-3 md:py-4 md:px-5 border-b">
                   <CardTitle className="text-xs md:text-sm font-semibold">Upload Documents</CardTitle>
-                  <p className="text-xs text-muted-foreground mt-0.5">Select document type. Formats: PDF, JPG, PNG, DOC.</p>
+                  <p className="text-[11px] md:text-xs text-muted-foreground mt-0.5">PDF, JPG, PNG, DOC supported.</p>
                 </CardHeader>
-                <CardContent className="px-4 md:px-5 py-4 md:py-5">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                <CardContent className="px-3 md:px-5 py-3 md:py-5">
+                  <div className="grid grid-cols-2 gap-2 md:gap-4">
                     <input ref={bolRef} type="file" className="hidden"
                       accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                       onChange={(e) => handleUpload(e.target.files[0], 'bol')} />
@@ -183,20 +183,20 @@ export default function DriverPortalView() {
                       onClick={() => bolRef.current?.click()}
                       disabled={!!uploading}
                       data-tour="driver-upload-bol"
-                      className="h-16 md:h-20 rounded-lg md:rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 hover:border-primary/60 transition-all flex flex-col items-center justify-center gap-1 md:gap-2 disabled:opacity-50"
+                      className="h-14 md:h-20 rounded-lg md:rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 active:bg-primary/15 hover:bg-primary/10 hover:border-primary/60 transition-all flex flex-col items-center justify-center gap-1 md:gap-2 disabled:opacity-50"
                       >
-                      {uploading === 'bol' ? <Loader2 className="w-5 md:w-6 h-5 md:h-6 animate-spin text-primary" /> : <Upload className="w-5 md:w-6 h-5 md:h-6 text-primary" />}
-                      <span className="text-xs md:text-sm font-semibold text-primary text-center">Upload BOL</span>
+                      {uploading === 'bol' ? <Loader2 className="w-4 md:w-6 h-4 md:h-6 animate-spin text-primary" /> : <Upload className="w-4 md:w-6 h-4 md:h-6 text-primary" />}
+                      <span className="text-[11px] md:text-sm font-semibold text-primary text-center">Upload BOL</span>
                     </button>
 
                     <button
                       onClick={() => rcRef.current?.click()}
                       disabled={!!uploading}
                       data-tour="driver-upload-rc"
-                      className="h-16 md:h-20 rounded-lg md:rounded-xl border-2 border-dashed border-border hover:border-muted-foreground/40 bg-muted/30 hover:bg-muted/50 transition-all flex flex-col items-center justify-center gap-1 md:gap-2 disabled:opacity-50"
+                      className="h-14 md:h-20 rounded-lg md:rounded-xl border-2 border-dashed border-border active:bg-muted/60 hover:border-muted-foreground/40 bg-muted/30 hover:bg-muted/50 transition-all flex flex-col items-center justify-center gap-1 md:gap-2 disabled:opacity-50"
                       >
-                      {uploading === 'rate_confirmation' ? <Loader2 className="w-5 md:w-6 h-5 md:h-6 animate-spin text-muted-foreground" /> : <FileCheck className="w-5 md:w-6 h-5 md:h-6 text-muted-foreground" />}
-                      <span className="text-xs md:text-sm font-semibold text-foreground text-center">Upload Rate Confirmation</span>
+                      {uploading === 'rate_confirmation' ? <Loader2 className="w-4 md:w-6 h-4 md:h-6 animate-spin text-muted-foreground" /> : <FileCheck className="w-4 md:w-6 h-4 md:h-6 text-muted-foreground" />}
+                      <span className="text-[11px] md:text-sm font-semibold text-foreground text-center leading-tight">Upload RC</span>
                     </button>
                   </div>
                 </CardContent>
