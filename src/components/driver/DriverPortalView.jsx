@@ -138,10 +138,11 @@ export default function DriverPortalView() {
       {/* Tab bar */}
       <div className="bg-card border-b border-border px-4 md:px-6 flex-shrink-0 overflow-x-auto">
         <div className="flex gap-1 md:gap-0">
-          {tabs.map(({ key, label, icon: Icon }) => (
+          {tabs.map(({ key, label, icon: Icon, tourAttr }) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
+              data-tour={tourAttr}
               className={`flex items-center gap-1 md:gap-2 px-3 md:px-5 py-3 text-xs md:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === key
                   ? 'border-primary text-primary'
