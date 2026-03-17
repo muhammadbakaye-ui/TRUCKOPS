@@ -15,11 +15,38 @@ export default function AdminDriverDocuments() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [driverFilter, setDriverFilter] = useState('all');
+  const [truckFilter, setTruckFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
 
   const { data: docs = [], isLoading } = useQuery({
     queryKey: ['all-driver-docs'],
     queryFn: () => base44.entities.DriverDocument.list('-created_date', 1000),
   });
+
+  const { data: drivers = [] } = useQuery({
+    queryKey: ['drivers-list'],
+    queryFn: () => base44.entities.Driver.list('full_name', 500),
+  });
+
+  const { data: trucks = [] } = useQuery({
+    queryKey: ['trucks-list'],
+    queryFn: () => base44.entities.Truck.list('unit_number', 500),
+  });
+
+  // Build driver -> truck map
+  const driverTruckMap = drivers.reduce((acc, d) => {
+    if (d.assigned_truck_id) {
+      const truck = trucks.find(t => t.id === d.assigned_truck_id);
+      if (truck) acc[d.id] = truck.unit_number;
+    }
+    return acc;
+  }, {});
+
+  // Unique driver names and upload dates for filter options
+  const uniqueDriverNames = [...new Set(docs.map(d => d.driver_name).filter(Boolean))].sort();
+  const uniqueDates = [...new Set(docs.map(d => d.created_date ? format(new Date(d.created_date), 'yyyy-MM-dd') : null).filter(Boolean))].sort().reverse();
+  const uniqueTrucks = [...new Set(trucks.map(t => t.unit_number).filter(Boolean))].sort();
 
   const deleteMutation = useMutation({
     mutationFn: async (doc) => {
