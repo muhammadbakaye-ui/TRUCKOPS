@@ -263,7 +263,7 @@ export default function Loads() {
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="saved">Saved</SelectItem>
             <SelectItem value="completed">Completed</SelectItem>
             <SelectItem value="canceled">Canceled</SelectItem>
           </SelectContent>
