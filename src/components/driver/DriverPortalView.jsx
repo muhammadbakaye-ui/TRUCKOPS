@@ -204,58 +204,44 @@ export default function DriverPortalView() {
 
               {/* Document list */}
               <Card>
-                <CardHeader className="py-3 px-4 md:py-4 md:px-5 border-b">
-                  <CardTitle className="text-xs md:text-sm font-semibold">Uploaded Documents
-                    <span className="ml-2 text-xs font-normal text-muted-foreground">({documents.length})</span>
+                <CardHeader className="py-2.5 px-3 md:py-4 md:px-5 border-b">
+                  <CardTitle className="text-xs md:text-sm font-semibold">
+                    Uploaded Documents <span className="ml-1 text-[11px] font-normal text-muted-foreground">({documents.length})</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="px-4 md:px-5 py-3 md:py-4">
+                <CardContent className="px-0 py-0">
                   {docsLoading ? (
-                    <div className="flex items-center justify-center py-8 md:py-10">
+                    <div className="flex items-center justify-center py-8">
                       <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                     </div>
                   ) : documents.length === 0 ? (
-                    <div className="text-center py-8 md:py-10 text-muted-foreground">
-                      <FileText className="w-6 md:w-8 h-6 md:h-8 mx-auto mb-2 opacity-30" />
-                      <p className="text-xs md:text-sm">No documents uploaded yet.</p>
+                    <div className="text-center py-8 text-muted-foreground">
+                      <FileText className="w-7 h-7 mx-auto mb-2 opacity-30" />
+                      <p className="text-xs">No documents uploaded yet.</p>
                     </div>
                   ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-xs md:text-sm">
-                        <thead>
-                          <tr className="border-b text-[10px] md:text-[11px] text-muted-foreground uppercase tracking-wide">
-                            <th className="text-left pb-2 font-semibold px-1">Date</th>
-                            <th className="text-left pb-2 font-semibold px-1">Type</th>
-                            <th className="text-left pb-2 font-semibold px-1">File</th>
-                            <th className="text-center pb-2 font-semibold px-1">View</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {documents.map((doc) => (
-                            <tr key={doc.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                              <td className="py-2 md:py-3 text-[10px] md:text-xs text-muted-foreground px-1">
-                                {doc.created_date ? format(new Date(doc.created_date), 'MMM d') : '—'}
-                              </td>
-                              <td className="py-2 md:py-3 px-1">
-                                <Badge variant="outline" className={`text-[10px] md:text-xs ${doc.document_type === 'bol'
-                                  ? 'text-blue-600 border-blue-300 bg-blue-50'
-                                  : 'text-purple-600 border-purple-300 bg-purple-50'
-                                }`}>
-                                  {doc.document_type === 'bol' ? 'BOL' : 'RC'}
-                                </Badge>
-                              </td>
-                              <td className="py-2 md:py-3 text-[10px] md:text-xs font-medium max-w-[100px] md:max-w-[180px] truncate px-1">{doc.file_name}</td>
-                              <td className="py-2 md:py-3 text-center px-1">
-                                <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
-                                  <Button variant="ghost" size="sm" className="h-6 md:h-7 text-[10px] md:text-xs gap-0.5 px-2">
-                                    <Download className="w-3 h-3" />
-                                  </Button>
-                                </a>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div className="divide-y">
+                      {documents.map((doc) => (
+                        <div key={doc.id} className="flex items-center justify-between px-3 md:px-5 py-2.5 md:py-3 hover:bg-muted/30 transition-colors">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Badge variant="outline" className={`text-[10px] shrink-0 ${doc.document_type === 'bol'
+                              ? 'text-blue-600 border-blue-300 bg-blue-50'
+                              : 'text-purple-600 border-purple-300 bg-purple-50'
+                            }`}>
+                              {doc.document_type === 'bol' ? 'BOL' : 'RC'}
+                            </Badge>
+                            <div className="min-w-0">
+                              <p className="text-[11px] md:text-xs font-medium truncate">{doc.file_name}</p>
+                              <p className="text-[10px] text-muted-foreground">{doc.created_date ? format(new Date(doc.created_date), 'MMM d, yyyy') : '—'}</p>
+                            </div>
+                          </div>
+                          <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="shrink-0 ml-2">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <Download className="w-3.5 h-3.5" />
+                            </Button>
+                          </a>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </CardContent>
