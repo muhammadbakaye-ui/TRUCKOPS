@@ -69,6 +69,7 @@ export default function LoginScreen() {
 
   return (
     <div className="min-h-screen bg-sidebar flex items-center justify-center p-4">
+      {showSlideshow && <PreLoginSlideshow onClose={closeSlideshow} />}
       <div className="w-full max-w-sm">
         {/* Branding */}
         <Logo className="mb-8" showCompanyName={true} />
