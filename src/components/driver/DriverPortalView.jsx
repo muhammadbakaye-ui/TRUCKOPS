@@ -316,51 +316,53 @@ export default function DriverPortalView() {
               {/* Statement View Modal */}
               {viewingStatement && (
                 <Dialog open={!!viewingStatement} onOpenChange={(open) => !open && setViewingStatement(null)}>
-                  <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-lg md:rounded-xl">
-                    <DialogHeader className="pb-3 md:pb-4 border-b">
-                      <DialogTitle className="text-xs md:text-sm">Statement Details</DialogTitle>
-                    </DialogHeader>
+                  <DialogContent className="w-full max-w-2xl max-h-[92vh] overflow-y-auto p-3 md:p-6 rounded-xl">
+                    <DialogHeader className="pb-2.5 md:pb-4 border-b">
+                       <DialogTitle className="text-sm md:text-base">Statement Details</DialogTitle>
+                     </DialogHeader>
 
-                    <div className="space-y-3 md:space-y-4 py-3 md:py-4">
-                      <div className="grid grid-cols-2 gap-3 md:gap-4">
+                    <div className="space-y-3 py-2.5 md:py-4">
+                      {/* Summary row */}
+                      <div className="bg-primary/5 rounded-lg p-3 flex items-center justify-between">
                         <div>
-                          <p className="text-xs text-muted-foreground">Period</p>
-                          <p className="text-sm font-semibold">
+                          <p className="text-[10px] text-muted-foreground">Period</p>
+                          <p className="text-xs font-semibold">
                             {viewingStatement.period_start && viewingStatement.period_end
                               ? `${format(new Date(viewingStatement.period_start + 'T12:00:00'), 'MMM d')} – ${format(new Date(viewingStatement.period_end + 'T12:00:00'), 'MMM d, yyyy')}`
                               : '—'}
                           </p>
                         </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Status</p>
-                          <Badge variant="outline" className={statusConfig[viewingStatement.status]?.cls}>
-                            {statusConfig[viewingStatement.status]?.label}
-                          </Badge>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Total Gross Year-To-Date</p>
-                          <p className="text-sm font-semibold text-green-600">
-                            ${(viewingStatement.gross_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Deductions</p>
-                          <p className="text-sm font-semibold text-red-600">
-                            -${(viewingStatement.deductions_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Fuel</p>
-                          <p className="text-sm font-semibold text-orange-600">
-                            -${(viewingStatement.fuel_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Net Pay (This Week)</p>
+                        <div className="text-right">
+                          <p className="text-[10px] text-muted-foreground">Net Pay</p>
                           <p className="text-lg font-bold text-primary">
                             ${(viewingStatement.final_check_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </p>
                         </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="bg-green-50 rounded-lg p-2 text-center">
+                          <p className="text-[10px] text-muted-foreground leading-tight">Gross</p>
+                          <p className="text-xs font-bold text-green-700 mt-0.5">
+                            ${(viewingStatement.gross_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                        <div className="bg-red-50 rounded-lg p-2 text-center">
+                          <p className="text-[10px] text-muted-foreground leading-tight">Deductions</p>
+                          <p className="text-xs font-bold text-red-700 mt-0.5">
+                            -${(viewingStatement.deductions_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                        <div className="bg-orange-50 rounded-lg p-2 text-center">
+                          <p className="text-[10px] text-muted-foreground leading-tight">Fuel</p>
+                          <p className="text-xs font-bold text-orange-700 mt-0.5">
+                            -${(viewingStatement.fuel_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={statusConfig[viewingStatement.status]?.cls}>
+                          {statusConfig[viewingStatement.status]?.label}
+                        </Badge>
                       </div>
 
                       {/* Load Details */}
