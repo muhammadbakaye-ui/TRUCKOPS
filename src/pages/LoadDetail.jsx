@@ -47,6 +47,11 @@ export default function LoadDetail() {
   const [form, setForm] = useState(null);
   const [stops, setStops] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [autoSaving, setAutoSaving] = useState(false);
+  const [lastAutoSaved, setLastAutoSaved] = useState(null);
+  const autoSaveTimerRef = useRef(null);
+  const savedLoadIdRef = useRef(loadId); // tracks the ID even for new loads
+  const initialLoadRef = useRef(true); // skip first render for autosave
 
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
 
