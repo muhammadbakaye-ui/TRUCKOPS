@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, LogOut, Shield } from 'lucide-react';
+import { Search, LogOut, Shield, ChevronLeft, ChevronRight, RotateCw } from 'lucide-react';
 import { useSession } from '../shared/AppSession';
 import NotificationBell from './NotificationBell';
 import TourButton from '../tutorial/TourButton';
