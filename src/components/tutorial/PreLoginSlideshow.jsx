@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 
 const slides = [
   {
-    gradient: 'linear-gradient(135deg, #1e3a5f 0%, #1e40af 100%)',
+    gradient: 'linear-gradient(135deg, #0c4a8f 0%, #1e5ba8 100%)',
     title: 'Auto-Create Loads from Documents',
     subtitle: '🚀 The #1 time-saver',
     description: 'Drop a rate confirmation or BOL and AI instantly extracts everything — customer, rate, stops, dates — and creates a complete load. No manual entry needed.',
@@ -13,7 +13,7 @@ const slides = [
     screenshotAlt: 'Upload Document page',
   },
   {
-    gradient: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
+    gradient: 'linear-gradient(135deg, #854d0e 0%, #b8860b 100%)',
     title: 'Load Management',
     subtitle: 'Full dispatch visibility',
     description: 'Track every load from pickup to delivery. Assign drivers and trucks, manage stops, and monitor dispatch status in real time.',
