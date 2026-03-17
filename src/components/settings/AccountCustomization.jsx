@@ -38,42 +38,39 @@ export default function AccountCustomization() {
       // Split full_name from auth into first and last name
       const [firstName = '', lastName = ''] = (currentUser.full_name || '').split(' ');
       
-      // Fetch the admin record to get phone and display_email
-      const fetchAdminData = async () => {
-        try {
-          const admins = await base44.entities.Admin.filter({ email: currentUser.email });
-          if (admins.length > 0) {
-            const admin = admins[0];
-            setAccountForm({
-              first_name: admin.first_name || firstName || '',
-              last_name: admin.last_name || lastName || '',
-              phone: admin.phone || '',
-              display_email: admin.display_email || '',
-              email: currentUser.email || '',
-            });
-          } else {
-            // If no admin record exists, use auth data
-            setAccountForm({
-              first_name: firstName,
-              last_name: lastName,
-              phone: '',
-              display_email: currentUser.email || '',
-              email: currentUser.email || '',
-            });
-          }
-        } catch (error) {
-          console.error('Error fetching admin data:', error);
-          // Fallback to auth data
-          setAccountForm({
-            first_name: firstName,
-            last_name: lastName,
-            phone: '',
-            display_email: currentUser.email || '',
-            email: currentUser.email || '',
-          });
-        }
-      };
-      fetchAdminData();
+      // Fetch the admin record to get phone and email
+       const fetchAdminData = async () => {
+         try {
+           const admins = await base44.entities.Admin.filter({ email: currentUser.email });
+           if (admins.length > 0) {
+             const admin = admins[0];
+             setAccountForm({
+               first_name: admin.first_name || firstName || '',
+               last_name: admin.last_name || lastName || '',
+               phone: admin.phone || '',
+               email: admin.email || currentUser.email || '',
+             });
+           } else {
+             // If no admin record exists, use auth data
+             setAccountForm({
+               first_name: firstName,
+               last_name: lastName,
+               phone: '',
+               email: currentUser.email || '',
+             });
+           }
+         } catch (error) {
+           console.error('Error fetching admin data:', error);
+           // Fallback to auth data
+           setAccountForm({
+             first_name: firstName,
+             last_name: lastName,
+             phone: '',
+             email: currentUser.email || '',
+           });
+         }
+       };
+       fetchAdminData();
     }
   }, [currentUser]);
 
