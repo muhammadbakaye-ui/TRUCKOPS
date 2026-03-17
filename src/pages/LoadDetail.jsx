@@ -233,7 +233,7 @@ export default function LoadDetail() {
         <div className="ml-auto flex gap-2">
           <Button size="sm" className="h-8 gap-1" onClick={handleSave} disabled={saving}>
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            {form.status === 'draft' ? 'Save & Activate' : 'Save'}
+            {form.status === 'draft' ? 'Save' : 'Save'}
           </Button>
           {(loadId || savedLoadIdRef.current) && (
             <Button variant="outline" size="sm" className="h-8 gap-1" onClick={handlePrint}>
