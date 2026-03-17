@@ -46,17 +46,28 @@ export default function LoginScreen() {
           setError('Invalid username or password.');
         }
       } else {
-        const drivers = await base44.entities.Driver.list('-created_date', 500);
-        const found = drivers.find(d =>
-          d.full_name?.toLowerCase().trim() === username.toLowerCase().trim() &&
-          d.assigned_truck_id?.toLowerCase().trim() === password.toLowerCase().trim()
-        );
+        const [drivers, trucks] = await Promise.all([
+          base44.entities.Driver.list('-created_date', 500),
+          base44.entities.Truck.list('-created_date', 500),
+        ]);
+        // Build a map of truck id -> unit_number for quick lookup
+        const truckMap = {};
+        trucks.forEach(t => { truckMap[t.id] = t.unit_number; });
+
+        const found = drivers.find(d => {
+          const nameMatch = d.full_name?.toLowerCase().trim() === username.toLowerCase().trim();
+          // Match against unit number (what driver types) OR the raw id (fallback)
+          const unitNumber = truckMap[d.assigned_truck_id] || d.assigned_truck_id || '';
+          const truckMatch = unitNumber.toLowerCase().trim() === password.toLowerCase().trim();
+          return nameMatch && truckMatch;
+        });
         if (found) {
+          const unitNumber = truckMap[found.assigned_truck_id] || found.assigned_truck_id || '';
           login({
             role: 'driver',
             driver_id: found.id,
             driver_name: found.full_name,
-            truck_number: found.assigned_truck_id,
+            truck_number: unitNumber,
           });
         } else {
           setError('Driver not found. Check your full name and Truck ID.');
