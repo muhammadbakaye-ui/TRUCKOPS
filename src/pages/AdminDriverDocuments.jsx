@@ -1,17 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Download, FolderOpen, Loader2, User, Trash2 } from 'lucide-react';
+import { Download, FolderOpen, Loader2, User, Trash2, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import PageHeader from '../components/shared/PageHeader';
 
 export default function AdminDriverDocuments() {
   const queryClient = useQueryClient();
+  const [search, setSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
 
   const { data: docs = [], isLoading } = useQuery({
     queryKey: ['all-driver-docs'],
@@ -35,18 +38,28 @@ export default function AdminDriverDocuments() {
     },
   });
 
-  // Group by driver_id, keeping newest docs first (already sorted by API)
-  const grouped = docs.reduce((acc, doc) => {
+  // Apply filters
+  const filtered = docs.filter(doc => {
+    const matchesSearch = !search || doc.driver_name?.toLowerCase().includes(search.toLowerCase()) || doc.file_name?.toLowerCase().includes(search.toLowerCase());
+    const matchesType = typeFilter === 'all' || doc.document_type === typeFilter;
+    return matchesSearch && matchesType;
+  });
+
+  // Group by driver, then by date within each driver
+  const grouped = filtered.reduce((acc, doc) => {
     const key = doc.driver_id || 'unknown';
-    if (!acc[key]) acc[key] = { driver_name: doc.driver_name || 'Unknown Driver', docs: [] };
-    acc[key].docs.push(doc);
+    if (!acc[key]) acc[key] = { driver_name: doc.driver_name || 'Unknown Driver', byDate: {} };
+    const dateKey = doc.created_date
+      ? format(new Date(doc.created_date), 'yyyy-MM-dd')
+      : 'unknown';
+    if (!acc[key].byDate[dateKey]) acc[key].byDate[dateKey] = [];
+    acc[key].byDate[dateKey].push(doc);
     return acc;
   }, {});
 
-  // Sort groups by most recent upload
   const driverGroups = Object.values(grouped).sort((a, b) => {
-    const aLatest = a.docs[0]?.created_date || '';
-    const bLatest = b.docs[0]?.created_date || '';
+    const aLatest = Object.keys(a.byDate).sort().reverse()[0] || '';
+    const bLatest = Object.keys(b.byDate).sort().reverse()[0] || '';
     return bLatest.localeCompare(aLatest);
   });
 
@@ -54,101 +67,123 @@ export default function AdminDriverDocuments() {
     <div className="p-4 space-y-4">
       <PageHeader
         title="Driver Documents"
-        description={`${docs.length} document${docs.length !== 1 ? 's' : ''} from ${driverGroups.length} driver${driverGroups.length !== 1 ? 's' : ''}`}
+        description={`${filtered.length} document${filtered.length !== 1 ? 's' : ''} from ${driverGroups.length} driver${driverGroups.length !== 1 ? 's' : ''}`}
       />
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-2">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Input
+            className="pl-8 h-9 w-56 text-sm"
+            placeholder="Search driver or file..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="h-9 w-44 text-sm">
+            <SelectValue placeholder="All Types" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="bol">BOL</SelectItem>
+            <SelectItem value="rate_confirmation">Rate Confirmation</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center h-40">
           <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
         </div>
       ) : driverGroups.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-            <FolderOpen className="w-10 h-10 mb-3 opacity-30" />
-            <p className="text-sm font-medium">No driver documents uploaded yet.</p>
-            <p className="text-xs mt-1">Documents uploaded by drivers will appear here.</p>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+          <FolderOpen className="w-10 h-10 mb-3 opacity-30" />
+          <p className="text-sm font-medium">No documents found.</p>
+        </div>
       ) : (
-        driverGroups.map(({ driver_name, docs: driverDocs }) => (
-          <Card key={driver_name}>
-            <CardHeader className="py-3.5 px-5 border-b flex-row items-center gap-3">
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <User className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <CardTitle className="text-sm font-semibold">{driver_name}</CardTitle>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {driverDocs.length} document{driverDocs.length !== 1 ? 's' : ''} · Last upload: {
-                    driverDocs[0]?.created_date
-                      ? format(new Date(driverDocs[0].created_date), 'MMM d, yyyy')
-                      : '—'
-                  }
-                </p>
-              </div>
-            </CardHeader>
-            <CardContent className="px-5 pt-3 pb-4">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-[11px] text-muted-foreground uppercase tracking-wide">
-                    <th className="text-left pb-2 font-semibold w-44">Date Sent</th>
-                    <th className="text-left pb-2 font-semibold w-44">Type</th>
-                    <th className="text-left pb-2 font-semibold">File Name</th>
-                    <th className="text-right pb-2 font-semibold w-28">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {driverDocs.map((doc) => (
-                    <tr key={doc.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                      <td className="py-3 text-xs text-muted-foreground">
-                        {doc.created_date
-                          ? format(new Date(doc.created_date), 'MMM d, yyyy · h:mm a')
-                          : '—'}
-                      </td>
-                      <td className="py-3">
-                        <Badge
-                          variant="outline"
-                          className={doc.document_type === 'bol'
-                            ? 'text-blue-600 border-blue-200 bg-blue-50'
-                            : 'text-purple-600 border-purple-200 bg-purple-50'}
-                        >
-                          {doc.document_type === 'bol' ? 'BOL' : 'Rate Confirmation'}
-                        </Badge>
-                      </td>
-                      <td className="py-3 text-xs font-medium">{doc.file_name}</td>
-                      <td className="py-3 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
-                            <Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5">
-                              <Download className="w-3 h-3" /> Download
-                            </Button>
-                          </a>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Document?</AlertDialogTitle>
-                                <AlertDialogDescription>"{doc.file_name}" will be moved to Deleted Items and kept for 30 days.</AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteMutation.mutate(doc)}>Delete</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
+          {driverGroups.map(({ driver_name, byDate }) => {
+            const sortedDates = Object.keys(byDate).sort().reverse();
+            const totalDocs = sortedDates.reduce((sum, d) => sum + byDate[d].length, 0);
+            return (
+              <div key={driver_name} className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+                {/* Driver header */}
+                <div className="flex items-center gap-3 px-4 py-3 bg-muted/40 border-b border-border">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <User className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{driver_name}</p>
+                    <p className="text-[11px] text-muted-foreground">{totalDocs} doc{totalDocs !== 1 ? 's' : ''} · {sortedDates.length} day{sortedDates.length !== 1 ? 's' : ''}</p>
+                  </div>
+                </div>
+
+                {/* Date groups */}
+                <div className="divide-y divide-border">
+                  {sortedDates.map(dateKey => {
+                    const dateDocs = byDate[dateKey];
+                    const dateLabel = dateKey !== 'unknown'
+                      ? format(new Date(dateKey), 'MMM d, yyyy')
+                      : 'Unknown Date';
+                    return (
+                      <div key={dateKey} className="px-4 py-3">
+                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">{dateLabel}</p>
+                        <div className="space-y-2">
+                          {dateDocs.map(doc => (
+                            <div key={doc.id} className="flex items-start justify-between gap-2 group">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <Badge
+                                    variant="outline"
+                                    className={`text-[10px] px-1.5 py-0 ${doc.document_type === 'bol'
+                                      ? 'text-blue-600 border-blue-200 bg-blue-50'
+                                      : 'text-purple-600 border-purple-200 bg-purple-50'}`}
+                                  >
+                                    {doc.document_type === 'bol' ? 'BOL' : 'RC'}
+                                  </Badge>
+                                  <span className="text-xs text-foreground truncate max-w-[160px]">{doc.file_name}</span>
+                                </div>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">
+                                  {doc.created_date ? format(new Date(doc.created_date), 'h:mm a') : ''}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
+                                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                                    <Download className="w-3 h-3" />
+                                  </Button>
+                                </a>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive">
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Document?</AlertDialogTitle>
+                                      <AlertDialogDescription>"{doc.file_name}" will be moved to Deleted Items.</AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteMutation.mutate(doc)}>Delete</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
-        ))
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
