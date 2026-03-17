@@ -7,7 +7,7 @@ import { Search, LogOut, Shield } from 'lucide-react';
 import { useSession } from '../shared/AppSession';
 import NotificationBell from './NotificationBell';
 import TourButton from '../tutorial/TourButton';
-import AppTour, { ADMIN_TOUR_STEPS } from '../tutorial/AppTour';
+import AppTour, { ADMIN_TOUR_STEPS, UPLOAD_TOUR_STEPS } from '../tutorial/AppTour';
 
 export default function TopBar({ pageTitle }) {
   const [searchQuery, setSearchQuery] = useState('');
