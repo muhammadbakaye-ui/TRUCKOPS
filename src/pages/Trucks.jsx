@@ -166,11 +166,14 @@ export default function Trucks() {
 
   const columns = [
     { header: 'Unit #', render: (r) => <span className="font-mono font-medium">{r.unit_number}</span> },
+    { header: 'Assigned Driver', render: (r) => {
+      const d = drivers.find(d => d.id === r.assigned_driver_id);
+      return d ? <span className="text-xs">{d.full_name}</span> : <span className="text-muted-foreground text-xs">—</span>;
+    }},
     { header: 'Make', accessor: 'make' },
     { header: 'Model', accessor: 'model' },
     { header: 'Year', accessor: 'year' },
     { header: 'Plate', accessor: 'plate_number' },
-    { header: 'VIN', render: (r) => r.vin ? <span className="font-mono text-[11px]">{r.vin}</span> : '—' },
     { header: 'Status', render: (r) => <StatusBadge status={r.status} /> },
   ];
 
