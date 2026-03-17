@@ -8,6 +8,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Legend
 } from 'recharts';
 import { subDays, format, parseISO, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
+import { groupByCustomer } from '../utils/normalizeCustomerName';
 import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
 import { printDriverPerformanceReport } from '../components/print/printDriverPerformance';
