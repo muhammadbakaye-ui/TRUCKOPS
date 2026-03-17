@@ -1,65 +1,68 @@
 import React, { useState, useEffect } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, Trash2, Check, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function NotificationBell() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [showDeleted, setShowDeleted] = useState(false);
 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications'],
-    queryFn: async () => {
-      const all = await base44.entities.Notification.list('-created_date', 50);
-      return all;
-    },
-    refetchInterval: 30000, // Refresh every 30 seconds
+    queryFn: () => base44.entities.Notification.list('-created_date', 100),
+    refetchInterval: 30000,
   });
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const active = notifications.filter(n => !n.deleted);
+  const deleted = notifications.filter(n => n.deleted);
+  const unreadCount = active.filter(n => !n.read).length;
 
-  const markAsReadMutation = useMutation({
-    mutationFn: async (notificationId) => {
-      await base44.entities.Notification.update(notificationId, { read: true });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    },
+  const markAsRead = useMutation({
+    mutationFn: (id) => base44.entities.Notification.update(id, { read: true }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
   });
 
-  const markAllAsReadMutation = useMutation({
+  const markAllAsRead = useMutation({
     mutationFn: async () => {
-      const unread = notifications.filter(n => !n.read);
-      for (const n of unread) {
+      for (const n of active.filter(n => !n.read)) {
         await base44.entities.Notification.update(n.id, { read: true });
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
   });
 
-  const handleNotificationClick = (notification) => {
-    markAsReadMutation.mutate(notification.id);
+  const softDelete = useMutation({
+    mutationFn: (id) => base44.entities.Notification.update(id, { deleted: true, read: true }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+  });
+
+  const deleteAll = useMutation({
+    mutationFn: async () => {
+      for (const n of active) {
+        await base44.entities.Notification.update(n.id, { deleted: true, read: true });
+      }
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications'] }),
+  });
+
+  const handleClick = (notification) => {
+    markAsRead.mutate(notification.id);
     if (notification.link_url) {
       navigate(notification.link_url);
       setOpen(false);
     }
   };
 
-  // Subscribe to new notifications in real-time
   useEffect(() => {
     const unsubscribe = base44.entities.Notification.subscribe((event) => {
-      if (event.type === 'create') {
-        queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      }
+      if (event.type === 'create') queryClient.invalidateQueries({ queryKey: ['notifications'] });
     });
     return unsubscribe;
   }, [queryClient]);
@@ -77,46 +80,92 @@ export default function NotificationBell() {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-96 p-0" align="end">
+        {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b">
           <h3 className="font-semibold text-sm">Notifications</h3>
-          {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs"
-              onClick={() => markAllAsReadMutation.mutate()}
-            >
-              Mark all read
-            </Button>
-          )}
+          <div className="flex gap-1">
+            {unreadCount > 0 && (
+              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => markAllAsRead.mutate()}>
+                <Check className="w-3 h-3 mr-1" /> Mark all read
+              </Button>
+            )}
+            {active.length > 0 && (
+              <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive hover:text-destructive" onClick={() => deleteAll.mutate()}>
+                <Trash2 className="w-3 h-3 mr-1" /> Delete all
+              </Button>
+            )}
+          </div>
         </div>
-        <ScrollArea className="h-[400px]">
-          {notifications.length === 0 ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">
-              No notifications yet
-            </div>
+
+        <ScrollArea className="h-[420px]">
+          {/* Active notifications */}
+          {active.length === 0 ? (
+            <div className="p-8 text-center text-sm text-muted-foreground">No notifications</div>
           ) : (
             <div className="divide-y">
-              {notifications.map((notification) => (
+              {active.map((n) => (
                 <div
-                  key={notification.id}
-                  className={`p-4 cursor-pointer hover:bg-accent transition-colors ${
-                    !notification.read ? 'bg-primary/5' : ''
-                  }`}
-                  onClick={() => handleNotificationClick(notification)}
+                  key={n.id}
+                  className={`p-3 hover:bg-accent transition-colors ${!n.read ? 'bg-primary/5' : ''}`}
                 >
-                  <div className="flex items-start gap-3">
-                    <div className={`mt-1 h-2 w-2 rounded-full flex-shrink-0 ${!notification.read ? 'bg-primary' : 'bg-transparent'}`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{notification.title}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{notification.message}</p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {formatDistanceToNow(new Date(notification.created_date), { addSuffix: true })}
+                  <div className="flex items-start gap-2">
+                    <div className={`mt-1.5 h-2 w-2 rounded-full flex-shrink-0 ${!n.read ? 'bg-primary' : 'bg-transparent'}`} />
+                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleClick(n)}>
+                      <p className="text-sm font-medium">{n.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatDistanceToNow(new Date(n.created_date), { addSuffix: true })}
                       </p>
+                    </div>
+                    <div className="flex gap-1 flex-shrink-0">
+                      {!n.read && (
+                        <Button
+                          variant="ghost" size="icon"
+                          className="h-6 w-6 text-muted-foreground hover:text-primary"
+                          title="Mark as read"
+                          onClick={(e) => { e.stopPropagation(); markAsRead.mutate(n.id); }}
+                        >
+                          <Check className="w-3 h-3" />
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost" size="icon"
+                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                        title="Delete"
+                        onClick={(e) => { e.stopPropagation(); softDelete.mutate(n.id); }}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
                     </div>
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Deleted section */}
+          {deleted.length > 0 && (
+            <div className="border-t">
+              <button
+                className="w-full flex items-center justify-between px-4 py-2 text-xs text-muted-foreground hover:bg-accent transition-colors"
+                onClick={() => setShowDeleted(v => !v)}
+              >
+                <span>Deleted ({deleted.length})</span>
+                {showDeleted ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+              </button>
+              {showDeleted && (
+                <div className="divide-y opacity-60">
+                  {deleted.map((n) => (
+                    <div key={n.id} className="px-4 py-3">
+                      <p className="text-xs font-medium">{n.title}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatDistanceToNow(new Date(n.created_date), { addSuffix: true })}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </ScrollArea>
