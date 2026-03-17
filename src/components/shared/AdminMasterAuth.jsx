@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Loader2, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import AdminAuthOptions from './AdminAuthOptions.jsx';
 
 export default function AdminMasterAuth({ onLoginSuccess }) {
   const [step, setStep] = useState('master'); // 'master', 'accountChoice', 'createAccount', 'login'
