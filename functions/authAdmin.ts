@@ -19,50 +19,57 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
-    const { action, master_password, first_name, last_name, password, admin_id } = body;
+    const { action, master_password, first_name, last_name, password, email } = body;
 
-    // Step 1: Verify master password
+    // Verify master password
     if (action === 'verify_master') {
       if (master_password !== MASTER_PASSWORD) {
-        return Response.json({ error: 'Invalid master password' }, { status: 401 });
+        return Response.json({ success: false, error: 'Invalid master password' }, { status: 401 });
       }
-      const admins = await base44.asServiceRole.entities.Admin.list('-created_date', 50);
-      return Response.json({ success: true, admins });
+      return Response.json({ success: true });
     }
 
-    // Step 2: Create new admin
+    // Create new admin account
     if (action === 'create_admin') {
-      if (master_password !== MASTER_PASSWORD) {
-        return Response.json({ error: 'Invalid master password' }, { status: 401 });
+      if (!first_name || !last_name || !password) {
+        return Response.json({ success: false, message: 'Missing required fields' }, { status: 400 });
       }
       const passwordHash = await hashPassword(password);
       const newAdmin = await base44.asServiceRole.entities.Admin.create({
         first_name,
         last_name,
+        email: `${first_name.toLowerCase()}.${last_name.toLowerCase()}@admin`,
         password_hash: passwordHash,
         active: true
       });
       return Response.json({ success: true, admin_id: newAdmin.id, admin_name: `${first_name} ${last_name}` });
     }
 
-    // Step 3: Login with admin credentials
-    if (action === 'login_admin') {
-      if (!admin_id || !password) {
-        return Response.json({ error: 'Missing credentials' }, { status: 400 });
+    // List all admins
+    if (action === 'list_admins') {
+      const admins = await base44.asServiceRole.entities.Admin.list('-created_date', 50);
+      return Response.json({ success: true, admins });
+    }
+
+    // Login with email and password
+    if (action === 'login') {
+      if (!email || !password) {
+        return Response.json({ success: false, message: 'Email and password required' }, { status: 400 });
       }
-      const admin = await base44.asServiceRole.entities.Admin.get(admin_id);
-      if (!admin || !admin.active) {
-        return Response.json({ error: 'Admin not found' }, { status: 404 });
+      const admins = await base44.asServiceRole.entities.Admin.list();
+      const admin = admins.find(a => a.email === email && a.active);
+      if (!admin) {
+        return Response.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
       }
       const isValid = await verifyPassword(password, admin.password_hash);
       if (!isValid) {
-        return Response.json({ error: 'Invalid password' }, { status: 401 });
+        return Response.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
       }
       return Response.json({ success: true, admin_id: admin.id, admin_name: `${admin.first_name} ${admin.last_name}` });
     }
 
-    return Response.json({ error: 'Invalid action' }, { status: 400 });
+    return Response.json({ success: false, error: 'Invalid action' }, { status: 400 });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return Response.json({ success: false, error: error.message }, { status: 500 });
   }
 });
