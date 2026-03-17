@@ -104,30 +104,39 @@ export default function PreLoginSlideshow({ onClose }) {
 
         {/* Screenshot header */}
         <div
-          className={`relative bg-gradient-to-br ${slide.color} overflow-hidden`}
+          className="relative overflow-hidden"
           style={{
+            background: slide.gradient,
             opacity: animating ? 0 : 1,
             transform: animating ? `translateX(${direction === 'right' ? '40px' : '-40px'})` : 'translateX(0)',
             transition: 'opacity 0.25s ease, transform 0.25s ease',
-            height: 180,
+            height: 200,
           }}
         >
-          {/* Decorative circles */}
-          <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-white/5 translate-y-8 -translate-x-6" />
-
-          {/* Screenshot image overlay */}
-          <img
-            src={slide.screenshot}
-            alt={slide.screenshotAlt}
-            className="absolute inset-0 w-full h-full object-cover opacity-25"
-            style={{ mixBlendMode: 'luminosity' }}
-          />
+          {slide.screenshot ? (
+            <>
+              {/* Real app screenshot — shown prominently */}
+              <img
+                src={slide.screenshot}
+                alt={slide.screenshotAlt}
+                className="absolute inset-0 w-full h-full object-cover object-top"
+                style={{ opacity: 0.55 }}
+              />
+              {/* Gradient fade at bottom so text is readable */}
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.7) 100%)' }} />
+            </>
+          ) : (
+            <>
+              {/* Decorative circles fallback */}
+              <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-white/5 -translate-y-10 translate-x-10" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 rounded-full bg-white/5 translate-y-8 -translate-x-6" />
+            </>
+          )}
 
           {/* Title overlay */}
           <div className="absolute inset-0 flex flex-col justify-end p-5">
-            <p className="text-white/70 text-xs font-semibold tracking-wider uppercase mb-1">{slide.subtitle}</p>
-            <h2 className="text-xl font-bold text-white leading-tight">{slide.title}</h2>
+            <p className="text-white/60 text-[10px] font-semibold tracking-widest uppercase mb-1">{slide.subtitle}</p>
+            <h2 className="text-lg font-bold text-white leading-tight drop-shadow">{slide.title}</h2>
           </div>
         </div>
 
