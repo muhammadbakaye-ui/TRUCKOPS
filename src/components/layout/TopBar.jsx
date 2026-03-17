@@ -44,14 +44,31 @@ export default function TopBar({ pageTitle, currentPageName }) {
     }
   };
 
+  const handleReload = () => {
+    navigate(0);
+  };
+
   return (
     <React.Fragment>
       {showTour && <AppTour steps={ADMIN_TOUR_STEPS} onClose={() => setShowTour(false)} />}
       {showUploadTour && <AppTour steps={UPLOAD_TOUR_STEPS} onClose={() => setShowUploadTour(false)} />}
       <div className="h-14 border-b border-border bg-card flex items-center justify-between px-4 flex-shrink-0">
-      <div>
-        <p className="text-[10px] text-muted-foreground font-medium tracking-wide leading-none mb-0.5">Unity Transportation LLC</p>
-        <h1 className="text-sm font-semibold text-foreground leading-none">{pageTitle}</h1>
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-0.5">
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => navigate(-1)}>
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => navigate(1)}>
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={handleReload}>
+            <RotateCw className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+        <div>
+          <p className="text-[10px] text-muted-foreground font-medium tracking-wide leading-none mb-0.5">Unity Transportation LLC</p>
+          <h1 className="text-sm font-semibold text-foreground leading-none">{pageTitle}</h1>
+        </div>
       </div>
 
       <div className="flex items-center gap-3">
