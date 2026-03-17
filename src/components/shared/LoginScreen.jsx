@@ -156,6 +156,16 @@ export default function LoginScreen() {
         <p className="text-center text-xs text-sidebar-foreground/30 mt-6">
           {mode === 'driver' ? 'Contact your dispatcher for login credentials.' : ''}
         </p>
+
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={() => setShowSlideshow(true)}
+            className="flex items-center gap-1.5 text-xs text-sidebar-foreground/40 hover:text-sidebar-foreground/70 transition-colors"
+          >
+            <PlayCircle className="w-3.5 h-3.5" />
+            View App Tour
+          </button>
+        </div>
       </div>
     </div>
   );
