@@ -211,7 +211,13 @@ export default function AccountCustomization() {
             </div>
             <div className="col-span-2">
               <Label className="text-xs">Login Email</Label>
-              <p className="text-xs text-muted-foreground mt-1">{accountForm.email}</p>
+              <Input
+                type="email"
+                value={accountForm.email}
+                onChange={(e) => handleAccountChange('email', e.target.value)}
+                className="h-8 text-xs mt-1"
+                placeholder="login.email@company.com"
+              />
             </div>
           </div>
         </CardContent>
