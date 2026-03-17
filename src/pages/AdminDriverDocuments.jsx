@@ -107,12 +107,41 @@ export default function AdminDriverDocuments() {
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <Input
-            className="pl-8 h-9 w-56 text-sm"
+            className="pl-8 h-9 w-48 text-sm"
             placeholder="Search driver or file..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
         </div>
+        <Select value={driverFilter} onValueChange={setDriverFilter}>
+          <SelectTrigger className="h-9 w-40 text-sm">
+            <SelectValue placeholder="All Drivers" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Drivers</SelectItem>
+            {uniqueDriverNames.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={truckFilter} onValueChange={setTruckFilter}>
+          <SelectTrigger className="h-9 w-32 text-sm">
+            <SelectValue placeholder="All Trucks" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Trucks</SelectItem>
+            {uniqueTrucks.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={dateFilter} onValueChange={setDateFilter}>
+          <SelectTrigger className="h-9 w-40 text-sm">
+            <SelectValue placeholder="All Dates" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Dates</SelectItem>
+            {uniqueDates.map(d => (
+              <SelectItem key={d} value={d}>{format(new Date(d), 'MMM d, yyyy')}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className="h-9 w-44 text-sm">
             <SelectValue placeholder="All Types" />
