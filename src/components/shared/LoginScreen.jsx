@@ -21,6 +21,7 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showSlideshow, setShowSlideshow] = useState(false);
+  const [adminLoggedIn, setAdminLoggedIn] = useState(false);
 
   // Auto-show on first ever visit
   useEffect(() => {
