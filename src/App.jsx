@@ -59,6 +59,7 @@ const AuthenticatedApp = () => {
         />
       ))}
       <Route path="/DeletedItems" element={<LayoutWrapper currentPageName="DeletedItems"><DeletedItems /></LayoutWrapper>} />
+      <Route path="/SystemAdmins" element={<LayoutWrapper currentPageName="SystemAdmins"><SystemAdmins /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
