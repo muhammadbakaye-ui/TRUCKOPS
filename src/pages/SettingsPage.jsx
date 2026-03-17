@@ -104,6 +104,7 @@ export default function SettingsPage() {
 
       <div className="space-y-4 mt-4">
         {activeTab === 'company' && (
+          <>
         <Card>
           <CardHeader className="py-3 px-4">
             <CardTitle className="text-sm">Company Information</CardTitle>
