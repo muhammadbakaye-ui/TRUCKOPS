@@ -177,9 +177,7 @@ export default function SettingsPage() {
           </>
         )}
 
-        {activeTab === 'security' && currentUser && (
-          <LoginHistoryTab userEmail={currentUser.email} />
-        )}
+        {activeTab === 'security' && currentUser && <LoginHistoryTab userEmail={currentUser.email} />}
       </div>
     </div>
   );
