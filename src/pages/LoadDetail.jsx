@@ -263,7 +263,7 @@ export default function LoadDetail() {
                   <SelectContent>{companies.map(c => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}</SelectContent>
                 </Select>
               </Field>
-              <Field label="Status"><Sel value={form.status} onChange={(v) => set('status', v)} options={[{value:'draft',label:'Draft'},{value:'active',label:'Active'},{value:'completed',label:'Completed'},{value:'canceled',label:'Canceled'}]} /></Field>
+              <Field label="Status"><Sel value={form.status} onChange={(v) => set('status', v)} options={[{value:'draft',label:'Draft'},{value:'saved',label:'Saved'},{value:'completed',label:'Completed'},{value:'canceled',label:'Canceled'}]} /></Field>
               <Field label="Dispatch Status"><Sel value={form.dispatch_status} onChange={(v) => set('dispatch_status', v)} options={[{value:'pending',label:'Pending'},{value:'dispatched',label:'Dispatched'},{value:'in_transit',label:'In Transit'},{value:'delivered',label:'Delivered'},{value:'completed',label:'Completed'}]} /></Field>
               <Field label="Load Type"><Sel value={form.load_type} onChange={(v) => set('load_type', v)} options={['FTL','LTL','partial','other'].map(v=>({value:v,label:v.toUpperCase()}))} /></Field>
               <Field label="Equipment"><Sel value={form.equipment_type} onChange={(v) => set('equipment_type', v)} options={['dry_van','reefer','flatbed','step_deck','lowboy','tanker','intermodal','other'].map(v=>({value:v,label:v.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}))} /></Field>
