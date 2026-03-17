@@ -61,7 +61,7 @@ import LoadDetail from './pages/LoadDetail';
 import Loads from './pages/Loads';
 import Reports from './pages/Reports';
 import SettingsPage from './pages/SettingsPage';
-import StatementBuilder from './pages/StatementBuilder';
+import StatementBuilder from './pages/StatementBuilder.jsx';
 import Trailers from './pages/Trailers';
 import Trucks from './pages/Trucks';
 import UploadDocument from './pages/UploadDocument';
