@@ -11,8 +11,19 @@ import AppTour, { ADMIN_TOUR_STEPS } from '../tutorial/AppTour';
 
 export default function TopBar({ pageTitle }) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [showTour, setShowTour] = useState(false);
   const navigate = useNavigate();
   const { logout } = useSession();
+
+  // Auto-show tour on first admin login
+  const startTour = () => setShowTour(true);
+  React.useEffect(() => {
+    const seen = localStorage.getItem('truckops_admin_tour_seen');
+    if (!seen) {
+      const t = setTimeout(() => { setShowTour(true); localStorage.setItem('truckops_admin_tour_seen', '1'); }, 800);
+      return () => clearTimeout(t);
+    }
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
