@@ -16,6 +16,52 @@ import PageHeader from '../components/shared/PageHeader';
 import BulkDeleteBar from '../components/shared/BulkDeleteBar';
 import { format, parseISO } from 'date-fns';
 
+const INVOICE_STATUS_STYLES = {
+  not_invoiced: 'bg-gray-100 text-gray-600 border-gray-200',
+  invoiced: 'bg-blue-50 text-blue-700 border-blue-200',
+  sent: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+  partial: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+  paid: 'bg-green-50 text-green-700 border-green-200',
+  overdue: 'bg-red-50 text-red-700 border-red-200',
+  canceled: 'bg-gray-100 text-gray-400 border-gray-200',
+};
+
+const INVOICE_STATUS_LABELS = {
+  not_invoiced: 'Not Invoiced',
+  invoiced: 'Invoiced',
+  sent: 'Sent',
+  partial: 'Partial',
+  paid: 'Paid',
+  overdue: 'Overdue',
+  canceled: 'Canceled',
+};
+
+function InvoiceStatusSelect({ load, queryClient }) {
+  const [saving, setSaving] = useState(false);
+  const current = load.invoice_status || 'not_invoiced';
+
+  const handleChange = async (value) => {
+    setSaving(true);
+    await base44.entities.Load.update(load.id, { invoice_status: value });
+    queryClient.invalidateQueries({ queryKey: ['loads'] });
+    setSaving(false);
+    toast.success('Invoice status updated');
+  };
+
+  return (
+    <Select value={current} onValueChange={handleChange} disabled={saving}>
+      <SelectTrigger className={`h-6 text-[11px] px-2 border rounded-md font-medium w-32 ${INVOICE_STATUS_STYLES[current] || ''}`}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {Object.entries(INVOICE_STATUS_LABELS).map(([val, label]) => (
+          <SelectItem key={val} value={val} className="text-xs">{label}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 export default function Loads() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
