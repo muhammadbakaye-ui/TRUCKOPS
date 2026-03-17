@@ -100,7 +100,7 @@ export default function Invoices() {
     { header: 'Invoice Date', render: (r) => r.invoice_date ? format(new Date(r.invoice_date), 'MMM d, yyyy') : '—' },
     { header: 'Due Date', render: (r) => r.due_date ? format(new Date(r.due_date), 'MMM d, yyyy') : '—' },
     { header: 'Amount', render: (r) => r.total ? <span className="font-medium">${r.total.toLocaleString()}</span> : '—' },
-    { header: 'Status', render: (r) => <StatusBadge status={r.status} /> },
+    { header: 'Status', render: (r) => <div onClick={e => e.stopPropagation()}><InvoiceStatusSelect invoice={r} queryClient={queryClient} /></div> },
     {
       header: '', render: (r) => (
         <AlertDialog>
