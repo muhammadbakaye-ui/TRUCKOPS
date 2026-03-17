@@ -495,7 +495,6 @@ export default function DriverPortalView() {
                       </Button>
                       <Button size="sm" className="gap-1 text-xs md:text-sm h-8 md:h-9" onClick={() => {
                         printStatement({ company: {}, statement: viewingStatement, allLines: statementLines });
-                        setViewingStatement(null);
                       }}>
                         <Printer className="w-3 md:w-3.5 h-3 md:h-3.5" /> <span className="hidden sm:inline">Download PDF</span><span className="sm:hidden">PDF</span>
                       </Button>
