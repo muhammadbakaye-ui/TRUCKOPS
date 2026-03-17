@@ -211,20 +211,31 @@ export default function LoadDetail() {
 
   return (
     <div className="p-4 space-y-4 max-w-5xl">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 flex-wrap">
         <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => navigate(createPageUrl('Loads'))}>
           <ArrowLeft className="w-3.5 h-3.5" /> Loads
         </Button>
         <h2 className="text-sm font-semibold">
-          {isNew ? 'New Load' : `Load ${form.internal_load_number}`}
+          {(isNew && !savedLoadIdRef.current) ? 'New Load' : `Load ${form.internal_load_number}`}
         </h2>
-        {!isNew && <StatusBadge status={form.status} />}
+        <StatusBadge status={form.status} />
+        {/* Auto-save indicator */}
+        {form.status === 'draft' && (
+          <span className="flex items-center gap-1 text-[11px] text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+            {autoSaving
+              ? <><Loader2 className="w-3 h-3 animate-spin" /> Auto-saving…</>
+              : lastAutoSaved
+              ? <><Cloud className="w-3 h-3" /> Draft auto-saved</>
+              : <><CloudOff className="w-3 h-3" /> Unsaved draft</>
+            }
+          </span>
+        )}
         <div className="ml-auto flex gap-2">
           <Button size="sm" className="h-8 gap-1" onClick={handleSave} disabled={saving}>
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            Save
+            {form.status === 'draft' ? 'Save & Activate' : 'Save'}
           </Button>
-          {!isNew && (
+          {(loadId || savedLoadIdRef.current) && (
             <Button variant="outline" size="sm" className="h-8 gap-1" onClick={handlePrint}>
               <Printer className="w-3.5 h-3.5" /> Print / PDF
             </Button>
