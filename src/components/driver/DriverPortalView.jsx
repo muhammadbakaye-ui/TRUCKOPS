@@ -122,6 +122,7 @@ export default function DriverPortalView() {
             <p className="text-xs font-semibold text-sidebar-primary-foreground">{session?.driver_name}</p>
             <p className="text-[11px] text-sidebar-foreground/60">Truck # {session?.truck_number}</p>
           </div>
+          <TourButton onClick={() => setShowTour(true)} />
           <Button
             variant="ghost"
             size="sm"
