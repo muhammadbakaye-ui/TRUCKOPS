@@ -114,7 +114,9 @@ export default function SettingsPage() {
        </div>
 
       <div className="space-y-4 mt-4">
-        {activeTab === 'company' && (
+         {activeTab === 'account' && <AccountCustomization />}
+
+         {activeTab === 'company' && (
           <>
         <Card>
           <CardHeader className="py-3 px-4">
