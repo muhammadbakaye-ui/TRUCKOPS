@@ -475,14 +475,14 @@ export default function DriverPortalView() {
                       </div>
                     </div>
 
-                    <DialogFooter className="flex gap-2 pt-3 md:pt-4 border-t">
-                      <Button variant="outline" size="sm" className="text-xs md:text-sm h-8 md:h-9" onClick={() => setViewingStatement(null)}>
+                    <DialogFooter className="flex gap-2 pt-2.5 md:pt-4 border-t">
+                      <Button variant="outline" size="sm" className="text-xs h-9 flex-1 md:flex-none" onClick={() => setViewingStatement(null)}>
                         Close
                       </Button>
-                      <Button size="sm" className="gap-1 text-xs md:text-sm h-8 md:h-9" onClick={() => {
-                        printStatement({ company: {}, statement: viewingStatement, allLines: statementLines });
-                      }}>
-                        <Printer className="w-3 md:w-3.5 h-3 md:h-3.5" /> <span className="hidden sm:inline">Download PDF</span><span className="sm:hidden">PDF</span>
+                      <Button size="sm" className="gap-1.5 text-xs h-9 flex-1 md:flex-none" onClick={() => {
+                         printStatement({ company: {}, statement: viewingStatement, allLines: statementLines });
+                       }}>
+                        <Printer className="w-3.5 h-3.5" /> Download PDF
                       </Button>
                     </DialogFooter>
                   </DialogContent>
