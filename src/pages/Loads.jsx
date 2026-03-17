@@ -171,6 +171,8 @@ export default function Loads() {
     queryFn: () => base44.entities.Load.list('-created_date', 1000),
   });
 
+  const [savingAllDrafts, setSavingAllDrafts] = useState(false);
+
   const deleteMutation = useMutation({
     mutationFn: async (loads) => {
       const loadsArray = Array.isArray(loads) ? loads : [loads];
@@ -192,6 +194,26 @@ export default function Loads() {
       setSelected(new Set());
     },
   });
+
+  const handleSaveAllDrafts = async () => {
+    const drafts = loads.filter(l => l.status === 'draft');
+    if (drafts.length === 0) {
+      toast.info('No draft loads to save');
+      return;
+    }
+    setSavingAllDrafts(true);
+    try {
+      for (const draft of drafts) {
+        await base44.entities.Load.update(draft.id, { status: 'saved' });
+      }
+      queryClient.invalidateQueries({ queryKey: ['loads'] });
+      toast.success(`${drafts.length} draft load${drafts.length === 1 ? '' : 's'} saved`);
+    } catch (err) {
+      toast.error('Failed to save drafts: ' + err.message);
+    } finally {
+      setSavingAllDrafts(false);
+    }
+  };
 
   const uniqueDrivers = [...new Set(loads
     .filter(l => l.driver_1_name)
