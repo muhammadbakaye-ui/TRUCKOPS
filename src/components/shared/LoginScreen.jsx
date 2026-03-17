@@ -49,7 +49,7 @@ export default function LoginScreen() {
         const drivers = await base44.entities.Driver.list('-created_date', 500);
         const found = drivers.find(d =>
           d.full_name?.toLowerCase().trim() === username.toLowerCase().trim() &&
-          d.assigned_truck_id?.trim() === password.trim()
+          d.assigned_truck_id?.toLowerCase().trim() === password.toLowerCase().trim()
         );
         if (found) {
           login({
@@ -122,7 +122,7 @@ export default function LoginScreen() {
                 <Input
                   type={showPass ? 'text' : 'password'}
                   className="h-11 pr-10"
-                  placeholder={mode === 'admin' ? '••••••••' : 'Enter your truck ID'}
+                  placeholder={mode === 'admin' ? 'Enter password' : 'Enter your truck ID'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
