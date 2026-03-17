@@ -17,6 +17,17 @@ const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'
 export default function Reports() {
   const [period, setPeriod] = useState('30');
 
+  const periodLabels = { '7': 'Last 7 Days', '30': 'Last 30 Days', '90': 'Last 90 Days', '365': 'Last 12 Months' };
+
+  const handlePrintDriverReport = () => {
+    printDriverPerformanceReport({
+      drivers,
+      loads: recentLoads,
+      period,
+      periodLabel: periodLabels[period] || `Last ${period} days`,
+    });
+  };
+
   const { data: loads = [] } = useQuery({ queryKey: ['loads-report'], queryFn: () => base44.entities.Load.list('-created_date', 1000) });
   const { data: invoices = [] } = useQuery({ queryKey: ['invoices-report'], queryFn: () => base44.entities.Invoice.list('-created_date', 1000) });
   const { data: drivers = [] } = useQuery({ queryKey: ['drivers-report'], queryFn: () => base44.entities.Driver.list() });
