@@ -42,11 +42,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       if (mode === 'admin') {
-        if (username === ADMIN_USER && password === ADMIN_PASS) {
-          setAdminLoggedIn(true);
-        } else {
-          setError('Invalid username or password.');
-        }
+        setShowAdminAuth(true);
       } else {
         const [drivers, trucks] = await Promise.all([
           base44.entities.Driver.list('-created_date', 500),
@@ -80,8 +76,15 @@ export default function LoginScreen() {
     }
   };
 
-  if (adminLoggedIn) {
-    return <AdminMasterAuth onLoginSuccess={() => login({ role: 'admin' })} />;
+  if (showAdminAuth) {
+    return <AdminAuthOptions
+      onBack={() => setShowAdminAuth(false)}
+      onSuccess={(adminId, adminName) => {
+        localStorage.setItem('adminId', adminId);
+        localStorage.setItem('adminName', adminName);
+        login({ role: 'admin' });
+      }}
+    />;
   }
 
   return (
