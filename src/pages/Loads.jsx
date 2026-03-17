@@ -45,6 +45,19 @@ function InvoiceStatusSelect({ load, queryClient }) {
     // Update load invoice_status
     await base44.entities.Load.update(load.id, { invoice_status: value });
 
+    // If switching back to not_invoiced, delete the linked Invoice record
+    if (value === 'not_invoiced') {
+      const existing = await base44.entities.Invoice.filter({ load_id: load.id }, '-created_date', 5);
+      for (const inv of existing) {
+        await base44.entities.Invoice.delete(inv.id);
+      }
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['loads'] });
+      setSaving(false);
+      toast.success('Invoice status updated');
+      return;
+    }
+
     // If moving away from not_invoiced, ensure an Invoice record exists
     if (value !== 'not_invoiced') {
       const existing = await base44.entities.Invoice.filter({ load_id: load.id }, '-created_date', 1);
