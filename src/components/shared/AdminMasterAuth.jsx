@@ -174,44 +174,19 @@ export default function AdminMasterAuth({ onLoginSuccess }) {
 
   if (step === 'accountChoice') {
     return (
-      <div className="min-h-screen bg-sidebar flex items-center justify-center p-4">
-        <div className="w-full max-w-sm">
-          <div className="bg-card rounded-2xl shadow-2xl border border-border overflow-hidden">
-            <div className="p-6 space-y-4">
-              <h1 className="text-xl font-bold">Account Options</h1>
-              <p className="text-sm text-muted-foreground">Choose an action</p>
-              <div className="space-y-3">
-                <Button
-                  onClick={() => setStep('createAccount')}
-                  className="w-full h-11 font-semibold"
-                >
-                  Create New Account
-                </Button>
-                {admins.length > 0 && (
-                  <Button
-                    onClick={() => setStep('login')}
-                    variant="outline"
-                    className="w-full h-11 font-semibold"
-                  >
-                    Sign In with Existing Account
-                  </Button>
-                )}
-                <Button
-                  onClick={() => {
-                    setStep('master');
-                    setMasterPassword('');
-                    setError('');
-                  }}
-                  variant="ghost"
-                  className="w-full h-11 font-semibold"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" /> Back
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <AdminAuthOptions
+        onBack={() => {
+          setStep('master');
+          setMasterPassword('');
+          setError('');
+        }}
+        onSuccess={(adminId, adminName) => {
+          localStorage.setItem('adminId', adminId);
+          localStorage.setItem('adminName', adminName);
+          toast.success('Logged in successfully!');
+          onLoginSuccess();
+        }}
+      />
     );
   }
 
