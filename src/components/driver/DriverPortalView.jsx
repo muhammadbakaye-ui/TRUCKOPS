@@ -26,10 +26,21 @@ export default function DriverPortalView() {
   const { session, logout } = useSession();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('documents');
-  const [uploading, setUploading] = useState(null); // null | 'bol' | 'rate_confirmation'
+  const [uploading, setUploading] = useState(null);
   const [viewingStatement, setViewingStatement] = useState(null);
+  const [showTour, setShowTour] = useState(false);
   const bolRef = useRef(null);
   const rcRef = useRef(null);
+
+  // Auto-show driver tour on first login
+  useEffect(() => {
+    const key = `truckops_driver_tour_seen_${session?.driver_id}`;
+    const seen = localStorage.getItem(key);
+    if (!seen) {
+      const t = setTimeout(() => { setShowTour(true); localStorage.setItem(key, '1'); }, 800);
+      return () => clearTimeout(t);
+    }
+  }, [session?.driver_id]);
 
   const { data: documents = [], isLoading: docsLoading } = useQuery({
     queryKey: ['driver-docs', session?.driver_id],
