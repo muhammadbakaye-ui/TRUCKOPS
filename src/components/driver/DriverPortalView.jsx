@@ -111,6 +111,7 @@ export default function DriverPortalView() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {showTour && <AppTour steps={DRIVER_TOUR_STEPS} onClose={() => setShowTour(false)} />}
       {/* Header */}
       <div className="h-14 bg-sidebar border-b border-sidebar-border flex items-center justify-between px-6 flex-shrink-0">
         <div className="flex items-center gap-2.5">
