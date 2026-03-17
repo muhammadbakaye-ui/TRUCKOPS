@@ -33,6 +33,8 @@ export default function TopBar({ pageTitle }) {
   };
 
   return (
+    <>
+    {showTour && <AppTour steps={ADMIN_TOUR_STEPS} onClose={() => setShowTour(false)} />}
     <div className="h-14 border-b border-border bg-card flex items-center justify-between px-4 flex-shrink-0">
       <div>
         <p className="text-[10px] text-muted-foreground font-medium tracking-wide leading-none mb-0.5">Unity Transportation LLC</p>
