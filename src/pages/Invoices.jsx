@@ -56,6 +56,7 @@ function InvoiceStatusSelect({ invoice, queryClient }) {
 export default function Invoices() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  // queryClient passed to InvoiceStatusSelect via columns closure
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
