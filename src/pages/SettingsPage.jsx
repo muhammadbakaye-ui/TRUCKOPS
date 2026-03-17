@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Save } from 'lucide-react';
 import PageHeader from '../components/shared/PageHeader';
+import LoginHistoryTab from '../components/settings/LoginHistoryTab';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
