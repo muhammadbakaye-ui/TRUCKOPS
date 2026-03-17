@@ -9,9 +9,10 @@ import NotificationBell from './NotificationBell';
 import TourButton from '../tutorial/TourButton';
 import AppTour, { ADMIN_TOUR_STEPS, UPLOAD_TOUR_STEPS } from '../tutorial/AppTour';
 
-export default function TopBar({ pageTitle }) {
+export default function TopBar({ pageTitle, currentPageName }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showTour, setShowTour] = useState(false);
+  const [showUploadTour, setShowUploadTour] = useState(false);
   const navigate = useNavigate();
   const { logout } = useSession();
 
@@ -24,6 +25,17 @@ export default function TopBar({ pageTitle }) {
       return () => clearTimeout(t);
     }
   }, []);
+
+  // Auto-show upload tour on first visit to UploadDocument
+  React.useEffect(() => {
+    if (currentPageName === 'UploadDocument') {
+      const seen = localStorage.getItem('truckops_upload_tour_seen');
+      if (!seen) {
+        const t = setTimeout(() => { setShowUploadTour(true); localStorage.setItem('truckops_upload_tour_seen', '1'); }, 600);
+        return () => clearTimeout(t);
+      }
+    }
+  }, [currentPageName]);
 
   const handleSearch = (e) => {
     e.preventDefault();
