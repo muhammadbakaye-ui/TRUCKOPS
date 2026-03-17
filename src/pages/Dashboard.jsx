@@ -75,6 +75,8 @@ export default function Dashboard() {
         <StatCard label="Draft Statements" value={draftStatements.length} icon={ClipboardList} color="text-yellow-600" onClick={() => navigate(createPageUrl('DriverStatements'))} />
       </div>
 
+      <RevenueCharts loads={loads} drivers={drivers} />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Recent Loads */}
         <Card className="lg:col-span-2">
