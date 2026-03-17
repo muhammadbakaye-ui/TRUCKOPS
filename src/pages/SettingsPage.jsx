@@ -79,7 +79,32 @@ export default function SettingsPage() {
     <div className="p-4 max-w-2xl">
       <PageHeader title="Settings" description="Carrier / company information" />
 
-      <div className="space-y-4 mt-2">
+      <div className="flex gap-2 mt-4 border-b">
+        <button
+          onClick={() => setActiveTab('company')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'company'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Company
+        </button>
+        <button
+          onClick={() => setActiveTab('security')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'security'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Login History
+        </button>
+      </div>
+
+      <div className="space-y-4 mt-4">
+        {activeTab === 'company' && (
+          <>
         <Card>
           <CardHeader className="py-3 px-4">
             <CardTitle className="text-sm">Company Information</CardTitle>
