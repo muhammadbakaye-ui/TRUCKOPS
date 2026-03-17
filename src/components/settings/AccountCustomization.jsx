@@ -84,16 +84,15 @@ export default function AccountCustomization() {
       await base44.auth.updateMe(updateData);
       
       // Update the Admin entity
-      const admins = await base44.entities.Admin.filter({ email: currentUser?.email });
-      if (admins.length > 0) {
-        return base44.entities.Admin.update(admins[0].id, {
-          first_name: data.first_name,
-          last_name: data.last_name,
-          email: data.email,
-          phone: data.phone || '',
-          display_email: data.display_email || '',
-        });
-      }
+       const admins = await base44.entities.Admin.filter({ email: currentUser?.email });
+       if (admins.length > 0) {
+         return base44.entities.Admin.update(admins[0].id, {
+           first_name: data.first_name,
+           last_name: data.last_name,
+           email: data.email,
+           phone: data.phone || '',
+         });
+       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['current-admin-user'] });
