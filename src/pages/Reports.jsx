@@ -55,51 +55,51 @@ export default function Reports() {
   const driverData = Object.values(driverLoads).sort((a, b) => b.revenue - a.revenue).slice(0, 8);
 
   const StatBox = ({ label, value, sub }) => (
-    <Card className="p-4">
-      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">{label}</p>
-      <p className="text-2xl font-bold mt-1">{value}</p>
-      {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
+    <Card className="p-3 md:p-4">
+      <p className="text-[10px] md:text-[11px] font-medium text-muted-foreground uppercase tracking-wider leading-tight">{label}</p>
+      <p className="text-lg md:text-2xl font-bold mt-0.5 md:mt-1">{value}</p>
+      {sub && <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5">{sub}</p>}
     </Card>
   );
 
   return (
-    <div className="p-4 space-y-4">
-      <PageHeader
-        title="Reports"
-        description="Revenue, load, and driver analytics"
-        actions={
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="h-8 text-xs w-36">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">Last 7 days</SelectItem>
-              <SelectItem value="30">Last 30 days</SelectItem>
-              <SelectItem value="90">Last 90 days</SelectItem>
-              <SelectItem value="365">Last 12 months</SelectItem>
-            </SelectContent>
-          </Select>
-        }
-      />
+    <div className="p-3 md:p-4 space-y-3 md:space-y-4">
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <h1 className="text-sm md:text-base font-bold">Reports</h1>
+          <p className="text-[11px] md:text-xs text-muted-foreground">Revenue, load & driver analytics</p>
+        </div>
+        <Select value={period} onValueChange={setPeriod}>
+          <SelectTrigger className="h-8 text-xs w-32 md:w-36">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="7">Last 7 days</SelectItem>
+            <SelectItem value="30">Last 30 days</SelectItem>
+            <SelectItem value="90">Last 90 days</SelectItem>
+            <SelectItem value="365">Last 12 months</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
         <StatBox label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} sub={`${recentInvoices.length} invoices`} />
         <StatBox label="Collected" value={`$${paidRevenue.toLocaleString()}`} sub={`${Math.round(totalRevenue ? paidRevenue / totalRevenue * 100 : 0)}% of total`} />
-        <StatBox label="Loads" value={recentLoads.length} sub={`Avg $${Math.round(avgLoadValue).toLocaleString()} / load`} />
+        <StatBox label="Loads" value={recentLoads.length} sub={`Avg $${Math.round(avgLoadValue).toLocaleString()}/load`} />
         <StatBox label="Active Drivers" value={drivers.filter(d => d.status === 'active').length} sub={`${driverData.length} with loads`} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
         <Card>
-          <CardHeader className="py-3 px-4">
-            <CardTitle className="text-sm">Revenue by Customer</CardTitle>
+          <CardHeader className="py-2.5 px-3 md:py-3 md:px-4">
+            <CardTitle className="text-xs md:text-sm">Revenue by Customer</CardTitle>
           </CardHeader>
-          <CardContent className="pr-4">
-            <ResponsiveContainer width="100%" height={220}>
+          <CardContent className="px-2 md:pr-4">
+            <ResponsiveContainer width="100%" height={180}>
               <BarChart data={customerData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                <XAxis type="number" tickFormatter={v => `$${(v/1000).toFixed(0)}k`} tick={{ fontSize: 11 }} />
-                <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11 }} />
+                <XAxis type="number" tickFormatter={v => `$${(v/1000).toFixed(0)}k`} tick={{ fontSize: 10 }} />
+                <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 10 }} />
                 <Tooltip formatter={(v) => [`$${v.toLocaleString()}`, 'Revenue']} />
                 <Bar dataKey="total" fill="hsl(var(--primary))" radius={[0, 3, 3, 0]} />
               </BarChart>
@@ -108,13 +108,13 @@ export default function Reports() {
         </Card>
 
         <Card>
-          <CardHeader className="py-3 px-4">
-            <CardTitle className="text-sm">Invoice Status Breakdown</CardTitle>
+          <CardHeader className="py-2.5 px-3 md:py-3 md:px-4">
+            <CardTitle className="text-xs md:text-sm">Invoice Status</CardTitle>
           </CardHeader>
           <CardContent className="flex items-center justify-center">
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={180}>
               <PieChart>
-                <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={11}>
+                <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={65} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={10}>
                   {statusData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
                 <Tooltip />
@@ -124,18 +124,18 @@ export default function Reports() {
         </Card>
 
         <Card className="lg:col-span-2">
-          <CardHeader className="py-3 px-4">
-            <CardTitle className="text-sm">Driver Performance (Loads & Revenue)</CardTitle>
+          <CardHeader className="py-2.5 px-3 md:py-3 md:px-4">
+            <CardTitle className="text-xs md:text-sm">Driver Performance</CardTitle>
           </CardHeader>
-          <CardContent className="pr-4">
-            <ResponsiveContainer width="100%" height={200}>
+          <CardContent className="px-1 md:pr-4">
+            <ResponsiveContainer width="100%" height={180}>
               <BarChart data={driverData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                <YAxis yAxisId="left" tickFormatter={v => `$${(v/1000).toFixed(0)}k`} tick={{ fontSize: 11 }} />
-                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
+                <XAxis dataKey="name" tick={{ fontSize: 9 }} />
+                <YAxis yAxisId="left" tickFormatter={v => `$${(v/1000).toFixed(0)}k`} tick={{ fontSize: 10 }} />
+                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
                 <Tooltip formatter={(v, name) => [name === 'revenue' ? `$${v.toLocaleString()}` : v, name]} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Legend wrapperStyle={{ fontSize: 10 }} />
                 <Bar yAxisId="left" dataKey="revenue" fill="hsl(var(--primary))" name="Revenue" radius={[3, 3, 0, 0]} />
                 <Bar yAxisId="right" dataKey="loads" fill="hsl(var(--chart-2))" name="Loads" radius={[3, 3, 0, 0]} />
               </BarChart>
