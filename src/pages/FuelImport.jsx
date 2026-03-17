@@ -571,7 +571,15 @@ Return only the JSON with the transactions array.`,
         <Card>
           <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
             <CardTitle className="text-sm">Transactions — {batches.find(b => b.id === selectedBatch)?.file_name}</CardTitle>
-            <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setSelectedBatch(null)}>Close</Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => {
+                const dialog = document.getElementById('tx-columns-dialog');
+                if (dialog) dialog.showModal();
+              }}>
+                Columns
+              </Button>
+              <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setSelectedBatch(null)}>Close</Button>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
            {selectedTx.size > 0 && (
@@ -594,6 +602,38 @@ Return only the JSON with the transactions array.`,
           </CardContent>
         </Card>
       )}
+
+      {/* Transaction columns selector dialog */}
+      <dialog id="tx-columns-dialog" className="backdrop:bg-black/50 rounded-lg p-6 shadow-lg max-w-sm w-full">
+        <div className="space-y-4">
+          <h2 className="text-base font-semibold">Show/Hide Columns</h2>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {allTxColumnOptions.map(col => (
+              <label key={col.id} className="flex items-center gap-2 cursor-pointer p-2 hover:bg-muted rounded">
+                <Checkbox
+                  checked={visibleTxColumns.has(col.id)}
+                  onCheckedChange={(checked) => {
+                    const newVisible = new Set(visibleTxColumns);
+                    if (checked) {
+                      newVisible.add(col.id);
+                    } else {
+                      newVisible.delete(col.id);
+                    }
+                    setVisibleTxColumns(newVisible);
+                  }}
+                />
+                <span className="text-sm">{col.label}</span>
+              </label>
+            ))}
+          </div>
+          <div className="flex justify-end gap-2 pt-4 border-t">
+            <Button variant="outline" size="sm" onClick={() => {
+              const dialog = document.getElementById('tx-columns-dialog');
+              if (dialog) dialog.close();
+            }}>Close</Button>
+          </div>
+        </div>
+      </dialog>
     </div>
   );
 }
