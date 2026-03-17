@@ -328,7 +328,7 @@ export default function DriverPortalView() {
                           <p className="text-xs text-muted-foreground">Period</p>
                           <p className="text-sm font-semibold">
                             {viewingStatement.period_start && viewingStatement.period_end
-                              ? `${format(new Date(viewingStatement.period_start), 'MMM d')} – ${format(new Date(viewingStatement.period_end), 'MMM d, yyyy')}`
+                              ? `${format(new Date(viewingStatement.period_start + 'T12:00:00'), 'MMM d')} – ${format(new Date(viewingStatement.period_end + 'T12:00:00'), 'MMM d, yyyy')}`
                               : '—'}
                           </p>
                         </div>
