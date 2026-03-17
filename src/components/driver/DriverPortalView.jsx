@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useSession } from '../shared/AppSession';
@@ -12,6 +12,8 @@ import { format, addDays, isPast, subDays } from 'date-fns';
 import { getPeriodForDate } from '@/components/shared/statementCalendar';
 import { printStatement } from '../print/printStatement';
 import StatementLoadDetails from './StatementLoadDetails';
+import AppTour, { DRIVER_TOUR_STEPS } from '../tutorial/AppTour';
+import TourButton from '../tutorial/TourButton';
 
 const statusConfig = {
   draft:     { label: 'Pending',   cls: 'bg-yellow-100 text-yellow-700 border-yellow-300' },
