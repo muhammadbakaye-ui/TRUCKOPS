@@ -77,34 +77,7 @@ export default function DriverStatements() {
     return matchesSearch && matchesStatus;
   });
 
-  // Group statements by period (Sunday-Saturday week)
-  const groupedByPeriod = filtered.reduce((acc, stmt) => {
-    if (!stmt.period_start || !stmt.period_end) return acc;
-    const periodKey = `${stmt.period_start} – ${stmt.period_end}`;
-    if (!acc[periodKey]) {
-      acc[periodKey] = [];
-    }
-    acc[periodKey].push(stmt);
-    return acc;
-  }, {});
 
-  const sortedPeriods = Object.keys(groupedByPeriod).sort((a, b) => {
-    const dateA = a.split(' – ')[0];
-    const dateB = b.split(' – ')[0];
-    return dateB.localeCompare(dateA); // Most recent first
-  });
-
-  const togglePeriod = (periodKey) => {
-    setExpandedPeriods(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(periodKey)) {
-        newSet.delete(periodKey);
-      } else {
-        newSet.add(periodKey);
-      }
-      return newSet;
-    });
-  };
 
   return (
     <div className="p-4">
