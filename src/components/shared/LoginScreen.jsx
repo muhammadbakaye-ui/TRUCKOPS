@@ -43,7 +43,7 @@ export default function LoginScreen() {
     try {
       if (mode === 'admin') {
         if (username === ADMIN_USER && password === ADMIN_PASS) {
-          login({ role: 'admin' });
+          setAdminLoggedIn(true);
         } else {
           setError('Invalid username or password.');
         }
