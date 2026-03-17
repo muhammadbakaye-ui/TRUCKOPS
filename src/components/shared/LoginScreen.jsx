@@ -81,7 +81,7 @@ export default function LoginScreen() {
   };
 
   if (adminLoggedIn) {
-    return <AdminLoginFlow onLoginSuccess={() => login({ role: 'admin' })} />;
+    return <AdminMasterAuth onLoginSuccess={() => login({ role: 'admin' })} />;
   }
 
   return (
