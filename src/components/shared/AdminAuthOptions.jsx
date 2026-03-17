@@ -13,7 +13,6 @@ export default function AdminAuthOptions({ onBack, onSuccess }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [formData, setFormData] = useState({
-    email: '',
     password: '',
     confirmPassword: '',
     firstName: '',
@@ -28,8 +27,8 @@ export default function AdminAuthOptions({ onBack, onSuccess }) {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!formData.email || !formData.password) {
-      setError('Email and password required');
+    if (!formData.firstName || !formData.lastName || !formData.password) {
+      setError('First name, last name, and password required');
       return;
     }
 
@@ -37,7 +36,8 @@ export default function AdminAuthOptions({ onBack, onSuccess }) {
     try {
       const response = await base44.functions.invoke('authAdmin', {
         action: 'login',
-        email: formData.email,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
         password: formData.password
       });
 
@@ -131,12 +131,24 @@ export default function AdminAuthOptions({ onBack, onSuccess }) {
             {mode === 'login' && (
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Email</label>
+                  <label className="block text-sm font-medium text-foreground mb-2">First Name</label>
                   <Input
-                    type="email"
-                    name="email"
-                    placeholder="Enter email"
-                    value={formData.email}
+                    type="text"
+                    name="firstName"
+                    placeholder="Enter first name"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    disabled={loading}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">Last Name</label>
+                  <Input
+                    type="text"
+                    name="lastName"
+                    placeholder="Enter last name"
+                    value={formData.lastName}
                     onChange={handleChange}
                     disabled={loading}
                   />
