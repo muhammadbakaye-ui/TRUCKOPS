@@ -74,7 +74,7 @@ export function printStatement({ company, statement, allLines }) {
   ${tableSection('Trips', ['Date','Trip #','Route','Description','Amount'],
     tripLines.map(l => `<tr>
       <td style="text-align:center">${l.date || ''}</td>
-      <td style="text-align:center">${l.description?.split('/')[0]?.trim() || ''}</td>
+      <td style="text-align:center">${l.description?.includes(' / ') ? l.description.split(' / ')[0].trim() : ''}</td>
       <td style="text-align:center">${l.route || ''}</td>
       <td style="text-align:center">${l.description || ''}</td>
       <td style="text-align:right">${fmt(l.amount)}</td>
