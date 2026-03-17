@@ -33,7 +33,7 @@ const navItems = [
 
 export default function Sidebar({ currentPage, collapsed, onToggle }) {
   return (
-    <div className={cn(
+    <div data-tour="sidebar" className={cn(
       "h-screen bg-sidebar flex flex-col border-r border-sidebar-border transition-all duration-200 flex-shrink-0",
       collapsed ? "w-16" : "w-56 md:w-56"
     )}>
