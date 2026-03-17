@@ -195,7 +195,7 @@ export default function Trucks() {
         </div>
       </div>
       <DataTable columns={columns} data={filtered} isLoading={isLoading} onRowClick={(row) => { setEditing(row); setDialogOpen(true); }} emptyMessage="No trucks found" />
-      <EntityFormDialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditing(null); }} title={editing ? 'Edit Truck' : 'New Truck'} fields={TRUCK_FIELDS} initialData={editing} onSave={(data) => saveMutation.mutate(data)} saving={saveMutation.isPending} />
+      <TruckFormDialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditing(null); }} editing={editing} drivers={drivers} onSave={(data) => saveMutation.mutate(data)} saving={saveMutation.isPending} />
     </div>
   );
 }
