@@ -67,7 +67,7 @@ export default function AccountCustomization() {
       if (data.phone) updateData.phone = data.phone;
       await base44.auth.updateMe(updateData);
       
-      // Also update the Admin entity with phone and display_email
+      // Update or create the Admin entity with phone and display_email
       const admins = await base44.entities.Admin.filter({ email: data.email });
       if (admins.length > 0) {
         return base44.entities.Admin.update(admins[0].id, {
@@ -76,10 +76,22 @@ export default function AccountCustomization() {
           phone: data.phone || '',
           display_email: data.display_email || '',
         });
+      } else {
+        // Create Admin record if it doesn't exist
+        return base44.entities.Admin.create({
+          first_name: data.first_name,
+          last_name: data.last_name,
+          email: data.email,
+          phone: data.phone || '',
+          display_email: data.display_email || '',
+          password_hash: '', // Will be set by authAdmin function
+          active: true,
+        });
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['current-admin-user'] });
+      queryClient.invalidateQueries({ queryKey: ['admins'] });
       toast.success('Account updated successfully');
     },
     onError: (error) => {
