@@ -176,7 +176,7 @@ export default function DriverStatements() {
                     <td className="p-2 font-mono">{stmt.truck_number || '—'}</td>
                     <td className="p-2 text-muted-foreground">
                       {stmt.period_start && stmt.period_end
-                        ? `${format(new Date(stmt.period_start), 'MMM d')} – ${format(new Date(stmt.period_end), 'MMM d, yyyy')}`
+                        ? `${format(new Date(stmt.period_start + 'T12:00:00'), 'MMM d')} – ${format(new Date(stmt.period_end + 'T12:00:00'), 'MMM d, yyyy')}`
                         : '—'}
                     </td>
                     <td className="p-2">{stmt.gross_total ? `$${stmt.gross_total.toLocaleString()}` : '—'}</td>
