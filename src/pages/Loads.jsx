@@ -337,7 +337,9 @@ export default function Loads() {
                             <td className="p-2 font-mono">{l.truck_number || '—'}</td>
                             <td className="p-2">{l.invoice_amount ? `$${l.invoice_amount.toLocaleString()}` : '—'}</td>
                             <td className="p-2"><StatusBadge status={l.status} /></td>
-                            <td className="p-2"><StatusBadge status={l.invoice_status} /></td>
+                            <td className="p-2" onClick={e => e.stopPropagation()}>
+                               <InvoiceStatusSelect load={l} queryClient={queryClient} />
+                             </td>
                             <td className="p-2">
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
