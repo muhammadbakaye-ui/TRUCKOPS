@@ -105,8 +105,8 @@ export default function DriverPortalView() {
   };
 
   const tabs = [
-    { key: 'documents', label: 'My Documents', icon: FileText },
-    { key: 'statements', label: 'My Statements', icon: Calendar },
+    { key: 'documents', label: 'My Documents', icon: FileText, tourAttr: 'driver-documents-tab' },
+    { key: 'statements', label: 'My Statements', icon: Calendar, tourAttr: 'driver-statements-tab' },
   ];
 
   return (
