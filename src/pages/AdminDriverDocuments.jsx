@@ -69,7 +69,12 @@ export default function AdminDriverDocuments() {
   const filtered = docs.filter(doc => {
     const matchesSearch = !search || doc.driver_name?.toLowerCase().includes(search.toLowerCase()) || doc.file_name?.toLowerCase().includes(search.toLowerCase());
     const matchesType = typeFilter === 'all' || doc.document_type === typeFilter;
-    return matchesSearch && matchesType;
+    const matchesDriver = driverFilter === 'all' || doc.driver_name === driverFilter;
+    const docTruck = driverTruckMap[doc.driver_id] || null;
+    const matchesTruck = truckFilter === 'all' || docTruck === truckFilter;
+    const docDate = doc.created_date ? format(new Date(doc.created_date), 'yyyy-MM-dd') : null;
+    const matchesDate = dateFilter === 'all' || docDate === dateFilter;
+    return matchesSearch && matchesType && matchesDriver && matchesTruck && matchesDate;
   });
 
   // Group by driver, then by date within each driver
