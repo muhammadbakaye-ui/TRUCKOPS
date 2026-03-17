@@ -333,11 +333,8 @@ export default function DriverPortalView() {
               {viewingStatement && (
                 <Dialog open={!!viewingStatement} onOpenChange={(open) => !open && setViewingStatement(null)}>
                   <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-y-auto p-4 md:p-6 rounded-lg md:rounded-xl">
-                    <DialogHeader className="flex flex-row items-center justify-between pb-3 md:pb-4 border-b">
+                    <DialogHeader className="pb-3 md:pb-4 border-b">
                       <DialogTitle className="text-xs md:text-sm">Statement Details</DialogTitle>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setViewingStatement(null)}>
-                        <X className="w-4 h-4" />
-                      </Button>
                     </DialogHeader>
 
                     <div className="space-y-3 md:space-y-4 py-3 md:py-4">
