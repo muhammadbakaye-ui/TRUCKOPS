@@ -171,10 +171,6 @@ export default function AccountCustomization() {
               />
             </div>
             <div className="col-span-2">
-              <Label className="text-xs">Email</Label>
-              <p className="text-xs text-foreground mt-1">{accountForm.email}</p>
-            </div>
-            <div className="col-span-2">
               <Label className="text-xs">Phone</Label>
               <Input
                 value={accountForm.phone}
@@ -182,6 +178,19 @@ export default function AccountCustomization() {
                 className="h-8 text-xs mt-1"
                 placeholder="+1 (555) 123-4567"
               />
+            </div>
+            <div className="col-span-2">
+              <Label className="text-xs">Email (shown to other admins)</Label>
+              <Input
+                value={accountForm.display_email}
+                onChange={(e) => handleAccountChange('display_email', e.target.value)}
+                className="h-8 text-xs mt-1"
+                placeholder="your.email@company.com"
+              />
+            </div>
+            <div className="col-span-2">
+              <Label className="text-xs">Login Email</Label>
+              <p className="text-xs text-muted-foreground mt-1">{accountForm.email}</p>
             </div>
           </div>
         </CardContent>
