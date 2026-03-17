@@ -49,11 +49,12 @@ export default function SystemAdmins() {
                           {admin.first_name} {admin.last_name}
                         </td>
                         <td className="py-3 px-4 text-muted-foreground">{admin.email}</td>
-                        <td className="py-3 px-4">
-                          <Badge variant={admin.active ? 'default' : 'secondary'}>
-                            {admin.active ? 'Active' : 'Inactive'}
-                          </Badge>
-                        </td>
+                         <td className="py-3 px-4 text-muted-foreground text-sm">{admin.phone || '-'}</td>
+                         <td className="py-3 px-4">
+                           <Badge variant={admin.active ? 'default' : 'secondary'}>
+                             {admin.active ? 'Active' : 'Inactive'}
+                           </Badge>
+                         </td>
                         <td className="py-3 px-4 text-muted-foreground text-xs">
                           {new Date(admin.created_date).toLocaleDateString()}
                         </td>
