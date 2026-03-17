@@ -83,17 +83,22 @@ export default function Reports() {
           <h1 className="text-sm md:text-base font-bold">Reports</h1>
           <p className="text-[11px] md:text-xs text-muted-foreground">Revenue, load & driver analytics</p>
         </div>
-        <Select value={period} onValueChange={setPeriod}>
-          <SelectTrigger className="h-8 text-xs w-32 md:w-36">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7">Last 7 days</SelectItem>
-            <SelectItem value="30">Last 30 days</SelectItem>
-            <SelectItem value="90">Last 90 days</SelectItem>
-            <SelectItem value="365">Last 12 months</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="h-8 text-xs w-32 md:w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">Last 7 days</SelectItem>
+              <SelectItem value="30">Last 30 days</SelectItem>
+              <SelectItem value="90">Last 90 days</SelectItem>
+              <SelectItem value="365">Last 12 months</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={handlePrintDriverReport}>
+            <FileDown className="w-3.5 h-3.5" /> Driver Report
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
