@@ -162,7 +162,7 @@ export default function LoadDetail() {
     try {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
       const currentId = savedLoadIdRef.current || loadId;
-      const saveStatus = form.status === 'draft' ? 'active' : form.status;
+      const saveStatus = form.status === 'draft' ? 'saved' : form.status;
       const payload = { ...form, status: saveStatus };
 
       if (!currentId) {
