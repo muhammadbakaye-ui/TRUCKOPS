@@ -48,7 +48,7 @@ export default function SystemAdmins() {
                         <td className="py-3 px-4">
                           {admin.first_name} {admin.last_name}
                         </td>
-                        <td className="py-3 px-4 text-muted-foreground">{admin.email}</td>
+                        <td className="py-3 px-4 text-muted-foreground">{admin.display_email || admin.email}</td>
                          <td className="py-3 px-4 text-muted-foreground text-sm">{admin.phone || '-'}</td>
                          <td className="py-3 px-4">
                            <Badge variant={admin.active ? 'default' : 'secondary'}>
