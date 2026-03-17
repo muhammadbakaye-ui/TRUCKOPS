@@ -284,10 +284,10 @@ export default function DriverPortalView() {
                            <div className="space-y-1 flex-1">
                              <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 gap-1">
                                <p className="text-xs md:text-sm font-semibold">
-                                 {stmt.period_start && stmt.period_end
-                                   ? `${format(new Date(stmt.period_start), 'MMM d')} – ${format(new Date(stmt.period_end), 'MMM d')}`
-                                   : stmt.statement_date || '—'}
-                               </p>
+                                   {stmt.period_start && stmt.period_end
+                                     ? `${format(new Date(stmt.period_start + 'T12:00:00'), 'MMM d')} – ${format(new Date(stmt.period_end + 'T12:00:00'), 'MMM d')}`
+                                     : stmt.statement_date || '—'}
+                                 </p>
                                {overdue && (
                                  <span className="flex items-center gap-1 text-[10px] md:text-[11px] font-bold text-red-600">
                                    <AlertCircle className="w-3 h-3" /> OVERDUE
