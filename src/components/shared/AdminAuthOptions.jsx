@@ -94,9 +94,7 @@ export default function AdminAuthOptions({ onBack, onSuccess }) {
       <div className="w-full max-w-md px-6">
         {/* Logo Section */}
         <div className="text-center mb-8">
-          <Logo className="h-12 w-12 mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-white mb-2">TRUCKOPS</h1>
-          <p className="text-sidebar-foreground text-sm">UNITY TRANSPORTATION LLC</p>
+          <Logo showCompanyName={true} />
         </div>
 
         {/* Card */}
