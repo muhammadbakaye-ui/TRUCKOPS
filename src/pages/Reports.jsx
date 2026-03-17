@@ -42,14 +42,10 @@ export default function Reports() {
   const paidRevenue = recentInvoices.filter(i => i.status === 'paid').reduce((s, i) => s + (i.total || 0), 0);
   const avgLoadValue = recentLoads.length ? (totalRevenue / recentLoads.length) : 0;
 
-  // Revenue by customer
-  const byCustomer = {};
-  recentInvoices.forEach(i => {
-    const name = i.customer_name || 'Unknown';
-    byCustomer[name] = (byCustomer[name] || 0) + (i.total || 0);
-  });
-  const customerData = Object.entries(byCustomer)
-    .map(([name, total]) => ({ name, total }))
+  // Revenue by customer — fuzzy grouped
+  const customerGroups = groupByCustomer(recentInvoices, i => i.customer_name);
+  const customerData = Object.entries(customerGroups)
+    .map(([name, items]) => ({ name, total: items.reduce((s, i) => s + (i.total || 0), 0) }))
     .sort((a, b) => b.total - a.total)
     .slice(0, 8);
 
