@@ -65,7 +65,18 @@ export default function AccountCustomization() {
         full_name: fullName,
       };
       if (data.phone) updateData.phone = data.phone;
-      return base44.auth.updateMe(updateData);
+      await base44.auth.updateMe(updateData);
+      
+      // Also update the Admin entity with phone and display_email
+      const admins = await base44.entities.Admin.filter({ email: data.email });
+      if (admins.length > 0) {
+        return base44.entities.Admin.update(admins[0].id, {
+          first_name: data.first_name,
+          last_name: data.last_name,
+          phone: data.phone || '',
+          display_email: data.display_email || '',
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['current-admin-user'] });
