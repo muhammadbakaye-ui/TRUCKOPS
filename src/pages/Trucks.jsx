@@ -127,16 +127,31 @@ export default function Trucks() {
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
+      let truckId;
       if (editing) {
         await base44.entities.Truck.update(editing.id, data);
+        truckId = editing.id;
         await logAudit({ action_type: 'update', entity_type: 'Truck', entity_id: editing.id, entity_label: data.unit_number });
       } else {
-        await base44.entities.Truck.create(data);
+        const created = await base44.entities.Truck.create(data);
+        truckId = created.id;
         await logAudit({ action_type: 'create', entity_type: 'Truck', entity_label: data.unit_number });
+      }
+
+      // Sync driver's assigned_truck_id
+      // First clear any driver who previously had this truck assigned
+      const prevDriverId = editing?.assigned_driver_id;
+      if (prevDriverId && prevDriverId !== data.assigned_driver_id) {
+        await base44.entities.Driver.update(prevDriverId, { assigned_truck_id: null });
+      }
+      // Set new driver's assigned_truck_id
+      if (data.assigned_driver_id) {
+        await base44.entities.Driver.update(data.assigned_driver_id, { assigned_truck_id: truckId });
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trucks'] });
+      queryClient.invalidateQueries({ queryKey: ['drivers'] });
       setDialogOpen(false);
       setEditing(null);
     }
