@@ -51,7 +51,8 @@ export default function TopBar({ pageTitle }) {
             className="w-64 h-8 pl-8 text-xs bg-muted border-0"
           />
         </form>
-        <NotificationBell />
+        <div data-tour="notification-bell"><NotificationBell /></div>
+        <TourButton onClick={startTour} />
         <div className="flex items-center gap-2 pl-2 border-l border-border">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Shield className="w-3.5 h-3.5" />
@@ -68,5 +69,6 @@ export default function TopBar({ pageTitle }) {
         </div>
       </div>
     </div>
+    </>
   );
 }
