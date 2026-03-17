@@ -37,6 +37,7 @@ export default function SystemAdmins() {
                     <tr className="border-b">
                       <th className="text-left py-3 px-4 font-semibold">Name</th>
                       <th className="text-left py-3 px-4 font-semibold">Email</th>
+                      <th className="text-left py-3 px-4 font-semibold">Phone</th>
                       <th className="text-left py-3 px-4 font-semibold">Status</th>
                       <th className="text-left py-3 px-4 font-semibold">Created</th>
                     </tr>
