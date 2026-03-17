@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Trash2, X } from 'lucide-react';
+import { Plus, Search, Trash2, ChevronDown, ChevronRight, X } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StatusBadge from '../components/shared/StatusBadge';
 import PageHeader from '../components/shared/PageHeader';
 import BulkDeleteBar from '../components/shared/BulkDeleteBar';
+import { format } from 'date-fns';
 
 export default function DriverStatements() {
   const navigate = useNavigate();
@@ -21,11 +23,15 @@ export default function DriverStatements() {
   const [search, setSearch] = useState(() => localStorage.getItem('statements_search') || '');
   const [statusFilter, setStatusFilter] = useState(() => localStorage.getItem('statements_status') || 'all');
   const [selected, setSelected] = useState(new Set());
+  useEffect(() => {
+    localStorage.setItem('statements_search', search);
+  }, [search]);
 
-  useEffect(() => { localStorage.setItem('statements_search', search); }, [search]);
-  useEffect(() => { localStorage.setItem('statements_status', statusFilter); }, [statusFilter]);
+  useEffect(() => {
+    localStorage.setItem('statements_status', statusFilter);
+  }, [statusFilter]);
 
-  const { data: statements = [] } = useQuery({
+  const { data: statements = [], isLoading } = useQuery({
     queryKey: ['statements'],
     queryFn: () => base44.entities.DriverStatement.list('-created_date', 300),
   });
@@ -52,12 +58,17 @@ export default function DriverStatements() {
     },
   });
 
+
+
   const filtered = statements.filter(s => {
     const q = search.toLowerCase();
-    const matchesSearch = !search || [s.driver_name, s.truck_number].some(v => v && v.toLowerCase().includes(q));
+    const matchesSearch = !search || [s.driver_name, s.truck_number]
+      .some(v => v && v.toLowerCase().includes(q));
     const matchesStatus = statusFilter === 'all' || s.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+
 
   return (
     <div className="p-4">
@@ -76,7 +87,9 @@ export default function DriverStatements() {
           <Input placeholder="Search by driver..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 pl-8 text-xs w-64" />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-8 text-xs w-36"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectTrigger className="h-8 text-xs w-36">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="draft">Draft</SelectItem>
@@ -86,24 +99,34 @@ export default function DriverStatements() {
           </SelectContent>
         </Select>
         {(search || statusFilter !== 'all') && (
-          <Button variant="ghost" size="sm" className="h-8 text-xs gap-1" onClick={() => { setSearch(''); setStatusFilter('all'); }}>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 text-xs gap-1" 
+            onClick={() => {
+              setSearch('');
+              setStatusFilter('all');
+            }}
+          >
             <X className="w-3.5 h-3.5" /> Clear Filters
           </Button>
         )}
       </div>
-
       {selected.size > 0 && (
         <BulkDeleteBar
           selectedCount={selected.size}
           allCount={filtered.length}
           onSelectAll={() => setSelected(new Set(filtered.map(s => s.id)))}
           onClearSelection={() => setSelected(new Set())}
-          onConfirmDelete={() => deleteMutation.mutate(filtered.filter(s => selected.has(s.id)))}
+          onConfirmDelete={() => {
+            const stmtsToDelete = filtered.filter(s => selected.has(s.id));
+            deleteMutation.mutate(stmtsToDelete);
+          }}
           isDeleting={deleteMutation.isPending}
           isAllSelected={selected.size === filtered.length}
         />
       )}
-
+      
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -114,7 +137,9 @@ export default function DriverStatements() {
                     <Checkbox
                       checked={filtered.length > 0 && filtered.every(s => selected.has(s.id))}
                       onCheckedChange={(checked) => {
-                        setSelected(checked ? new Set(filtered.map(s => s.id)) : new Set());
+                        const newSelected = new Set(selected);
+                        filtered.forEach(s => checked ? newSelected.add(s.id) : newSelected.delete(s.id));
+                        setSelected(newSelected);
                       }}
                     />
                   </th>
@@ -141,7 +166,7 @@ export default function DriverStatements() {
                         checked={selected.has(stmt.id)}
                         onCheckedChange={(checked) => {
                           const newSelected = new Set(selected);
-                          if (checked) newSelected.add(stmt.id); else newSelected.delete(stmt.id);
+                          checked ? newSelected.add(stmt.id) : newSelected.delete(stmt.id);
                           setSelected(newSelected);
                         }}
                         onClick={(e) => e.stopPropagation()}
@@ -149,7 +174,11 @@ export default function DriverStatements() {
                     </td>
                     <td className="p-2 font-medium">{stmt.driver_name || '—'}</td>
                     <td className="p-2 font-mono">{stmt.truck_number || '—'}</td>
-                    <td className="p-2 text-muted-foreground">{stmt.period_start && stmt.period_end ? `${stmt.period_start} – ${stmt.period_end}` : '—'}</td>
+                    <td className="p-2 text-muted-foreground">
+                      {stmt.period_start && stmt.period_end
+                        ? `${format(new Date(stmt.period_start), 'MMM d')} – ${format(new Date(stmt.period_end), 'MMM d, yyyy')}`
+                        : '—'}
+                    </td>
                     <td className="p-2">{stmt.gross_total ? `$${stmt.gross_total.toLocaleString()}` : '—'}</td>
                     <td className="p-2">{stmt.deductions_total ? `$${stmt.deductions_total.toLocaleString()}` : '—'}</td>
                     <td className="p-2 font-semibold">{stmt.final_check_amount != null ? `$${stmt.final_check_amount.toLocaleString()}` : '—'}</td>
@@ -174,7 +203,10 @@ export default function DriverStatements() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(stmt); }}>Delete</AlertDialogAction>
+                            <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={(e) => {
+                              e.stopPropagation();
+                              deleteMutation.mutate(stmt);
+                            }}>Delete</AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
@@ -184,7 +216,7 @@ export default function DriverStatements() {
               </tbody>
             </table>
             {filtered.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground text-xs">
+              <div className="text-center py-12 text-muted-foreground text-sm">
                 No statements found. Create a new driver statement.
               </div>
             )}
