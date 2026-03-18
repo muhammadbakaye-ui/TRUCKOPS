@@ -290,16 +290,14 @@ export default function StatementBuilder() {
         <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${form.status === 'saved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
           {form.status?.toUpperCase()}
         </span>
-        {isDraft && (
-          <span className="flex items-center gap-1 text-[11px] text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-            {autoSaving
-              ? <><Loader2 className="w-3 h-3 animate-spin" /> Auto-saving…</>
-              : lastAutoSaved
-              ? <><Cloud className="w-3 h-3" /> Draft auto-saved</>
-              : <><CloudOff className="w-3 h-3" /> Unsaved draft</>
-            }
-          </span>
-        )}
+        <span className="flex items-center gap-1 text-[11px] text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+          {autoSaving
+            ? <><Loader2 className="w-3 h-3 animate-spin" /> Auto-saving…</>
+            : lastAutoSaved
+            ? <><Cloud className="w-3 h-3" /> Auto-saved</>
+            : <><CloudOff className="w-3 h-3" /> Unsaved</>
+          }
+        </span>
         <div className="ml-auto flex gap-2">
           <Button
             variant={form.published ? "default" : "outline"}
