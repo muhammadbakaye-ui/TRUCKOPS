@@ -306,7 +306,7 @@ export default function StatementBuilder() {
           <Button
             variant={form.published ? "default" : "outline"}
             size="sm" className="h-8 gap-1"
-            onClick={async () => { set('published', !form.published); await handleSave(false); }}
+            onClick={async () => { set('published', !form.published); await handleSave(); }}
             disabled={saving}
           >
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (form.published ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />)}
