@@ -181,18 +181,15 @@ export default function StatementBuilder() {
     return () => clearTimeout(autoSaveTimerRef.current);
   }, [form, tripLines, deductionLines, fuelLines]);
 
-  const handleSave = async (finalize = false) => {
+  const handleSave = async () => {
     setSaving(true);
     if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     try {
-      const newStatus = finalize ? 'finalized' : form.status;
+      const newStatus = 'saved';
       await persistStatement(form, tripLines, deductionLines, fuelLines, newStatus);
-      if (finalize) {
-        setForm(prev => ({ ...prev, status: 'finalized' }));
-        await logAudit({ action_type: 'finalize', entity_type: 'DriverStatement', entity_id: savedIdRef.current });
-      }
+      setForm(prev => ({ ...prev, status: 'saved' }));
       queryClient.invalidateQueries({ queryKey: ['statements'] });
-      toast.success(finalize ? 'Statement finalized' : 'Statement saved');
+      toast.success('Statement saved');
       setLastAutoSaved(new Date());
       if (!statementId && savedIdRef.current) navigate(createPageUrl(`StatementBuilder?id=${savedIdRef.current}`));
     } catch (err) {
