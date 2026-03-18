@@ -419,7 +419,15 @@ Return only the JSON with the transactions array.`,
         />
       )
     },
-    ...allTxColumnOptions.filter(col => visibleTxColumns.has(col.id)),
+    { header: 'Date', render: (r) => r.transaction_date || '—' },
+    { header: 'Location', render: (r) => r.location_name || '—' },
+    { header: 'Matched Driver', render: (r) => r.matched_driver_name || <span className="text-muted-foreground">—</span> },
+    { header: 'Truck', render: (r) => r.matched_truck_number || r.truck_number_raw || '—' },
+    { header: 'City', render: (r) => r.city ? `${r.city}, ${r.state || ''}` : '—' },
+    { header: 'Gallons', render: (r) => r.gallons || '—' },
+    { header: 'Fuel $', render: (r) => r.fuel_amount ? `$${r.fuel_amount.toFixed(2)}` : '—' },
+    { header: 'Total $', render: (r) => r.total_amount ? `$${r.total_amount.toFixed(2)}` : '—' },
+    { header: 'Status', render: (r) => <StatusBadge status={r.import_status} /> },
     { 
       header: '', 
       render: (r) => (
