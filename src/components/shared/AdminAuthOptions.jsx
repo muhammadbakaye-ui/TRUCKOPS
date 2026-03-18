@@ -1,22 +1,24 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Eye, EyeOff, Shield, User } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import Logo from './Logo';
 
 export default function AdminAuthOptions({ onBack, onSuccess }) {
-  const [mode, setMode] = useState('login'); // 'login' or 'signup'
+  const [mode, setMode] = useState('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
     password: '',
     confirmPassword: '',
-    firstName: '',
-    lastName: ''
   });
 
   const handleChange = (e) => {
@@ -27,20 +29,17 @@ export default function AdminAuthOptions({ onBack, onSuccess }) {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!formData.firstName || !formData.lastName || !formData.password) {
-      setError('First name, last name, and password required');
+    if (!formData.email || !formData.password) {
+      setError('Email and password are required');
       return;
     }
-
     setLoading(true);
     try {
       const response = await base44.functions.invoke('authAdmin', {
         action: 'login',
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        password: formData.password
+        email: formData.email,
+        password: formData.password,
       });
-
       if (response.data.success) {
         onSuccess(response.data.admin_id, response.data.admin_name);
       } else {
@@ -55,8 +54,8 @@ export default function AdminAuthOptions({ onBack, onSuccess }) {
 
   const handleSignup = async (e) => {
     e.preventDefault();
-    if (!formData.firstName || !formData.lastName || !formData.password || !formData.confirmPassword) {
-      setError('All fields required');
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.confirmPassword) {
+      setError('All fields are required');
       return;
     }
     if (formData.password !== formData.confirmPassword) {
@@ -67,16 +66,15 @@ export default function AdminAuthOptions({ onBack, onSuccess }) {
       setError('Password must be at least 6 characters');
       return;
     }
-
     setLoading(true);
     try {
       const response = await base44.functions.invoke('authAdmin', {
         action: 'create_admin',
         first_name: formData.firstName,
         last_name: formData.lastName,
-        password: formData.password
+        email: formData.email,
+        password: formData.password,
       });
-
       if (response.data.success) {
         onSuccess(response.data.admin_id, response.data.admin_name);
       } else {
@@ -92,75 +90,55 @@ export default function AdminAuthOptions({ onBack, onSuccess }) {
   return (
     <div className="flex items-center justify-center min-h-screen bg-sidebar">
       <div className="w-full max-w-md px-6">
-        {/* Logo Section */}
         <div className="text-center mb-8">
           <Logo showCompanyName={true} />
         </div>
 
-        {/* Card */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          {/* Tab Headers */}
+          {/* Tabs */}
           <div className="flex border-b">
             <button
               onClick={() => { setMode('login'); setError(''); }}
-              className={`flex-1 py-4 font-medium transition-colors flex items-center justify-center gap-2 ${
-                mode === 'login'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-white text-foreground hover:bg-muted'
+              className={`flex-1 py-4 font-medium transition-colors ${
+                mode === 'login' ? 'bg-primary text-primary-foreground' : 'bg-white text-foreground hover:bg-muted'
               }`}
             >
-              <Shield className="w-4 h-4" />
-              Admin Login
+              Sign In
             </button>
             <button
               onClick={() => { setMode('signup'); setError(''); }}
-              className={`flex-1 py-4 font-medium transition-colors flex items-center justify-center gap-2 ${
-                mode === 'signup'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-white text-foreground hover:bg-muted'
+              className={`flex-1 py-4 font-medium transition-colors ${
+                mode === 'signup' ? 'bg-primary text-primary-foreground' : 'bg-white text-foreground hover:bg-muted'
               }`}
             >
-              <User className="w-4 h-4" />
-              Sign Up
+              Create Account
             </button>
           </div>
 
-          {/* Form Content */}
           <div className="p-6">
-            {/* Login Mode */}
+            {/* Login Form */}
             {mode === 'login' && (
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">First Name</label>
+                  <Label className="text-sm font-medium">Email</Label>
                   <Input
-                    type="text"
-                    name="firstName"
-                    placeholder="Enter first name"
-                    value={formData.firstName}
+                    type="email"
+                    name="email"
+                    placeholder="you@example.com"
+                    value={formData.email}
                     onChange={handleChange}
                     disabled={loading}
+                    className="mt-1.5"
+                    autoFocus
                   />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Last Name</label>
-                  <Input
-                    type="text"
-                    name="lastName"
-                    placeholder="Enter last name"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    disabled={loading}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Password</label>
-                  <div className="relative">
+                  <Label className="text-sm font-medium">Password</Label>
+                  <div className="relative mt-1.5">
                     <Input
                       type={showPassword ? 'text' : 'password'}
                       name="password"
-                      placeholder="Enter password"
+                      placeholder="Enter your password"
                       value={formData.password}
                       onChange={handleChange}
                       disabled={loading}
@@ -178,60 +156,64 @@ export default function AdminAuthOptions({ onBack, onSuccess }) {
 
                 {error && <p className="text-sm text-destructive">{error}</p>}
 
-                <Button
-                  type="submit"
-                  className="w-full bg-primary hover:bg-primary/90 text-white"
-                  disabled={loading}
-                >
+                <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Signing In...' : 'Sign In'}
                 </Button>
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={onBack}
-                  className="w-full"
-                  disabled={loading}
-                >
+                <Button type="button" variant="ghost" onClick={onBack} className="w-full" disabled={loading}>
                   Back
                 </Button>
               </form>
             )}
 
-            {/* Signup Mode */}
+            {/* Signup Form */}
             {mode === 'signup' && (
               <form onSubmit={handleSignup} className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-sm font-medium">First Name</Label>
+                    <Input
+                      type="text"
+                      name="firstName"
+                      placeholder="First name"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      disabled={loading}
+                      className="mt-1.5"
+                      autoFocus
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Last Name</Label>
+                    <Input
+                      type="text"
+                      name="lastName"
+                      placeholder="Last name"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      disabled={loading}
+                      className="mt-1.5"
+                    />
+                  </div>
+                </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">First Name</label>
+                  <Label className="text-sm font-medium">Email</Label>
                   <Input
-                    type="text"
-                    name="firstName"
-                    placeholder="Enter first name"
-                    value={formData.firstName}
+                    type="email"
+                    name="email"
+                    placeholder="you@example.com"
+                    value={formData.email}
                     onChange={handleChange}
                     disabled={loading}
+                    className="mt-1.5"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Last Name</label>
-                  <Input
-                    type="text"
-                    name="lastName"
-                    placeholder="Enter last name"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    disabled={loading}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Password</label>
-                  <div className="relative">
+                  <Label className="text-sm font-medium">Password</Label>
+                  <div className="relative mt-1.5">
                     <Input
                       type={showPassword ? 'text' : 'password'}
                       name="password"
-                      placeholder="Enter password"
+                      placeholder="At least 6 characters"
                       value={formData.password}
                       onChange={handleChange}
                       disabled={loading}
@@ -246,14 +228,13 @@ export default function AdminAuthOptions({ onBack, onSuccess }) {
                     </button>
                   </div>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Confirm Password</label>
-                  <div className="relative">
+                  <Label className="text-sm font-medium">Confirm Password</Label>
+                  <div className="relative mt-1.5">
                     <Input
                       type={showConfirmPassword ? 'text' : 'password'}
                       name="confirmPassword"
-                      placeholder="Confirm password"
+                      placeholder="Confirm your password"
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       disabled={loading}
@@ -271,21 +252,10 @@ export default function AdminAuthOptions({ onBack, onSuccess }) {
 
                 {error && <p className="text-sm text-destructive">{error}</p>}
 
-                <Button
-                  type="submit"
-                  className="w-full bg-primary hover:bg-primary/90 text-white"
-                  disabled={loading}
-                >
+                <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Creating Account...' : 'Create Account'}
                 </Button>
-
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={onBack}
-                  className="w-full"
-                  disabled={loading}
-                >
+                <Button type="button" variant="ghost" onClick={onBack} className="w-full" disabled={loading}>
                   Back
                 </Button>
               </form>
