@@ -279,8 +279,6 @@ export default function StatementBuilder() {
     </div>
   );
 
-  const isDraft = form.status === 'draft';
-
   return (
     <div className="p-6 space-y-5 max-w-screen-2xl">
       {/* Top bar */}
