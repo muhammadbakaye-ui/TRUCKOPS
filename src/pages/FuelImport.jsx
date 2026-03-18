@@ -19,9 +19,6 @@ export default function FuelImport() {
   const [selectedBatch, setSelectedBatch] = useState(() => localStorage.getItem('fuel_selected_batch') || null);
   const [selectedTx, setSelectedTx] = useState(new Set());
   const [selectedBatches, setSelectedBatches] = useState(new Set());
-  const [expandedBatch, setExpandedBatch] = useState(() => localStorage.getItem('fuel_expanded_batch') || null);
-  const [visibleBatchColumns, setVisibleBatchColumns] = useState(new Set(['file_name', 'import_date', 'total_records', 'status']));
-  const [visibleTxColumns, setVisibleTxColumns] = useState(new Set(['transaction_date', 'location_name', 'matched_driver_name', 'matched_truck_number', 'city_state', 'fuel_amount', 'total_amount', 'import_status']));
   const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
 
