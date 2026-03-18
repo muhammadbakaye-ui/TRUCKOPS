@@ -292,7 +292,7 @@ export default function StatementBuilder() {
           <ArrowLeft className="w-3.5 h-3.5" /> Statements
         </Button>
         <h2 className="text-sm font-semibold">{(statementId || savedIdRef.current) ? `Statement — ${form.driver_name || ''}` : 'New Driver Statement'}</h2>
-        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${form.status === 'finalized' ? 'bg-green-100 text-green-700' : form.status === 'paid' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>
+        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${form.status === 'saved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
           {form.status?.toUpperCase()}
         </span>
         {isDraft && (
