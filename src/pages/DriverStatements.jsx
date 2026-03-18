@@ -164,9 +164,7 @@ export default function DriverStatements() {
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="finalized">Finalized</SelectItem>
-            <SelectItem value="paid">Paid</SelectItem>
-            <SelectItem value="void">Void</SelectItem>
+            <SelectItem value="saved">Saved</SelectItem>
           </SelectContent>
         </Select>
 
