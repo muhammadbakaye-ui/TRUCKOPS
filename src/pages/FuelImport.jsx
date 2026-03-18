@@ -515,37 +515,7 @@ Return only the JSON with the transactions array.`,
         </CardContent>
       </Card>
 
-      {/* Batch columns selector dialog */}
-      <dialog id="batch-columns-dialog" className="backdrop:bg-black/50 rounded-lg p-6 shadow-lg max-w-sm w-full">
-        <div className="space-y-4">
-          <h2 className="text-base font-semibold">Show/Hide Columns</h2>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {allBatchColumnOptions.map(col => (
-              <label key={col.id} className="flex items-center gap-2 cursor-pointer p-2 hover:bg-muted rounded">
-                <Checkbox
-                  checked={visibleBatchColumns.has(col.id)}
-                  onCheckedChange={(checked) => {
-                    const newVisible = new Set(visibleBatchColumns);
-                    if (checked) {
-                      newVisible.add(col.id);
-                    } else {
-                      newVisible.delete(col.id);
-                    }
-                    setVisibleBatchColumns(newVisible);
-                  }}
-                />
-                <span className="text-sm">{col.label}</span>
-              </label>
-            ))}
-          </div>
-          <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button variant="outline" size="sm" onClick={() => {
-              const dialog = document.getElementById('batch-columns-dialog');
-              if (dialog) dialog.close();
-            }}>Close</Button>
-          </div>
-        </div>
-      </dialog>
+
 
       {/* Transaction detail */}
       {selectedBatch && (
