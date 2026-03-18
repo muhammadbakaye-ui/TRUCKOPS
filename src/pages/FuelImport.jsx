@@ -389,19 +389,6 @@ Return only the JSON with the transactions array.`,
     }
   };
 
-  const allTxColumnOptions = [
-    { id: 'transaction_date', label: 'Date', render: (r) => r.transaction_date || '—' },
-    { id: 'location_name', label: 'Location', render: (r) => r.location_name || '—' },
-    { id: 'driver_name_raw', label: 'Driver (Raw)', render: (r) => r.driver_name_raw || '—' },
-    { id: 'matched_driver_name', label: 'Matched Driver', render: (r) => r.matched_driver_name || <span className="text-muted-foreground">—</span> },
-    { id: 'matched_truck_number', label: 'Truck', render: (r) => r.matched_truck_number || r.truck_number_raw || '—' },
-    { id: 'city_state', label: 'City', render: (r) => r.city ? `${r.city}, ${r.state || ''}` : '—' },
-    { id: 'gallons', label: 'Gallons', render: (r) => r.gallons || '—' },
-    { id: 'fuel_amount', label: 'Fuel $', render: (r) => r.fuel_amount ? `$${r.fuel_amount.toFixed(2)}` : '—' },
-    { id: 'total_amount', label: 'Total $', render: (r) => r.total_amount ? `$${r.total_amount.toFixed(2)}` : '—' },
-    { id: 'import_status', label: 'Status', render: (r) => <StatusBadge status={r.import_status} /> },
-  ];
-
   const txColumns = [
     {
       header: (
