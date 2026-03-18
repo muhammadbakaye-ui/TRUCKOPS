@@ -277,7 +277,12 @@ Return only the JSON with the transactions array.`,
         />
       )
     },
-    ...allBatchColumnOptions.filter(col => visibleBatchColumns.has(col.id)),
+    { header: 'File', render: (r) => <span className="font-medium text-xs">{r.file_name}</span> },
+    { header: 'Date', render: (r) => r.import_date ? format(new Date(r.import_date), 'MMM d, yyyy') : '—' },
+    { header: 'Total', render: (r) => r.total_records || 0 },
+    { header: 'Matched', render: (r) => <span className="text-green-600">{r.successful_records || 0}</span> },
+    { header: 'Exceptions', render: (r) => <span className="text-orange-600">{r.exception_records || 0}</span> },
+    { header: 'Status', render: (r) => <StatusBadge status={r.status} /> },
     {
       header: '',
       render: (r) => (
