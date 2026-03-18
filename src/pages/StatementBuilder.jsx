@@ -315,12 +315,9 @@ export default function StatementBuilder() {
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (form.published ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />)}
             {form.published ? 'Published' : 'Unpublished'}
           </Button>
-          <Button variant="outline" size="sm" className="h-8 gap-1" onClick={() => handleSave(false)} disabled={saving}>
+          <Button size="sm" className="h-8 gap-1" onClick={() => handleSave(false)} disabled={saving}>
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             Save
-          </Button>
-          <Button size="sm" className="h-8 gap-1" onClick={() => handleSave(true)} disabled={saving}>
-            <CheckCircle className="w-3.5 h-3.5" /> Finalize
           </Button>
           <Button variant="outline" size="sm" className="h-8 gap-1" onClick={handlePrint}>
             <Printer className="w-3.5 h-3.5" /> Print / PDF
