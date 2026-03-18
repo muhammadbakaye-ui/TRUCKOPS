@@ -80,9 +80,7 @@ export default function LoginScreen() {
     return <AdminAuthOptions
       onBack={() => setShowAdminAuth(false)}
       onSuccess={(adminId, adminName) => {
-        localStorage.setItem('adminId', adminId);
-        localStorage.setItem('adminName', adminName);
-        login({ role: 'admin' });
+        login({ role: 'admin', admin_id: adminId, admin_name: adminName });
       }}
     />;
   }
