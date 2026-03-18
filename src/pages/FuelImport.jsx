@@ -490,14 +490,7 @@ Return only the JSON with the transactions array.`,
           <div className="flex-1">
             <CardTitle className="text-sm">Import History</CardTitle>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => {
-              const dialog = document.getElementById('batch-columns-dialog');
-              if (dialog) dialog.showModal();
-            }}>
-              Columns
-            </Button>
-          </div>
+          <div />
         </CardHeader>
         <CardContent className="p-0">
           {selectedBatches.size > 0 && (
