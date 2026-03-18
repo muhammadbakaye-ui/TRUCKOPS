@@ -523,12 +523,6 @@ Return only the JSON with the transactions array.`,
           <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
             <CardTitle className="text-sm">Transactions — {batches.find(b => b.id === selectedBatch)?.file_name}</CardTitle>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => {
-                const dialog = document.getElementById('tx-columns-dialog');
-                if (dialog) dialog.showModal();
-              }}>
-                Columns
-              </Button>
               <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setSelectedBatch(null)}>Close</Button>
             </div>
           </CardHeader>
