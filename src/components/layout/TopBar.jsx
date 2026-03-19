@@ -50,7 +50,7 @@ export default function TopBar({ pageTitle, currentPageName }) {
   };
 
   return (
-    <React.Fragment>
+    <>
       {showTour && <AppTour steps={ADMIN_TOUR_STEPS} onClose={() => setShowTour(false)} />}
       {showUploadTour && <AppTour steps={UPLOAD_TOUR_STEPS} onClose={() => setShowUploadTour(false)} />}
       <div className="h-14 border-b border-border bg-card flex items-center justify-between px-4 flex-shrink-0" style={{ paddingLeft: 'max(1rem, env(safe-area-inset-left))', paddingRight: 'max(1rem, env(safe-area-inset-right))' }}>
