@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-// Admin tour steps — each step targets an element by data-tour attribute
-export const ADMIN_TOUR_STEPS = [
+const isMobile = () => window.innerWidth < 768;
+
+// Admin tour steps — desktop (sidebar) version
+export const ADMIN_TOUR_STEPS_DESKTOP = [
   {
     target: '[data-tour="sidebar"]',
     title: 'Navigation Sidebar',
@@ -47,6 +49,37 @@ export const ADMIN_TOUR_STEPS = [
     placement: 'bottom',
   },
 ];
+
+// Admin tour steps — mobile (bottom nav) version
+export const ADMIN_TOUR_STEPS_MOBILE = [
+  {
+    target: '[data-tour="mobile-nav-loads"]',
+    title: 'Loads',
+    description: 'View and manage all your freight loads. Assign drivers, trucks, stops, and track dispatch status.',
+    placement: 'top',
+  },
+  {
+    target: '[data-tour="mobile-nav-statements"]',
+    title: 'Driver Statements',
+    description: 'Build weekly pay statements. Auto-pull trips and fuel charges, add deductions, and publish to each driver\'s portal.',
+    placement: 'top',
+  },
+  {
+    target: '[data-tour="mobile-nav-invoices"]',
+    title: 'Invoices',
+    description: 'Manage and track customer invoices from here.',
+    placement: 'top',
+  },
+  {
+    target: '[data-tour="notification-bell"]',
+    title: 'Notifications',
+    description: 'See alerts when drivers upload documents or statements are ready for review.',
+    placement: 'bottom',
+  },
+];
+
+// Automatically pick the right steps based on screen size
+export const ADMIN_TOUR_STEPS = isMobile() ? ADMIN_TOUR_STEPS_MOBILE : ADMIN_TOUR_STEPS_DESKTOP;
 
 // Upload page tour — shown when on the UploadDocument page
 export const UPLOAD_TOUR_STEPS = [
