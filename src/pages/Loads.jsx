@@ -422,7 +422,7 @@ export default function Loads() {
                           <th className="text-left p-2 font-medium">Load #</th>
                           <th className="text-left p-2 font-medium">Customer</th>
                           <th className="text-left p-2 font-medium">Route</th>
-                          <th className="text-left p-2 font-medium">Delivery</th>
+                          <th className="text-left p-2 font-medium">Pickup → Delivery</th>
                           <th className="text-left p-2 font-medium">Driver(s)</th>
                           <th className="text-left p-2 font-medium">Truck</th>
                           <th className="text-left p-2 font-medium">Amount</th>
