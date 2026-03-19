@@ -94,16 +94,39 @@ function getRect(selector) {
 function TooltipBox({ step, onPrev, onNext, onClose, current, total }) {
   const [rect, setRect] = useState(null);
   const [visible, setVisible] = useState(false);
+  const rafRef = useRef(null);
 
   useEffect(() => {
     setVisible(false);
-    // Wait a tick for scroll to settle, then measure
-    const t1 = setTimeout(() => {
-      const r = getRect(step.target);
-      setRect(r);
-    }, 120);
-    const t2 = setTimeout(() => setVisible(true), 200);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    setRect(null);
+
+    // Continuously track the element's position via rAF
+    let running = true;
+    const track = () => {
+      if (!running) return;
+      const el = document.querySelector(step.target);
+      if (el) {
+        const r = el.getBoundingClientRect();
+        setRect(prev => {
+          // Only update if position/size actually changed
+          if (!prev || prev.top !== r.top || prev.left !== r.left || prev.width !== r.width || prev.height !== r.height) {
+            return { top: r.top, left: r.left, width: r.width, height: r.height, right: r.right, bottom: r.bottom };
+          }
+          return prev;
+        });
+      }
+      rafRef.current = requestAnimationFrame(track);
+    };
+
+    const t1 = setTimeout(() => { track(); }, 80);
+    const t2 = setTimeout(() => setVisible(true), 180);
+
+    return () => {
+      running = false;
+      clearTimeout(t1);
+      clearTimeout(t2);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, [step]);
 
   if (!rect) return null;
