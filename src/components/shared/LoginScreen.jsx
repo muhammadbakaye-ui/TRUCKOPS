@@ -36,6 +36,12 @@ export default function LoginScreen() {
 
   const switchMode = (m) => { setMode(m); setError(''); setUsername(''); setPassword(''); };
 
+  // Go straight to AdminAuthOptions when admin tab is clicked
+  const handleAdminTabClick = () => {
+    switchMode('admin');
+    setShowAdminAuth(true);
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
