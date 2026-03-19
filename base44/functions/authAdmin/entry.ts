@@ -11,10 +11,10 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
-    const { action, email, password, first_name, last_name } = body;
+    const { action, email, password_hash, password, first_name, last_name } = body;
 
     if (action === 'login') {
-      if (!email || !password) {
+      if (!email || (!password && !password_hash)) {
         return Response.json({ success: false, message: 'Email and password are required' }, { status: 400 });
       }
       const allAdmins = await base44.asServiceRole.entities.Admin.list('-created_date', 100);
@@ -22,7 +22,8 @@ Deno.serve(async (req) => {
       if (!admin) {
         return Response.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
       }
-      const inputHash = await hashPassword(password);
+      // Accept pre-hashed password from client to save CPU time
+      const inputHash = password_hash || await hashPassword(password);
       if (inputHash !== admin.password_hash) {
         return Response.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
       }
