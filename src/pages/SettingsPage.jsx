@@ -199,7 +199,43 @@ export default function SettingsPage() {
               <CardTitle className="text-sm text-destructive">Danger Zone</CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4">
-              <p className="text-xs text-muted-foreground mb-3">Permanently delete your account. This action cannot be undone.</p>
+              <p className="text-xs text-muted-foreground mb-3">Manage account-level actions. These cannot be undone.</p>
+
+              {/* Sign out all devices */}
+              <div className="mb-4">
+                <p className="text-xs font-medium mb-1">Sign Out All Devices</p>
+                <p className="text-xs text-muted-foreground mb-2">This will immediately end all active sessions across every device.</p>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1.5 border-destructive/40 text-destructive hover:bg-destructive/10">
+                      <LogOut className="w-3.5 h-3.5" /> Sign Out All Devices
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Sign Out All Devices</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will sign you out from all devices and active sessions immediately. You will need to log back in on each device.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-destructive hover:bg-destructive/90"
+                        onClick={() => {
+                          base44.auth.logout();
+                        }}
+                      >
+                        Sign Out All Devices
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+
+              <div className="border-t pt-4">
+                <p className="text-xs font-medium mb-1">Delete Account</p>
+              </div>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" size="sm" className="gap-1.5">
