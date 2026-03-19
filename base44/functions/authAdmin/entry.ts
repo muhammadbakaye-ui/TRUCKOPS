@@ -1,5 +1,4 @@
-const APP_ID = Deno.env.get('BASE44_APP_ID');
-const API_BASE = `https://api.base44.com/api/apps/${APP_ID}`;
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 async function hashPassword(password) {
   const encoder = new TextEncoder();
@@ -8,52 +7,9 @@ async function hashPassword(password) {
   return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function getServiceToken(req) {
-  // Extract the authorization token from the incoming request to use as service role
-  const authHeader = req.headers.get('authorization') || '';
-  return authHeader.replace('Bearer ', '');
-}
-
-async function listAdmins(token) {
-  const res = await fetch(`${API_BASE}/entities/Admin?limit=200`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-  if (!res.ok) throw new Error(`Failed to list admins: ${res.status}`);
-  return res.json();
-}
-
-async function createAdmin(token, data) {
-  const res = await fetch(`${API_BASE}/entities/Admin`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error(`Failed to create admin: ${res.status}`);
-  return res.json();
-}
-
-async function updateAdmin(token, id, data) {
-  const res = await fetch(`${API_BASE}/entities/Admin/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error(`Failed to update admin: ${res.status}`);
-  return res.json();
-}
-
 Deno.serve(async (req) => {
   try {
-    const token = await getServiceToken(req);
+    const base44 = createClientFromRequest(req);
     const body = await req.json();
     const { action, email, password, password_hash, first_name, last_name } = body;
 
@@ -61,16 +17,15 @@ Deno.serve(async (req) => {
       if (!email || (!password && !password_hash)) {
         return Response.json({ success: false, message: 'Email and password are required' }, { status: 400 });
       }
-      const adminsData = await listAdmins(token);
-      const admins = adminsData.data || adminsData;
-      const admin = Array.isArray(admins)
-        ? admins.find(a => a.active && a.email?.toLowerCase().trim() === email.toLowerCase().trim())
-        : null;
-      if (!admin) {
-        return Response.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
-      }
-      const inputHash = password_hash || await hashPassword(password);
-      if (inputHash !== admin.password_hash) {
+
+      // Run hash and DB fetch in parallel to save time
+      const [allAdmins, inputHash] = await Promise.all([
+        base44.asServiceRole.entities.Admin.list('-created_date', 100),
+        password_hash ? Promise.resolve(password_hash) : hashPassword(password),
+      ]);
+
+      const admin = allAdmins.find(a => a.active && a.email?.toLowerCase().trim() === email.toLowerCase().trim());
+      if (!admin || inputHash !== admin.password_hash) {
         return Response.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
       }
       return Response.json({ success: true, admin_id: admin.id, admin_name: `${admin.first_name} ${admin.last_name}` });
@@ -80,16 +35,14 @@ Deno.serve(async (req) => {
       if (!first_name || !last_name || !email || (!password && !password_hash)) {
         return Response.json({ success: false, message: 'All fields are required' }, { status: 400 });
       }
-      const adminsData = await listAdmins(token);
-      const admins = adminsData.data || adminsData;
-      const existing = Array.isArray(admins)
-        ? admins.find(a => a.email?.toLowerCase().trim() === email.toLowerCase().trim())
-        : null;
-      if (existing) {
+      const [existing, passwordHash] = await Promise.all([
+        base44.asServiceRole.entities.Admin.filter({ email: email.toLowerCase().trim() }),
+        password_hash ? Promise.resolve(password_hash) : hashPassword(password),
+      ]);
+      if (existing.length > 0) {
         return Response.json({ success: false, message: 'An account with this email already exists' }, { status: 400 });
       }
-      const passwordHash = password_hash || await hashPassword(password);
-      const newAdmin = await createAdmin(token, {
+      const newAdmin = await base44.asServiceRole.entities.Admin.create({
         first_name: first_name.trim(),
         last_name: last_name.trim(),
         email: email.toLowerCase().trim(),
@@ -103,22 +56,19 @@ Deno.serve(async (req) => {
       if (!email || (!password && !password_hash)) {
         return Response.json({ success: false, message: 'Email and new password required' }, { status: 400 });
       }
-      const adminsData = await listAdmins(token);
-      const admins = adminsData.data || adminsData;
-      const admin = Array.isArray(admins)
-        ? admins.find(a => a.email?.toLowerCase().trim() === email.toLowerCase().trim())
-        : null;
-      if (!admin) {
+      const [admins, newHash] = await Promise.all([
+        base44.asServiceRole.entities.Admin.filter({ email: email.toLowerCase().trim() }),
+        password_hash ? Promise.resolve(password_hash) : hashPassword(password),
+      ]);
+      if (!admins.length) {
         return Response.json({ success: false, message: 'Admin not found' }, { status: 404 });
       }
-      const newHash = password_hash || await hashPassword(password);
-      await updateAdmin(token, admin.id, { password_hash: newHash });
+      await base44.asServiceRole.entities.Admin.update(admins[0].id, { password_hash: newHash });
       return Response.json({ success: true, message: 'Password updated' });
     }
 
     if (action === 'list_admins') {
-      const adminsData = await listAdmins(token);
-      const admins = adminsData.data || adminsData;
+      const admins = await base44.asServiceRole.entities.Admin.list('-created_date', 50);
       return Response.json({ success: true, admins });
     }
 
