@@ -17,8 +17,8 @@ Deno.serve(async (req) => {
       if (!email || !password) {
         return Response.json({ success: false, message: 'Email and password are required' }, { status: 400 });
       }
-      const admins = await base44.asServiceRole.entities.Admin.filter({ email: email.toLowerCase().trim() });
-      const admin = admins.find(a => a.active);
+      const allAdmins = await base44.asServiceRole.entities.Admin.list('-created_date', 100);
+      const admin = allAdmins.find(a => a.active && a.email?.toLowerCase().trim() === email.toLowerCase().trim());
       if (!admin) {
         return Response.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
       }
