@@ -183,7 +183,7 @@ export default function LoadDetail() {
         navigate(createPageUrl(`LoadDetail?id=${savedLoad.id}`));
       } else {
         await base44.entities.Load.update(currentId, payload);
-        setForm(prev => ({ ...prev, status: saveStatus }));
+        setForm(prev => ({ ...prev, ...derived, status: saveStatus }));
         const existingStops = await base44.entities.LoadStop.filter({ load_id: currentId }, 'stop_order', 20);
         for (const es of existingStops) {
           if (!stops.find(s => s.id === es.id)) await base44.entities.LoadStop.delete(es.id);
