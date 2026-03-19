@@ -33,6 +33,7 @@ const pageTitles = {
 function AppShell({ children, currentPageName }) {
   const { session } = useSession();
   const [collapsed, setCollapsed] = useState(false);
+  useAndroidBackButton();
 
   if (!session) {
     return <LoginScreen />;
@@ -43,18 +44,24 @@ function AppShell({ children, currentPageName }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar
-        currentPage={currentPageName}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed(!collapsed)}
-      />
+    <div className="flex h-screen overflow-hidden bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      {/* Sidebar: hidden on mobile, visible on md+ */}
+      <div className="hidden md:flex">
+        <Sidebar
+          currentPage={currentPageName}
+          collapsed={collapsed}
+          onToggle={() => setCollapsed(!collapsed)}
+        />
+      </div>
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <TopBar pageTitle={pageTitles[currentPageName] || currentPageName} currentPageName={currentPageName} />
-        <main className="flex-1 overflow-auto px-2 md:px-0">
+        {/* Extra bottom padding on mobile to clear the bottom nav */}
+        <main className="flex-1 overflow-auto px-2 md:px-0 pb-16 md:pb-0">
           {children}
         </main>
       </div>
+      {/* Bottom nav: mobile only */}
+      <BottomNav currentPage={currentPageName} />
     </div>
   );
 }
