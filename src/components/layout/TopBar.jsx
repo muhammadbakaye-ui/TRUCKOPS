@@ -52,9 +52,9 @@ export default function TopBar({ pageTitle, currentPageName }) {
     <React.Fragment>
       {showTour && <AppTour steps={ADMIN_TOUR_STEPS} onClose={() => setShowTour(false)} />}
       {showUploadTour && <AppTour steps={UPLOAD_TOUR_STEPS} onClose={() => setShowUploadTour(false)} />}
-      <div className="h-14 border-b border-border bg-card flex items-center justify-between px-4 flex-shrink-0">
+      <div className="h-14 border-b border-border bg-card flex items-center justify-between px-4 flex-shrink-0" style={{ paddingLeft: 'max(1rem, env(safe-area-inset-left))', paddingRight: 'max(1rem, env(safe-area-inset-right))' }}>
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-0.5">
+        <div className="hidden md:flex items-center gap-0.5">
           <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => navigate(-1)}>
             <ChevronLeft className="w-4 h-4" />
           </Button>
@@ -72,7 +72,7 @@ export default function TopBar({ pageTitle, currentPageName }) {
       </div>
 
       <div className="flex items-center gap-3">
-        <form onSubmit={handleSearch} className="relative" data-tour="topbar-search">
+        <form onSubmit={handleSearch} className="relative hidden md:block" data-tour="topbar-search">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <Input
             placeholder="Search loads, invoices..."
@@ -82,8 +82,8 @@ export default function TopBar({ pageTitle, currentPageName }) {
           />
         </form>
         <div data-tour="notification-bell"><NotificationBell /></div>
-        <TourButton onClick={startTour} />
-        <div className="flex items-center gap-2 pl-2 border-l border-border">
+        <TourButton onClick={startTour} className="hidden md:flex" />
+        <div className="hidden md:flex items-center gap-2 pl-2 border-l border-border">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Shield className="w-3.5 h-3.5" />
             <span className="font-medium">Admin</span>
