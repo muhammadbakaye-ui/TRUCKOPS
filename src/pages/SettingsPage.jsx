@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Loader2, Save, Trash2 } from 'lucide-react';
+import { Loader2, Save, Trash2, LogOut } from 'lucide-react';
 import PageHeader from '../components/shared/PageHeader';
 import LoginHistoryTab from '../components/settings/LoginHistoryTab';
 import AccountCustomization from '../components/settings/AccountCustomization';
