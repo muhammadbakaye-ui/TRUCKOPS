@@ -8,6 +8,7 @@ import { useSession } from '../shared/AppSession';
 import NotificationBell from './NotificationBell';
 import TourButton from '../tutorial/TourButton';
 import AppTour, { ADMIN_TOUR_STEPS, UPLOAD_TOUR_STEPS } from '../tutorial/AppTour';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 export default function TopBar({ pageTitle, currentPageName }) {
   const [searchQuery, setSearchQuery] = useState('');
