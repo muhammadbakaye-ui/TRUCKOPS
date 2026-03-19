@@ -165,7 +165,8 @@ export default function LoadDetail() {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
       const currentId = savedLoadIdRef.current || loadId;
       const saveStatus = form.status === 'draft' ? 'saved' : form.status;
-      const payload = { ...form, status: saveStatus };
+      const derived = deriveStopFields(form, stops);
+      const payload = { ...derived, status: saveStatus };
 
       if (!currentId) {
         // Never auto-saved yet
