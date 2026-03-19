@@ -89,14 +89,27 @@ export default function TopBar({ pageTitle, currentPageName }) {
             <Shield className="w-3.5 h-3.5" />
             <span className="font-medium">Admin</span>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
-            onClick={logout}
-          >
-            <LogOut className="w-3.5 h-3.5" /> Logout
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
+              >
+                <LogOut className="w-3.5 h-3.5" /> Logout
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Log Out</AlertDialogTitle>
+                <AlertDialogDescription>Are you sure you want to log out?</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={logout}>Log Out</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
       </div>
