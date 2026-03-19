@@ -4,6 +4,7 @@ import { createPageUrl } from '@/utils';
 import { LayoutDashboard, Container, ClipboardList, Receipt, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSession } from '../shared/AppSession';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 const BOTTOM_NAV_ITEMS = [
   { label: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard', tourAttr: 'mobile-nav-dashboard' },
