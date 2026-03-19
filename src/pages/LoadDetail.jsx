@@ -202,6 +202,21 @@ export default function LoadDetail() {
     }
   };
 
+  // Derive pickup/delivery fields from stops
+  const deriveStopFields = (currentForm, currentStops) => {
+    const firstPickup = currentStops.find(s => s.stop_type === 'pickup');
+    const lastDelivery = [...currentStops].reverse().find(s => s.stop_type === 'delivery');
+    return {
+      ...currentForm,
+      pickup_date: firstPickup?.appointment_date || currentForm.pickup_date || '',
+      pickup_city: firstPickup?.city || currentForm.pickup_city || '',
+      pickup_state: firstPickup?.state || currentForm.pickup_state || '',
+      delivery_date: lastDelivery?.appointment_date || currentForm.delivery_date || '',
+      delivery_city: lastDelivery?.city || currentForm.delivery_city || '',
+      delivery_state: lastDelivery?.state || currentForm.delivery_state || '',
+    };
+  };
+
   const addStop = () => setStops(prev => [...prev, { stop_type: 'stop', stop_order: prev.length + 1, company_name: '', city: '', state: '' }]);
   const removeStop = (i) => setStops(prev => prev.filter((_, idx) => idx !== i));
   const setStop = (i, key, val) => setStops(prev => prev.map((s, idx) => idx === i ? { ...s, [key]: val } : s));
