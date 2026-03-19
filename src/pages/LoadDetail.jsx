@@ -107,13 +107,14 @@ export default function LoadDetail() {
     setAutoSaving(true);
     try {
       const currentId = savedLoadIdRef.current;
-      if (!currentId) {
-        // First auto-save: create the record
-        const existingLoads = await base44.entities.Load.list('-created_date', 1);
-        const lastNum = existingLoads.length > 0
-          ? parseInt(existingLoads[0].internal_load_number?.replace(/\D/g, '') || '1000')
-          : 1000;
-        const payload = { ...currentForm, status: 'draft', internal_load_number: currentForm.internal_load_number || `L-${lastNum + 1}` };
+        if (!currentId) {
+          // First auto-save: create the record
+          const existingLoads = await base44.entities.Load.list('-created_date', 1);
+          const lastNum = existingLoads.length > 0
+            ? parseInt(existingLoads[0].internal_load_number?.replace(/\D/g, '') || '1000')
+            : 1000;
+          const derived = deriveStopFields(currentForm, currentStops);
+          const payload = { ...derived, status: 'draft', internal_load_number: currentForm.internal_load_number || `L-${lastNum + 1}` };
         const savedLoad = await base44.entities.Load.create(payload);
         savedLoadIdRef.current = savedLoad.id;
         for (let i = 0; i < currentStops.length; i++) {
