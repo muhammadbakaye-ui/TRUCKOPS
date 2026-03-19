@@ -459,7 +459,11 @@ export default function Loads() {
                                 ? `${l.pickup_city || ''}${l.pickup_state ? ', ' + l.pickup_state : ''} → ${l.delivery_city || ''}${l.delivery_state ? ', ' + l.delivery_state : ''}`
                                 : '—'}
                             </td>
-                            <td className="p-2">{l.delivery_date || '—'}</td>
+                            <td className="p-2 whitespace-nowrap">
+                              {l.pickup_date || l.delivery_date
+                                ? <>{l.pickup_date || '—'}<span className="text-muted-foreground mx-1">→</span>{l.delivery_date || '—'}</>
+                                : '—'}
+                            </td>
                             <td className="p-2">
                               {l.driver_1_name || '—'}
                               {l.driver_2_name && <div>{l.driver_2_name}</div>}
