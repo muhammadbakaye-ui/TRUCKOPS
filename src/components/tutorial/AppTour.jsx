@@ -98,9 +98,8 @@ function TooltipBox({ step, onPrev, onNext, onClose, current, total }) {
 
   useEffect(() => {
     setVisible(false);
-    setRect(null);
 
-    // Continuously track the element's position via rAF
+    // Continuously track the element's position via rAF (don't null-reset so no flash)
     let running = true;
     const track = () => {
       if (!running) return;
@@ -108,7 +107,6 @@ function TooltipBox({ step, onPrev, onNext, onClose, current, total }) {
       if (el) {
         const r = el.getBoundingClientRect();
         setRect(prev => {
-          // Only update if position/size actually changed
           if (!prev || prev.top !== r.top || prev.left !== r.left || prev.width !== r.width || prev.height !== r.height) {
             return { top: r.top, left: r.left, width: r.width, height: r.height, right: r.right, bottom: r.bottom };
           }
@@ -118,13 +116,12 @@ function TooltipBox({ step, onPrev, onNext, onClose, current, total }) {
       rafRef.current = requestAnimationFrame(track);
     };
 
-    const t1 = setTimeout(() => { track(); }, 80);
-    const t2 = setTimeout(() => setVisible(true), 180);
+    track();
+    const t = setTimeout(() => setVisible(true), 150);
 
     return () => {
       running = false;
-      clearTimeout(t1);
-      clearTimeout(t2);
+      clearTimeout(t);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [step]);
