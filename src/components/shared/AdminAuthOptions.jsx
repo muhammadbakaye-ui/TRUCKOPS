@@ -42,10 +42,11 @@ export default function AdminAuthOptions({ onBack, onSuccess }) {
     }
     setLoading(true);
     try {
+      const pHash = await hashPassword(formData.password);
       const response = await base44.functions.invoke('authAdmin', {
         action: 'login',
         email: formData.email,
-        password: formData.password,
+        password_hash: pHash,
       });
       if (response.data.success) {
         onSuccess(response.data.admin_id, response.data.admin_name);
