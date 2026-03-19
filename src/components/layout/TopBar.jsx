@@ -113,6 +113,6 @@ export default function TopBar({ pageTitle, currentPageName }) {
         </div>
       </div>
       </div>
-    </React.Fragment>
+    </>
   );
 }
