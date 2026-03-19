@@ -104,7 +104,7 @@ export default function LoginScreen() {
           <div className="flex">
             <button
               type="button"
-              onClick={() => switchMode('admin')}
+              onClick={handleAdminTabClick}
               className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-sm font-semibold transition-all ${
                 mode === 'admin'
                   ? 'bg-primary text-primary-foreground'
