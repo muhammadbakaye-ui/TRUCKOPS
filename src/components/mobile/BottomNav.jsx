@@ -40,13 +40,24 @@ export default function BottomNav({ currentPage }) {
       })}
 
       {/* Logout button */}
-      <button
-        onClick={logout}
-        className="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-[10px] font-medium text-sidebar-foreground/60 select-none"
-      >
-        <LogOut className="w-5 h-5" />
-        <span>Logout</span>
-      </button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <button className="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-[10px] font-medium text-sidebar-foreground/60 select-none">
+            <LogOut className="w-5 h-5" />
+            <span>Logout</span>
+          </button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Log Out</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to log out?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={logout}>Log Out</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </nav>
   );
 }
