@@ -31,14 +31,14 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'create_admin') {
-      if (!first_name || !last_name || !email || !password) {
+      if (!first_name || !last_name || !email || (!password && !password_hash)) {
         return Response.json({ success: false, message: 'All fields are required' }, { status: 400 });
       }
       const existing = await base44.asServiceRole.entities.Admin.filter({ email: email.toLowerCase().trim() });
       if (existing.length > 0) {
         return Response.json({ success: false, message: 'An account with this email already exists' }, { status: 400 });
       }
-      const passwordHash = await hashPassword(password);
+      const passwordHash = password_hash || await hashPassword(password);
       const newAdmin = await base44.asServiceRole.entities.Admin.create({
         first_name: first_name.trim(),
         last_name: last_name.trim(),
