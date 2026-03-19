@@ -124,7 +124,8 @@ export default function LoadDetail() {
         window.history.replaceState({}, '', `?id=${savedLoad.id}`);
       } else {
         // Subsequent auto-saves: update
-        await base44.entities.Load.update(currentId, { ...currentForm, status: currentForm.status === 'draft' ? 'draft' : currentForm.status });
+        const derived = deriveStopFields(currentForm, currentStops);
+        await base44.entities.Load.update(currentId, { ...derived, status: currentForm.status === 'draft' ? 'draft' : currentForm.status });
         const existingStops = await base44.entities.LoadStop.filter({ load_id: currentId }, 'stop_order', 20);
         for (const es of existingStops) {
           if (!currentStops.find(s => s.id === es.id)) await base44.entities.LoadStop.delete(es.id);
