@@ -17,7 +17,7 @@ export default function BottomNav({ currentPage }) {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar border-t border-sidebar-border flex z-50"
+      className="lg:hidden fixed bottom-0 left-0 right-0 bg-sidebar border-t border-sidebar-border flex z-50"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       {BOTTOM_NAV_ITEMS.map(({ label, icon: Icon, page, tourAttr }) => {
