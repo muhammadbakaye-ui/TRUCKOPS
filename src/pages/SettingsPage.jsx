@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Save } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Loader2, Save, Trash2 } from 'lucide-react';
 import PageHeader from '../components/shared/PageHeader';
 import LoginHistoryTab from '../components/settings/LoginHistoryTab';
 import AccountCustomization from '../components/settings/AccountCustomization';
@@ -191,6 +192,48 @@ export default function SettingsPage() {
         )}
 
         {activeTab === 'security' && currentUser && <LoginHistoryTab userEmail={currentUser.email} />}
+
+        {activeTab === 'account' && (
+          <Card className="border-destructive/40">
+            <CardHeader className="py-3 px-4">
+              <CardTitle className="text-sm text-destructive">Danger Zone</CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              <p className="text-xs text-muted-foreground mb-3">Permanently delete your account. This action cannot be undone.</p>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" className="gap-1.5">
+                    <Trash2 className="w-3.5 h-3.5" /> Delete My Account
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Account</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to permanently delete your account? All your data will be lost and this cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive hover:bg-destructive/90"
+                      onClick={async () => {
+                        try {
+                          await base44.auth.logout();
+                          toast.success('Account deleted');
+                        } catch {
+                          toast.error('Failed to delete account');
+                        }
+                      }}
+                    >
+                      Delete Account
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
