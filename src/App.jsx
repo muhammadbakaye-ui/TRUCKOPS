@@ -43,27 +43,29 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
-    <Routes>
-      <Route path="/" element={
-        <LayoutWrapper currentPageName={mainPageKey}>
-          <MainPage />
-        </LayoutWrapper>
-      } />
-      {Object.entries(Pages).map(([path, Page]) => (
-        <Route
-          key={path}
-          path={`/${path}`}
-          element={
-            <LayoutWrapper currentPageName={path}>
-              <Page />
-            </LayoutWrapper>
-          }
-        />
-      ))}
-      <Route path="/DeletedItems" element={<LayoutWrapper currentPageName="DeletedItems"><DeletedItems /></LayoutWrapper>} />
-      <Route path="/SystemAdmins" element={<LayoutWrapper currentPageName="SystemAdmins"><SystemAdmins /></LayoutWrapper>} />
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+    <PageTransition>
+      <Routes>
+        <Route path="/" element={
+          <LayoutWrapper currentPageName={mainPageKey}>
+            <MainPage />
+          </LayoutWrapper>
+        } />
+        {Object.entries(Pages).map(([path, Page]) => (
+          <Route
+            key={path}
+            path={`/${path}`}
+            element={
+              <LayoutWrapper currentPageName={path}>
+                <Page />
+              </LayoutWrapper>
+            }
+          />
+        ))}
+        <Route path="/DeletedItems" element={<LayoutWrapper currentPageName="DeletedItems"><DeletedItems /></LayoutWrapper>} />
+        <Route path="/SystemAdmins" element={<LayoutWrapper currentPageName="SystemAdmins"><SystemAdmins /></LayoutWrapper>} />
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    </PageTransition>
   );
 };
 
