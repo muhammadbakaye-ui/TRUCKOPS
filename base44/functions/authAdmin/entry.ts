@@ -58,6 +58,20 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, admin_id: admin.id, admin_name: `${admin.first_name} ${admin.last_name}` });
     }
 
+    // Reset password (admin tool - resets hash for a given email)
+    if (action === 'reset_password') {
+      if (!email || !password) {
+        return Response.json({ success: false, message: 'Email and new password required' }, { status: 400 });
+      }
+      const admins = await base44.asServiceRole.entities.Admin.filter({ email: email.toLowerCase().trim() });
+      if (!admins.length) {
+        return Response.json({ success: false, message: 'Admin not found' }, { status: 404 });
+      }
+      const newHash = await hashPassword(password);
+      await base44.asServiceRole.entities.Admin.update(admins[0].id, { password_hash: newHash });
+      return Response.json({ success: true, message: 'Password updated' });
+    }
+
     // List all admins
     if (action === 'list_admins') {
       const admins = await base44.asServiceRole.entities.Admin.list('-created_date', 50);
