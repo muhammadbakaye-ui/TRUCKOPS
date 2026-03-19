@@ -83,6 +83,47 @@
   }
 }
 
+/* Mobile safe area & touch */
+button, a, [role="button"] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+svg {
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}
+/* Responsive card tables — collapse on mobile */
+@media (max-width: 767px) {
+  .mobile-card-table thead { display: none; }
+  .mobile-card-table tbody tr {
+    display: block;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: hsl(var(--card));
+  }
+  .mobile-card-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0;
+    font-size: 0.8rem;
+    border: none;
+  }
+  .mobile-card-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 0.7rem;
+    color: hsl(var(--muted-foreground));
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-right: 0.5rem;
+    white-space: nowrap;
+  }
+}
+
 /* Desktop scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
