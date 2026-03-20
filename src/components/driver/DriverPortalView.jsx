@@ -411,13 +411,13 @@ export default function DriverPortalView() {
                                   <p className="text-xs font-semibold text-muted-foreground mb-1.5">Credits</p>
                                   <div className="space-y-1 text-xs">
                                     {creditLines.map((line) => (
-                                      <div key={line.id} className="flex justify-between p-1.5 md:p-2 bg-green-50/50 rounded text-xs md:text-sm gap-2">
+                                      <div key={line.id} className="flex justify-between p-1.5 md:p-2 bg-green-500/10 rounded text-xs md:text-sm gap-2">
                                         <span className="truncate">{line.description || '—'}</span>
                                         <span className="font-medium text-green-600 whitespace-nowrap">${(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                       </div>
                                     ))}
-                                    <div className="flex justify-between p-1.5 md:p-2 bg-green-50 rounded text-xs md:text-sm gap-2 border-t-2 border-green-200">
-                                      <span className="font-bold text-green-700">Total Credits</span>
+                                    <div className="flex justify-between p-1.5 md:p-2 bg-green-500/10 rounded text-xs md:text-sm gap-2 border-t-2 border-green-500/30">
+                                      <span className="font-bold text-green-600">Total Credits</span>
                                       <span className="font-bold text-green-600 whitespace-nowrap">${creditTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                   </div>
