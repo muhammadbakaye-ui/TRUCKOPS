@@ -10,7 +10,10 @@ export function applyTheme(theme) {
   const root = document.documentElement;
   root.classList.remove('dark', 'very-dark');
   if (theme === 'dark') root.classList.add('dark');
-  if (theme === 'very-dark') root.classList.add('very-dark');
+  if (theme === 'very-dark') {
+    // also add 'dark' so Tailwind dark: variants apply
+    root.classList.add('dark', 'very-dark');
+  }
   localStorage.setItem(THEME_KEY, theme);
 }
 
