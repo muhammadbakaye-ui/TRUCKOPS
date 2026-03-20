@@ -121,11 +121,11 @@ export default function Loads() {
     const params = new URLSearchParams(window.location.search);
     return params.get('search') || localStorage.getItem('loads_search') || '';
   });
-  const [statusFilter, setStatusFilter] = useState(() => localStorage.getItem('loads_status') || 'all');
-  const [invoiceFilter, setInvoiceFilter] = useState(() => localStorage.getItem('loads_invoice') || 'all');
-  const [driverFilter, setDriverFilter] = useState(() => localStorage.getItem('loads_driver') || 'all');
-  const [truckFilter, setTruckFilter] = useState(() => localStorage.getItem('loads_truck') || 'all');
-  const [tripFilter, setTripFilter] = useState(() => localStorage.getItem('loads_trip') || 'all');
+  const [statusFilter, setStatusFilter] = useState(() => { try { return JSON.parse(localStorage.getItem('loads_status2')) || []; } catch { return []; } });
+  const [invoiceFilter, setInvoiceFilter] = useState(() => { try { return JSON.parse(localStorage.getItem('loads_invoice2')) || []; } catch { return []; } });
+  const [driverFilter, setDriverFilter] = useState(() => { try { return JSON.parse(localStorage.getItem('loads_driver2')) || []; } catch { return []; } });
+  const [truckFilter, setTruckFilter] = useState(() => { try { return JSON.parse(localStorage.getItem('loads_truck2')) || []; } catch { return []; } });
+  const [tripFilter, setTripFilter] = useState(() => { try { return JSON.parse(localStorage.getItem('loads_trip2')) || []; } catch { return []; } });
   const [selected, setSelected] = useState(new Set());
   const [expandedDates, setExpandedDates] = useState(() => {
     const saved = localStorage.getItem('loads_expanded_dates');
