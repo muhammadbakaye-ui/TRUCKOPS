@@ -174,8 +174,8 @@ export default function AdminAuthOptions({ onBack, onSuccess }) {
               </form>
             )}
 
-            {/* Signup Form - disabled */}
-            {false && mode === 'signup' && (
+            {/* Signup Form */}
+            {mode === 'signup' && (
               <form onSubmit={handleSignup} className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
