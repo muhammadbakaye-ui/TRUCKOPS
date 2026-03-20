@@ -610,6 +610,10 @@ Return only the JSON with the transactions array.`,
           <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
             <CardTitle className="text-sm">Transactions — {batches.find(b => b.id === selectedBatch)?.file_name}</CardTitle>
             <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="text-xs h-7 gap-1" onClick={handleRematch} disabled={processing}>
+                {processing ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                Re-match
+              </Button>
               <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setSelectedBatch(null)}>Close</Button>
             </div>
           </CardHeader>
