@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
 import { printDriverPerformanceReport } from '../components/print/printDriverPerformance';
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+const COLORS = ['#9CA3AF', '#FF8C42', '#06B6D4', '#10B981', '#8b5cf6', '#ef4444'];
 
 export default function Reports() {
   const [period, setPeriod] = useState('30');
@@ -49,10 +49,17 @@ export default function Reports() {
     .sort((a, b) => b.total - a.total)
     .slice(0, 8);
 
-  // Invoice status breakdown
-  const statusCount = {};
-  invoices.forEach(i => { statusCount[i.status] = (statusCount[i.status] || 0) + 1; });
-  const statusData = Object.entries(statusCount).map(([name, value]) => ({ name, value }));
+  // Invoice status breakdown (including not_invoiced loads)
+  const invoiceStatusData = [];
+  const notInvoicedCount = loads.filter(l => l.invoice_status === 'not_invoiced' || !l.invoice_status).length;
+  if (notInvoicedCount > 0) invoiceStatusData.push({ name: 'Not invoiced', value: notInvoicedCount });
+  const priorityCount = invoices.filter(i => i.status === 'priority').length;
+  if (priorityCount > 0) invoiceStatusData.push({ name: 'Priority', value: priorityCount });
+  const sentCount = invoices.filter(i => i.status === 'sent').length;
+  if (sentCount > 0) invoiceStatusData.push({ name: 'Sent', value: sentCount });
+  const paidCount = invoices.filter(i => i.status === 'paid').length;
+  if (paidCount > 0) invoiceStatusData.push({ name: 'Paid', value: paidCount });
+  const statusData = invoiceStatusData;
 
   // Driver performance
   const driverLoads = {};
