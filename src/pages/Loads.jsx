@@ -233,7 +233,9 @@ export default function Loads() {
     const matchesTrip = tripFilter.length === 0 ||
       (tripFilter.includes('__unselected__') ? !l.trip_number : false) ||
       tripFilter.includes(l.trip_number);
-    return matchesSearch && matchesStatus && matchesInvoice && matchesDriver && matchesTruck && matchesTrip;
+    const matchesDateFrom = !dateFrom || (l.pickup_date && l.pickup_date >= dateFrom);
+    const matchesDateTo = !dateTo || (l.pickup_date && l.pickup_date <= dateTo);
+    return matchesSearch && matchesStatus && matchesInvoice && matchesDriver && matchesTruck && matchesTrip && matchesDateFrom && matchesDateTo;
   });
 
   // Group by pickup_date
