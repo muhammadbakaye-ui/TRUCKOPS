@@ -104,24 +104,11 @@ export default function AdminAuthOptions({ onBack, onSuccess }) {
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          {/* Tabs */}
+          {/* Header */}
           <div className="flex border-b">
-            <button
-              onClick={() => { setMode('login'); setError(''); }}
-              className={`flex-1 py-4 font-medium transition-colors ${
-                mode === 'login' ? 'bg-primary text-primary-foreground' : 'bg-white text-foreground hover:bg-muted'
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => { setMode('signup'); setError(''); }}
-              className={`flex-1 py-4 font-medium transition-colors ${
-                mode === 'signup' ? 'bg-primary text-primary-foreground' : 'bg-white text-foreground hover:bg-muted'
-              }`}
-            >
-              Create Account
-            </button>
+            <div className="flex-1 py-4 font-medium bg-primary text-primary-foreground text-center">
+              Admin Sign In
+            </div>
           </div>
 
           <div className="p-6">
