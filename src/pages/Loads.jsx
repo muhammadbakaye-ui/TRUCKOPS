@@ -147,25 +147,11 @@ export default function Loads() {
     localStorage.setItem('loads_search', search);
   }, [search]);
 
-  useEffect(() => {
-    localStorage.setItem('loads_status', statusFilter);
-  }, [statusFilter]);
-
-  useEffect(() => {
-    localStorage.setItem('loads_invoice', invoiceFilter);
-  }, [invoiceFilter]);
-
-  useEffect(() => {
-    localStorage.setItem('loads_driver', driverFilter);
-  }, [driverFilter]);
-
-  useEffect(() => {
-    localStorage.setItem('loads_truck', truckFilter);
-  }, [truckFilter]);
-
-  useEffect(() => {
-    localStorage.setItem('loads_trip', tripFilter);
-  }, [tripFilter]);
+  useEffect(() => { localStorage.setItem('loads_status2', JSON.stringify(statusFilter)); }, [statusFilter]);
+  useEffect(() => { localStorage.setItem('loads_invoice2', JSON.stringify(invoiceFilter)); }, [invoiceFilter]);
+  useEffect(() => { localStorage.setItem('loads_driver2', JSON.stringify(driverFilter)); }, [driverFilter]);
+  useEffect(() => { localStorage.setItem('loads_truck2', JSON.stringify(truckFilter)); }, [truckFilter]);
+  useEffect(() => { localStorage.setItem('loads_trip2', JSON.stringify(tripFilter)); }, [tripFilter]);
 
   const { data: loads = [], isLoading } = useQuery({
     queryKey: ['loads'],
