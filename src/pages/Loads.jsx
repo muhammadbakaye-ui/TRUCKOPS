@@ -442,18 +442,35 @@ export default function Loads() {
       </div>
 
       {selected.size > 0 && (
-        <BulkDeleteBar
-          selectedCount={selected.size}
-          allCount={filtered.length}
-          onSelectAll={() => setSelected(new Set(filtered.map(l => l.id)))}
-          onClearSelection={() => setSelected(new Set())}
-          onConfirmDelete={() => {
-            const loadsToDelete = filtered.filter(l => selected.has(l.id));
-            deleteMutation.mutate(loadsToDelete);
-          }}
-          isDeleting={deleteMutation.isPending}
-          isAllSelected={selected.size === filtered.length}
-        />
+        <>
+          <BulkDeleteBar
+            selectedCount={selected.size}
+            allCount={filtered.length}
+            onSelectAll={() => setSelected(new Set(filtered.map(l => l.id)))}
+            onClearSelection={() => { setSelected(new Set()); handleCancelBulkEdit(); }}
+            onConfirmDelete={() => {
+              const loadsToDelete = filtered.filter(l => selected.has(l.id));
+              deleteMutation.mutate(loadsToDelete);
+            }}
+            isDeleting={deleteMutation.isPending}
+            isAllSelected={selected.size === filtered.length}
+            onBulkEdit={handleOpenBulkEdit}
+            bulkEditMode={bulkEditMode}
+          />
+          {bulkEditMode && (
+            <div className="flex items-center gap-3 mb-3 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg text-xs dark:bg-yellow-900/20 dark:border-yellow-700">
+              <span className="font-medium text-yellow-800 dark:text-yellow-300">
+                Editing <strong>{bulkEditMode}</strong> for {selected.size} load{selected.size !== 1 ? 's' : ''} — make your changes below, then save.
+              </span>
+              <div className="flex-1" />
+              <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={handleCancelBulkEdit}>Cancel</Button>
+              <Button size="sm" className="h-7 text-xs gap-1" onClick={handleSaveBulkEdit} disabled={savingBulk}>
+                {savingBulk ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                Save {selected.size} Load{selected.size !== 1 ? 's' : ''}
+              </Button>
+            </div>
+          )}
+        </>
       )}
 
       <div className="space-y-3">
