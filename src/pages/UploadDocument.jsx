@@ -191,18 +191,50 @@ Return a structured JSON with the following fields (use null if not found):
     <div className="p-4 max-w-3xl space-y-4">
       <PageHeader title="Upload Document" description="Upload a rate confirmation or BOL to auto-create a load" />
 
-      <div className="flex gap-3 items-center">
-        <Label className="text-xs">Document Type</Label>
-        <Select value={docType} onValueChange={setDocType}>
-          <SelectTrigger className="h-8 text-xs w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="rate_confirmation">Rate Confirmation</SelectItem>
-            <SelectItem value="bol">Bill of Lading</SelectItem>
-            <SelectItem value="carrier_tender">Carrier Tender</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex flex-wrap gap-3 items-center">
+        <div className="flex gap-2 items-center">
+          <Label className="text-xs">Document Type</Label>
+          <Select value={docType} onValueChange={setDocType}>
+            <SelectTrigger className="h-8 text-xs w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="rate_confirmation">Rate Confirmation</SelectItem>
+              <SelectItem value="bol">Bill of Lading</SelectItem>
+              <SelectItem value="carrier_tender">Carrier Tender</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex gap-2 items-center">
+          <Label className="text-xs">Driver</Label>
+          <Select value={selectedDriverId} onValueChange={setSelectedDriverId}>
+            <SelectTrigger className="h-8 text-xs w-44">
+              <SelectValue placeholder="(optional)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={null}>None</SelectItem>
+              {drivers.map(d => (
+                <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex gap-2 items-center">
+          <Label className="text-xs">Truck</Label>
+          <Select value={selectedTruckId} onValueChange={setSelectedTruckId}>
+            <SelectTrigger className="h-8 text-xs w-36">
+              <SelectValue placeholder="(optional)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={null}>None</SelectItem>
+              {trucks.map(t => (
+                <SelectItem key={t.id} value={t.id}>#{t.unit_number}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <Card
