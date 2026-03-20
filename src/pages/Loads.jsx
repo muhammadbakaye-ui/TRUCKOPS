@@ -529,8 +529,8 @@ export default function Loads() {
                         {dateLoads.map(l => (
                           <tr
                             key={l.id}
-                            className="border-b hover:bg-muted/30 cursor-pointer transition-colors"
-                            onClick={() => navigate(createPageUrl(`LoadDetail?id=${l.id}`))}
+                            className={`border-b hover:bg-muted/30 transition-colors ${bulkEditMode && selected.has(l.id) ? 'bg-primary/5 cursor-default' : 'cursor-pointer'}`}
+                            onClick={() => !bulkEditMode && navigate(createPageUrl(`LoadDetail?id=${l.id}`))}
                           >
                             <td className="p-2">
                               <Checkbox
