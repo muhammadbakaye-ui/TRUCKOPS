@@ -81,6 +81,12 @@ export default function BulkDeleteBar({
               >
                 🚛 Truck
               </button>
+              <button
+                onClick={() => { onBulkEdit('trip'); setShowEditMenu(false); }}
+                className="w-full text-left px-3 py-2 text-xs hover:bg-accent"
+              >
+                🔢 Trip #
+              </button>
             </div>
           )}
         </div>
