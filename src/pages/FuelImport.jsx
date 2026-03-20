@@ -372,6 +372,88 @@ Return only the JSON with the transactions array.`,
     }
   };
 
+  const handleRematch = async () => {
+    if (!selectedBatch) return;
+    setProcessing(true);
+    try {
+      const drivers = await base44.entities.Driver.list();
+      const trucks = await base44.entities.Truck.list();
+      const txList = await base44.entities.FuelTransaction.filter({ batch_id: selectedBatch }, '-transaction_date', 500);
+
+      const normalizeUnit = (s) => s ? s.toLowerCase().trim().replace(/^0+/, '') : '';
+      const normalizeName = (s) => s ? s.toLowerCase().trim().replace(/^n-/, '').replace(/\s+/g, ' ').trim() : '';
+
+      const matchDriverByName = (rawName) => {
+        const raw = normalizeName(rawName);
+        if (!raw) return null;
+        return drivers.find(d => {
+          if (!d.full_name) return false;
+          const full = d.full_name.toLowerCase().trim();
+          if (full === raw) return true;
+          const rawParts = raw.split(' ');
+          const fullParts = full.split(' ');
+          if (rawParts.length >= 1 && rawParts[0].length >= 4 && rawParts[0] === fullParts[0]) {
+            if (rawParts.length === 1) return true;
+            if (rawParts.length >= 2 && fullParts.length >= 2) {
+              if (fullParts[1].startsWith(rawParts[1]) || rawParts[1].startsWith(fullParts[1])) return true;
+            }
+          }
+          return false;
+        }) || null;
+      };
+
+      const matchTruckByNumber = (rawNumber) => {
+        if (!rawNumber) return null;
+        const norm = normalizeUnit(rawNumber);
+        return trucks.find(t => t.unit_number && normalizeUnit(t.unit_number) === norm) || null;
+      };
+
+      let matched = 0, exceptions = 0;
+      for (const tx of txList) {
+        let matchedTruck = matchTruckByNumber(tx.truck_number_raw);
+        let matchedDriver = matchDriverByName(tx.driver_name_raw);
+
+        if (matchedTruck && !matchedDriver && matchedTruck.assigned_driver_id)
+          matchedDriver = drivers.find(d => d.id === matchedTruck.assigned_driver_id) || null;
+        if (matchedDriver && !matchedTruck && matchedDriver.assigned_truck_id)
+          matchedTruck = trucks.find(t => t.id === matchedDriver.assigned_truck_id) || null;
+
+        let importStatus, exceptionReason;
+        if (matchedDriver && matchedTruck) {
+          importStatus = 'matched'; exceptionReason = null; matched++;
+        } else {
+          importStatus = 'exception'; exceptions++;
+          if (!matchedDriver && !matchedTruck) exceptionReason = 'Could not match driver or truck';
+          else if (!matchedDriver) exceptionReason = `Truck matched (${matchedTruck.unit_number}) but driver not found`;
+          else exceptionReason = `Driver matched (${matchedDriver.full_name}) but truck not found`;
+        }
+
+        await base44.entities.FuelTransaction.update(tx.id, {
+          matched_driver_id: matchedDriver?.id || null,
+          matched_driver_name: matchedDriver?.full_name || null,
+          matched_truck_id: matchedTruck?.id || null,
+          matched_truck_number: matchedTruck?.unit_number || null,
+          import_status: importStatus,
+          exception_reason: exceptionReason,
+        });
+      }
+
+      // Update batch counts
+      await base44.entities.FuelBatch.update(selectedBatch, {
+        successful_records: matched,
+        exception_records: exceptions,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['fuel-transactions', selectedBatch] });
+      queryClient.invalidateQueries({ queryKey: ['fuel-batches'] });
+      toast.success(`Re-matched ${txList.length} transactions: ${matched} matched, ${exceptions} exceptions`);
+    } catch (err) {
+      toast.error('Re-match failed: ' + err.message);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handleBulkDeleteTx = async (txList) => {
     try {
       for (const tx of txList) {
