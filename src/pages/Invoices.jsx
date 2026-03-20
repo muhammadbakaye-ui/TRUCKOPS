@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Search, Trash2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Search, Trash2, X, Check, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import DataTable from '../components/shared/DataTable';
 import StatusBadge from '../components/shared/StatusBadge';
@@ -61,9 +62,11 @@ function InvoiceStatusSelect({ invoice, queryClient }) {
 export default function Invoices() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  // queryClient passed to InvoiceStatusSelect via columns closure
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selected, setSelected] = useState(new Set());
+  const [bulkStatusMode, setBulkStatusMode] = useState(null);
+  const [bulkSaving, setBulkSaving] = useState(false);
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ['invoices'],
@@ -99,7 +102,52 @@ export default function Invoices() {
     .filter(i => ['draft', 'sent', 'partial', 'overdue'].includes(i.status))
     .reduce((sum, i) => sum + (i.total || 0), 0);
 
+  const handleBulkStatusUpdate = async (newStatus) => {
+    setBulkSaving(true);
+    const idsToUpdate = [...selected];
+    await Promise.all(
+      idsToUpdate.map(async (id) => {
+        const inv = invoices.find(i => i.id === id);
+        await base44.entities.Invoice.update(id, { status: newStatus });
+        // Sync load's invoice_status
+        if (inv?.load_id) {
+          const statusMap = { draft: 'invoiced', priority: 'priority', sent: 'sent', partial: 'partial', paid: 'paid', overdue: 'overdue', canceled: 'canceled' };
+          await base44.entities.Load.update(inv.load_id, { invoice_status: statusMap[newStatus] || 'invoiced' });
+        }
+      })
+    );
+    queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    queryClient.invalidateQueries({ queryKey: ['loads'] });
+    toast.success(`Updated ${idsToUpdate.length} invoice${idsToUpdate.length !== 1 ? 's' : ''}`);
+    setSelected(new Set());
+    setBulkStatusMode(null);
+    setBulkSaving(false);
+  };
+
   const columns = [
+    {
+      header: <Checkbox
+        checked={filtered.every(r => selected.has(r.id))}
+        onCheckedChange={(checked) => {
+          if (checked) {
+            setSelected(new Set(filtered.map(r => r.id)));
+          } else {
+            setSelected(new Set());
+          }
+        }}
+      />,
+      render: (r) => (
+        <Checkbox
+          checked={selected.has(r.id)}
+          onCheckedChange={(checked) => {
+            const next = new Set(selected);
+            checked ? next.add(r.id) : next.delete(r.id);
+            setSelected(next);
+          }}
+          onClick={e => e.stopPropagation()}
+        />
+      )
+    },
     { header: 'Invoice #', render: (r) => <span className="font-mono font-semibold">{r.invoice_number}</span> },
     { header: 'Load #', render: (r) => <span className="font-mono text-primary">{r.load_number || '—'}</span> },
     { header: 'Customer', render: (r) => <span className="font-medium">{r.customer_name || '—'}</span> },
@@ -141,26 +189,65 @@ export default function Invoices() {
         }
       />
       <div className="flex gap-2 mb-3">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input placeholder="Search invoices..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 pl-8 text-xs w-64" />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-8 text-xs w-36">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="priority">Priority</SelectItem>
-            <SelectItem value="sent">Sent</SelectItem>
-            <SelectItem value="partial">Partial</SelectItem>
-            <SelectItem value="paid">Paid</SelectItem>
-            <SelectItem value="overdue">Overdue</SelectItem>
-            <SelectItem value="canceled">Canceled</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+         <div className="relative">
+           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+           <Input placeholder="Search invoices..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 pl-8 text-xs w-64" />
+         </div>
+         <Select value={statusFilter} onValueChange={setStatusFilter}>
+           <SelectTrigger className="h-8 text-xs w-36">
+             <SelectValue placeholder="Status" />
+           </SelectTrigger>
+           <SelectContent>
+             <SelectItem value="all">All Statuses</SelectItem>
+             <SelectItem value="draft">Draft</SelectItem>
+             <SelectItem value="priority">Priority</SelectItem>
+             <SelectItem value="sent">Sent</SelectItem>
+             <SelectItem value="partial">Partial</SelectItem>
+             <SelectItem value="paid">Paid</SelectItem>
+             <SelectItem value="overdue">Overdue</SelectItem>
+             <SelectItem value="canceled">Canceled</SelectItem>
+           </SelectContent>
+         </Select>
+       </div>
+
+       {selected.size > 0 && (
+         <div className="flex items-center gap-3 mb-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-xs dark:bg-blue-900/20 dark:border-blue-700">
+           <span className="font-medium text-blue-800 dark:text-blue-300">
+             {selected.size} invoice{selected.size !== 1 ? 's' : ''} selected
+           </span>
+           {bulkStatusMode ? (
+             <>
+               <span className="text-blue-700 dark:text-blue-400">Change status to:</span>
+               <Select value={bulkStatusMode} onValueChange={setBulkStatusMode} disabled={bulkSaving}>
+                 <SelectTrigger className="h-7 text-xs w-28">
+                   <SelectValue />
+                 </SelectTrigger>
+                 <SelectContent>
+                   <SelectItem value="draft">Draft</SelectItem>
+                   <SelectItem value="priority">Priority</SelectItem>
+                   <SelectItem value="sent">Sent</SelectItem>
+                   <SelectItem value="partial">Partial</SelectItem>
+                   <SelectItem value="paid">Paid</SelectItem>
+                   <SelectItem value="overdue">Overdue</SelectItem>
+                   <SelectItem value="canceled">Canceled</SelectItem>
+                 </SelectContent>
+               </Select>
+               <div className="flex-1" />
+               <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setBulkStatusMode(null)} disabled={bulkSaving}>Cancel</Button>
+               <Button size="sm" className="h-7 text-xs gap-1" onClick={() => handleBulkStatusUpdate(bulkStatusMode)} disabled={bulkSaving}>
+                 {bulkSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                 Update
+               </Button>
+             </>
+           ) : (
+             <>
+               <div className="flex-1" />
+               <Button size="sm" className="h-7 text-xs gap-1" onClick={() => setBulkStatusMode('sent')}>Change Status</Button>
+               <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setSelected(new Set())}>Clear</Button>
+             </>
+           )}
+         </div>
+       )}
       <DataTable
         columns={columns}
         data={filtered}
