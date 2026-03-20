@@ -25,6 +25,7 @@ export default function UploadDocument() {
   const [selectedDriverId, setSelectedDriverId] = useState('');
   const [selectedTruckId, setSelectedTruckId] = useState('');
   const [tripNumber, setTripNumber] = useState('');
+  const [manualAmount, setManualAmount] = useState('');
 
   useEffect(() => {
     base44.entities.Driver.filter({ status: 'active' }).then(setDrivers);
