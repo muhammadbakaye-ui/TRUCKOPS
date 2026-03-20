@@ -227,6 +227,7 @@ export default function Loads() {
       if (field === 'amount') initial[l.id] = l.invoice_amount ?? '';
       if (field === 'driver') initial[l.id] = l.driver_1_id || '';
       if (field === 'truck') initial[l.id] = l.truck_id || '';
+      if (field === 'trip') initial[l.id] = l.trip_number || '';
     });
     setBulkEdits(initial);
   };
