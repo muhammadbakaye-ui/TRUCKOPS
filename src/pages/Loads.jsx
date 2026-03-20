@@ -129,6 +129,9 @@ export default function Loads() {
   const [dateFrom, setDateFrom] = useState(() => localStorage.getItem('loads_date_from') || '');
   const [dateTo, setDateTo] = useState(() => localStorage.getItem('loads_date_to') || '');
   const [selected, setSelected] = useState(new Set());
+  const [bulkEditMode, setBulkEditMode] = useState(null); // 'amount' | 'driver' | 'truck'
+  const [bulkEdits, setBulkEdits] = useState({}); // { [loadId]: { field: value } }
+  const [savingBulk, setSavingBulk] = useState(false);
   const [expandedDates, setExpandedDates] = useState(() => {
     const saved = localStorage.getItem('loads_expanded_dates');
     return saved ? new Set(JSON.parse(saved)) : null; // null = all open by default
