@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, Legend
+  LineChart, Line, Legend, PieChart, Pie, Cell
 } from 'recharts';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
@@ -27,7 +27,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-export default function RevenueCharts({ loads, drivers }) {
+export default function RevenueCharts({ loads, drivers, invoices = [] }) {
   // Build last N months revenue data
   const monthlyData = useMemo(() => {
     const months = [];
@@ -71,6 +71,26 @@ export default function RevenueCharts({ loads, drivers }) {
       .slice(0, 8);
   }, [loads]);
 
+  // Invoice Status breakdown
+  const invoiceStatusData = useMemo(() => {
+    const statusCount = {
+      not_invoiced: loads.filter(l => l.invoice_status === 'not_invoiced' || !l.invoice_status).length,
+      priority: invoices.filter(i => i.status === 'priority').length,
+      sent: invoices.filter(i => i.status === 'sent').length,
+      paid: invoices.filter(i => i.status === 'paid').length,
+    };
+    return Object.entries(statusCount)
+      .filter(([_, count]) => count > 0)
+      .map(([status, count]) => ({ name: status.charAt(0).toUpperCase() + status.slice(1), value: count }));
+  }, [loads, invoices]);
+
+  const invoiceStatusColors = {
+    'Not_invoiced': '#9CA3AF',
+    'Priority': '#FF8C42',
+    'Sent': '#06B6D4',
+    'Paid': '#10B981',
+  };
+
   return (
     <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
       {/* Monthly Revenue Bar Chart */}
@@ -100,6 +120,39 @@ export default function RevenueCharts({ loads, drivers }) {
               <Bar dataKey="revenue" name="Revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Invoice Status Pie Chart */}
+      <Card className="xl:col-span-1">
+        <CardHeader className="py-3 px-4">
+          <CardTitle className="text-sm font-semibold">Invoice Status</CardTitle>
+        </CardHeader>
+        <CardContent className="px-2 pb-4">
+          {invoiceStatusData.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-12">No data yet</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={180}>
+              <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                <Pie
+                  data={invoiceStatusData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={35}
+                  outerRadius={60}
+                  dataKey="value"
+                  label={({ name, value, percent }) => `${name} ${value}`}
+                  labelLine={false}
+                >
+                  {invoiceStatusData.map((entry, index) => {
+                    const colors = ['#9CA3AF', '#FF8C42', '#06B6D4', '#10B981'];
+                    return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                  })}
+                </Pie>
+                <Tooltip formatter={(value) => `${value}`} contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '6px' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </CardContent>
       </Card>
 
