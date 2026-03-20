@@ -154,6 +154,8 @@ export default function Loads() {
   useEffect(() => { localStorage.setItem('loads_driver2', JSON.stringify(driverFilter)); }, [driverFilter]);
   useEffect(() => { localStorage.setItem('loads_truck2', JSON.stringify(truckFilter)); }, [truckFilter]);
   useEffect(() => { localStorage.setItem('loads_trip2', JSON.stringify(tripFilter)); }, [tripFilter]);
+  useEffect(() => { localStorage.setItem('loads_date_from', dateFrom); }, [dateFrom]);
+  useEffect(() => { localStorage.setItem('loads_date_to', dateTo); }, [dateTo]);
 
   const { data: loads = [], isLoading } = useQuery({
     queryKey: ['loads'],
