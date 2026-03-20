@@ -129,6 +129,9 @@ Return a structured JSON with the following fields (use null if not found):
           const firstStop = extracted.stops?.find(s => s.stop_type === 'pickup');
           const lastStop = [...(extracted.stops || [])].reverse().find(s => s.stop_type === 'delivery');
 
+          const selectedDriver = selectedDriverId ? drivers.find(d => d.id === selectedDriverId) : null;
+          const selectedTruck = selectedTruckId ? trucks.find(t => t.id === selectedTruckId) : null;
+
           const load = await base44.entities.Load.create({
             internal_load_number: newLoadNum,
             external_load_number: extracted.load_number,
@@ -153,6 +156,8 @@ Return a structured JSON with the following fields (use null if not found):
             delivery_city: lastStop?.city,
             delivery_state: lastStop?.state,
             delivery_date: lastStop?.appointment_date,
+            ...(selectedDriver ? { driver_1_id: selectedDriver.id, driver_1_name: selectedDriver.full_name } : {}),
+            ...(selectedTruck ? { truck_id: selectedTruck.id, truck_number: selectedTruck.unit_number } : {}),
           });
 
           const stops = extracted.stops || [];
