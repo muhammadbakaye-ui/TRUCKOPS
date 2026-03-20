@@ -457,13 +457,13 @@ export default function DriverPortalView() {
                                   <p className="text-xs font-semibold text-muted-foreground mb-1.5">Fuel Card Charges</p>
                                   <div className="space-y-1 text-xs">
                                     {fuelLines.map((line) => (
-                                      <div key={line.id} className="flex justify-between p-1.5 md:p-2 bg-orange-50/50 rounded text-xs md:text-sm gap-2">
+                                      <div key={line.id} className="flex justify-between p-1.5 md:p-2 bg-orange-500/10 rounded text-xs md:text-sm gap-2">
                                         <span className="truncate">{line.description || '—'}</span>
                                         <span className="font-medium text-orange-600 whitespace-nowrap">-${Math.abs(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                       </div>
                                     ))}
-                                    <div className="flex justify-between p-1.5 md:p-2 bg-orange-50 rounded text-xs md:text-sm gap-2 border-t-2 border-orange-200">
-                                      <span className="font-bold text-orange-700">Total Fuel</span>
+                                    <div className="flex justify-between p-1.5 md:p-2 bg-orange-500/10 rounded text-xs md:text-sm gap-2 border-t-2 border-orange-500/30">
+                                      <span className="font-bold text-orange-600">Total Fuel</span>
                                       <span className="font-bold text-orange-600 whitespace-nowrap">-${fuelTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                   </div>
