@@ -16,8 +16,8 @@ import AppTour, { DRIVER_TOUR_STEPS } from '../tutorial/AppTour';
 import TourButton from '../tutorial/TourButton';
 
 const statusConfig = {
-  draft:     { label: 'Pending',   cls: 'bg-yellow-100 text-yellow-700 border-yellow-300' },
-  finalized: { label: 'Ready',     cls: 'bg-green-100 text-green-700 border-green-300' },
+  draft:     { label: 'Ready',     cls: 'bg-green-100 text-green-700 border-green-300' },
+  finalized: { label: 'Finalized', cls: 'bg-blue-100 text-blue-700 border-blue-300' },
   paid:      { label: 'Paid',      cls: 'bg-blue-100 text-blue-700 border-blue-300' },
   void:      { label: 'Void',      cls: 'bg-muted text-muted-foreground border-border' },
 };
