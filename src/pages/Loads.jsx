@@ -268,74 +268,74 @@ export default function Loads() {
             className="h-8 pl-8 text-xs w-64"
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-8 text-xs w-36">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="saved">Saved</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="canceled">Canceled</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={invoiceFilter} onValueChange={setInvoiceFilter}>
-          <SelectTrigger className="h-8 text-xs w-40">
-            <SelectValue placeholder="Invoice Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Invoice Statuses</SelectItem>
-            <SelectItem value="not_invoiced">Not Invoiced</SelectItem>
-            <SelectItem value="invoiced">Invoiced</SelectItem>
-            <SelectItem value="sent">Sent</SelectItem>
-            <SelectItem value="partial">Partial</SelectItem>
-            <SelectItem value="paid">Paid</SelectItem>
-            <SelectItem value="overdue">Overdue</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={driverFilter} onValueChange={setDriverFilter}>
-          <SelectTrigger className="h-8 text-xs w-36">
-            <SelectValue placeholder="Driver" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Drivers</SelectItem>
-            <SelectItem value="unselected">Unselected</SelectItem>
-            {uniqueDrivers.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={truckFilter} onValueChange={setTruckFilter}>
-          <SelectTrigger className="h-8 text-xs w-32">
-            <SelectValue placeholder="Truck" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Trucks</SelectItem>
-            <SelectItem value="unselected">Unselected</SelectItem>
-            {uniqueTrucks.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={tripFilter} onValueChange={setTripFilter}>
-          <SelectTrigger className="h-8 text-xs w-32">
-            <SelectValue placeholder="Trip #" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Trips</SelectItem>
-            <SelectItem value="unselected">Unselected</SelectItem>
-            {uniqueTrips.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        {(search || statusFilter !== 'all' || invoiceFilter !== 'all' || driverFilter !== 'all' || truckFilter !== 'all' || tripFilter !== 'all') && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-8 text-xs gap-1" 
+        <MultiSelectFilter
+          label="Status"
+          selected={statusFilter}
+          onChange={setStatusFilter}
+          width="w-32"
+          options={[
+            { value: 'draft', label: 'Draft' },
+            { value: 'saved', label: 'Saved' },
+            { value: 'completed', label: 'Completed' },
+            { value: 'canceled', label: 'Canceled' },
+          ]}
+        />
+        <MultiSelectFilter
+          label="Invoice"
+          selected={invoiceFilter}
+          onChange={setInvoiceFilter}
+          width="w-32"
+          options={[
+            { value: 'not_invoiced', label: 'Not Invoiced' },
+            { value: 'invoiced', label: 'Invoiced' },
+            { value: 'sent', label: 'Sent' },
+            { value: 'partial', label: 'Partial' },
+            { value: 'paid', label: 'Paid' },
+            { value: 'overdue', label: 'Overdue' },
+          ]}
+        />
+        <MultiSelectFilter
+          label="Driver"
+          selected={driverFilter}
+          onChange={setDriverFilter}
+          width="w-36"
+          options={[
+            { value: '__unselected__', label: '(Unassigned)' },
+            ...uniqueDrivers.map(d => ({ value: d, label: d })),
+          ]}
+        />
+        <MultiSelectFilter
+          label="Truck"
+          selected={truckFilter}
+          onChange={setTruckFilter}
+          width="w-32"
+          options={[
+            { value: '__unselected__', label: '(Unassigned)' },
+            ...uniqueTrucks.map(t => ({ value: t, label: t })),
+          ]}
+        />
+        <MultiSelectFilter
+          label="Trip #"
+          selected={tripFilter}
+          onChange={setTripFilter}
+          width="w-32"
+          options={[
+            { value: '__unselected__', label: '(Unassigned)' },
+            ...uniqueTrips.map(t => ({ value: t, label: t })),
+          ]}
+        />
+        {(search || statusFilter.length > 0 || invoiceFilter.length > 0 || driverFilter.length > 0 || truckFilter.length > 0 || tripFilter.length > 0) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 text-xs gap-1"
             onClick={() => {
               setSearch('');
-              setStatusFilter('all');
-              setInvoiceFilter('all');
-              setDriverFilter('all');
-              setTruckFilter('all');
-              setTripFilter('all');
+              setStatusFilter([]);
+              setInvoiceFilter([]);
+              setDriverFilter([]);
+              setTruckFilter([]);
+              setTripFilter([]);
             }}
           >
             <X className="w-3.5 h-3.5" /> Clear Filters
