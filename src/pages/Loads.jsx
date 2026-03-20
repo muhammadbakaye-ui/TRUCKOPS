@@ -619,10 +619,10 @@ export default function Loads() {
                             <td className="p-2" onClick={e => e.stopPropagation()}>
                                <InvoiceStatusSelect load={l} queryClient={queryClient} />
                              </td>
-                            <td className="p-2">
+                            <td className="p-2" onClick={e => e.stopPropagation()}>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={e => e.stopPropagation()}>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </Button>
                                 </AlertDialogTrigger>
