@@ -113,6 +113,16 @@ export default function SettingsPage() {
          >
            Login History
          </button>
+         <button
+           onClick={() => setActiveTab('broadcast')}
+           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+             activeTab === 'broadcast'
+               ? 'border-primary text-primary'
+               : 'border-transparent text-muted-foreground hover:text-foreground'
+           }`}
+         >
+           Broadcast
+         </button>
        </div>
 
       <div className="space-y-4 mt-4">
