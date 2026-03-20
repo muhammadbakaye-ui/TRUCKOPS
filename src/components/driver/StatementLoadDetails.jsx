@@ -88,7 +88,7 @@ export default function StatementLoadDetails({ statementId, driverId }) {
             </div>
 
             {/* Miles and equipment */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 border-t border-slate-200">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 border-t border-border">
               {load.billable_miles && (
                 <div>
                   <p className="text-[10px] text-muted-foreground">Miles</p>
