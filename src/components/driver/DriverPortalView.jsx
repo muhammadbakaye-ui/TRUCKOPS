@@ -340,25 +340,25 @@ export default function DriverPortalView() {
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-2">
-                        <div className="bg-green-50 rounded-lg p-2 text-center">
-                          <p className="text-[10px] text-muted-foreground leading-tight">Gross</p>
-                          <p className="text-xs font-bold text-green-700 mt-0.5">
-                            ${(viewingStatement.gross_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                          </p>
-                        </div>
-                        <div className="bg-red-50 rounded-lg p-2 text-center">
-                          <p className="text-[10px] text-muted-foreground leading-tight">Deductions</p>
-                          <p className="text-xs font-bold text-red-700 mt-0.5">
-                            -${(viewingStatement.deductions_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                          </p>
-                        </div>
-                        <div className="bg-orange-50 rounded-lg p-2 text-center">
-                          <p className="text-[10px] text-muted-foreground leading-tight">Fuel</p>
-                          <p className="text-xs font-bold text-orange-700 mt-0.5">
-                            -${(viewingStatement.fuel_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                          </p>
-                        </div>
-                      </div>
+                         <div className="bg-green-500/10 rounded-lg p-2 text-center">
+                           <p className="text-[10px] text-muted-foreground leading-tight">Gross</p>
+                           <p className="text-xs font-bold text-green-600 mt-0.5">
+                             ${(viewingStatement.gross_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                           </p>
+                         </div>
+                         <div className="bg-red-500/10 rounded-lg p-2 text-center">
+                           <p className="text-[10px] text-muted-foreground leading-tight">Deductions</p>
+                           <p className="text-xs font-bold text-red-600 mt-0.5">
+                             -${(viewingStatement.deductions_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                           </p>
+                         </div>
+                         <div className="bg-orange-500/10 rounded-lg p-2 text-center">
+                           <p className="text-[10px] text-muted-foreground leading-tight">Fuel</p>
+                           <p className="text-xs font-bold text-orange-600 mt-0.5">
+                             -${(viewingStatement.fuel_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                           </p>
+                         </div>
+                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className={statusConfig[viewingStatement.status]?.cls}>
                           {statusConfig[viewingStatement.status]?.label}
