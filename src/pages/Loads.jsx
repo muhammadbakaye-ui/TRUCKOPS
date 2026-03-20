@@ -219,6 +219,49 @@ export default function Loads() {
     }
   };
 
+  const handleOpenBulkEdit = (field) => {
+    setBulkEditMode(field);
+    // Seed current values for selected loads
+    const initial = {};
+    loads.filter(l => selected.has(l.id)).forEach(l => {
+      if (field === 'amount') initial[l.id] = l.invoice_amount ?? '';
+      if (field === 'driver') initial[l.id] = l.driver_1_id || '';
+      if (field === 'truck') initial[l.id] = l.truck_id || '';
+    });
+    setBulkEdits(initial);
+  };
+
+  const handleCancelBulkEdit = () => {
+    setBulkEditMode(null);
+    setBulkEdits({});
+  };
+
+  const handleSaveBulkEdit = async () => {
+    setSavingBulk(true);
+    const idsToUpdate = [...selected];
+    await Promise.all(idsToUpdate.map(id => {
+      const val = bulkEdits[id];
+      if (bulkEditMode === 'amount') {
+        const num = parseFloat(val);
+        return isNaN(num) ? null : base44.entities.Load.update(id, { invoice_amount: num });
+      }
+      if (bulkEditMode === 'driver') {
+        const driver = drivers.find(d => d.id === val);
+        return base44.entities.Load.update(id, { driver_1_id: val || null, driver_1_name: driver?.full_name || '' });
+      }
+      if (bulkEditMode === 'truck') {
+        const truck = trucks.find(t => t.id === val);
+        return base44.entities.Load.update(id, { truck_id: val || null, truck_number: truck?.unit_number || '' });
+      }
+    }).filter(Boolean));
+    queryClient.invalidateQueries({ queryKey: ['loads'] });
+    toast.success(`Updated ${idsToUpdate.length} load${idsToUpdate.length === 1 ? '' : 's'}`);
+    setBulkEditMode(null);
+    setBulkEdits({});
+    setSelected(new Set());
+    setSavingBulk(false);
+  };
+
   const uniqueDrivers = [...new Set(loads
     .filter(l => l.driver_1_name)
     .map(l => l.driver_1_name))].sort();
