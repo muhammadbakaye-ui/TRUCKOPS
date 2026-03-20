@@ -6,6 +6,7 @@ import LoginScreen from './components/shared/LoginScreen';
 import DriverPortalView from './components/driver/DriverPortalView';
 import BottomNav from './components/mobile/BottomNav';
 import useAndroidBackButton from './hooks/useAndroidBackButton';
+import GlobalBroadcastListener from './components/shared/GlobalBroadcastListener';
 
 const pageTitles = {
   Dashboard: 'Dashboard',
