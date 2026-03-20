@@ -46,9 +46,13 @@ function InvoiceStatusSelect({ invoice, queryClient }) {
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {Object.entries(INV_STATUS_STYLES).map(([val]) => (
-          <SelectItem key={val} value={val} className="text-xs capitalize">{val.charAt(0).toUpperCase() + val.slice(1)}</SelectItem>
-        ))}
+        <SelectItem value="draft" className="text-xs">Draft</SelectItem>
+        <SelectItem value="priority" className="text-xs">Priority</SelectItem>
+        <SelectItem value="sent" className="text-xs">Sent</SelectItem>
+        <SelectItem value="partial" className="text-xs">Partial</SelectItem>
+        <SelectItem value="paid" className="text-xs">Paid</SelectItem>
+        <SelectItem value="overdue" className="text-xs">Overdue</SelectItem>
+        <SelectItem value="canceled" className="text-xs">Canceled</SelectItem>
       </SelectContent>
     </Select>
   );
