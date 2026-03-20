@@ -278,7 +278,7 @@ export default function DriverPortalView() {
                            key={stmt.id}
                            onClick={() => setViewingStatement(stmt)}
                            className={`w-full flex items-center justify-between px-3 md:px-5 py-3 md:py-4 transition-colors text-left active:bg-muted/40 ${
-                             overdue ? 'bg-red-50/60' : ''
+                             overdue ? 'bg-red-500/10' : ''
                            }`}
                          >
                            <div className="space-y-0.5 flex-1 min-w-0">
