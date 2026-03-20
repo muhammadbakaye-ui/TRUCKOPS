@@ -14,6 +14,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import StatusBadge from '../components/shared/StatusBadge';
 import PageHeader from '../components/shared/PageHeader';
 import BulkDeleteBar from '../components/shared/BulkDeleteBar';
+import MultiSelectFilter from '../components/shared/MultiSelectFilter';
 import { format, parseISO } from 'date-fns';
 
 const INVOICE_STATUS_STYLES = {
