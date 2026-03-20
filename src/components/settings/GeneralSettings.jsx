@@ -1,53 +1,63 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTheme } from '@/lib/useTheme';
+import { Sun, Moon, MoonStar } from 'lucide-react';
 
 export default function GeneralSettings() {
-  const { theme, setTheme } = useTheme();
+  const [theme, setTheme] = useTheme();
+
+  const options = [
+    {
+      value: 'light',
+      label: 'Light',
+      icon: Sun,
+      preview: { bg: 'bg-gray-100', card: 'bg-white', text: 'text-gray-800', sidebar: 'bg-slate-800' },
+    },
+    {
+      value: 'dark',
+      label: 'Dark',
+      icon: Moon,
+      preview: { bg: 'bg-slate-700', card: 'bg-slate-600', text: 'text-gray-200', sidebar: 'bg-slate-900' },
+    },
+    {
+      value: 'very-dark',
+      label: 'Very Dark',
+      icon: MoonStar,
+      preview: { bg: 'bg-slate-900', card: 'bg-slate-800', text: 'text-blue-400', sidebar: 'bg-slate-950' },
+    },
+  ];
 
   return (
-    <Card>
-      <CardHeader className="py-3 px-4">
-        <CardTitle className="text-sm">Appearance</CardTitle>
-      </CardHeader>
-      <CardContent className="px-4 pb-4 space-y-3">
-        <p className="text-xs text-muted-foreground">Choose how the app looks for you.</p>
-        <div className="flex gap-3">
-          <button
-            onClick={() => setTheme('light')}
-            className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-colors ${
-              theme === 'light' ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground/40'
-            }`}
-          >
-            {/* Light mode preview */}
-            <div className="w-24 h-16 rounded overflow-hidden border border-border flex">
-              <div className="w-7 bg-slate-800 h-full" />
-              <div className="flex-1 flex flex-col">
-                <div className="h-4 bg-white border-b border-border" />
-                <div className="flex-1 bg-slate-100" />
+    <div className="mt-6 max-w-lg">
+      <h2 className="text-base font-semibold mb-1">Appearance</h2>
+      <p className="text-sm text-muted-foreground mb-4">Choose your preferred color theme.</p>
+      <div className="grid grid-cols-3 gap-3">
+        {options.map((opt) => {
+          const Icon = opt.icon;
+          const isActive = theme === opt.value;
+          return (
+            <button
+              key={opt.value}
+              onClick={() => setTheme(opt.value)}
+              className={`rounded-lg border-2 p-3 text-left transition-all ${
+                isActive ? 'border-primary ring-2 ring-primary/30' : 'border-border hover:border-primary/50'
+              }`}
+            >
+              {/* Mini preview */}
+              <div className={`rounded-md overflow-hidden mb-2 h-16 flex ${opt.preview.bg}`}>
+                <div className={`w-1/4 h-full ${opt.preview.sidebar}`} />
+                <div className="flex-1 p-1 flex flex-col gap-1">
+                  <div className={`rounded h-2 w-3/4 ${opt.preview.card}`} />
+                  <div className={`rounded h-2 w-1/2 ${opt.preview.card}`} />
+                </div>
               </div>
-            </div>
-            <span className="text-xs font-medium">Light</span>
-          </button>
-
-          <button
-            onClick={() => setTheme('dark')}
-            className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-colors ${
-              theme === 'dark' ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground/40'
-            }`}
-          >
-            {/* Dark mode preview */}
-            <div className="w-24 h-16 rounded overflow-hidden border border-border flex">
-              <div className="w-7 bg-slate-800 h-full" />
-              <div className="flex-1 flex flex-col">
-                <div className="h-4 bg-slate-700 border-b border-slate-600" />
-                <div className="flex-1 bg-slate-800" />
+              <div className="flex items-center gap-1.5">
+                <Icon className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-xs font-medium">{opt.label}</span>
               </div>
-            </div>
-            <span className="text-xs font-medium">Dark</span>
-          </button>
-        </div>
-      </CardContent>
-    </Card>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
