@@ -32,9 +32,38 @@ const pageTitles = {
   DeletedItems: 'Deleted Items',
 };
 
+function useMainScrollRestoration(currentPageName) {
+  const mainRef = useRef(null);
+  const location = useLocation();
+  const key = `scroll_${currentPageName}`;
+
+  // Restore on page change
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+    const saved = sessionStorage.getItem(key);
+    const timer = setTimeout(() => {
+      if (mainRef.current) mainRef.current.scrollTop = saved ? parseInt(saved, 10) : 0;
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [location.pathname, location.search, key]);
+
+  // Save on scroll
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+    const onScroll = () => sessionStorage.setItem(key, el.scrollTop);
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [key]);
+
+  return mainRef;
+}
+
 function AppShell({ children, currentPageName }) {
   const { session } = useSession();
   const [collapsed, setCollapsed] = useState(false);
+  const mainRef = useMainScrollRestoration(currentPageName);
   useAndroidBackButton();
 
   if (!session) {
