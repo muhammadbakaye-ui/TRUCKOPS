@@ -165,6 +165,16 @@ export default function Loads() {
     queryFn: () => base44.entities.Load.list('-created_date', 1000),
   });
 
+  const { data: drivers = [] } = useQuery({
+    queryKey: ['drivers'],
+    queryFn: () => base44.entities.Driver.filter({ status: 'active' }, 'full_name', 200),
+  });
+
+  const { data: trucks = [] } = useQuery({
+    queryKey: ['trucks'],
+    queryFn: () => base44.entities.Truck.filter({ status: 'active' }, 'unit_number', 200),
+  });
+
   const [savingAllDrafts, setSavingAllDrafts] = useState(false);
 
   const deleteMutation = useMutation({
