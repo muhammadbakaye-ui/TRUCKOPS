@@ -159,6 +159,7 @@ Return a structured JSON with the following fields (use null if not found):
             delivery_date: lastStop?.appointment_date,
             ...(selectedDriver ? { driver_1_id: selectedDriver.id, driver_1_name: selectedDriver.full_name } : {}),
             ...(selectedTruck ? { truck_id: selectedTruck.id, truck_number: selectedTruck.unit_number } : {}),
+            ...(tripNumber ? { trip_number: tripNumber } : {}),
           });
 
           const stops = extracted.stops || [];
