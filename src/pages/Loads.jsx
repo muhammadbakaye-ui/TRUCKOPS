@@ -547,9 +547,19 @@ export default function Loads() {
                                 onClick={e => e.stopPropagation()}
                               />
                             </td>
-                            <td className="p-2">
+                            <td className="p-2" onClick={e => e.stopPropagation()}>
                               <span className="font-mono font-semibold text-primary">{l.internal_load_number}</span>
-                              {l.trip_number && <div className="text-muted-foreground">Trip: {l.trip_number}</div>}
+                              {bulkEditMode === 'trip' && selected.has(l.id) ? (
+                                <input
+                                  type="text"
+                                  value={bulkEdits[l.id] ?? ''}
+                                  onChange={e => setBulkEdits(prev => ({ ...prev, [l.id]: e.target.value }))}
+                                  placeholder="Trip #"
+                                  className="mt-1 h-7 w-24 rounded border border-primary bg-background px-2 text-xs text-foreground block"
+                                />
+                              ) : (
+                                l.trip_number && <div className="text-muted-foreground">Trip: {l.trip_number}</div>
+                              )}
                             </td>
                             <td className="p-2 font-medium">{l.customer_name || '—'}</td>
                             <td className="p-2">
