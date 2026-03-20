@@ -47,7 +47,7 @@ export default function StatementLoadDetails({ statementId, driverId }) {
   return (
     <div className="space-y-2 text-xs">
       {loads.map((load) => (
-        <div key={load.id} className="border rounded-lg p-2 md:p-3 bg-slate-50/50 hover:bg-slate-100/50 transition-colors">
+        <div key={load.id} className="border rounded-lg p-2 md:p-3 bg-muted/30 hover:bg-muted/50 transition-colors">
           <div className="flex flex-col gap-1.5">
             {/* Load number and dates */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
