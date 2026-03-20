@@ -18,7 +18,6 @@ Deno.serve(async (req) => {
         return Response.json({ success: false, message: 'Email and password are required' }, { status: 400 });
       }
 
-      // Run hash and DB fetch in parallel to save time
       const [allAdmins, inputHash] = await Promise.all([
         base44.asServiceRole.entities.Admin.list('-created_date', 100),
         password_hash ? Promise.resolve(password_hash) : hashPassword(password),
