@@ -91,7 +91,7 @@ function InvoiceStatusSelect({ load, queryClient }) {
         queryClient.invalidateQueries({ queryKey: ['invoices'] });
       } else {
         // Update existing invoice status to match
-        const invStatus = value === 'paid' ? 'paid' : value === 'sent' ? 'sent' : value === 'priority' ? 'priority' : value === 'partial' ? 'partial' : value === 'overdue' ? 'overdue' : 'draft';
+        const invStatus = value === 'paid' ? 'paid' : value === 'sent' ? 'sent' : value === 'priority' ? 'priority' : value === 'partial' ? 'partial' : value === 'overdue' ? 'overdue' : value === 'invoiced' ? 'draft' : 'draft';
         await base44.entities.Invoice.update(existing[0].id, { status: invStatus });
         queryClient.invalidateQueries({ queryKey: ['invoices'] });
       }
