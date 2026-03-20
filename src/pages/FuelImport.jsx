@@ -145,72 +145,77 @@ Return only the JSON with the transactions array.`,
        const drivers = await base44.entities.Driver.list();
        const trucks = await base44.entities.Truck.list();
 
+       // Normalize a unit number: lowercase, strip leading zeros and spaces
+       const normalizeUnit = (s) => s ? s.toLowerCase().trim().replace(/^0+/, '') : '';
+
+       // Normalize a driver name: remove N- prefix, collapse spaces, lowercase
+       const normalizeName = (s) => s ? s.toLowerCase().trim().replace(/^n-/, '').replace(/\s+/g, ' ').trim() : '';
+
+       // Match a driver by name with fuzzy logic
+       const matchDriverByName = (rawName) => {
+         const raw = normalizeName(rawName);
+         if (!raw) return null;
+         return drivers.find(d => {
+           if (!d.full_name) return false;
+           const full = d.full_name.toLowerCase().trim();
+           if (full === raw) return true;
+           const rawParts = raw.split(' ');
+           const fullParts = full.split(' ');
+           if (rawParts.length >= 1 && rawParts[0].length >= 4 && rawParts[0] === fullParts[0]) {
+             if (rawParts.length === 1) return true;
+             if (rawParts.length >= 2 && fullParts.length >= 2) {
+               if (fullParts[1].startsWith(rawParts[1]) || rawParts[1].startsWith(fullParts[1])) return true;
+             }
+           }
+           return false;
+         }) || null;
+       };
+
+       // Match a truck by unit number with normalization
+       const matchTruckByNumber = (rawNumber) => {
+         if (!rawNumber) return null;
+         const norm = normalizeUnit(rawNumber);
+         return trucks.find(t => t.unit_number && normalizeUnit(t.unit_number) === norm) || null;
+       };
+
        for (const tx of txList) {
-         // Try to match truck first (more reliable)
          let matchedTruck = null;
          let matchedDriver = null;
-         
-         if (tx.truck_number_raw) {
-           matchedTruck = trucks.find(t => 
-             t.unit_number && t.unit_number.toLowerCase().includes(tx.truck_number_raw.toLowerCase())
-           );
-           // If truck matched, get its assigned driver
-           if (matchedTruck && matchedTruck.assigned_driver_id) {
-             matchedDriver = drivers.find(d => d.id === matchedTruck.assigned_driver_id);
-           }
+
+         // Step 1: Try to match truck by number (most reliable)
+         matchedTruck = matchTruckByNumber(tx.truck_number_raw);
+
+         // Step 2: Try to match driver by name
+         matchedDriver = matchDriverByName(tx.driver_name_raw);
+
+         // Step 3: Cross-fill using the truck↔driver assignment relationship
+         if (matchedTruck && !matchedDriver && matchedTruck.assigned_driver_id) {
+           matchedDriver = drivers.find(d => d.id === matchedTruck.assigned_driver_id) || null;
          }
-         
-         // If no match via truck, try matching by driver name
-         if (!matchedDriver && tx.driver_name_raw) {
-           matchedDriver = drivers.find(d => {
-             if (!d.full_name) return false;
-
-             // Normalize raw name: remove N- prefix, collapse extra spaces, lowercase
-             const raw = tx.driver_name_raw
-               .toLowerCase()
-               .trim()
-               .replace(/^n-/, '')
-               .replace(/\s+/g, ' ') // collapse multiple spaces to single
-               .trim();
-
-             const full = d.full_name.toLowerCase().trim();
-
-             // Exact match (most reliable)
-             if (full === raw) return true;
-
-             // Hardcoded mappings for known spelling variations
-             if ((raw === 'ismail abdiaziz' && full === 'ismael abdiaziz') || 
-                 (raw === 'ismael abdiaziz' && full === 'ismail abdiaziz')) return true;
-
-             // Check if raw is a substring at the start (for truncated names like "abdiweli" matching "abdiweli hassan")
-             // Only match if it's at least the first name fully
-             const rawParts = raw.split(' ');
-             const fullParts = full.split(' ');
-
-             // If raw has at least first name and it matches the start of full name
-             if (rawParts.length >= 1 && rawParts[0].length >= 4) {
-               // Match if first name is exact and last name either matches or is abbreviated
-               if (rawParts[0] === fullParts[0]) {
-                 // If only first name provided, match
-                 if (rawParts.length === 1) return true;
-                 // If last name provided, check if it matches or is an abbreviation
-                 if (rawParts.length >= 2 && fullParts.length >= 2) {
-                   if (fullParts[1].startsWith(rawParts[1]) || rawParts[1].startsWith(fullParts[1])) {
-                     return true;
-                   }
-                 }
-               }
-             }
-
-             return false;
-           });
-           // If driver matched, get their assigned truck
-           if (matchedDriver && matchedDriver.assigned_truck_id) {
-             matchedTruck = trucks.find(t => t.id === matchedDriver.assigned_truck_id);
-           }
+         if (matchedDriver && !matchedTruck && matchedDriver.assigned_truck_id) {
+           matchedTruck = trucks.find(t => t.id === matchedDriver.assigned_truck_id) || null;
          }
 
-         const importStatus = matchedDriver && matchedTruck ? 'matched' : 'exception';
+         // Step 4: If still missing one side, try cross-matching the other side's raw value
+         if (matchedDriver && !matchedTruck) {
+           matchedTruck = matchTruckByNumber(tx.truck_number_raw);
+         }
+         if (matchedTruck && !matchedDriver) {
+           matchedDriver = matchDriverByName(tx.driver_name_raw);
+         }
+
+         // Determine status and exception reason
+         let importStatus, exceptionReason;
+         if (matchedDriver && matchedTruck) {
+           importStatus = 'matched';
+           exceptionReason = null;
+         } else {
+           importStatus = 'exception';
+           if (!matchedDriver && !matchedTruck) exceptionReason = 'Could not match driver or truck';
+           else if (!matchedDriver) exceptionReason = `Truck matched (${matchedTruck.unit_number}) but driver not found`;
+           else exceptionReason = `Driver matched (${matchedDriver.full_name}) but truck not found`;
+         }
+
          if (importStatus === 'exception') exceptions++;
          else successful++;
 
@@ -222,7 +227,7 @@ Return only the JSON with the transactions array.`,
            matched_truck_id: matchedTruck?.id || null,
            matched_truck_number: matchedTruck?.unit_number || null,
            import_status: importStatus,
-           exception_reason: importStatus === 'exception' ? 'Could not match driver or truck' : null,
+           exception_reason: exceptionReason,
          });
        }
 
