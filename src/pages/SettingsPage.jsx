@@ -20,7 +20,7 @@ export default function SettingsPage() {
     company_name: '', address_1: '', address_2: '', city: '', state: '', zip: '',
     phone: '', email: '', mc_number: '', dot_number: '', next_load_number: '1001',
   });
-  const [activeTab, setActiveTab] = useState('company');
+  const [activeTab, setActiveTab] = useState('general');
 
   const { data: currentUser } = useQuery({
     queryKey: ['current-user'],
