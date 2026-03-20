@@ -54,7 +54,7 @@ export default function AdminAuthOptions({ onBack, onSuccess }) {
         setError(response.data.message || 'Login failed');
       }
     } catch (err) {
-      setError('Login failed. Please try again.');
+      setError(err?.response?.data?.message || err?.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
