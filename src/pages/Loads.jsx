@@ -81,7 +81,7 @@ function InvoiceStatusSelect({ load, queryClient }) {
           invoice_date: today,
           total: load.invoice_amount || 0,
           subtotal: load.invoice_amount || 0,
-          status: value === 'paid' ? 'paid' : value === 'sent' ? 'sent' : 'draft',
+          status: value === 'paid' ? 'paid' : value === 'sent' ? 'sent' : value === 'priority' ? 'priority' : 'draft',
           line_items: [
             { description: 'Line Haul', quantity: 1, rate: load.freight_rate || 0, amount: load.freight_rate || 0 },
             ...(load.fuel_surcharge ? [{ description: 'Fuel Surcharge', quantity: 1, rate: load.fuel_surcharge, amount: load.fuel_surcharge }] : []),
@@ -349,18 +349,19 @@ export default function Loads() {
           ]}
         />
         <MultiSelectFilter
-          label="Invoice"
-          selected={invoiceFilter}
-          onChange={setInvoiceFilter}
-          width="w-32"
-          options={[
-            { value: 'not_invoiced', label: 'Not Invoiced' },
-            { value: 'invoiced', label: 'Invoiced' },
-            { value: 'sent', label: 'Sent' },
-            { value: 'partial', label: 'Partial' },
-            { value: 'paid', label: 'Paid' },
-            { value: 'overdue', label: 'Overdue' },
-          ]}
+         label="Invoice"
+         selected={invoiceFilter}
+         onChange={setInvoiceFilter}
+         width="w-32"
+         options={[
+           { value: 'not_invoiced', label: 'Not Invoiced' },
+           { value: 'invoiced', label: 'Invoiced' },
+           { value: 'priority', label: 'Priority' },
+           { value: 'sent', label: 'Sent' },
+           { value: 'partial', label: 'Partial' },
+           { value: 'paid', label: 'Paid' },
+           { value: 'overdue', label: 'Overdue' },
+         ]}
         />
         <MultiSelectFilter
           label="Driver"
