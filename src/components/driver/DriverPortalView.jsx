@@ -434,13 +434,13 @@ export default function DriverPortalView() {
                                   <p className="text-xs font-semibold text-muted-foreground mb-1.5">Deductions</p>
                                   <div className="space-y-1 text-xs">
                                     {deductionLines.map((line) => (
-                                      <div key={line.id} className="flex justify-between p-1.5 md:p-2 bg-red-50/50 rounded text-xs md:text-sm gap-2">
+                                      <div key={line.id} className="flex justify-between p-1.5 md:p-2 bg-red-500/10 rounded text-xs md:text-sm gap-2">
                                         <span className="truncate">{line.description || '—'}</span>
                                         <span className="font-medium text-red-600 whitespace-nowrap">-${Math.abs(line.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                       </div>
                                     ))}
-                                    <div className="flex justify-between p-1.5 md:p-2 bg-red-50 rounded text-xs md:text-sm gap-2 border-t-2 border-red-200">
-                                      <span className="font-bold text-red-700">Total Deductions</span>
+                                    <div className="flex justify-between p-1.5 md:p-2 bg-red-500/10 rounded text-xs md:text-sm gap-2 border-t-2 border-red-500/30">
+                                      <span className="font-bold text-red-600">Total Deductions</span>
                                       <span className="font-bold text-red-600 whitespace-nowrap">-${deductionTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                                     </div>
                                   </div>
