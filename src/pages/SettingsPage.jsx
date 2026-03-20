@@ -203,6 +203,7 @@ export default function SettingsPage() {
         )}
 
         {activeTab === 'security' && currentUser && <LoginHistoryTab userEmail={currentUser.email} />}
+        {activeTab === 'broadcast' && <BroadcastPanel />}
 
         {activeTab === 'account' && (
           <Card className="border-destructive/40">
