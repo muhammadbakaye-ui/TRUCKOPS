@@ -254,6 +254,9 @@ export default function Loads() {
         const truck = trucks.find(t => t.id === val);
         return base44.entities.Load.update(id, { truck_id: val || null, truck_number: truck?.unit_number || '' });
       }
+      if (bulkEditMode === 'trip') {
+        return base44.entities.Load.update(id, { trip_number: val || null });
+      }
     }).filter(Boolean));
     queryClient.invalidateQueries({ queryKey: ['loads'] });
     toast.success(`Updated ${idsToUpdate.length} load${idsToUpdate.length === 1 ? '' : 's'}`);
