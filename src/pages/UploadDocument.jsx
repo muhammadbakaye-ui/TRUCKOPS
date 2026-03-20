@@ -224,6 +224,16 @@ Return a structured JSON with the following fields (use null if not found):
         </div>
 
         <div className="flex gap-2 items-center">
+          <Label className="text-xs">Trip #</Label>
+          <Input
+            value={tripNumber}
+            onChange={e => setTripNumber(e.target.value)}
+            placeholder="(optional)"
+            className="h-8 text-xs w-32"
+          />
+        </div>
+
+        <div className="flex gap-2 items-center">
           <Label className="text-xs">Truck</Label>
           <Select value={selectedTruckId} onValueChange={setSelectedTruckId}>
             <SelectTrigger className="h-8 text-xs w-36">
