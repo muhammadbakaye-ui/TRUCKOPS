@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Truck, Upload, FileText, LogOut, Download, Loader2, FileCheck, Calendar, AlertCircle, X, Printer } from 'lucide-react';
+import { Truck, Upload, FileText, LogOut, Download, Loader2, FileCheck, Calendar, X, Printer } from 'lucide-react';
 import { toast } from 'sonner';
-import { format, addDays, isPast, subDays } from 'date-fns';
-import { getPeriodForDate } from '@/components/shared/statementCalendar';
+import { format, addDays, subDays } from 'date-fns';
+
 import { printStatement } from '../print/printStatement';
 import StatementLoadDetails from './StatementLoadDetails';
 import AppTour, { DRIVER_TOUR_STEPS } from '../tutorial/AppTour';
@@ -93,16 +93,7 @@ export default function DriverPortalView() {
     }
   };
 
-  const getDueDate = (period_end) => {
-    if (!period_end) return null;
-    // Look up the due date from the hardcoded calendar
-    const period = getPeriodForDate(period_end);
-    return period ? new Date(period.due) : null;
-  };
-  const checkOverdue = (period_end, status) => {
-    const due = getDueDate(period_end);
-    return due && isPast(due) && !['finalized', 'paid', 'void'].includes(status);
-  };
+
 
   const tabs = [
     { key: 'documents', label: 'My Documents', icon: FileText, tourAttr: 'driver-documents-tab' },
@@ -270,34 +261,19 @@ export default function DriverPortalView() {
                  ) : (
                    <div className="divide-y">
                      {statements.map((stmt) => {
-                       const dueDate = getDueDate(stmt.period_end);
-                       const overdue = checkOverdue(stmt.period_end, stmt.status);
                        const cfg = statusConfig[stmt.status] || statusConfig.draft;
                        return (
                          <button
                            key={stmt.id}
                            onClick={() => setViewingStatement(stmt)}
-                           className={`w-full flex items-center justify-between px-3 md:px-5 py-3 md:py-4 transition-colors text-left active:bg-muted/40 ${
-                             overdue ? 'bg-red-500/10' : ''
-                           }`}
+                           className="w-full flex items-center justify-between px-3 md:px-5 py-3 md:py-4 transition-colors text-left active:bg-muted/40"
                          >
                            <div className="space-y-0.5 flex-1 min-w-0">
-                             <div className="flex items-center gap-1.5">
-                               <p className="text-xs md:text-sm font-semibold">
-                                 {stmt.period_start && stmt.period_end
-                                   ? `${format(new Date(stmt.period_start + 'T12:00:00'), 'MMM d')} – ${format(new Date(stmt.period_end + 'T12:00:00'), 'MMM d')}`
-                                   : stmt.statement_date || '—'}
-                               </p>
-                               {overdue && (
-                                 <span className="flex items-center gap-0.5 text-[10px] font-bold text-red-600">
-                                   <AlertCircle className="w-2.5 h-2.5" /> OVERDUE
-                                 </span>
-                               )}
-                             </div>
-                             <p className="text-[10px] md:text-xs text-muted-foreground">
-                               Due {dueDate ? format(dueDate, 'MMM d') : '—'}
+                             <p className="text-xs md:text-sm font-semibold">
+                               {stmt.period_start && stmt.period_end
+                                 ? `${format(new Date(stmt.period_start + 'T12:00:00'), 'MMM d')} – ${format(new Date(stmt.period_end + 'T12:00:00'), 'MMM d')}`
+                                 : stmt.statement_date || '—'}
                              </p>
-                           </div>
                            <div className="flex items-center gap-2 shrink-0 ml-2">
                              <div className="text-right">
                                <p className="text-sm md:text-base font-bold text-primary">
