@@ -412,13 +412,10 @@ export default function LoadDetail() {
           <Card>
             <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Financials</CardTitle></CardHeader>
             <CardContent className="px-4 pb-4 space-y-3">
-              <Field label="Freight Rate ($)"><Input type="number" value={form.freight_rate || ''} onChange={(e) => { set('freight_rate', Number(e.target.value)); set('invoice_amount', Number(e.target.value) + (form.fuel_surcharge || 0)); }} className="h-8 text-xs" /></Field>
-              <Field label="Fuel Surcharge ($)"><Input type="number" value={form.fuel_surcharge || ''} onChange={(e) => { set('fuel_surcharge', Number(e.target.value)); set('invoice_amount', (form.freight_rate || 0) + Number(e.target.value)); }} className="h-8 text-xs" /></Field>
-              <Field label="Extra Charges ($)"><Input type="number" value={form.extra_charges || ''} onChange={(e) => set('extra_charges', Number(e.target.value))} className="h-8 text-xs" /></Field>
-              <div className="border-t pt-2">
-                <p className="text-xs text-muted-foreground">Invoice Total</p>
-                <p className="text-xl font-bold">${((form.freight_rate || 0) + (form.fuel_surcharge || 0) + (form.extra_charges || 0)).toLocaleString()}</p>
-              </div>
+              <Field label="Freight Rate ($)"><Input type="number" value={form.freight_rate || ''} onChange={(e) => { const rate = Number(e.target.value); set('freight_rate', rate); set('invoice_amount', rate + (form.fuel_surcharge || 0) + (form.extra_charges || 0)); }} className="h-8 text-xs" /></Field>
+              <Field label="Fuel Surcharge ($)"><Input type="number" value={form.fuel_surcharge || ''} onChange={(e) => { const fsc = Number(e.target.value); set('fuel_surcharge', fsc); set('invoice_amount', (form.freight_rate || 0) + fsc + (form.extra_charges || 0)); }} className="h-8 text-xs" /></Field>
+              <Field label="Extra Charges ($)"><Input type="number" value={form.extra_charges || ''} onChange={(e) => { const extra = Number(e.target.value); set('extra_charges', extra); set('invoice_amount', (form.freight_rate || 0) + (form.fuel_surcharge || 0) + extra); }} className="h-8 text-xs" /></Field>
+              <Field label="Invoice Amount ($)"><Input type="number" value={form.invoice_amount || ''} onChange={(e) => set('invoice_amount', Number(e.target.value))} className="h-8 text-xs font-semibold" /></Field>
               <Field label="Invoice Status"><Sel value={form.invoice_status} onChange={(v) => set('invoice_status', v)} options={['not_invoiced','invoiced','sent','partial','paid','overdue','canceled'].map(v=>({value:v,label:v.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}))} /></Field>
               <Field label="Billable Miles"><Input type="number" value={form.billable_miles || ''} onChange={(e) => set('billable_miles', Number(e.target.value))} className="h-8 text-xs" /></Field>
             </CardContent>
