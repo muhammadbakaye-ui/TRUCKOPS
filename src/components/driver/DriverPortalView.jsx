@@ -274,6 +274,7 @@ export default function DriverPortalView() {
                                  ? `${format(new Date(stmt.period_start + 'T12:00:00'), 'MMM d')} – ${format(new Date(stmt.period_end + 'T12:00:00'), 'MMM d')}`
                                  : stmt.statement_date || '—'}
                              </p>
+                           </div>
                            <div className="flex items-center gap-2 shrink-0 ml-2">
                              <div className="text-right">
                                <p className="text-sm md:text-base font-bold text-primary">
