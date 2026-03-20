@@ -225,8 +225,8 @@ export default function DriverPortalView() {
                         <div key={doc.id} className="flex items-center justify-between px-3 md:px-5 py-2.5 md:py-3 hover:bg-muted/30 transition-colors">
                           <div className="flex items-center gap-2 min-w-0">
                             <Badge variant="outline" className={`text-[10px] shrink-0 ${doc.document_type === 'bol'
-                              ? 'text-blue-600 border-blue-300 bg-blue-50'
-                              : 'text-purple-600 border-purple-300 bg-purple-50'
+                              ? 'text-blue-600 border-blue-500/30 bg-blue-500/10'
+                               : 'text-purple-600 border-purple-500/30 bg-purple-500/10'
                             }`}>
                               {doc.document_type === 'bol' ? 'BOL' : 'RC'}
                             </Badge>
