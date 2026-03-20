@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Truck, Upload, FileText, LogOut, Download, Loader2, FileCheck, Calendar, X, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, addDays, subDays } from 'date-fns';
@@ -29,6 +30,7 @@ export default function DriverPortalView() {
   const [uploading, setUploading] = useState(null);
   const [viewingStatement, setViewingStatement] = useState(null);
   const [showTour, setShowTour] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const bolRef = useRef(null);
   const rcRef = useRef(null);
 
@@ -103,6 +105,22 @@ export default function DriverPortalView() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {showTour && <AppTour steps={DRIVER_TOUR_STEPS} onClose={() => setShowTour(false)} />}
+      <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Logout</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to logout? You'll need to log back in to access your statements and documents.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={logout} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Logout
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
       {/* Header */}
       <div className="h-12 md:h-14 bg-sidebar border-b border-sidebar-border flex items-center justify-between px-3 md:px-6 flex-shrink-0">
         <div className="flex items-center gap-2">
@@ -119,7 +137,7 @@ export default function DriverPortalView() {
             variant="ghost"
             size="sm"
             className="h-7 md:h-8 text-[11px] md:text-xs gap-1 px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-            onClick={logout}
+            onClick={() => setShowLogoutConfirm(true)}
           >
             <LogOut className="w-3 h-3 md:w-3.5 md:h-3.5" />
             <span className="hidden sm:inline">Logout</span>
