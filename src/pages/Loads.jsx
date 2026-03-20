@@ -20,6 +20,7 @@ import { format, parseISO } from 'date-fns';
 const INVOICE_STATUS_STYLES = {
   not_invoiced: 'bg-muted text-muted-foreground border-border',
   invoiced: 'bg-blue-500/10 text-blue-600 border-blue-500/30',
+  priority: 'bg-orange-500/10 text-orange-600 border-orange-500/30',
   sent: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/30',
   partial: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30',
   paid: 'bg-green-500/10 text-green-600 border-green-500/30',
@@ -30,6 +31,7 @@ const INVOICE_STATUS_STYLES = {
 const INVOICE_STATUS_LABELS = {
   not_invoiced: 'Not Invoiced',
   invoiced: 'Invoiced',
+  priority: 'Priority',
   sent: 'Sent',
   partial: 'Partial',
   paid: 'Paid',
