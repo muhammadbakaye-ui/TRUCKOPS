@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { SessionProvider, useSession } from './components/shared/AppSession';
 import Sidebar from './components/layout/Sidebar';
 import TopBar from './components/layout/TopBar';
