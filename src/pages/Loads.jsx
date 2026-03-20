@@ -330,7 +330,30 @@ export default function Loads() {
             ...uniqueTrips.map(t => ({ value: t, label: t })),
           ]}
         />
-        {(search || statusFilter.length > 0 || invoiceFilter.length > 0 || driverFilter.length > 0 || truckFilter.length > 0 || tripFilter.length > 0) && (
+        <div className="flex items-center gap-1 border border-input rounded-md px-2 h-8 bg-background">
+          <span className="text-xs text-muted-foreground whitespace-nowrap">Pickup:</span>
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={e => setDateFrom(e.target.value)}
+            className="text-xs bg-transparent outline-none w-28 text-foreground"
+            placeholder="From"
+          />
+          <span className="text-xs text-muted-foreground">–</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={e => setDateTo(e.target.value)}
+            className="text-xs bg-transparent outline-none w-28 text-foreground"
+            placeholder="To"
+          />
+          {(dateFrom || dateTo) && (
+            <button onClick={() => { setDateFrom(''); setDateTo(''); }} className="text-muted-foreground hover:text-foreground ml-1">
+              <X className="w-3 h-3" />
+            </button>
+          )}
+        </div>
+        {(search || statusFilter.length > 0 || invoiceFilter.length > 0 || driverFilter.length > 0 || truckFilter.length > 0 || tripFilter.length > 0 || dateFrom || dateTo) && (
           <Button
             variant="ghost"
             size="sm"
@@ -342,6 +365,8 @@ export default function Loads() {
               setDriverFilter([]);
               setTruckFilter([]);
               setTripFilter([]);
+              setDateFrom('');
+              setDateTo('');
             }}
           >
             <X className="w-3.5 h-3.5" /> Clear Filters
