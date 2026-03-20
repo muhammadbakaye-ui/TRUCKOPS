@@ -218,14 +218,17 @@ export default function Loads() {
       l.internal_load_number, l.external_load_number, l.customer_name,
       l.driver_1_name, l.truck_number, l.pickup_city, l.delivery_city
     ].some(v => v && v.toLowerCase().includes(q));
-    const matchesStatus = statusFilter === 'all' || l.status === statusFilter;
-    const matchesInvoice = invoiceFilter === 'all' || l.invoice_status === invoiceFilter;
-    const matchesDriver = driverFilter === 'all' || 
-      (driverFilter === 'unselected' ? (!l.driver_1_name && !l.driver_2_name) : (l.driver_1_name === driverFilter || l.driver_2_name === driverFilter));
-    const matchesTruck = truckFilter === 'all' || 
-      (truckFilter === 'unselected' ? !l.truck_number : l.truck_number === truckFilter);
-    const matchesTrip = tripFilter === 'all' || 
-      (tripFilter === 'unselected' ? !l.trip_number : l.trip_number === tripFilter);
+    const matchesStatus = statusFilter.length === 0 || statusFilter.includes(l.status);
+    const matchesInvoice = invoiceFilter.length === 0 || invoiceFilter.includes(l.invoice_status || 'not_invoiced');
+    const matchesDriver = driverFilter.length === 0 ||
+      (driverFilter.includes('__unselected__') ? (!l.driver_1_name && !l.driver_2_name) : false) ||
+      driverFilter.includes(l.driver_1_name) || driverFilter.includes(l.driver_2_name);
+    const matchesTruck = truckFilter.length === 0 ||
+      (truckFilter.includes('__unselected__') ? !l.truck_number : false) ||
+      truckFilter.includes(l.truck_number);
+    const matchesTrip = tripFilter.length === 0 ||
+      (tripFilter.includes('__unselected__') ? !l.trip_number : false) ||
+      tripFilter.includes(l.trip_number);
     return matchesSearch && matchesStatus && matchesInvoice && matchesDriver && matchesTruck && matchesTrip;
   });
 
