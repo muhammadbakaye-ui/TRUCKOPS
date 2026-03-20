@@ -137,6 +137,7 @@ export default function SettingsPage() {
        </div>
 
       <div className="space-y-4 mt-4">
+         {activeTab === 'general' && <GeneralSettings />}
          {activeTab === 'account' && <AccountCustomization />}
 
          {activeTab === 'company' && (
