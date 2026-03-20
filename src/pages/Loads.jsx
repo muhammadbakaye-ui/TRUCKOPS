@@ -18,13 +18,13 @@ import MultiSelectFilter from '../components/shared/MultiSelectFilter';
 import { format, parseISO } from 'date-fns';
 
 const INVOICE_STATUS_STYLES = {
-  not_invoiced: 'bg-gray-100 text-gray-600 border-gray-200',
-  invoiced: 'bg-blue-50 text-blue-700 border-blue-200',
-  sent: 'bg-cyan-50 text-cyan-700 border-cyan-200',
-  partial: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-  paid: 'bg-green-50 text-green-700 border-green-200',
-  overdue: 'bg-red-50 text-red-700 border-red-200',
-  canceled: 'bg-gray-100 text-gray-400 border-gray-200',
+  not_invoiced: 'bg-muted text-muted-foreground border-border',
+  invoiced: 'bg-blue-500/10 text-blue-600 border-blue-500/30',
+  sent: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/30',
+  partial: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30',
+  paid: 'bg-green-500/10 text-green-600 border-green-500/30',
+  overdue: 'bg-red-500/10 text-red-600 border-red-500/30',
+  canceled: 'bg-muted text-muted-foreground border-border',
 };
 
 const INVOICE_STATUS_LABELS = {
