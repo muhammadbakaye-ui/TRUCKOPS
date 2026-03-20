@@ -20,6 +20,15 @@ export default function UploadDocument() {
   const [processing, setProcessing] = useState(false);
   const [results, setResults] = useState([]);
   const fileInputRef = useRef(null);
+  const [drivers, setDrivers] = useState([]);
+  const [trucks, setTrucks] = useState([]);
+  const [selectedDriverId, setSelectedDriverId] = useState('');
+  const [selectedTruckId, setSelectedTruckId] = useState('');
+
+  useEffect(() => {
+    base44.entities.Driver.filter({ status: 'active' }).then(setDrivers);
+    base44.entities.Truck.filter({ status: 'active' }).then(setTrucks);
+  }, []);
 
   const handleFiles = (newFiles) => {
     setFiles(prev => [...prev, ...newFiles]);
