@@ -40,6 +40,11 @@ function AppShell({ children, currentPageName }) {
     return <LoginScreen />;
   }
 
+  return (
+    <>
+      <GlobalBroadcastListener />
+      {session.role === 'driver' ? <DriverPortalView /> : (
+
   if (session.role === 'driver') {
     return <DriverPortalView />;
   }
