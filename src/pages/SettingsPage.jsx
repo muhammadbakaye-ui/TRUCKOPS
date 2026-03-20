@@ -12,6 +12,7 @@ import BroadcastPanel from '../components/settings/BroadcastPanel';
 import PageHeader from '../components/shared/PageHeader';
 import LoginHistoryTab from '../components/settings/LoginHistoryTab';
 import AccountCustomization from '../components/settings/AccountCustomization';
+import GeneralSettings from '../components/settings/GeneralSettings';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
