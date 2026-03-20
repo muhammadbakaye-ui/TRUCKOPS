@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 
 const INV_STATUS_STYLES = {
   draft: 'bg-gray-100 text-gray-600 border-gray-200',
+  priority: 'bg-orange-50 text-orange-700 border-orange-300',
   sent: 'bg-cyan-50 text-cyan-700 border-cyan-200',
   partial: 'bg-yellow-50 text-yellow-700 border-yellow-200',
   paid: 'bg-green-50 text-green-700 border-green-200',
@@ -30,7 +31,7 @@ function InvoiceStatusSelect({ invoice, queryClient }) {
     await base44.entities.Invoice.update(invoice.id, { status: value });
     // Sync the load's invoice_status if linked
     if (invoice.load_id) {
-      const statusMap = { draft: 'invoiced', sent: 'sent', partial: 'partial', paid: 'paid', overdue: 'overdue', canceled: 'canceled' };
+      const statusMap = { draft: 'invoiced', priority: 'sent', sent: 'sent', partial: 'partial', paid: 'paid', overdue: 'overdue', canceled: 'canceled' };
       await base44.entities.Load.update(invoice.load_id, { invoice_status: statusMap[value] || 'invoiced' });
       queryClient.invalidateQueries({ queryKey: ['loads'] });
     }
@@ -147,6 +148,7 @@ export default function Invoices() {
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="draft">Draft</SelectItem>
+            <SelectItem value="priority">Priority</SelectItem>
             <SelectItem value="sent">Sent</SelectItem>
             <SelectItem value="partial">Partial</SelectItem>
             <SelectItem value="paid">Paid</SelectItem>
