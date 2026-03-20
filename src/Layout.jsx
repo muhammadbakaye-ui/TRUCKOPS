@@ -40,35 +40,38 @@ function AppShell({ children, currentPageName }) {
     return <LoginScreen />;
   }
 
-  return (
-    <>
-      <GlobalBroadcastListener />
-      {session.role === 'driver' ? <DriverPortalView /> : (
-
   if (session.role === 'driver') {
-    return <DriverPortalView />;
+    return (
+      <>
+        <GlobalBroadcastListener />
+        <DriverPortalView />
+      </>
+    );
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-      {/* Sidebar: hidden on mobile, visible on md+ */}
-      <div className="hidden lg:flex">
-        <Sidebar
-          currentPage={currentPageName}
-          collapsed={collapsed}
-          onToggle={() => setCollapsed(!collapsed)}
-        />
+    <>
+      <GlobalBroadcastListener />
+      <div className="flex h-screen overflow-hidden bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+        {/* Sidebar: hidden on mobile, visible on md+ */}
+        <div className="hidden lg:flex">
+          <Sidebar
+            currentPage={currentPageName}
+            collapsed={collapsed}
+            onToggle={() => setCollapsed(!collapsed)}
+          />
+        </div>
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <TopBar pageTitle={pageTitles[currentPageName] || currentPageName} currentPageName={currentPageName} />
+          {/* Extra bottom padding on mobile to clear the bottom nav */}
+          <main className="flex-1 overflow-auto px-2 lg:px-0 pb-16 lg:pb-0">
+            {children}
+          </main>
+        </div>
+        {/* Bottom nav: mobile only */}
+        <BottomNav currentPage={currentPageName} />
       </div>
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <TopBar pageTitle={pageTitles[currentPageName] || currentPageName} currentPageName={currentPageName} />
-        {/* Extra bottom padding on mobile to clear the bottom nav */}
-        <main className="flex-1 overflow-auto px-2 lg:px-0 pb-16 lg:pb-0">
-          {children}
-        </main>
-      </div>
-      {/* Bottom nav: mobile only */}
-      <BottomNav currentPage={currentPageName} />
-    </div>
+    </>
   );
 }
 
