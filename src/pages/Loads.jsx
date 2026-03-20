@@ -558,12 +558,49 @@ export default function Loads() {
                                 ? <>{l.pickup_date || '—'}<span className="text-muted-foreground mx-1">→</span>{l.delivery_date || '—'}</>
                                 : '—'}
                             </td>
-                            <td className="p-2">
-                              {l.driver_1_name || '—'}
-                              {l.driver_2_name && <div>{l.driver_2_name}</div>}
+                            <td className="p-2" onClick={e => e.stopPropagation()}>
+                              {bulkEditMode === 'driver' && selected.has(l.id) ? (
+                                <select
+                                  value={bulkEdits[l.id] ?? ''}
+                                  onChange={e => setBulkEdits(prev => ({ ...prev, [l.id]: e.target.value }))}
+                                  className="h-7 rounded border border-primary bg-background px-1 text-xs text-foreground w-32"
+                                >
+                                  <option value="">— Unassigned —</option>
+                                  {drivers.map(d => <option key={d.id} value={d.id}>{d.full_name}</option>)}
+                                </select>
+                              ) : (
+                                <>
+                                  {l.driver_1_name || '—'}
+                                  {l.driver_2_name && <div>{l.driver_2_name}</div>}
+                                </>
+                              )}
                             </td>
-                            <td className="p-2 font-mono">{l.truck_number || '—'}</td>
-                            <td className="p-2">{l.invoice_amount ? `$${l.invoice_amount.toLocaleString()}` : '—'}</td>
+                            <td className="p-2 font-mono" onClick={e => e.stopPropagation()}>
+                              {bulkEditMode === 'truck' && selected.has(l.id) ? (
+                                <select
+                                  value={bulkEdits[l.id] ?? ''}
+                                  onChange={e => setBulkEdits(prev => ({ ...prev, [l.id]: e.target.value }))}
+                                  className="h-7 rounded border border-primary bg-background px-1 text-xs text-foreground w-24"
+                                >
+                                  <option value="">— Unassigned —</option>
+                                  {trucks.map(t => <option key={t.id} value={t.id}>{t.unit_number}</option>)}
+                                </select>
+                              ) : (
+                                l.truck_number || '—'
+                              )}
+                            </td>
+                            <td className="p-2" onClick={e => e.stopPropagation()}>
+                              {bulkEditMode === 'amount' && selected.has(l.id) ? (
+                                <input
+                                  type="number"
+                                  value={bulkEdits[l.id] ?? ''}
+                                  onChange={e => setBulkEdits(prev => ({ ...prev, [l.id]: e.target.value }))}
+                                  className="h-7 w-24 rounded border border-primary bg-background px-2 text-xs text-foreground"
+                                />
+                              ) : (
+                                l.invoice_amount ? `$${l.invoice_amount.toLocaleString()}` : '—'
+                              )}
+                            </td>
                             <td className="p-2"><StatusBadge status={l.status} /></td>
                             <td className="p-2" onClick={e => e.stopPropagation()}>
                                <InvoiceStatusSelect load={l} queryClient={queryClient} />
