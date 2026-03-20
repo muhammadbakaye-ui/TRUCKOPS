@@ -85,6 +85,16 @@ export default function SettingsPage() {
 
       <div className="flex gap-2 mt-4 border-b">
          <button
+           onClick={() => setActiveTab('general')}
+           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+             activeTab === 'general'
+               ? 'border-primary text-primary'
+               : 'border-transparent text-muted-foreground hover:text-foreground'
+           }`}
+         >
+           General
+         </button>
+         <button
            onClick={() => setActiveTab('account')}
            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
              activeTab === 'account'
