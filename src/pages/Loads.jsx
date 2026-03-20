@@ -126,6 +126,8 @@ export default function Loads() {
   const [driverFilter, setDriverFilter] = useState(() => { try { return JSON.parse(localStorage.getItem('loads_driver2')) || []; } catch { return []; } });
   const [truckFilter, setTruckFilter] = useState(() => { try { return JSON.parse(localStorage.getItem('loads_truck2')) || []; } catch { return []; } });
   const [tripFilter, setTripFilter] = useState(() => { try { return JSON.parse(localStorage.getItem('loads_trip2')) || []; } catch { return []; } });
+  const [dateFrom, setDateFrom] = useState(() => localStorage.getItem('loads_date_from') || '');
+  const [dateTo, setDateTo] = useState(() => localStorage.getItem('loads_date_to') || '');
   const [selected, setSelected] = useState(new Set());
   const [expandedDates, setExpandedDates] = useState(() => {
     const saved = localStorage.getItem('loads_expanded_dates');
