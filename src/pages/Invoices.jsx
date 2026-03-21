@@ -169,9 +169,37 @@ export default function Invoices() {
       )
     },
     { header: 'Invoice #', render: (r) => <span className="font-mono font-semibold">{r.invoice_number}</span> },
-    { header: 'Load #', render: (r) => <span className="font-mono text-primary">{r.load_number || '—'}</span> },
+    {
+      header: 'Load #',
+      render: (r) => {
+        const loadNum = r.load_number;
+        if (!loadNum) return <span className="text-muted-foreground">—</span>;
+        const copied = copiedId === loadNum;
+        return (
+          <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+            <span className="font-mono text-primary">{loadNum}</span>
+            <button
+              onClick={(e) => handleCopyLoadNumber(e, loadNum)}
+              className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+              title="Copy load number"
+            >
+              {copied
+                ? <Check className="w-3 h-3 text-green-600" />
+                : <Copy className="w-3 h-3" />}
+            </button>
+          </div>
+        );
+      }
+    },
     { header: 'Customer', render: (r) => <span className="font-medium">{r.customer_name || '—'}</span> },
-    { header: 'Invoice Date', render: (r) => r.invoice_date ? format(new Date(r.invoice_date), 'MMM d, yyyy') : '—' },
+    {
+      header: 'Delivered',
+      render: (r) => {
+        const load = loadsMap[r.load_id];
+        const date = load?.delivery_date;
+        return date ? format(new Date(date + 'T12:00:00'), 'MMM d, yyyy') : '—';
+      }
+    },
     { header: 'Due Date', render: (r) => r.due_date ? format(new Date(r.due_date), 'MMM d, yyyy') : '—' },
     { header: 'Amount', render: (r) => r.total ? <span className="font-medium">${r.total.toLocaleString()}</span> : '—' },
     { header: 'Status', render: (r) => <div onClick={e => e.stopPropagation()}><InvoiceStatusSelect invoice={r} queryClient={queryClient} /></div> },
