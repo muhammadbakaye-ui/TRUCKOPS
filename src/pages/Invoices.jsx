@@ -68,10 +68,30 @@ export default function Invoices() {
   const [bulkStatusMode, setBulkStatusMode] = useState(null);
   const [bulkSaving, setBulkSaving] = useState(false);
 
+  const [copiedId, setCopiedId] = useState(null);
+
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ['invoices'],
     queryFn: () => base44.entities.Invoice.list('-created_date', 500),
   });
+
+  const { data: loads = [] } = useQuery({
+    queryKey: ['loads-for-invoices'],
+    queryFn: () => base44.entities.Load.list('-created_date', 1000),
+  });
+
+  const loadsMap = React.useMemo(() => {
+    const m = {};
+    loads.forEach(l => { m[l.id] = l; });
+    return m;
+  }, [loads]);
+
+  const handleCopyLoadNumber = (e, loadNumber) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(loadNumber);
+    setCopiedId(loadNumber);
+    setTimeout(() => setCopiedId(null), 1500);
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (inv) => {
