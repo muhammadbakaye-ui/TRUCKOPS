@@ -80,7 +80,7 @@ export default function Invoices() {
     queryFn: () => base44.entities.Load.list('-created_date', 1000),
   });
 
-  const loadsMap = React.useMemo(() => {
+  const loadsMap = useMemo(() => {
     const m = {};
     loads.forEach(l => { m[l.id] = l; });
     return m;
