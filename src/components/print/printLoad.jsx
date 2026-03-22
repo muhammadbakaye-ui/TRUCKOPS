@@ -172,11 +172,6 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
       <tbody>
         <tr><td>Freight Income</td><td>${fmt(load.freight_rate)}</td></tr>
         <tr class="subtotal-row"><td>Sub Total :</td><td>${fmt(load.freight_rate)}</td></tr>
-      </tbody>
-    </table>
-    <div style="height: 16px;"></div>
-    <table class="fin-table">
-      <tbody>
         <tr class="total-row"><td>Total Due:</td><td>${fmt(total)}</td></tr>
       </tbody>
     </table>
