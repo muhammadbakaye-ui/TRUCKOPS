@@ -114,7 +114,8 @@ export default function Invoices() {
 
   const filtered = invoices.filter(inv => {
     const q = search.toLowerCase();
-    const matchesSearch = !search || [inv.invoice_number, inv.customer_name, inv.load_number]
+    const load = loadsMap[inv.load_id];
+    const matchesSearch = !search || [inv.invoice_number, inv.customer_name, inv.load_number, load?.external_load_number]
       .some(v => v && v.toLowerCase().includes(q));
     const matchesStatus = statusFilter === 'all' || inv.status === statusFilter;
     return matchesSearch && matchesStatus;
