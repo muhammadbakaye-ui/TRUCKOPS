@@ -201,7 +201,6 @@ export default function Invoices() {
         return date ? format(new Date(date + 'T12:00:00'), 'MMM d, yyyy') : '—';
       }
     },
-    { header: 'Due Date', render: (r) => r.due_date ? format(new Date(r.due_date), 'MMM d, yyyy') : '—' },
     { header: 'Amount', render: (r) => r.total ? <span className="font-medium">${r.total.toLocaleString()}</span> : '—' },
     { header: 'Status', render: (r) => <div onClick={e => e.stopPropagation()}><InvoiceStatusSelect invoice={r} queryClient={queryClient} /></div> },
     {
