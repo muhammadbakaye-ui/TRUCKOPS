@@ -42,14 +42,14 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
     .push { flex: 1; }
 
     /* HEADER */
-    .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 8px; border-bottom: 3px solid #1a3a6b; margin-bottom: 10px; }
-    .co-name { font-size: 13px; font-weight: bold; color: #1a3a6b; }
-    .co-sub { font-size: 9px; color: #555; margin-top: 2px; line-height: 1.55; }
-    .header-right { text-align: right; }
-    .doc-title { font-size: 24px; font-weight: 900; color: #1a3a6b; letter-spacing: 2px; }
-    .load-num { font-size: 10px; font-weight: bold; color: #333; margin-top: 1px; }
-    .broker-num { font-size: 9px; color: #555; margin-top: 1px; }
-    .status-badge { display: inline-block; margin-top: 3px; padding: 2px 7px; background: #1a3a6b; color: #fff; font-size: 7.5px; font-weight: bold; border-radius: 3px; letter-spacing: 1px; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 10px; border-bottom: 3px solid #1a3a6b; margin-bottom: 10px; }
+    .co-name { font-size: 14px; font-weight: bold; color: #1a3a6b; text-transform: uppercase; }
+    .co-sub { font-size: 9.5px; color: #444; margin-top: 3px; line-height: 1.7; }
+    .header-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+    .doc-title { font-size: 38px; font-weight: 900; color: #1a3a6b; letter-spacing: 3px; line-height: 1; }
+    .load-num { font-size: 10px; font-weight: bold; color: #333; }
+    .broker-num { font-size: 9.5px; color: #333; }
+    .status-badge { display: inline-block; padding: 2px 8px; background: #1a3a6b; color: #fff; font-size: 8px; font-weight: bold; border-radius: 3px; letter-spacing: 1px; }
 
     /* ROUTE BAR */
     .route-bar { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 10px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; font-size: 9.5px; }
