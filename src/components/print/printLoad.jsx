@@ -201,12 +201,12 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 </body>
 </html>`;
 
-  const win = window.open('', '_blank', 'width=900,height=1100');
-  win.document.open();
-  win.document.write(html);
-  win.document.close();
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, '_blank', 'width=900,height=1100');
 
   win.onload = () => {
     win.focus();
+    URL.revokeObjectURL(url);
   };
 }
