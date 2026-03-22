@@ -660,6 +660,10 @@ export default function Loads() {
                                <InvoiceStatusSelect load={l} queryClient={queryClient} />
                              </td>
                             <td className="p-2" onClick={e => e.stopPropagation()}>
+                              <div className="flex items-center gap-0.5">
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={(e) => handlePrintLoad(e, l)} title="Download PDF">
+                                <Download className="w-3.5 h-3.5" />
+                              </Button>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
