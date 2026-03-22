@@ -678,10 +678,11 @@ export default function Loads() {
                                   <AlertDialogFooter>
                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                                     <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteMutation.mutate(l)}>Delete</AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </td>
+                                    </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                    </AlertDialog>
+                                    </div>
+                                    </td>
                           </tr>
                         ))}
                       </tbody>
