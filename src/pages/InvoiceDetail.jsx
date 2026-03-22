@@ -108,9 +108,24 @@ export default function InvoiceDetail() {
         </div>
       </div>
 
+      {/* Status Timeline */}
+      <Card>
+        <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Timeline</CardTitle></CardHeader>
+        <CardContent className="px-4 pb-4">
+          <div className="space-y-2 text-xs">
+            {form.created_date && <div className="flex items-center gap-2"><Check className="w-3 h-3 text-green-600" /> <span className="text-muted-foreground">Created:</span> <span className="font-medium">{new Date(form.created_date).toLocaleDateString()}</span></div>}
+            {form.status !== 'draft' && form.invoice_date && <div className="flex items-center gap-2"><Check className="w-3 h-3 text-blue-600" /> <span className="text-muted-foreground">Invoice Date:</span> <span className="font-medium">{new Date(form.invoice_date).toLocaleDateString()}</span></div>}
+            {(form.status === 'sent' || form.status === 'paid' || form.status === 'overdue' || form.status === 'partial') && form.invoice_date && <div className="flex items-center gap-2"><Check className="w-3 h-3 text-cyan-600" /> <span className="text-muted-foreground">Sent:</span> <span className="font-medium">{new Date(form.invoice_date).toLocaleDateString()}</span></div>}
+            {(form.status === 'paid' || form.status === 'partial') && form.updated_date && <div className="flex items-center gap-2"><Check className="w-3 h-3 text-green-600" /> <span className="text-muted-foreground">Paid/Updated:</span> <span className="font-medium">{new Date(form.updated_date).toLocaleDateString()}</span></div>}
+            {form.status === 'overdue' && form.due_date && <div className="flex items-center gap-2"><Check className="w-3 h-3 text-red-600" /> <span className="text-muted-foreground">Due Date:</span> <span className="font-medium">{new Date(form.due_date).toLocaleDateString()}</span></div>}
+            {form.status === 'canceled' && form.updated_date && <div className="flex items-center gap-2"><Check className="w-3 h-3 text-gray-500" /> <span className="text-muted-foreground">Canceled:</span> <span className="font-medium">{new Date(form.updated_date).toLocaleDateString()}</span></div>}
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-3 gap-4">
-        <Card className="col-span-2">
-          <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Invoice Details</CardTitle></CardHeader>
+         <Card className="col-span-2">
+           <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Invoice Details</CardTitle></CardHeader>
           <CardContent className="px-4 pb-4 grid grid-cols-3 gap-3">
             <div>
               <Label className="text-xs">Invoice #</Label>
