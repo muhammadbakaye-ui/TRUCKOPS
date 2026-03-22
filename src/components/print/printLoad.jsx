@@ -71,16 +71,16 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
     .sf-val { font-size: 9.5px; font-weight: 600; color: #111; }
 
     /* FINANCIALS */
-    .fin-wrap { margin-top: 12px; display: flex; justify-content: flex-end; align-items: stretch; }
-    .fin-inner { display: flex; align-items: stretch; border: 1px solid #d1d5db; }
+    .fin-wrap { margin-top: 16px; display: flex; justify-content: flex-end; align-items: stretch; }
+    .fin-inner { display: flex; align-items: stretch; border: 2px solid #1a3a6b; }
     table.fin-tbl { border-collapse: collapse; font-size: 9.5px; width: 250px; }
-    table.fin-tbl thead tr { border-bottom: 1px solid #d1d5db; }
-    table.fin-tbl th { padding: 4px 12px; text-align: left; font-weight: bold; background: #fff; }
+    table.fin-tbl thead tr { border-bottom: 2px solid #1a3a6b; }
+    table.fin-tbl th { padding: 5px 12px; text-align: left; font-weight: bold; background: #fff; }
     table.fin-tbl th:last-child { text-align: right; }
-    table.fin-tbl td { padding: 3px 12px; background: #fff; }
+    table.fin-tbl td { padding: 4px 12px; background: #fff; font-weight: 600; }
     table.fin-tbl td:last-child { text-align: right; font-weight: 600; }
     table.fin-tbl .sub-row td { border-top: 1px solid #bbb; font-weight: bold; }
-    .total-box { border-left: 1px solid #d1d5db; padding: 0 20px; display: flex; align-items: center; gap: 16px; font-size: 10px; font-weight: bold; white-space: nowrap; background: #fff; }
+    .total-box { border-left: 2px solid #1a3a6b; padding: 0 24px; display: flex; align-items: center; gap: 20px; font-size: 10.5px; font-weight: bold; white-space: nowrap; background: #fff; min-width: 180px; }
 
     /* FOOTER */
     .page-footer { margin-top: auto; padding-top: 10px; border-top: 1px solid #d1d5db; display: flex; justify-content: space-between; font-size: 8px; color: #999; }
