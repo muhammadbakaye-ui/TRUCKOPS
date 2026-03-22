@@ -32,7 +32,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 <html>
 <head>
   <meta charset="UTF-8">
-  <title></title>
+  <title>${load.external_load_number || load.internal_load_number || 'Load'}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, sans-serif; font-size: 10px; color: #111; background: #fff; }
