@@ -30,9 +30,12 @@ export default function InvoiceDetail() {
   const { isLoading } = useQuery({
     queryKey: ['invoice', invoiceId],
     queryFn: async () => {
+      if (!invoiceId) return null;
       const inv = await base44.entities.Invoice.get(invoiceId);
-      setForm(inv);
-      setLineItems(inv.line_items || []);
+      if (inv) {
+        setForm(inv);
+        setLineItems(inv.line_items || []);
+      }
       return inv;
     },
     enabled: !!invoiceId,
