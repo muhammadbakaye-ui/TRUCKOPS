@@ -205,6 +205,19 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
   const url = URL.createObjectURL(blob);
   const win = window.open(url, '_blank', 'width=900,height=1100');
 
+  if (!win) {
+    // Popup blocked — fallback: write directly
+    const fallback = window.open('', '_blank', 'width=900,height=1100');
+    if (fallback) {
+      fallback.document.open();
+      fallback.document.write(html);
+      fallback.document.close();
+      fallback.focus();
+    }
+    URL.revokeObjectURL(url);
+    return;
+  }
+
   win.onload = () => {
     win.focus();
     URL.revokeObjectURL(url);
