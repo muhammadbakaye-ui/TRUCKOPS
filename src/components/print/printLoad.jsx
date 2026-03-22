@@ -208,7 +208,5 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 
   win.onload = () => {
     win.focus();
-    win.print();
-    win.onafterprint = () => win.close();
   };
 }
