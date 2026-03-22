@@ -178,6 +178,17 @@ export default function Loads() {
     queryFn: () => base44.entities.Truck.filter({ status: 'active' }, 'unit_number', 200),
   });
 
+  const { data: company = {} } = useQuery({
+    queryKey: ['company-settings'],
+    queryFn: async () => { const r = await base44.entities.Company.filter({ company_type: 'carrier' }, '-created_date', 1); return r[0] || {}; },
+  });
+
+  const handlePrintLoad = async (e, load) => {
+    e.stopPropagation();
+    const stops = await base44.entities.LoadStop.filter({ load_id: load.id }, 'stop_order', 50);
+    printLoad({ company, load, stops, drivers, trucks, trailers: [] });
+  };
+
   const [savingAllDrafts, setSavingAllDrafts] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
 
