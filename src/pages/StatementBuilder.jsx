@@ -210,7 +210,7 @@ export default function StatementBuilder() {
       const filteredLoads = loads.filter(l => { const d = l.delivery_date || l.pickup_date; return d && d >= form.period_start && d <= form.period_end; });
       const newLines = filteredLoads.sort((a, b) => (a.delivery_date||a.pickup_date||'').localeCompare(b.delivery_date||b.pickup_date||'')).map((l, idx) => {
         const tripNum = l.trip_number || extractTripNum(l.external_load_number) || extractTripNum(l.customer_reference_number) || extractTripNum(l.internal_load_number);
-        const loadRevenue = l.invoice_amount || l.freight_rate || 0;
+        const loadRevenue = l.driver_rate || l.invoice_amount || l.freight_rate || 0;
         let driverPay = loadRevenue;
         if (driver?.pay_type && driver?.pay_rate) {
           if (driver.pay_type === 'percentage') driverPay = loadRevenue * (driver.pay_rate / 100);
