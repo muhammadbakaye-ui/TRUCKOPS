@@ -220,7 +220,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
       pdf.addImage(imgData, 'JPEG', 0, -y, pageW, imgH);
       y += pageH;
     }
-    pdf.save(`Load-${load.internal_load_number || 'sheet'}.pdf`);
+    pdf.save(`Load-${load.external_load_number || load.internal_load_number || 'sheet'}.pdf`);
     document.body.removeChild(iframe);
   };
 }
