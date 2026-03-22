@@ -112,9 +112,9 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
     <!-- ROUTE BAR -->
     ${pickups.length && deliveries.length ? `
     <div class="route-bar">
-      <span class="city-tag">📍 ${pickups[0].city || ''}${pickups[0].state ? ', ' + pickups[0].state : ''}</span>
-      <span class="route-arrow">→</span>
-      <span class="city-tag">📍 ${deliveries[deliveries.length - 1].city || ''}${deliveries[deliveries.length - 1].state ? ', ' + deliveries[deliveries.length - 1].state : ''}</span>
+      <span style="color:#c00;">📍</span><span class="city-tag"> ${pickups[0].city || ''}${pickups[0].state ? ', ' + pickups[0].state : ''}</span>
+      <span class="route-arrow"> → </span>
+      <span style="color:#c00;">📍</span><span class="city-tag"> ${deliveries[deliveries.length - 1].city || ''}${deliveries[deliveries.length - 1].state ? ', ' + deliveries[deliveries.length - 1].state : ''}</span>
       ${pickups[0].appointment_date ? `<span class="route-meta">Pickup: ${pickups[0].appointment_date}</span>` : ''}
     </div>` : ''}
 
