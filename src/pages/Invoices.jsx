@@ -170,9 +170,10 @@ export default function Invoices() {
     },
     { header: 'Invoice #', render: (r) => <span className="font-mono font-semibold">{r.invoice_number}</span> },
     {
-      header: 'Load #',
+      header: 'Broker Load #',
       render: (r) => {
-        const loadNum = r.load_number;
+        const load = loadsMap[r.load_id];
+        const loadNum = load?.external_load_number;
         if (!loadNum) return <span className="text-muted-foreground">—</span>;
         const copied = copiedId === loadNum;
         return (
