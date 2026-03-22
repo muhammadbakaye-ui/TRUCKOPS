@@ -55,6 +55,7 @@ function InvoiceStatusSelect({ invoice, queryClient }) {
         <SelectItem value="overdue" className="text-xs">Overdue</SelectItem>
         <SelectItem value="canceled" className="text-xs">Canceled</SelectItem>
       </SelectContent>
+
     </Select>
   );
 }
