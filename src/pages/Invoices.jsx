@@ -43,7 +43,7 @@ function InvoiceStatusSelect({ invoice, queryClient }) {
   const current = invoice.status || 'draft';
   return (
     <Select value={current} onValueChange={handleChange} disabled={saving}>
-      <SelectTrigger className={`h-6 text-[11px] px-2 border rounded-md font-medium w-28 ${INV_STATUS_STYLES[current] || ''}`}>
+      <SelectTrigger className={`h-7 text-xs px-2 border rounded-md font-medium w-36 ${INV_STATUS_STYLES[current] || ''}`}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
