@@ -5,7 +5,6 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
   const pickups = allStops.filter(s => s.stop_type === 'pickup');
   const deliveries = allStops.filter(s => s.stop_type === 'delivery');
 
-  // Extract Trip # from description pattern (e.g., "63247_803_030126_1" -> "803")
   const extractTripNum = (desc) => {
     if (!desc) return null;
     const match = desc.match(/_(\d{3})_/);
@@ -13,7 +12,6 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
   };
   const tripNum = extractTripNum(load.external_load_number) || extractTripNum(load.customer_reference_number) || extractTripNum(load.internal_load_number);
 
-  // Auto-fill truck from driver if not on load
   let truckNum = load.truck_number || '';
   let trailerNum = load.trailer_number || '';
   if (!truckNum.trim() && load.driver_1_id) {
@@ -28,164 +26,156 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
   const stopLabel = { pickup: 'PICKUP', delivery: 'DELIVERY', stop: 'STOP' };
   const stopBg = { pickup: '#eff6ff', delivery: '#f0fdf4', stop: '#faf5ff' };
 
+  // Letter page at 96dpi = 816x1056px. We use exactly this width so capture = page.
+  const PAGE_W = 816;
+  const PAGE_H = 1056;
+
   const html = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Load Sheet - ${load.internal_load_number || ''}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Arial', sans-serif; font-size: 11px; color: #111; background: #fff; }
-    .page { width: 750px; min-height: 1050px; padding: 32px 40px; display: flex; flex-direction: column; }
-    .content { flex: 1; }
-    .spacer { flex: 1; }
+    body { font-family: Arial, sans-serif; font-size: 10px; color: #111; background: #fff; width: ${PAGE_W}px; }
+    .page { width: ${PAGE_W}px; height: ${PAGE_H}px; padding: 36px 48px; display: flex; flex-direction: column; }
+    .content { flex: 0 0 auto; }
+    .push { flex: 1; }
 
     /* HEADER */
-    .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 8px; border-bottom: 3px solid #1a3a6b; margin-bottom: 8px; }
-    .header-left .co-name { font-size: 14px; font-weight: bold; color: #1a3a6b; }
-    .header-left .co-sub { font-size: 10px; color: #555; margin-top: 3px; line-height: 1.6; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 8px; border-bottom: 3px solid #1a3a6b; margin-bottom: 10px; }
+    .co-name { font-size: 13px; font-weight: bold; color: #1a3a6b; }
+    .co-sub { font-size: 9px; color: #555; margin-top: 2px; line-height: 1.55; }
     .header-right { text-align: right; }
-    .header-right .title { font-size: 26px; font-weight: 900; color: #1a3a6b; letter-spacing: 2px; }
-    .header-right .load-num { font-size: 11px; font-weight: bold; color: #333; margin-top: 2px; }
-    .header-right .status-badge { display: inline-block; margin-top: 3px; padding: 2px 8px; background: #1a3a6b; color: #fff; font-size: 8px; font-weight: bold; border-radius: 3px; letter-spacing: 1px; }
+    .doc-title { font-size: 24px; font-weight: 900; color: #1a3a6b; letter-spacing: 2px; }
+    .load-num { font-size: 10px; font-weight: bold; color: #333; margin-top: 1px; }
+    .broker-num { font-size: 9px; color: #555; margin-top: 1px; }
+    .status-badge { display: inline-block; margin-top: 3px; padding: 2px 7px; background: #1a3a6b; color: #fff; font-size: 7.5px; font-weight: bold; border-radius: 3px; letter-spacing: 1px; }
+
+    /* ROUTE BAR */
+    .route-bar { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 10px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; font-size: 9.5px; }
+    .city-tag { font-weight: bold; color: #1a3a6b; }
+    .route-arrow { color: #1a3a6b; font-weight: bold; }
+    .route-meta { color: #555; margin-left: auto; }
 
     /* INFO GRID */
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
-    .info-box { border: 1px solid #d1d5db; border-radius: 4px; overflow: hidden; }
-    .info-box-header { background: #1a3a6b; color: #fff; font-size: 8.5px; font-weight: bold; padding: 3px 8px; letter-spacing: 1px; text-transform: uppercase; }
-    .info-box-body { padding: 4px 8px; font-size: 10px; line-height: 1.5; }
-    .info-box-body .row { display: flex; }
-    .info-box-body .lbl { color: #555; width: 90px; flex-shrink: 0; }
-    .info-box-body .val { font-weight: 600; color: #111; }
-
-    /* ROUTE SUMMARY BAR */
-    .route-bar { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 10px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; font-size: 10px; }
-    .route-bar .arrow { color: #1a3a6b; font-weight: bold; font-size: 12px; }
-    .route-bar .city-tag { font-weight: bold; color: #1a3a6b; }
-    .route-bar .meta { color: #555; margin-left: auto; }
+    .info-box { border: 1px solid #d1d5db; border-radius: 3px; overflow: hidden; }
+    .info-box-hdr { background: #1a3a6b; color: #fff; font-size: 8px; font-weight: bold; padding: 3px 8px; letter-spacing: 0.8px; text-transform: uppercase; }
+    .info-box-body { padding: 4px 8px; line-height: 1.55; }
+    .irow { display: flex; }
+    .ilbl { color: #666; width: 80px; flex-shrink: 0; font-size: 9.5px; }
+    .ival { font-weight: 600; color: #111; font-size: 9.5px; }
 
     /* STOPS */
-    .stops-title { font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #555; margin-bottom: 4px; }
-    .stop-card { border: 1px solid #d1d5db; border-radius: 4px; margin-bottom: 3px; overflow: hidden; }
-    .stop-card-header { display: flex; align-items: center; justify-content: space-between; padding: 3px 8px; font-size: 9px; font-weight: bold; }
-    .stop-card-body { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 4px; padding: 3px 8px 4px; font-size: 10px; }
-    .stop-field .sf-label { font-size: 8px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1px; }
-    .stop-field .sf-val { font-weight: 600; color: #111; }
+    .stops-title { font-size: 8.5px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: #666; margin-bottom: 4px; margin-top: 2px; }
+    .stop-card { border: 1px solid #d1d5db; border-radius: 3px; margin-bottom: 4px; overflow: hidden; }
+    .stop-hdr { display: flex; align-items: center; justify-content: space-between; padding: 3px 8px; font-size: 8.5px; font-weight: bold; }
+    .stop-hdr-date { font-size: 9px; font-weight: normal; color: #444; }
+    .stop-body { display: grid; grid-template-columns: 2.2fr 1fr 1fr; gap: 6px; padding: 4px 8px 5px; }
+    .sf-lbl { font-size: 7.5px; color: #999; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 1px; }
+    .sf-val { font-size: 9.5px; font-weight: 600; color: #111; }
 
     /* FINANCIALS */
-    .fin-section { margin-top: 10px; display: flex; justify-content: flex-end; align-items: stretch; gap: 0; }
-    table.fin-table { border-collapse: collapse; font-size: 10px; width: 240px; border: 2px solid #1a3a6b; }
-    table.fin-table th { background: #fff; color: #000; padding: 4px 10px; text-align: left; border-bottom: 2px solid #1a3a6b; font-weight: bold; }
-    table.fin-table th:last-child { text-align: right; }
-    table.fin-table td { border: none; padding: 4px 10px; background: #fff; }
-    table.fin-table td:last-child { text-align: right; font-weight: 600; }
-    table.fin-table .subtotal-row td { border-top: 1px solid #000; font-weight: bold; }
-    .fin-total-box { border: 2px solid #1a3a6b; border-left: none; padding: 4px 20px; display: flex; align-items: center; gap: 30px; font-size: 10px; font-weight: bold; white-space: nowrap; }
+    .fin-wrap { margin-top: 10px; display: flex; justify-content: flex-end; }
+    .fin-inner { display: flex; border: 2px solid #1a3a6b; }
+    table.fin-tbl { border-collapse: collapse; font-size: 9.5px; width: 260px; }
+    table.fin-tbl thead tr { border-bottom: 2px solid #1a3a6b; }
+    table.fin-tbl th { padding: 4px 10px; text-align: left; font-weight: bold; background: #fff; }
+    table.fin-tbl th:last-child { text-align: right; }
+    table.fin-tbl td { padding: 3px 10px; background: #fff; }
+    table.fin-tbl td:last-child { text-align: right; font-weight: 600; }
+    table.fin-tbl .sub-row td { border-top: 1px solid #ccc; font-weight: bold; }
+    .total-box { border-left: 2px solid #1a3a6b; padding: 0 18px; display: flex; align-items: center; gap: 24px; font-size: 9.5px; font-weight: bold; white-space: nowrap; min-width: 160px; }
 
     /* FOOTER */
-    .page-footer { padding-top: 6px; border-top: 1px solid #d1d5db; display: flex; justify-content: space-between; font-size: 8px; color: #888; }
-
-    @page { margin: 0.3in; }
-    @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+    .page-footer { padding-top: 6px; border-top: 1px solid #d1d5db; display: flex; justify-content: space-between; font-size: 8px; color: #999; }
   </style>
 </head>
 <body>
 <div class="page">
-<div class="content">
+  <div class="content">
 
-  <!-- HEADER -->
-  <div class="header">
-    <div class="header-left">
-      <div class="co-name">UNITY TRANSPORTATION LLC</div>
-      <div class="co-sub">
-        P.O BOX 56521<br>SAINT LOUIS, MO 63156<br>Phone #: (573)742-8547
+    <!-- HEADER -->
+    <div class="header">
+      <div>
+        <div class="co-name">UNITY TRANSPORTATION LLC</div>
+        <div class="co-sub">P.O BOX 56521<br>SAINT LOUIS, MO 63156<br>Phone #: (573)742-8547</div>
+      </div>
+      <div class="header-right">
+        <div class="doc-title">LOAD INVOICE</div>
+        <div class="load-num">Load # ${load.internal_load_number || '—'}</div>
+        ${load.external_load_number ? `<div class="broker-num">Broker Load #: ${load.external_load_number}</div>` : ''}
+        <div><span class="status-badge">${(load.dispatch_status || load.status || 'DRAFT').toUpperCase().replace(/_/g, ' ')}</span></div>
       </div>
     </div>
-    <div class="header-right">
-      <div class="title">LOAD INVOICE</div>
-      <div class="load-num">Load # ${load.internal_load_number || '—'}</div>
-      ${load.external_load_number ? `<div style="font-size:10px;color:#555;margin-top:2px;">Broker Load #: ${load.external_load_number}</div>` : ''}
-      <div><span class="status-badge">${(load.dispatch_status || load.status || 'DRAFT').toUpperCase().replace(/_/g, ' ')}</span></div>
-    </div>
-  </div>
 
-  <!-- ROUTE SUMMARY -->
-  ${pickups.length && deliveries.length ? `
-  <div class="route-bar">
-    <span class="city-tag">📍 ${pickups[0].city || ''}${pickups[0].state ? ', ' + pickups[0].state : ''}</span>
-    <span class="arrow">→</span>
-    <span class="city-tag">📍 ${deliveries[deliveries.length - 1].city || ''}${deliveries[deliveries.length - 1].state ? ', ' + deliveries[deliveries.length - 1].state : ''}</span>
-    ${load.billable_miles ? `<span class="meta">${load.billable_miles.toLocaleString()} mi</span>` : ''}
-    ${pickups[0].appointment_date ? `<span class="meta">Pickup: ${pickups[0].appointment_date}</span>` : ''}
-  </div>` : ''}
+    <!-- ROUTE BAR -->
+    ${pickups.length && deliveries.length ? `
+    <div class="route-bar">
+      <span class="city-tag">📍 ${pickups[0].city || ''}${pickups[0].state ? ', ' + pickups[0].state : ''}</span>
+      <span class="route-arrow">→</span>
+      <span class="city-tag">📍 ${deliveries[deliveries.length - 1].city || ''}${deliveries[deliveries.length - 1].state ? ', ' + deliveries[deliveries.length - 1].state : ''}</span>
+      ${pickups[0].appointment_date ? `<span class="route-meta">Pickup: ${pickups[0].appointment_date}</span>` : ''}
+    </div>` : ''}
 
-  <!-- INFO GRID -->
-  <div class="info-grid">
-    <div class="info-box">
-      <div class="info-box-header">Load Information</div>
-      <div class="info-box-body">
-        <div class="row"><span class="lbl">Customer:</span><span class="val">${load.customer_name || '—'}</span></div>
-        ${load.external_load_number ? `<div class="row"><span class="lbl">Load #:</span><span class="val">${load.external_load_number}</span></div>` : ''}
-        ${load.trip_number || tripNum ? `<div class="row"><span class="lbl">Trip #:</span><span class="val">${load.trip_number || tripNum}</span></div>` : ''}
-        ${load.customer_reference_number ? `<div class="row"><span class="lbl">Ref #:</span><span class="val">${load.customer_reference_number}</span></div>` : ''}
-        ${load.billable_miles ? `<div class="row"><span class="lbl">Miles:</span><span class="val">${load.billable_miles.toLocaleString()}</span></div>` : ''}
+    <!-- INFO GRID -->
+    <div class="info-grid">
+      <div class="info-box">
+        <div class="info-box-hdr">Load Information</div>
+        <div class="info-box-body">
+          <div class="irow"><span class="ilbl">Customer:</span><span class="ival">${load.customer_name || '—'}</span></div>
+          ${load.external_load_number ? `<div class="irow"><span class="ilbl">Load #:</span><span class="ival">${load.external_load_number}</span></div>` : ''}
+          ${load.trip_number || tripNum ? `<div class="irow"><span class="ilbl">Trip #:</span><span class="ival">${load.trip_number || tripNum}</span></div>` : ''}
+          ${load.customer_reference_number ? `<div class="irow"><span class="ilbl">Ref #:</span><span class="ival">${load.customer_reference_number}</span></div>` : ''}
+          ${load.billable_miles ? `<div class="irow"><span class="ilbl">Miles:</span><span class="ival">${load.billable_miles.toLocaleString()}</span></div>` : ''}
+        </div>
+      </div>
+      <div class="info-box">
+        <div class="info-box-hdr">Assignment</div>
+        <div class="info-box-body">
+          <div class="irow"><span class="ilbl">Driver:</span><span class="ival">${load.driver_1_name || '—'}</span></div>
+          ${load.driver_2_name ? `<div class="irow"><span class="ilbl">Driver 2:</span><span class="ival">${load.driver_2_name}</span></div>` : ''}
+          <div class="irow"><span class="ilbl">Truck #:</span><span class="ival">${truckNum || '—'}</span></div>
+          <div class="irow"><span class="ilbl">Trailer #:</span><span class="ival">${trailerNum || '—'}</span></div>
+        </div>
       </div>
     </div>
-    <div class="info-box">
-      <div class="info-box-header">Assignment</div>
-      <div class="info-box-body">
-        <div class="row"><span class="lbl">Driver:</span><span class="val">${load.driver_1_name || '—'}</span></div>
-        ${load.driver_2_name ? `<div class="row"><span class="lbl">Driver 2:</span><span class="val">${load.driver_2_name}</span></div>` : ''}
-        <div class="row"><span class="lbl">Truck #:</span><span class="val">${truckNum || '—'}</span></div>
-        <div class="row"><span class="lbl">Trailer #:</span><span class="val">${trailerNum || '—'}</span></div>
+
+    <!-- STOPS -->
+    <div class="stops-title">Stops (${allStops.length})</div>
+    ${allStops.map((s, i) => `
+    <div class="stop-card" style="border-left:4px solid ${stopColor[s.stop_type] || '#555'};">
+      <div class="stop-hdr" style="background:${stopBg[s.stop_type] || '#f9f9f9'}; color:${stopColor[s.stop_type] || '#333'};">
+        <span>${stopLabel[s.stop_type] || 'STOP'} #${i + 1}${s.company_name ? ' — ' + s.company_name : ''}</span>
+        <span class="stop-hdr-date">${s.appointment_date || ''}${s.time_from ? ' · ' + s.time_from : ''}${s.time_to ? ' – ' + s.time_to : ''}</span>
+      </div>
+      <div class="stop-body">
+        <div><div class="sf-lbl">Address</div><div class="sf-val">${[s.street, s.city, s.state, s.zip].filter(Boolean).join(', ') || '—'}</div></div>
+        <div><div class="sf-lbl">Ref / BOL #</div><div class="sf-val">${s.reference_number || s.bol_number || '—'}</div></div>
+        <div><div class="sf-lbl">Notes</div><div class="sf-val" style="font-weight:normal;">${s.memo || '—'}</div></div>
+      </div>
+    </div>`).join('')}
+
+    <!-- FINANCIALS -->
+    <div class="fin-wrap">
+      <div class="fin-inner">
+        <table class="fin-tbl">
+          <thead><tr><th>Description</th><th>Amount</th></tr></thead>
+          <tbody>
+            <tr><td>Freight Income</td><td>${fmt(load.freight_rate)}</td></tr>
+            <tr class="sub-row"><td>Sub Total :</td><td>${fmt(load.freight_rate)}</td></tr>
+          </tbody>
+        </table>
+        <div class="total-box">
+          <span>Total Due:</span>
+          <span>${fmt(total)}</span>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- STOPS -->
-  <div class="stops-title">Stops (${allStops.length})</div>
-  ${allStops.map((s, i) => `
-  <div class="stop-card" style="border-left: 4px solid ${stopColor[s.stop_type] || '#555'};">
-    <div class="stop-card-header" style="background:${stopBg[s.stop_type] || '#f9f9f9'}; color:${stopColor[s.stop_type] || '#333'};">
-      <span>${stopLabel[s.stop_type] || 'STOP'} #${i + 1} — ${s.company_name || ''}</span>
-      <span style="font-size:10px; font-weight:normal; color:#555;">${s.appointment_date || ''}${s.time_from ? ' · ' + s.time_from : ''}${s.time_to ? ' – ' + s.time_to : ''}</span>
-    </div>
-    <div class="stop-card-body">
-      <div class="stop-field">
-        <div class="sf-label">Address</div>
-        <div class="sf-val">${[s.street, s.city, s.state, s.zip].filter(Boolean).join(', ') || '—'}</div>
-      </div>
-      <div class="stop-field">
-        <div class="sf-label">Ref / BOL #</div>
-        <div class="sf-val">${s.reference_number || s.bol_number || '—'}</div>
-      </div>
-      <div class="stop-field">
-        <div class="sf-label">Notes</div>
-        <div class="sf-val" style="font-weight:normal;">${s.memo || '—'}</div>
-      </div>
-    </div>
-  </div>`).join('')}
+  </div><!-- end .content -->
 
-
-
-  <!-- FINANCIALS -->
-  <div class="fin-section">
-    <table class="fin-table">
-      <thead><tr><th>Description</th><th>Amount</th></tr></thead>
-      <tbody>
-        <tr><td>Freight Income</td><td>${fmt(load.freight_rate)}</td></tr>
-        <tr class="subtotal-row"><td>Sub Total :</td><td>${fmt(load.freight_rate)}</td></tr>
-      </tbody>
-    </table>
-    <div class="fin-total-box">
-      <span>Total Due:</span>
-      <span>${fmt(total)}</span>
-    </div>
-  </div>
-
-</div><!-- end content -->
-
-<div class="spacer"></div>
+  <div class="push"></div>
 
   <!-- FOOTER -->
   <div class="page-footer">
@@ -193,13 +183,12 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
     <span>Load # ${load.internal_load_number || '—'}</span>
     <span>Printed ${new Date().toLocaleDateString()}</span>
   </div>
-
 </div>
 </body>
 </html>`;
 
   const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;left:0;top:0;width:750px;height:1050px;border:none;opacity:0;pointer-events:none;z-index:-1;';
+  iframe.style.cssText = `position:fixed;left:0;top:0;width:${PAGE_W}px;height:${PAGE_H}px;border:none;opacity:0;pointer-events:none;z-index:-1;`;
   document.body.appendChild(iframe);
   iframe.contentDocument.open();
   iframe.contentDocument.write(html);
@@ -212,10 +201,10 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
       scale: 2,
       useCORS: true,
       backgroundColor: '#fff',
-      width: 750,
-      height: 1050,
-      windowWidth: 750,
-      windowHeight: 1050,
+      width: PAGE_W,
+      height: PAGE_H,
+      windowWidth: PAGE_W,
+      windowHeight: PAGE_H,
     });
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
