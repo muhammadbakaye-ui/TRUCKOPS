@@ -202,7 +202,7 @@ export default function Invoices() {
       }
     },
     { header: 'Amount', render: (r) => r.total ? <span className="font-medium">${r.total.toLocaleString()}</span> : '—' },
-    { header: 'Status', render: (r) => <div onClick={e => e.stopPropagation()}><InvoiceStatusSelect invoice={r} queryClient={queryClient} /></div> },
+    { header: 'Status', width: '100%', render: (r) => <div onClick={e => e.stopPropagation()} className="w-full"><InvoiceStatusSelect invoice={r} queryClient={queryClient} /></div> },
     {
       header: '', render: (r) => (
         <AlertDialog>
