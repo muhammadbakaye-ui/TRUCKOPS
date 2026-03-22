@@ -141,9 +141,12 @@ export default function RevenueCharts({ loads, drivers, invoices = [] }) {
                   innerRadius={35}
                   outerRadius={60}
                   dataKey="value"
-                  label={({ name, value }) => `${name} ${value}`}
+                  label={({ name, value, x, y, textAnchor, dominantBaseline }) => (
+                    <text x={x} y={y} textAnchor={textAnchor} dominantBaseline={dominantBaseline} style={{ fontSize: 9, fill: 'hsl(var(--foreground))' }}>
+                      {`${name} ${value}`}
+                    </text>
+                  )}
                   labelLine={false}
-                  labelStyle={{ fontSize: 9, fill: 'hsl(var(--foreground))' }}
                 >
                   {invoiceStatusData.map((entry, index) => {
                     const colors = ['#9CA3AF', '#FF8C42', '#06B6D4', '#10B981'];
