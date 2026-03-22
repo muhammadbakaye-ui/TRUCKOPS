@@ -192,16 +192,24 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 </html>`;
 
   const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:900px;height:1165px;border:none;';
+  iframe.style.cssText = 'position:fixed;left:0;top:0;width:900px;height:1165px;border:none;opacity:0;pointer-events:none;z-index:-1;';
   document.body.appendChild(iframe);
   iframe.contentDocument.open();
   iframe.contentDocument.write(html);
   iframe.contentDocument.close();
 
-  iframe.onload = async () => {
+  setTimeout(async () => {
     const { default: html2canvas } = await import('html2canvas');
     const { jsPDF } = await import('jspdf');
-    const canvas = await html2canvas(iframe.contentDocument.body, { scale: 2, useCORS: true, backgroundColor: '#fff', width: 900, height: 1165 });
+    const canvas = await html2canvas(iframe.contentDocument.body, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#fff',
+      width: 900,
+      height: 1165,
+      windowWidth: 900,
+      windowHeight: 1165,
+    });
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
     const pageW = pdf.internal.pageSize.getWidth();
@@ -209,5 +217,5 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
     pdf.addImage(imgData, 'JPEG', 0, 0, pageW, pageH);
     pdf.save(`Load-${load.external_load_number || load.internal_load_number || 'sheet'}.pdf`);
     document.body.removeChild(iframe);
-  };
+  }, 800);
 }
