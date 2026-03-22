@@ -41,7 +41,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
     .spacer { flex: 1; }
 
     /* HEADER */
-    .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 10px; border-bottom: 3px solid #1a3a6b; margin-bottom: 10px; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 8px; border-bottom: 3px solid #1a3a6b; margin-bottom: 8px; }
     .header-left .co-name { font-size: 15px; font-weight: bold; color: #1a3a6b; }
     .header-left .co-sub { font-size: 10px; color: #555; margin-top: 3px; line-height: 1.6; }
     .header-right { text-align: right; }
