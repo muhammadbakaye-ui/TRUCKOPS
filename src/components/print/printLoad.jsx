@@ -202,22 +202,16 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
   iframe.contentDocument.close();
 
   iframe.onload = async () => {
-    const contentHeight = iframe.contentDocument.body.scrollHeight;
-    iframe.style.height = contentHeight + 'px';
+    const PAGE_HEIGHT = 1165;
+    iframe.style.height = PAGE_HEIGHT + 'px';
     const { default: html2canvas } = await import('html2canvas');
     const { jsPDF } = await import('jspdf');
-    const canvas = await html2canvas(iframe.contentDocument.body, { scale: 2, useCORS: true, backgroundColor: '#fff', width: 900, height: contentHeight });
+    const canvas = await html2canvas(iframe.contentDocument.body, { scale: 2, useCORS: true, backgroundColor: '#fff', width: 900, height: PAGE_HEIGHT });
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
-    const imgH = (canvas.height / canvas.width) * pageW;
-    let y = 0;
-    while (y < imgH) {
-      if (y > 0) pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 0, -y, pageW, imgH);
-      y += pageH;
-    }
+    pdf.addImage(imgData, 'JPEG', 0, 0, pageW, pageH);
     pdf.save(`Load-${load.external_load_number || load.internal_load_number || 'sheet'}.pdf`);
     document.body.removeChild(iframe);
   };
