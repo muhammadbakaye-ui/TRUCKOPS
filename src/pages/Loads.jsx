@@ -178,6 +178,14 @@ export default function Loads() {
   });
 
   const [savingAllDrafts, setSavingAllDrafts] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
+
+  const handleCopyLoadNumber = (e, loadNumber) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(loadNumber);
+    setCopiedId(loadNumber);
+    setTimeout(() => setCopiedId(null), 1500);
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (loads) => {
