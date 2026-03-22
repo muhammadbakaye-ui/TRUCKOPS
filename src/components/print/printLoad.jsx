@@ -81,7 +81,8 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
     table.fin-table .total-row td { background: #fff; color: #000; font-weight: bold; border-top: 2px solid #1a3a6b; }
 
     /* FOOTER */
-    .page-footer { margin-top: 10px; padding-top: 8px; border-top: 1px solid #d1d5db; display: flex; justify-content: space-between; font-size: 8px; color: #888; }
+    .page-footer { position: fixed; bottom: 0.3in; left: 0.3in; right: 0.3in; padding-top: 6px; border-top: 1px solid #d1d5db; display: flex; justify-content: space-between; font-size: 8px; color: #888; }
+    .page { padding-bottom: 36px; }
 
     @page { margin: 0.3in; }
     @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
