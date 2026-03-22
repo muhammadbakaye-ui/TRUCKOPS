@@ -348,15 +348,7 @@ export default function Loads() {
       />
 
       <div className="flex gap-2 mb-3 flex-wrap">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input
-            placeholder="Search loads..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-8 pl-8 text-xs w-64"
-          />
-        </div>
+        <SearchInput value={search} onChange={setSearch} placeholder="Search loads..." className="w-64" />
         <MultiSelectFilter
           label="Status"
           selected={statusFilter}
