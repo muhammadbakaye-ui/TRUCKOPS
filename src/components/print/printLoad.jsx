@@ -189,18 +189,14 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 </body>
 </html>`;
 
-  const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:850px;height:1100px;border:none;visibility:hidden;';
-  document.body.appendChild(iframe);
-  iframe.contentDocument.open();
-  iframe.contentDocument.write(html);
-  iframe.contentDocument.close();
+  const win = window.open('', '_blank', 'width=900,height=1100');
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
 
-  setTimeout(() => {
-    // Override document.title in the iframe to suppress browser's header line
-    iframe.contentDocument.title = '';
-    iframe.contentWindow.focus();
-    iframe.contentWindow.print();
-    setTimeout(() => document.body.removeChild(iframe), 2000);
-  }, 500);
+  win.onload = () => {
+    win.focus();
+    win.print();
+    win.onafterprint = () => win.close();
+  };
 }
