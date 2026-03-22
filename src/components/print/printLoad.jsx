@@ -195,7 +195,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 
   // Use iframe + html2canvas + jsPDF to download directly without print dialog
   const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:900px;height:auto;border:none;';
+  iframe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:900px;height:1165px;border:none;';
   document.body.appendChild(iframe);
   iframe.contentDocument.open();
   iframe.contentDocument.write(html);
