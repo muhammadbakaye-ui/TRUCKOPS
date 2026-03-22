@@ -46,7 +46,7 @@ function InvoiceStatusSelect({ invoice, queryClient }) {
       <SelectTrigger className={`h-6 text-xs px-2 border rounded-md font-medium w-28 ${INV_STATUS_STYLES[current] || ''}`}>
         <SelectValue />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="min-w-[7rem] w-28">
         <SelectItem value="draft" className="text-xs">Draft</SelectItem>
         <SelectItem value="priority" className="text-xs">Priority</SelectItem>
         <SelectItem value="sent" className="text-xs">Sent</SelectItem>
