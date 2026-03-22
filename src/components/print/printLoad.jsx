@@ -4,6 +4,8 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
   const total = (load.freight_rate || 0) + (load.fuel_surcharge || 0) + (load.extra_charges || 0);
   const pickups = allStops.filter(s => s.stop_type === 'pickup');
   const deliveries = allStops.filter(s => s.stop_type === 'delivery');
+  const firstStop = allStops[0];
+  const lastStop = allStops[allStops.length - 1];
 
   const extractTripNum = (desc) => {
     if (!desc) return null;
