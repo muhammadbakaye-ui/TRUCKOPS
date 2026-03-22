@@ -197,6 +197,8 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
   iframe.contentDocument.close();
 
   setTimeout(() => {
+    // Override document.title in the iframe to suppress browser's header line
+    iframe.contentDocument.title = '';
     iframe.contentWindow.focus();
     iframe.contentWindow.print();
     setTimeout(() => document.body.removeChild(iframe), 2000);
