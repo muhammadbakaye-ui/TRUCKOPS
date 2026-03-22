@@ -190,16 +190,18 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 
   // Use iframe + html2canvas + jsPDF to download directly without print dialog
   const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:900px;height:1200px;border:none;';
+  iframe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:900px;height:auto;border:none;';
   document.body.appendChild(iframe);
   iframe.contentDocument.open();
   iframe.contentDocument.write(html);
   iframe.contentDocument.close();
 
   iframe.onload = async () => {
+    const contentHeight = iframe.contentDocument.body.scrollHeight;
+    iframe.style.height = contentHeight + 'px';
     const { default: html2canvas } = await import('html2canvas');
     const { jsPDF } = await import('jspdf');
-    const canvas = await html2canvas(iframe.contentDocument.body, { scale: 2, useCORS: true, backgroundColor: '#fff', width: 900 });
+    const canvas = await html2canvas(iframe.contentDocument.body, { scale: 2, useCORS: true, backgroundColor: '#fff', width: 900, height: contentHeight });
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
     const pageW = pdf.internal.pageSize.getWidth();
