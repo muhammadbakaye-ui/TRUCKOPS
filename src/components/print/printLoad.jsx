@@ -42,11 +42,11 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 
     /* HEADER */
     .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 10px; border-bottom: 3px solid #1a3a6b; margin-bottom: 10px; }
-    .header-left .co-name { font-size: 13px; font-weight: bold; color: #1a3a6b; }
-    .header-left .co-sub { font-size: 9px; color: #555; margin-top: 2px; line-height: 1.5; }
+    .header-left .co-name { font-size: 15px; font-weight: bold; color: #1a3a6b; }
+    .header-left .co-sub { font-size: 10px; color: #555; margin-top: 3px; line-height: 1.6; }
     .header-right { text-align: right; }
-    .header-right .title { font-size: 18px; font-weight: 900; color: #1a3a6b; letter-spacing: 2px; }
-    .header-right .load-num { font-size: 11px; font-weight: bold; color: #333; margin-top: 2px; }
+    .header-right .title { font-size: 22px; font-weight: 900; color: #1a3a6b; letter-spacing: 2px; }
+    .header-right .load-num { font-size: 12px; font-weight: bold; color: #333; margin-top: 2px; }
     .header-right .status-badge { display: inline-block; margin-top: 3px; padding: 2px 8px; background: #1a3a6b; color: #fff; font-size: 8px; font-weight: bold; border-radius: 3px; letter-spacing: 1px; }
 
     /* INFO GRID */
