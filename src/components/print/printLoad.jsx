@@ -199,7 +199,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 </html>`;
 
   const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;left:0;top:0;width:900px;height:1165px;border:none;opacity:0;pointer-events:none;z-index:-1;';
+  iframe.style.cssText = 'position:fixed;left:0;top:0;width:750px;height:1050px;border:none;opacity:0;pointer-events:none;z-index:-1;';
   document.body.appendChild(iframe);
   iframe.contentDocument.open();
   iframe.contentDocument.write(html);
@@ -212,10 +212,10 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
       scale: 2,
       useCORS: true,
       backgroundColor: '#fff',
-      width: 900,
-      height: 1165,
-      windowWidth: 900,
-      windowHeight: 1165,
+      width: 750,
+      height: 1050,
+      windowWidth: 750,
+      windowHeight: 1050,
     });
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
