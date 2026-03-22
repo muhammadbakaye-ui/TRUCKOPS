@@ -141,8 +141,8 @@ export default function RevenueCharts({ loads, drivers, invoices = [] }) {
                   innerRadius={35}
                   outerRadius={60}
                   dataKey="value"
-                  label={({ name, value, x, y, textAnchor, dominantBaseline }) => (
-                    <text x={x} y={y} textAnchor={textAnchor} dominantBaseline={dominantBaseline} style={{ fontSize: 9, fill: 'hsl(var(--foreground))' }}>
+                  label={({ name, value, x, y, textAnchor, dominantBaseline, fill }) => (
+                    <text x={x} y={y} textAnchor={textAnchor} dominantBaseline={dominantBaseline} style={{ fontSize: 9, fill }}>
                       {`${name} ${value}`}
                     </text>
                   )}
