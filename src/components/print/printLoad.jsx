@@ -89,7 +89,6 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 </head>
 <body>
 <div class="page">
-<div class="content">
 
   <!-- HEADER -->
   <div class="header">
