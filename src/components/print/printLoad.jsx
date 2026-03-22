@@ -36,9 +36,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Arial', sans-serif; font-size: 10px; color: #111; background: #fff; }
-    .page { width: 900px; min-height: 1165px; padding: 28px 36px; display: flex; flex-direction: column; }
-    .content { flex: 1; }
-    .spacer { flex: 1; }
+    .page { width: 900px; padding: 28px 36px; }
 
     /* HEADER */
     .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 10px; border-bottom: 3px solid #1a3a6b; margin-bottom: 10px; }
