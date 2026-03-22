@@ -181,8 +181,6 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
     </div>
   </div>
 
-</div><!-- end .content -->
-  <div class="spacer"></div>
   <!-- FOOTER -->
   <div class="page-footer">
     <span>${company.company_name || 'Unity Transportation LLC'}</span>
