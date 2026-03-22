@@ -35,8 +35,8 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
   <title>Load Sheet - ${load.internal_load_number || ''}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Arial', sans-serif; font-size: 10px; color: #111; background: #fff; }
-    .page { width: 900px; height: 1165px; padding: 28px 36px; display: flex; flex-direction: column; }
+    body { font-family: 'Arial', sans-serif; font-size: 11px; color: #111; background: #fff; }
+    .page { width: 750px; min-height: 1050px; padding: 32px 40px; display: flex; flex-direction: column; }
     .content { flex: 1; }
     .spacer { flex: 1; }
 
