@@ -574,6 +574,22 @@ export default function Loads() {
                               )}
                             </td>
                             <td className="p-2 font-medium">{l.customer_name || '—'}</td>
+                            <td className="p-2" onClick={e => e.stopPropagation()}>
+                              {l.external_load_number ? (
+                                <div className="flex items-center gap-1">
+                                  <span className="font-mono text-primary">{l.external_load_number}</span>
+                                  <button
+                                    onClick={(e) => handleCopyLoadNumber(e, l.external_load_number)}
+                                    className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                                    title="Copy broker load #"
+                                  >
+                                    {copiedId === l.external_load_number
+                                      ? <Check className="w-3 h-3 text-green-600" />
+                                      : <Copy className="w-3 h-3" />}
+                                  </button>
+                                </div>
+                              ) : <span className="text-muted-foreground">—</span>}
+                            </td>
                             <td className="p-2">
                               {l.pickup_city || l.delivery_city
                                 ? `${l.pickup_city || ''}${l.pickup_state ? ', ' + l.pickup_state : ''} → ${l.delivery_city || ''}${l.delivery_state ? ', ' + l.delivery_state : ''}`
