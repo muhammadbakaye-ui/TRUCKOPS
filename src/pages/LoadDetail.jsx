@@ -412,7 +412,14 @@ export default function LoadDetail() {
           <Card>
             <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Financials</CardTitle></CardHeader>
             <CardContent className="px-4 pb-4 space-y-3">
-              <Field label="Freight Rate ($)"><Input type="number" value={form.freight_rate || ''} onChange={(e) => { const rate = Number(e.target.value); set('freight_rate', rate); set('invoice_amount', rate + (form.fuel_surcharge || 0) + (form.extra_charges || 0)); }} className="h-8 text-xs" /></Field>
+              <Field label="Freight Rate — Print ($)">
+                <Input type="number" value={form.freight_rate || ''} onChange={(e) => { const rate = Number(e.target.value); set('freight_rate', rate); set('invoice_amount', rate + (form.fuel_surcharge || 0) + (form.extra_charges || 0)); }} className="h-8 text-xs" />
+                <p className="text-[10px] text-muted-foreground mt-0.5">Shows on the printed load PDF</p>
+              </Field>
+              <Field label="Driver Rate — Statement ($)">
+                <Input type="number" value={form.driver_rate || ''} onChange={(e) => set('driver_rate', Number(e.target.value))} className="h-8 text-xs" placeholder={form.freight_rate ? `Default: $${form.freight_rate}` : 'Leave blank to use Freight Rate'} />
+                <p className="text-[10px] text-muted-foreground mt-0.5">Used for driver pay calculation (driver % applied to this)</p>
+              </Field>
               <Field label="Fuel Surcharge ($)"><Input type="number" value={form.fuel_surcharge || ''} onChange={(e) => { const fsc = Number(e.target.value); set('fuel_surcharge', fsc); set('invoice_amount', (form.freight_rate || 0) + fsc + (form.extra_charges || 0)); }} className="h-8 text-xs" /></Field>
               <Field label="Extra Charges ($)"><Input type="number" value={form.extra_charges || ''} onChange={(e) => { const extra = Number(e.target.value); set('extra_charges', extra); set('invoice_amount', (form.freight_rate || 0) + (form.fuel_surcharge || 0) + extra); }} className="h-8 text-xs" /></Field>
               <Field label="Invoice Amount ($)"><Input type="number" value={form.invoice_amount || ''} onChange={(e) => set('invoice_amount', Number(e.target.value))} className="h-8 text-xs font-semibold" /></Field>
