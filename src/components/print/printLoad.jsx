@@ -58,21 +58,21 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
     .route-meta { color: #555; margin-left: auto; }
 
     /* INFO GRID */
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
     .info-box { border: 1px solid #d1d5db; border-radius: 3px; overflow: hidden; }
-    .info-box-hdr { background: #1a3a6b; color: #fff; font-size: 8px; font-weight: bold; padding: 3px 8px; letter-spacing: 0.8px; text-transform: uppercase; }
-    .info-box-body { padding: 4px 8px; line-height: 1.55; }
+    .info-box-hdr { background: #1a3a6b; color: #fff; font-size: 8px; font-weight: bold; padding: 3px 10px; letter-spacing: 1px; text-transform: uppercase; }
+    .info-box-body { padding: 5px 10px; line-height: 1.7; }
     .irow { display: flex; }
-    .ilbl { color: #666; width: 80px; flex-shrink: 0; font-size: 9.5px; }
+    .ilbl { color: #555; width: 85px; flex-shrink: 0; font-size: 9.5px; }
     .ival { font-weight: 600; color: #111; font-size: 9.5px; }
 
     /* STOPS */
-    .stops-title { font-size: 8.5px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: #666; margin-bottom: 4px; margin-top: 2px; }
-    .stop-card { border: 1px solid #d1d5db; border-radius: 3px; margin-bottom: 4px; overflow: hidden; }
-    .stop-hdr { display: flex; align-items: center; justify-content: space-between; padding: 3px 8px; font-size: 8.5px; font-weight: bold; }
+    .stops-title { font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: #555; margin-bottom: 5px; margin-top: 2px; }
+    .stop-card { border: 1px solid #d1d5db; border-radius: 3px; margin-bottom: 5px; overflow: hidden; }
+    .stop-hdr { display: flex; align-items: center; justify-content: space-between; padding: 4px 10px; font-size: 9px; font-weight: bold; }
     .stop-hdr-date { font-size: 9px; font-weight: normal; color: #444; }
-    .stop-body { display: grid; grid-template-columns: 2.2fr 1fr 1fr; gap: 6px; padding: 4px 8px 5px; }
-    .sf-lbl { font-size: 7.5px; color: #999; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 1px; }
+    .stop-body { display: grid; grid-template-columns: 2.2fr 1fr 1fr; gap: 8px; padding: 5px 10px 6px; }
+    .sf-lbl { font-size: 7.5px; color: #999; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
     .sf-val { font-size: 9.5px; font-weight: 600; color: #111; }
 
     /* FINANCIALS */
