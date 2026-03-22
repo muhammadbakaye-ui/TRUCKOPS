@@ -195,7 +195,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 
   <!-- DOWNLOAD BUTTON -->
   <div class="download-bar">
-    <button class="btn-print" onclick="window.print()">⬇ Download / Print</button>
+    <button class="btn-print" onclick="window.print()">⬇ Download / Print PDF</button>
   </div>
 
 </body>
