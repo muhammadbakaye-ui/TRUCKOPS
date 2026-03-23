@@ -16,18 +16,45 @@ export function printStatement({ company, statement, allLines }) {
   const checkAmount = tripsTotal + creditsTotal - deductionsTotal - fuelTotal;
   const ytdAmount = statement.gross_total || tripsTotal;
 
-  const tableSection = (title, headers, rows, totalLabel, totalValue) => {
-    if (rows.length === 0) return '';
-    return `
-      <p class="section-title">${title} :</p>
-      <table>
-        <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
-        <tbody>
-          ${rows}
-          <tr class="total-row">${totalLabel}<td style="text-align:right;font-weight:bold">${totalValue}</td></tr>
-        </tbody>
-      </table>`;
-  };
+  const co = company || {};
+
+  const tripsRows = tripLines.map(l => {
+    const tripNum = l.description?.includes(' / ') ? l.description.split(' / ')[0].trim() : '';
+    return `<tr>
+      <td style="text-align:center">${l.date || ''}</td>
+      <td style="text-align:center">${tripNum}</td>
+      <td>${l.route || ''}</td>
+      <td>${l.description || ''}</td>
+      <td style="text-align:right">${fmt(l.amount)}</td>
+    </tr>`;
+  }).join('');
+
+  const deductionRows = deductionLines.map(l => `<tr>
+    <td>${l.description || ''}</td>
+    <td style="text-align:center">${l.date || ''}</td>
+    <td style="text-align:right">${fmtNeg(l.amount)}</td>
+  </tr>`).join('');
+
+  const creditRows = creditLines.map(l => `<tr>
+    <td>${l.description || ''}</td>
+    <td style="text-align:center">${l.date || ''}</td>
+    <td style="text-align:right">${fmt(l.amount)}</td>
+  </tr>`).join('');
+
+  const fuelRows = fuelLines.map(l => {
+    const clean = (v) => (v && v !== 'null') ? v : '';
+    return `<tr>
+      <td style="text-align:center">${clean(l.card_number)}</td>
+      <td>${clean(l.location_name)}</td>
+      <td>${clean(l.description)}</td>
+      <td style="text-align:center">${clean(l.city_state)}</td>
+      <td style="text-align:right">$0.00</td>
+      <td style="text-align:right">$0.00</td>
+      <td style="text-align:right">$0.00</td>
+      <td style="text-align:center">${clean(l.date)}</td>
+      <td style="text-align:right">${fmtNeg(l.amount)}</td>
+    </tr>`;
+  }).join('');
 
   const html = `<!DOCTYPE html>
 <html>
@@ -35,122 +62,207 @@ export function printStatement({ company, statement, allLines }) {
   <meta charset="UTF-8">
   <title>Statement - ${statement.driver_name || ''}</title>
   <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:Arial,sans-serif;font-size:11px;color:#000;padding:24px 32px}
-    .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px}
-    .company-info{font-size:10px;line-height:1.6}
-    .statement-title{text-align:center;font-size:13px;font-weight:bold;line-height:1.9}
-    .section-title{font-weight:bold;font-size:11.5px;margin:12px 0 3px 0}
-    table{width:100%;border-collapse:collapse;margin-bottom:8px}
-    th{background:#f0f0f0;color:#000;padding:4px 6px;text-align:center;font-size:9.5px;border:1px solid #ccc;font-weight:normal}
-    td{border:1px solid #ccc;padding:3px 6px;font-size:10px}
-    .total-row td{font-weight:bold;background:#eee}
-    .footer{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:8px;border-top:2px solid #000;font-size:12px;font-weight:bold}
-    .footer .ytd{color:#0055bb}
-    .footer .check{border:1px solid #000;padding:4px 14px;color:#0055bb}
-    .page-footer{text-align:center;margin-top:32px;font-size:9.5px;color:#555;border-top:1px solid #ccc;padding-top:6px}
-    @page{margin:0.5in}
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; font-size: 11px; color: #000; background: #fff; }
+    .page { width: 100%; padding: 32px 48px; }
+
+    /* HEADER */
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+    .co-info { font-size: 10px; line-height: 1.7; color: #000; }
+    .stmt-title { text-align: right; font-size: 13px; font-weight: bold; line-height: 2; color: #000; }
+
+    /* SECTIONS */
+    .driver-name { font-weight: bold; font-size: 11.5px; margin-bottom: 10px; }
+    .section-title { font-weight: bold; font-size: 11px; margin: 14px 0 4px 0; }
+
+    /* TABLES */
+    table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+    th {
+      background: #fff;
+      color: #000;
+      padding: 4px 6px;
+      text-align: center;
+      font-size: 9.5px;
+      font-weight: bold;
+      border: 1px solid #000;
+    }
+    td {
+      border: 1px solid #000;
+      padding: 3px 6px;
+      font-size: 10px;
+      color: #000;
+    }
+    .total-row td {
+      font-weight: bold;
+      background: #fff;
+      border-top: 1px solid #000;
+    }
+
+    /* FOOTER */
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 24px;
+      padding-top: 8px;
+      border-top: 2px solid #000;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .footer .ytd { color: #0055bb; }
+    .footer .check-box { border: 2px solid #000; padding: 5px 14px; color: #0055bb; font-size: 12px; font-weight: bold; }
+
+    /* PAGE FOOTER */
+    .page-footer { text-align: center; margin-top: 32px; font-size: 9.5px; color: #555; border-top: 1px solid #000; padding-top: 6px; }
+
+    /* DOWNLOAD BAR */
+    .download-bar { position: fixed; bottom: 24px; right: 32px; display: flex; gap: 10px; z-index: 9999; }
+    .btn-print { background: #1a3a6b; color: #fff; border: none; padding: 10px 22px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.25); letter-spacing: 0.5px; }
+    .btn-print:hover { background: #14306a; }
+
+    @page { size: letter; margin: 0; }
+    @media print {
+      body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .page { padding: 0.5in; }
+      .download-bar { display: none !important; }
+    }
   </style>
 </head>
 <body>
+<div class="page">
+
+  <!-- HEADER -->
   <div class="header">
-    <div class="company-info">
-      UNITY TRANSPORTATION LLC<br>
-      P.O BOX 56521<br>
-      SAINT LOUIS, MO 63156<br>
-      Phone #: (573)742-8547
+    <div class="co-info">
+      ${co.company_name || 'UNITY TRANSPORTATION LLC'}<br>
+      ${co.address_1 || 'P.O BOX 56521'}<br>
+      ${[co.city, co.state, co.zip].filter(Boolean).join(', ') || 'SAINT LOUIS, MO 63156'}<br>
+      Phone #: ${co.phone || '(573)742-8547'}
     </div>
-    <div class="statement-title">
+    <div class="stmt-title">
       Statement<br>
-      ${statement.statement_date ? format(new Date(statement.statement_date), 'M-d-yyyy') : ''}<br>
+      ${statement.statement_date ? format(new Date(statement.statement_date + 'T12:00:00'), 'M-d-yyyy') : ''}<br>
       ${statement.driver_name || ''}<br>
       Unit #${statement.truck_number || ''}<br>
       (${statement.driver_name || ''})
     </div>
   </div>
 
-  <div style="margin-bottom:20px;font-size:11px"><strong>${statement.driver_name || ''}</strong></div>
+  <div class="driver-name">${statement.driver_name || ''}</div>
 
-  ${tableSection('Trips', ['Date','Trip #','Route','Description','Amount'],
-    tripLines.map(l => `<tr>
-      <td style="text-align:center">${l.date || ''}</td>
-      <td style="text-align:center">${l.description?.includes(' / ') ? l.description.split(' / ')[0].trim() : ''}</td>
-      <td style="text-align:center">${l.route || ''}</td>
-      <td style="text-align:center">${l.description || ''}</td>
-      <td style="text-align:right">${fmt(l.amount)}</td>
-    </tr>`).join(''),
-    `<td colspan="4" style="text-align:right">Total:</td>`, fmt(tripsTotal)
-  )}
+  ${tripLines.length > 0 ? `
+  <div class="section-title">Trips :</div>
+  <table>
+    <thead><tr>
+      <th>Date</th>
+      <th>Trip #</th>
+      <th>Route</th>
+      <th>Description</th>
+      <th>Amount</th>
+    </tr></thead>
+    <tbody>
+      ${tripsRows}
+      <tr class="total-row">
+        <td colspan="4" style="text-align:right">Total:</td>
+        <td style="text-align:right;font-weight:bold">${fmt(tripsTotal)}</td>
+      </tr>
+    </tbody>
+  </table>` : ''}
 
-  ${tableSection('Deductions', ['Description','Date','Amount'],
-    deductionLines.map(l => `<tr>
-      <td style="text-align:center">${l.description || ''}</td>
-      <td style="text-align:center">${l.date || ''}</td>
-      <td style="text-align:right">${fmtNeg(l.amount)}</td>
-    </tr>`).join(''),
-    `<td colspan="2" style="text-align:right">Total:</td>`, fmtNeg(deductionsTotal)
-  )}
+  ${deductionLines.length > 0 ? `
+  <div class="section-title">Deductions :</div>
+  <table>
+    <thead><tr>
+      <th>Description</th>
+      <th>Date</th>
+      <th>Amount</th>
+    </tr></thead>
+    <tbody>
+      ${deductionRows}
+      <tr class="total-row">
+        <td colspan="2" style="text-align:right">Total:</td>
+        <td style="text-align:right;font-weight:bold">${fmtNeg(deductionsTotal)}</td>
+      </tr>
+    </tbody>
+  </table>` : ''}
 
-  ${tableSection('Credits', ['Description','Date','Amount'],
-    creditLines.map(l => `<tr>
-      <td style="text-align:center">${l.description || ''}</td>
-      <td style="text-align:center">${l.date || ''}</td>
-      <td style="text-align:right">${fmt(l.amount)}</td>
-    </tr>`).join(''),
-    `<td colspan="2" style="text-align:right">Total:</td>`, fmt(creditsTotal)
-  )}
+  ${creditLines.length > 0 ? `
+  <div class="section-title">Credits :</div>
+  <table>
+    <thead><tr>
+      <th>Description</th>
+      <th>Date</th>
+      <th>Amount</th>
+    </tr></thead>
+    <tbody>
+      ${creditRows}
+      <tr class="total-row">
+        <td colspan="2" style="text-align:right">Total:</td>
+        <td style="text-align:right;font-weight:bold">${fmt(creditsTotal)}</td>
+      </tr>
+    </tbody>
+  </table>` : ''}
 
-  ${tableSection('Fuel Card', ['Fuel Card#','Location','Description','City, State','Advance ($)','Advance Fee ($)','Misc. ($)','Date','Amount'],
-    fuelLines.map(l => {
-      const cleanVal = (v) => (v && v !== 'null' && v !== '') ? v : '';
-      return `<tr>
-      <td>${cleanVal(l.card_number)}</td>
-      <td>${cleanVal(l.location_name)}</td>
-      <td>${cleanVal(l.description)}</td>
-      <td style="text-align:center">${cleanVal(l.city_state)}</td>
-      <td style="text-align:right">$0.00</td>
-      <td style="text-align:right">$0.00</td>
-      <td style="text-align:right">$0.00</td>
-      <td style="text-align:center">${cleanVal(l.date)}</td>
-      <td style="text-align:right">${fmtNeg(l.amount)}</td>
-    </tr>`;
-    }).join(''),
-    `<td colspan="8" style="text-align:right">Total:</td>`, fmtNeg(fuelTotal)
-  )}
+  ${fuelLines.length > 0 ? `
+  <div class="section-title">Fuel Card :</div>
+  <table>
+    <thead><tr>
+      <th>Fuel Card#</th>
+      <th>Location</th>
+      <th>Description</th>
+      <th>City, State</th>
+      <th>Advance ($)</th>
+      <th>Advance Fee ($)</th>
+      <th>Misc. ($)</th>
+      <th>Date</th>
+      <th>Amount</th>
+    </tr></thead>
+    <tbody>
+      ${fuelRows}
+      <tr class="total-row">
+        <td colspan="8" style="text-align:right">Total:</td>
+        <td style="text-align:right;font-weight:bold">${fmtNeg(fuelTotal)}</td>
+      </tr>
+    </tbody>
+  </table>` : ''}
 
+  <!-- FOOTER -->
   <div class="footer">
     <div>Total Gross Year-To-Date : <span class="ytd">${fmt(ytdAmount)}</span></div>
-    <div class="check">Check Amount: <span class="ytd">${fmt(checkAmount)}</span></div>
+    <div class="check-box">Check Amount: ${fmt(checkAmount)}</div>
   </div>
 
-  <div class="page-footer">${company.company_name || ''}&nbsp;&nbsp;&nbsp;&nbsp;Page 1 Of 1</div>
+  <div class="page-footer">Page 1 Of 1</div>
+
+</div>
+
+<!-- DOWNLOAD BUTTON -->
+<div class="download-bar">
+  <button class="btn-print" onclick="window.print()">⬇ Download / Print PDF</button>
+</div>
+
 </body>
 </html>`;
 
-  // Use iframe + html2canvas + jsPDF to download directly without print dialog
-  const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:900px;height:1200px;border:none;';
-  document.body.appendChild(iframe);
-  iframe.contentDocument.open();
-  iframe.contentDocument.write(html);
-  iframe.contentDocument.close();
+  // Same open-in-new-window flow as printLoad
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const win = window.open(url, '_blank', 'width=900,height=1100');
 
-  iframe.onload = async () => {
-    const { default: html2canvas } = await import('html2canvas');
-    const { jsPDF } = await import('jspdf');
-    const canvas = await html2canvas(iframe.contentDocument.body, { scale: 2, useCORS: true, backgroundColor: '#fff', width: 900 });
-    const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
-    const imgH = (canvas.height / canvas.width) * pageW;
-    let y = 0;
-    while (y < imgH) {
-      if (y > 0) pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 0, -y, pageW, imgH);
-      y += pageH;
+  if (!win) {
+    const fallback = window.open('', '_blank', 'width=900,height=1100');
+    if (fallback) {
+      fallback.document.open();
+      fallback.document.write(html);
+      fallback.document.close();
+      fallback.focus();
     }
-    pdf.save(`Statement-${statement.driver_name || 'statement'}.pdf`);
-    document.body.removeChild(iframe);
+    URL.revokeObjectURL(url);
+    return;
+  }
+
+  win.onload = () => {
+    win.focus();
+    URL.revokeObjectURL(url);
   };
 }
