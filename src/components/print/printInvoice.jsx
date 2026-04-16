@@ -34,7 +34,7 @@ export function printInvoice({ company, invoice, lineItems, stops }) {
   <meta charset="UTF-8">
   <title>Invoice ${invoice.invoice_number || ''}</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin: 0; padding: 0; box-sizing: border-box; user-select: text !important; -webkit-user-select: text !important; }
     body {
       font-family: Arial, sans-serif;
       font-size: 11px;
