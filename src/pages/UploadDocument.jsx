@@ -32,6 +32,31 @@ export default function UploadDocument() {
     base44.entities.Truck.filter({ status: 'active' }).then(setTrucks);
   }, []);
 
+  // Ctrl+V paste from clipboard
+  useEffect(() => {
+    const handlePaste = (e) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      const imageFiles = [];
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) {
+            // Give it a meaningful name with timestamp
+            const ext = item.type.split('/')[1] || 'png';
+            const named = new File([file], `pasted-image-${Date.now()}.${ext}`, { type: item.type });
+            imageFiles.push(named);
+          }
+        }
+      }
+      if (imageFiles.length > 0) {
+        handleFiles(imageFiles);
+      }
+    };
+    window.addEventListener('paste', handlePaste);
+    return () => window.removeEventListener('paste', handlePaste);
+  }, []);
+
   const handleFiles = (newFiles) => setFiles(prev => [...prev, ...newFiles]);
 
   const onDrop = (e) => {
@@ -128,14 +153,27 @@ export default function UploadDocument() {
               <>
                 <FileText className="w-10 h-10 text-green-600" />
                 <p className="text-sm font-medium">{files.length} file{files.length !== 1 ? 's' : ''} selected</p>
-                <p className="text-xs text-muted-foreground">{files.map(f => `${f.name} (${(f.size / 1024).toFixed(0)} KB)`).join(', ')}</p>
-                <p className="text-xs text-primary">Click to add more</p>
+                <div className="flex flex-col gap-1 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+                  {files.map((f, i) => (
+                    <div key={i} className="flex items-center justify-between gap-2 bg-green-500/10 rounded px-2 py-1 text-xs">
+                      <span className="truncate text-foreground">{f.name} <span className="text-muted-foreground">({(f.size / 1024).toFixed(0)} KB)</span></span>
+                      <button
+                        className="flex-shrink-0 text-muted-foreground hover:text-destructive"
+                        onClick={() => setFiles(prev => prev.filter((_, idx) => idx !== i))}
+                        title="Remove"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-primary">Click to add more · or Ctrl+V to paste</p>
               </>
             ) : (
               <>
                 <Upload className="w-10 h-10 text-muted-foreground" />
                 <p className="text-sm font-medium">Drop files here or click to browse</p>
-                <p className="text-xs text-muted-foreground">PDF, image, or document formats supported · Multiple files OK</p>
+                <p className="text-xs text-muted-foreground">PDF, image, or document formats supported · Multiple files OK · Ctrl+V to paste image</p>
               </>
             )}
             <input ref={fileInputRef} type="file" className="hidden" multiple accept=".pdf,.png,.jpg,.jpeg,.tiff,.doc,.docx" onChange={(e) => handleFiles(Array.from(e.target.files))} />
