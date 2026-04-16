@@ -67,7 +67,8 @@ export function printStatement({ company, statement, allLines }) {
   <meta charset="UTF-8">
   <title>${docTitle}</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; user-select: text !important; -webkit-user-select: text !important; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, div, span, p, td, th, li, a { user-select: text !important; -webkit-user-select: text !important; cursor: text; }
     body { font-family: Arial, sans-serif; font-size: 11px; color: #000; background: #fff; }
     .page { width: 100%; padding: 32px 48px; }
 
