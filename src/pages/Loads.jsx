@@ -132,7 +132,9 @@ export default function Loads() {
   const [tripFilter, setTripFilter] = useState(() => { try { return JSON.parse(localStorage.getItem('loads_trip2')) || []; } catch { return []; } });
   const [dateFrom, setDateFrom] = useState(() => localStorage.getItem('loads_date_from') || '');
   const [dateTo, setDateTo] = useState(() => localStorage.getItem('loads_date_to') || '');
-  const [selected, setSelected] = useState(new Set());
+  const [selected, setSelected] = useState(() => {
+    try { const s = sessionStorage.getItem('loads_selected'); return s ? new Set(JSON.parse(s)) : new Set(); } catch { return new Set(); }
+  });
   const [bulkEditMode, setBulkEditMode] = useState(null); // 'amount' | 'driver' | 'truck'
   const [bulkEdits, setBulkEdits] = useState({}); // { [loadId]: { field: value } }
   const [savingBulk, setSavingBulk] = useState(false);
@@ -163,6 +165,7 @@ export default function Loads() {
   useEffect(() => { localStorage.setItem('loads_trip2', JSON.stringify(tripFilter)); }, [tripFilter]);
   useEffect(() => { localStorage.setItem('loads_date_from', dateFrom); }, [dateFrom]);
   useEffect(() => { localStorage.setItem('loads_date_to', dateTo); }, [dateTo]);
+  useEffect(() => { sessionStorage.setItem('loads_selected', JSON.stringify([...selected])); }, [selected]);
 
   const { data: loads = [], isLoading } = useQuery({
     queryKey: ['loads'],
