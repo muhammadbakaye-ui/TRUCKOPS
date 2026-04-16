@@ -219,6 +219,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
   }
 
   win.onload = () => {
+    win.document.title = load.external_load_number || load.internal_load_number || 'Load';
     win.focus();
     URL.revokeObjectURL(url);
   };
