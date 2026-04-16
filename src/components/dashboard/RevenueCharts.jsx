@@ -38,7 +38,7 @@ export default function RevenueCharts({ loads, drivers, invoices = [] }) {
       const start = format(startOfMonth(date), 'yyyy-MM-dd');
       const end = format(endOfMonth(date), 'yyyy-MM-dd');
       const monthLoads = loads.filter(l => {
-        const d = l.delivery_date || l.pickup_date || '';
+        const d = l.pickup_date || '';
         return d >= start && d <= end && !l.canceled;
       });
       const revenue = monthLoads.reduce((s, l) => s + (Number(l.invoice_amount) || 0), 0);
@@ -56,7 +56,7 @@ export default function RevenueCharts({ loads, drivers, invoices = [] }) {
   const topDriversData = useMemo(() => {
     const last2Start = format(startOfMonth(subMonths(new Date(), 1)), 'yyyy-MM-dd');
     const recentLoads = loads.filter(l => {
-      const d = l.delivery_date || l.pickup_date || '';
+      const d = l.pickup_date || '';
       return d >= last2Start && !l.canceled;
     });
     const driverMap = {};

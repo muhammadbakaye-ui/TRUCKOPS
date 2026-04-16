@@ -220,8 +220,8 @@ export default function StatementBuilder() {
       const driver = drivers.find(d => d.id === form.driver_id);
       const loads = await base44.entities.Load.filter({ driver_1_id: form.driver_id }, '-created_date', 500);
       const extractTripNum = (desc) => { if (!desc) return null; const m = desc.match(/_(\d{3})_/); return m ? m[1] : null; };
-      const filteredLoads = loads.filter(l => { const d = l.delivery_date || l.pickup_date; return d && d >= form.period_start && d <= form.period_end; });
-      const newLines = filteredLoads.sort((a, b) => (a.delivery_date||a.pickup_date||'').localeCompare(b.delivery_date||b.pickup_date||'')).map((l, idx) => {
+      const filteredLoads = loads.filter(l => { const d = l.pickup_date; return d && d >= form.period_start && d <= form.period_end; });
+      const newLines = filteredLoads.sort((a, b) => (a.pickup_date||'').localeCompare(b.pickup_date||'')).map((l, idx) => {
         const tripNum = l.trip_number || extractTripNum(l.external_load_number) || extractTripNum(l.customer_reference_number) || extractTripNum(l.internal_load_number);
         const loadRevenue = l.driver_rate || l.invoice_amount || l.freight_rate || 0;
         let driverPay = loadRevenue;
@@ -235,7 +235,7 @@ export default function StatementBuilder() {
         return {
           _key: l.id || `trip_${Date.now()}_${idx}`,
           line_type: 'trip', source_id: l.id, source_type: 'load',
-          date: l.delivery_date || l.pickup_date || '',
+          date: l.pickup_date || '',
           description: l.customer_name ? `${loadRef} — ${l.customer_name}` : loadRef,
           route: `${l.pickup_city || ''}${l.pickup_state ? `, ${l.pickup_state}` : ''} → ${l.delivery_city || ''}${l.delivery_state ? `, ${l.delivery_state}` : ''}`,
           amount: driverPay, internal_load_number: l.internal_load_number || '',
