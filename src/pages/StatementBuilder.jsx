@@ -13,6 +13,7 @@ import { CalendarIcon, Cloud, CloudOff } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Save, ArrowLeft, Plus, Trash2, CheckCircle, Fuel, Truck, Printer, Eye, EyeOff } from 'lucide-react';
 import { logAudit } from '../components/shared/AuditLogger';
+import LoadPickerModal from '../components/print/LoadPickerModal';
 import { toast } from 'sonner';
 import { printStatement } from '../components/print/printStatement';
 import { format, parse } from 'date-fns';
@@ -59,7 +60,7 @@ export default function StatementBuilder() {
   const [saving, setSaving] = useState(false);
   const [autoSaving, setAutoSaving] = useState(false);
   const [lastAutoSaved, setLastAutoSaved] = useState(null);
-  const [loadingTrips, setLoadingTrips] = useState(false);
+  const [loadPickerOpen, setLoadPickerOpen] = useState(false);
   const [loadingFuel, setLoadingFuel] = useState(false);
   const autoSaveTimerRef = useRef(null);
   const savedIdRef = useRef(statementId);
@@ -224,38 +225,13 @@ export default function StatementBuilder() {
     }
   };
 
-  const loadDriverTrips = async () => {
-    if (!form.driver_id) return toast.error('Select a driver first');
-    if (!form.period_start || !form.period_end) return toast.error('Select a statement date first');
-    setLoadingTrips(true);
-    try {
-      const driver = drivers.find(d => d.id === form.driver_id);
-      const loads = await base44.entities.Load.filter({ driver_1_id: form.driver_id }, '-created_date', 500);
-      const extractTripNum = (desc) => { if (!desc) return null; const m = desc.match(/_(\d{3})_/); return m ? m[1] : null; };
-      const filteredLoads = loads.filter(l => { const d = l.pickup_date; return d && d >= form.period_start && d <= form.period_end; });
-      const newLines = filteredLoads.sort((a, b) => (a.pickup_date||'').localeCompare(b.pickup_date||'')).map((l, idx) => {
-        const tripNum = l.trip_number || extractTripNum(l.external_load_number) || extractTripNum(l.customer_reference_number) || extractTripNum(l.internal_load_number);
-        const loadRevenue = l.driver_rate || l.invoice_amount || l.freight_rate || 0;
-        let driverPay = loadRevenue;
-        if (driver?.pay_type && driver?.pay_rate) {
-          if (driver.pay_type === 'percentage') driverPay = loadRevenue * (driver.pay_rate / 100);
-          else if (driver.pay_type === 'per_mile' && l.billable_miles) driverPay = l.billable_miles * driver.pay_rate;
-          else if (driver.pay_type === 'flat_rate') driverPay = driver.pay_rate;
-        }
-        const externalNum = l.external_load_number || '';
-        const loadRef = tripNum ? `${tripNum} / ${externalNum || l.internal_load_number}` : (externalNum || l.internal_load_number || '');
-        return {
-          _key: l.id || `trip_${Date.now()}_${idx}`,
-          line_type: 'trip', source_id: l.id, source_type: 'load',
-          date: l.pickup_date || '',
-          description: l.customer_name ? `${loadRef} — ${l.customer_name}` : loadRef,
-          route: `${l.pickup_city || ''}${l.pickup_state ? `, ${l.pickup_state}` : ''} → ${l.delivery_city || ''}${l.delivery_state ? `, ${l.delivery_state}` : ''}`,
-          amount: driverPay, internal_load_number: l.internal_load_number || '',
-        };
-      });
-      setTripLines(newLines);
-      toast.success(`Loaded ${newLines.length} trips`);
-    } catch (err) { toast.error('Failed to load trips'); } finally { setLoadingTrips(false); }
+  const handleLoadsAdded = (newLines) => {
+    setTripLines(prev => {
+      const existingIds = new Set(prev.map(l => l.source_id).filter(Boolean));
+      const toAdd = newLines.filter(l => !existingIds.has(l.source_id));
+      return [...prev, ...toAdd].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    });
+    toast.success(`Added ${newLines.length} load${newLines.length !== 1 ? 's' : ''}`);
   };
 
   const loadDriverFuel = async () => {
@@ -291,7 +267,6 @@ export default function StatementBuilder() {
 
   const addDefaultDeduction = (def) => setDeductionLines(prev => [...prev, { _key: `ded_${Date.now()}`, line_type: 'deduction', date: form.statement_date || new Date().toISOString().split('T')[0], description: def.description, amount: def.amount }]);
   const addCustomDeduction = () => setDeductionLines(prev => [...prev, { _key: `ded_${Date.now()}`, line_type: 'deduction', date: new Date().toISOString().split('T')[0], description: '', amount: 0 }]);
-  const addTripLine = () => setTripLines(prev => [...prev, { _key: `trip_${Date.now()}`, line_type: 'trip', date: new Date().toISOString().split('T')[0], description: '', route: '', amount: 0 }]);
   const addCustomFuel = () => setFuelLines(prev => [...prev, { _key: `fuel_${Date.now()}`, line_type: 'fuel', date: form.statement_date || new Date().toISOString().split('T')[0], description: '', card_number: '', location_name: '', city_state: '', amount: 0 }]);
 
   const colHeaders = (
@@ -426,16 +401,15 @@ export default function StatementBuilder() {
             <CardHeader className="py-3.5 px-5 flex flex-row items-center justify-between border-b">
               <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Settlement Items ({tripLines.length})</CardTitle>
               <div className="flex gap-1">
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={loadDriverTrips} disabled={loadingTrips || !form.driver_id}>
-                  {loadingTrips ? <Loader2 className="w-3 h-3 animate-spin" /> : <Truck className="w-3 h-3" />} Load Trips
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => { if (!form.driver_id) { toast.error('Select a driver first'); return; } setLoadPickerOpen(true); }} disabled={!form.driver_id}>
+                  <Truck className="w-3 h-3" /> Pick Loads
                 </Button>
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addTripLine}><Plus className="w-3 h-3" /> Add</Button>
               </div>
             </CardHeader>
             <CardContent className="px-5 pb-5">
               {colHeaders}
               {tripLines.map((line, i) => <LineRow key={line._key || i} line={line} onChange={(k, v) => updateTripLine(i, k, v)} onRemove={() => setTripLines(prev => prev.filter((_, idx) => idx !== i))} />)}
-              {tripLines.length === 0 && <p className="text-xs text-muted-foreground text-center py-5">No trips. Select a driver and click "Load Trips" or add manually.</p>}
+              {tripLines.length === 0 && <p className="text-xs text-muted-foreground text-center py-5">No trips. Select a driver and click "Pick Loads" to add from existing loads.</p>}
               {tripLines.length > 0 && <div className="flex justify-end mt-3 pt-2 border-t"><span className="text-sm font-bold text-green-700">Gross: ${tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>}
             </CardContent>
           </Card>
@@ -515,6 +489,15 @@ export default function StatementBuilder() {
           </Card>
         </div>
       </div>
+      <LoadPickerModal
+        open={loadPickerOpen}
+        onClose={() => setLoadPickerOpen(false)}
+        driver={drivers.find(d => d.id === form.driver_id)}
+        periodStart={form.period_start}
+        periodEnd={form.period_end}
+        existingSourceIds={new Set(tripLines.map(l => l.source_id).filter(Boolean))}
+        onAdd={handleLoadsAdded}
+      />
     </div>
   );
 }
