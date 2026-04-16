@@ -201,12 +201,14 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 </body>
 </html>`;
 
-  const win = window.open('', '_blank', 'width=900,height=1100');
-  if (win) {
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
-    win.document.title = load.external_load_number || load.internal_load_number || 'Load';
-    win.focus();
-  }
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
