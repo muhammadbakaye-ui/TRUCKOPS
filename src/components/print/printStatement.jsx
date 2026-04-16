@@ -18,6 +18,11 @@ export function printStatement({ company, statement, allLines }) {
 
   const co = company || {};
 
+  const stmtDate = statement.statement_date
+    ? (() => { const [y,m,d] = statement.statement_date.split('-'); return `${parseInt(m)}-${parseInt(d)}-${y}`; })()
+    : '';
+  const docTitle = `Statement ${statement.truck_number || ''} ${stmtDate}`.trim();
+
   const tripsRows = tripLines.map(l => {
     const tripNum = l.description?.includes(' / ') ? l.description.split(' / ')[0].trim() : '';
     return `<tr>
@@ -60,7 +65,7 @@ export function printStatement({ company, statement, allLines }) {
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Statement - ${statement.driver_name || ''}</title>
+  <title>${docTitle}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, sans-serif; font-size: 11px; color: #000; background: #fff; }
@@ -255,6 +260,7 @@ export function printStatement({ company, statement, allLines }) {
       fallback.document.open();
       fallback.document.write(html);
       fallback.document.close();
+      fallback.document.title = docTitle;
       fallback.focus();
     }
     URL.revokeObjectURL(url);
@@ -262,6 +268,7 @@ export function printStatement({ company, statement, allLines }) {
   }
 
   win.onload = () => {
+    win.document.title = docTitle;
     win.focus();
     URL.revokeObjectURL(url);
   };

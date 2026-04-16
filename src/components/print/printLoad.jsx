@@ -212,6 +212,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
       fallback.document.open();
       fallback.document.write(html);
       fallback.document.close();
+      fallback.document.title = load.external_load_number || load.internal_load_number || 'Load';
       fallback.focus();
     }
     URL.revokeObjectURL(url);
