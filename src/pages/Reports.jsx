@@ -13,7 +13,13 @@ import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
 import { printDriverPerformanceReport } from '../components/print/printDriverPerformance';
 
-const COLORS = ['#9CA3AF', '#FF8C42', '#06B6D4', '#10B981', '#8b5cf6', '#ef4444'];
+const INVOICE_STATUS_COLORS = {
+  'Not invoiced': '#9CA3AF',
+  'Priority': '#FF8C42',
+  'Sent': '#06B6D4',
+  'Paid': '#10B981',
+};
+const getInvoiceStatusColor = (name) => INVOICE_STATUS_COLORS[name] || '#9CA3AF';
 
 export default function Reports() {
   const [period, setPeriod] = useState('30');
@@ -138,7 +144,7 @@ export default function Reports() {
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={65} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={10}>
-                  {statusData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  {statusData.map((entry, i) => <Cell key={i} fill={getInvoiceStatusColor(entry.name)} />)}
                 </Pie>
                 <Tooltip />
               </PieChart>

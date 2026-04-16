@@ -91,6 +91,11 @@ export default function RevenueCharts({ loads, drivers, invoices = [] }) {
     'Paid': '#10B981',
   };
 
+  const getInvoiceStatusColor = (name) => {
+    const key = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+    return invoiceStatusColors[key] || '#9CA3AF';
+  };
+
   return (
     <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
       {/* Monthly Revenue Bar Chart */}
@@ -148,10 +153,9 @@ export default function RevenueCharts({ loads, drivers, invoices = [] }) {
                   )}
                   labelLine={false}
                 >
-                  {invoiceStatusData.map((entry, index) => {
-                    const colors = ['#9CA3AF', '#FF8C42', '#06B6D4', '#10B981'];
-                    return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
-                  })}
+                  {invoiceStatusData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={getInvoiceStatusColor(entry.name)} />
+                  ))}
                 </Pie>
                 <Tooltip formatter={(value) => `${value}`} contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '6px' }} />
               </PieChart>
