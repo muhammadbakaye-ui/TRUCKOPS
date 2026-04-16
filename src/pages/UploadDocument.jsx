@@ -26,6 +26,7 @@ export default function UploadDocument() {
   const [selectedTruckId, setSelectedTruckId] = useState('');
   const [tripNumber, setTripNumber] = useState('');
   const [manualAmount, setManualAmount] = useState('');
+  const [driverAmount, setDriverAmount] = useState('');
 
   useEffect(() => {
     base44.entities.Driver.filter({ status: 'active' }).then(setDrivers);
@@ -143,6 +144,7 @@ Return a structured JSON with the following fields (use null if not found):
             freight_rate: manualAmount ? parseFloat(manualAmount) : extracted.freight_rate,
             fuel_surcharge: manualAmount ? 0 : extracted.fuel_surcharge,
             invoice_amount: manualAmount ? parseFloat(manualAmount) : (extracted.freight_rate || 0) + (extracted.fuel_surcharge || 0),
+            ...(driverAmount ? { driver_rate: parseFloat(driverAmount) } : {}),
             commodity: extracted.commodity,
             weight: extracted.weight,
             equipment_type: extracted.equipment_type,
@@ -235,11 +237,22 @@ Return a structured JSON with the following fields (use null if not found):
         </div>
 
         <div className="flex gap-2 items-center">
-          <Label className="text-xs">Amount $</Label>
+          <Label className="text-xs">Invoice $</Label>
           <Input
             value={manualAmount}
             onChange={e => setManualAmount(e.target.value)}
             placeholder="(override)"
+            type="number"
+            className="h-8 text-xs w-32"
+          />
+        </div>
+
+        <div className="flex gap-2 items-center">
+          <Label className="text-xs">Driver $</Label>
+          <Input
+            value={driverAmount}
+            onChange={e => setDriverAmount(e.target.value)}
+            placeholder="(optional)"
             type="number"
             className="h-8 text-xs w-32"
           />
