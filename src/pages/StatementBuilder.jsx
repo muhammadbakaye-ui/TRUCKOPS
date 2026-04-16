@@ -64,6 +64,15 @@ export default function StatementBuilder() {
   const autoSaveTimerRef = useRef(null);
   const savedIdRef = useRef(statementId);
   const initialLoadRef = useRef(true);
+  // Keep refs in sync with latest state to avoid stale closure in auto-save
+  const formRef = useRef(form);
+  const tripLinesRef = useRef(tripLines);
+  const deductionLinesRef = useRef(deductionLines);
+  const fuelLinesRef = useRef(fuelLines);
+  useEffect(() => { formRef.current = form; }, [form]);
+  useEffect(() => { tripLinesRef.current = tripLines; }, [tripLines]);
+  useEffect(() => { deductionLinesRef.current = deductionLines; }, [deductionLines]);
+  useEffect(() => { fuelLinesRef.current = fuelLines; }, [fuelLines]);
 
   const updateTripLine = useCallback((index, key, value) => {
     setTripLines(prev => { const n = [...prev]; n[index] = { ...n[index], [key]: value }; return n; });
@@ -165,19 +174,23 @@ export default function StatementBuilder() {
     return savedId;
   }, [drivers, trucks]);
 
-  // Auto-save: debounce 2.5s, keep status as draft
-  useEffect(() => {
-    if (initialLoadRef.current) { initialLoadRef.current = false; return; }
+  // Auto-save: debounce 2.5s, uses refs to avoid stale closures
+  const scheduleAutoSave = useCallback(() => {
     if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     autoSaveTimerRef.current = setTimeout(async () => {
       setAutoSaving(true);
       try {
-        await persistStatement(form, tripLines, deductionLines, fuelLines);
+        await persistStatement(formRef.current, tripLinesRef.current, deductionLinesRef.current, fuelLinesRef.current);
         setLastAutoSaved(new Date());
       } catch (e) { /* silent */ } finally {
         setAutoSaving(false);
       }
     }, 2500);
+  }, [persistStatement]);
+
+  useEffect(() => {
+    if (initialLoadRef.current) { initialLoadRef.current = false; return; }
+    scheduleAutoSave();
     return () => clearTimeout(autoSaveTimerRef.current);
   }, [form, tripLines, deductionLines, fuelLines]);
 
@@ -302,7 +315,23 @@ export default function StatementBuilder() {
           <Button
             variant={form.published ? "default" : "outline"}
             size="sm" className="h-8 gap-1"
-            onClick={async () => { set('published', !form.published); await handleSave(); }}
+            onClick={async () => {
+              const newPublished = !form.published;
+              setForm(prev => ({ ...prev, published: newPublished }));
+              setSaving(true);
+              if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+              try {
+                const updatedForm = { ...formRef.current, published: newPublished };
+                await persistStatement(updatedForm, tripLinesRef.current, deductionLinesRef.current, fuelLinesRef.current);
+                queryClient.invalidateQueries({ queryKey: ['statements'] });
+                toast.success(newPublished ? 'Statement published' : 'Statement unpublished');
+                setLastAutoSaved(new Date());
+              } catch (err) {
+                toast.error('Error: ' + err.message);
+              } finally {
+                setSaving(false);
+              }
+            }}
             disabled={saving}
           >
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (form.published ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />)}

@@ -6,7 +6,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Trash2, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Search, Trash2, X, ChevronDown, ChevronRight, Eye, EyeOff, Printer, Loader2, FileText } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
@@ -16,6 +16,7 @@ import PageHeader from '../components/shared/PageHeader';
 import BulkDeleteBar from '../components/shared/BulkDeleteBar';
 import { format } from 'date-fns';
 import { STATEMENT_PERIODS_2026 } from '../components/shared/statementCalendar';
+import { printStatement } from '../components/print/printStatement';
 
 const fmt = (dateStr) => format(new Date(dateStr + 'T12:00:00'), 'MMM d');
 const fmtFull = (dateStr) => format(new Date(dateStr + 'T12:00:00'), 'MMM d, yyyy');
@@ -25,6 +26,8 @@ const periodLabel = (start, end) => `${fmt(start)} – ${fmtFull(end)}`;
 export default function DriverStatements() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [updatingId, setUpdatingId] = useState(null);
+  const [downloadingId, setDownloadingId] = useState(null);
 
   const [search, setSearch] = useState(() => localStorage.getItem('statements_search') || '');
   const [statusFilter, setStatusFilter] = useState(() => localStorage.getItem('statements_status') || 'all');
@@ -63,6 +66,54 @@ export default function DriverStatements() {
       setSelected(new Set());
     },
   });
+
+  const { data: carrierCompany = [] } = useQuery({
+    queryKey: ['settings-company'],
+    queryFn: () => base44.entities.Company.filter({ company_type: 'carrier' }, '-created_date', 1),
+  });
+
+  const togglePublished = async (stmt, e) => {
+    e.stopPropagation();
+    setUpdatingId(stmt.id + '_pub');
+    try {
+      await base44.entities.DriverStatement.update(stmt.id, { published: !stmt.published });
+      queryClient.invalidateQueries({ queryKey: ['statements'] });
+      toast.success(!stmt.published ? 'Statement published' : 'Statement unpublished');
+    } catch (err) {
+      toast.error('Failed to update: ' + err.message);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const toggleStatus = async (stmt, e) => {
+    e.stopPropagation();
+    const newStatus = stmt.status === 'draft' ? 'saved' : 'draft';
+    setUpdatingId(stmt.id + '_status');
+    try {
+      await base44.entities.DriverStatement.update(stmt.id, { status: newStatus });
+      queryClient.invalidateQueries({ queryKey: ['statements'] });
+      toast.success(`Status set to ${newStatus}`);
+    } catch (err) {
+      toast.error('Failed to update: ' + err.message);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleDownload = async (stmt, e) => {
+    e.stopPropagation();
+    setDownloadingId(stmt.id);
+    try {
+      const lines = await base44.entities.StatementLine.filter({ statement_id: stmt.id }, 'date', 200);
+      const company = carrierCompany[0] || {};
+      printStatement({ company, statement: stmt, allLines: lines });
+    } catch (err) {
+      toast.error('Failed to load statement: ' + err.message);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   // Unique drivers and trucks for filter dropdowns
   const uniqueDrivers = useMemo(() => [...new Set(statements.map(s => s.driver_name).filter(Boolean))].sort(), [statements]);
@@ -240,7 +291,7 @@ export default function DriverStatements() {
                         <th className="text-left p-2 font-medium">Net Pay</th>
                         <th className="text-left p-2 font-medium">Status</th>
                         <th className="text-left p-2 font-medium">Published</th>
-                        <th className="w-8"></th>
+                        <th className="text-left p-2 font-medium">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -267,31 +318,57 @@ export default function DriverStatements() {
                           <td className="p-2 text-red-600">{stmt.deductions_total ? `-$${stmt.deductions_total.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : '—'}</td>
                           <td className="p-2 text-orange-600">{stmt.fuel_total ? `-$${stmt.fuel_total.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : '—'}</td>
                           <td className="p-2 font-semibold">{stmt.final_check_amount != null ? `$${stmt.final_check_amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : '—'}</td>
-                          <td className="p-2"><StatusBadge status={stmt.status} /></td>
-                          <td className="p-2">
-                            {stmt.published
-                              ? <span className="text-green-600 font-medium">✓ Published</span>
-                              : <span className="text-muted-foreground">Draft</span>
-                            }
+                          <td className="p-2" onClick={e => e.stopPropagation()}>
+                            <Button
+                              variant="ghost" size="sm"
+                              className={`h-6 text-xs px-2 gap-1 ${stmt.status === 'draft' ? 'text-yellow-600 bg-yellow-50' : 'text-green-700 bg-green-50'}`}
+                              disabled={updatingId === stmt.id + '_status'}
+                              onClick={(e) => toggleStatus(stmt, e)}
+                            >
+                              {updatingId === stmt.id + '_status' ? <Loader2 className="w-3 h-3 animate-spin" /> : <FileText className="w-3 h-3" />}
+                              {stmt.status === 'draft' ? 'Draft' : 'Saved'}
+                            </Button>
+                          </td>
+                          <td className="p-2" onClick={e => e.stopPropagation()}>
+                            <Button
+                              variant="ghost" size="sm"
+                              className={`h-6 text-xs px-2 gap-1 ${stmt.published ? 'text-green-600 bg-green-50' : 'text-muted-foreground'}`}
+                              disabled={updatingId === stmt.id + '_pub'}
+                              onClick={(e) => togglePublished(stmt, e)}
+                            >
+                              {updatingId === stmt.id + '_pub' ? <Loader2 className="w-3 h-3 animate-spin" /> : stmt.published ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                              {stmt.published ? 'Published' : 'Unpublished'}
+                            </Button>
                           </td>
                           <td className="p-2">
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={e => e.stopPropagation()}>
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Statement?</AlertDialogTitle>
-                                  <AlertDialogDescription>{stmt.driver_name}'s statement will be moved to Deleted Items.</AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(stmt); }}>Delete</AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost" size="icon"
+                                className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                disabled={downloadingId === stmt.id}
+                                onClick={(e) => handleDownload(stmt, e)}
+                                title="Download PDF"
+                              >
+                                {downloadingId === stmt.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Printer className="w-3.5 h-3.5" />}
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={e => e.stopPropagation()}>
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Statement?</AlertDialogTitle>
+                                    <AlertDialogDescription>{stmt.driver_name}'s statement will be moved to Deleted Items.</AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(stmt); }}>Delete</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
                           </td>
                         </tr>
                       ))}
