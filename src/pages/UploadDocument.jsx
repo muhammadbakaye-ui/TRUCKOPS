@@ -7,17 +7,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
 import { Upload, Loader2, FileText, CheckCircle, ArrowRight } from 'lucide-react';
 import PageHeader from '../components/shared/PageHeader';
 import { toast } from 'sonner';
 import { logAudit } from '../components/shared/AuditLogger';
+import { useUploadContext } from '../context/UploadContext';
 
 export default function UploadDocument() {
   const navigate = useNavigate();
+  const { startJob, updateJob } = useUploadContext();
   const [dragging, setDragging] = useState(false);
   const [files, setFiles] = useState([]);
   const [docType, setDocType] = useState('rate_confirmation');
   const [processing, setProcessing] = useState(false);
+  const [progress, setProgress] = useState({ current: 0, total: 0, currentFileName: '' });
   const [results, setResults] = useState([]);
   const fileInputRef = useRef(null);
   const [drivers, setDrivers] = useState([]);
@@ -48,9 +52,14 @@ export default function UploadDocument() {
     setProcessing(true);
     setResults([]);
     const processedResults = [];
+    const jobId = startJob(files.length);
+    setProgress({ current: 0, total: files.length, currentFileName: '' });
 
     try {
       for (const file of files) {
+        const fileIndex = processedResults.length + 1;
+        setProgress({ current: fileIndex, total: files.length, currentFileName: file.name });
+        updateJob(jobId, { current: fileIndex, currentFileName: file.name });
         try {
           const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
@@ -179,6 +188,7 @@ Return a structured JSON with the following fields (use null if not found):
           await logAudit({ action_type: 'create', entity_type: 'Load', entity_id: load.id, entity_label: newLoadNum, details: `Created from ${docType} upload` });
 
           processedResults.push({ load, extracted, stops });
+          updateJob(jobId, { current: fileIndex, results: [...processedResults] });
           toast.success(`Load ${newLoadNum} created!`);
         } catch (err) {
           toast.error(`Failed to process ${file.name}: ${err.message}`);
@@ -187,8 +197,10 @@ Return a structured JSON with the following fields (use null if not found):
 
       setResults(processedResults);
       setFiles([]);
+      updateJob(jobId, { status: 'done', current: processedResults.length, results: processedResults });
     } finally {
       setProcessing(false);
+      setProgress({ current: 0, total: 0, currentFileName: '' });
     }
   };
 
@@ -302,10 +314,22 @@ Return a structured JSON with the following fields (use null if not found):
       </Card>
 
       {files.length > 0 && results.length === 0 && (
-        <Button onClick={handleProcess} disabled={processing} className="gap-2">
-          {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-          {processing ? `Processing ${files.length} file${files.length !== 1 ? 's' : ''}...` : `Extract & Create Load${files.length > 1 ? 's' : ''}`}
-        </Button>
+        <div className="space-y-2">
+          <Button onClick={handleProcess} disabled={processing} className="gap-2">
+            {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            {processing
+              ? `Processing ${progress.current} / ${progress.total}...`
+              : `Extract & Create Load${files.length > 1 ? 's' : ''}`}
+          </Button>
+          {processing && progress.total > 0 && (
+            <div className="space-y-1.5 max-w-sm">
+              <Progress value={Math.round((progress.current / progress.total) * 100)} className="h-2" />
+              <p className="text-xs text-muted-foreground truncate">
+                {progress.currentFileName ? `Processing: ${progress.currentFileName}` : ''}
+              </p>
+            </div>
+          )}
+        </div>
       )}
 
       {results.length > 0 && (
