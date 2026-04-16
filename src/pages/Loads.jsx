@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Trash2, X, ChevronDown, ChevronRight, Loader2, Save, Check, Copy, Download } from 'lucide-react';
 import SearchInput from '../components/shared/SearchInput';
 import { printLoad } from '../components/print/printLoad';
+import UndoToast from '../components/shared/UndoToast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
@@ -195,6 +196,11 @@ export default function Loads() {
 
   const [savingAllDrafts, setSavingAllDrafts] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+  const [undoToast, setUndoToast] = useState(null); // { message, onUndo }
+
+  const showUndoToast = (message, onUndo) => {
+    setUndoToast({ message, onUndo });
+  };
 
   const handleCopyLoadNumber = (e, loadNumber) => {
     e.stopPropagation();
@@ -216,12 +222,22 @@ export default function Loads() {
         });
         await base44.entities.Load.delete(load.id);
       }
+      return loadsArray;
     },
-    onSuccess: () => {
+    onSuccess: (loadsArray) => {
       queryClient.invalidateQueries({ queryKey: ['loads'] });
-      const count = selected.size;
-      toast.success(`${count} load${count === 1 ? '' : 's'} moved to deleted items`);
+      const count = loadsArray.length;
       setSelected(new Set());
+      showUndoToast(
+        `${count} load${count === 1 ? '' : 's'} deleted`,
+        async () => {
+          for (const load of loadsArray) {
+            const { id, created_date, updated_date, ...rest } = load;
+            await base44.entities.Load.create(rest);
+          }
+          queryClient.invalidateQueries({ queryKey: ['loads'] });
+        }
+      );
     },
   });
 
@@ -237,9 +253,15 @@ export default function Loads() {
         await base44.entities.Load.update(draft.id, { status: 'saved' });
       }
       queryClient.invalidateQueries({ queryKey: ['loads'] });
-      toast.success(`${drafts.length} draft load${drafts.length === 1 ? '' : 's'} saved`);
-    } catch (err) {
-      toast.error('Failed to save drafts: ' + err.message);
+      showUndoToast(
+        `${drafts.length} draft${drafts.length === 1 ? '' : 's'} saved`,
+        async () => {
+          for (const draft of drafts) {
+            await base44.entities.Load.update(draft.id, { status: 'draft' });
+          }
+          queryClient.invalidateQueries({ queryKey: ['loads'] });
+        }
+      );
     } finally {
       setSavingAllDrafts(false);
     }
@@ -285,7 +307,22 @@ export default function Loads() {
       }
     }).filter(Boolean));
     queryClient.invalidateQueries({ queryKey: ['loads'] });
-    toast.success(`Updated ${idsToUpdate.length} load${idsToUpdate.length === 1 ? '' : 's'}`);
+    const prevValues = { ...bulkEdits };
+    const prevMode = bulkEditMode;
+    showUndoToast(
+      `Updated ${idsToUpdate.length} load${idsToUpdate.length === 1 ? '' : 's'} (${bulkEditMode})`,
+      async () => {
+        await Promise.all(idsToUpdate.map(id => {
+          const original = loads.find(l => l.id === id);
+          if (!original) return null;
+          if (prevMode === 'amount') return base44.entities.Load.update(id, { invoice_amount: original.invoice_amount });
+          if (prevMode === 'driver') return base44.entities.Load.update(id, { driver_1_id: original.driver_1_id || null, driver_1_name: original.driver_1_name || '' });
+          if (prevMode === 'truck') return base44.entities.Load.update(id, { truck_id: original.truck_id || null, truck_number: original.truck_number || '' });
+          if (prevMode === 'trip') return base44.entities.Load.update(id, { trip_number: original.trip_number || null });
+        }).filter(Boolean));
+        queryClient.invalidateQueries({ queryKey: ['loads'] });
+      }
+    );
     setBulkEditMode(null);
     setBulkEdits({});
     setSelected(new Set());
@@ -693,6 +730,14 @@ export default function Loads() {
           <div className="text-center py-12 text-muted-foreground text-sm">No loads found.</div>
         )}
       </div>
+
+      {undoToast && (
+        <UndoToast
+          message={undoToast.message}
+          onUndo={undoToast.onUndo}
+          onClose={() => setUndoToast(null)}
+        />
+      )}
     </div>
   );
 }
