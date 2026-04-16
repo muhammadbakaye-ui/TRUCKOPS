@@ -34,8 +34,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
   <meta charset="UTF-8">
   <title>${load.external_load_number || load.internal_load_number || 'Load'}</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body, div, span, p, td, th, li, a { user-select: text !important; -webkit-user-select: text !important; cursor: text; }
+    * { margin: 0; padding: 0; box-sizing: border-box; user-select: text !important; -webkit-user-select: text !important; }
     body { font-family: Arial, sans-serif; font-size: 10px; color: #111; background: #fff; }
     .page { width: 100%; padding: 32px 48px; display: flex; flex-direction: column; min-height: 100vh; }
 
@@ -104,6 +103,16 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
     }
   </style>
 </head>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    document.onselectstart = null;
+    document.onmousedown = null;
+    if (document.body) {
+      document.body.style.webkitUserSelect = 'text';
+      document.body.style.userSelect = 'text';
+    }
+  });
+</script>
 <body>
 <div class="page">
 

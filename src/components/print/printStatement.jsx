@@ -67,8 +67,7 @@ export function printStatement({ company, statement, allLines }) {
   <meta charset="UTF-8">
   <title>${docTitle}</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body, div, span, p, td, th, li, a { user-select: text !important; -webkit-user-select: text !important; cursor: text; }
+    * { margin: 0; padding: 0; box-sizing: border-box; user-select: text !important; -webkit-user-select: text !important; }
     body { font-family: Arial, sans-serif; font-size: 11px; color: #000; background: #fff; }
     .page { width: 100%; padding: 32px 48px; }
 
@@ -134,6 +133,16 @@ export function printStatement({ company, statement, allLines }) {
     }
   </style>
 </head>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    document.onselectstart = null;
+    document.onmousedown = null;
+    if (document.body) {
+      document.body.style.webkitUserSelect = 'text';
+      document.body.style.userSelect = 'text';
+    }
+  });
+</script>
 <body>
 <div class="page">
 
