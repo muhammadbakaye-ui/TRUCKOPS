@@ -64,6 +64,18 @@ export default function StatementBuilder() {
   const autoSaveTimerRef = useRef(null);
   const savedIdRef = useRef(statementId);
   const initialLoadRef = useRef(true);
+
+  // Reset everything when navigating to a new blank statement
+  useEffect(() => {
+    if (!statementId) {
+      setForm({ status: 'draft', gross_total: 0, deductions_total: 0, fuel_total: 0, final_check_amount: 0 });
+      setTripLines([]);
+      setDeductionLines([]);
+      setFuelLines([]);
+      savedIdRef.current = null;
+      initialLoadRef.current = true;
+    }
+  }, [statementId]);
   // Keep refs in sync with latest state to avoid stale closure in auto-save
   const formRef = useRef(form);
   const tripLinesRef = useRef(tripLines);
