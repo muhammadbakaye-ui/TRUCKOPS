@@ -201,27 +201,12 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 </body>
 </html>`;
 
-  const blob = new Blob([html], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const win = window.open(url, '_blank', 'width=900,height=1100');
-
-  if (!win) {
-    // Popup blocked — fallback: write directly
-    const fallback = window.open('', '_blank', 'width=900,height=1100');
-    if (fallback) {
-      fallback.document.open();
-      fallback.document.write(html);
-      fallback.document.close();
-      fallback.document.title = load.external_load_number || load.internal_load_number || 'Load';
-      fallback.focus();
-    }
-    URL.revokeObjectURL(url);
-    return;
-  }
-
-  win.onload = () => {
+  const win = window.open('', '_blank', 'width=900,height=1100');
+  if (win) {
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
     win.document.title = load.external_load_number || load.internal_load_number || 'Load';
     win.focus();
-    URL.revokeObjectURL(url);
-  };
+  }
 }

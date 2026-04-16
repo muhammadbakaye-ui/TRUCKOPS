@@ -249,27 +249,12 @@ export function printStatement({ company, statement, allLines }) {
 </body>
 </html>`;
 
-  // Same open-in-new-window flow as printLoad
-  const blob = new Blob([html], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const win = window.open(url, '_blank', 'width=900,height=1100');
-
-  if (!win) {
-    const fallback = window.open('', '_blank', 'width=900,height=1100');
-    if (fallback) {
-      fallback.document.open();
-      fallback.document.write(html);
-      fallback.document.close();
-      fallback.document.title = docTitle;
-      fallback.focus();
-    }
-    URL.revokeObjectURL(url);
-    return;
-  }
-
-  win.onload = () => {
+  const win = window.open('', '_blank', 'width=900,height=1100');
+  if (win) {
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
     win.document.title = docTitle;
     win.focus();
-    URL.revokeObjectURL(url);
-  };
+  }
 }
