@@ -197,6 +197,15 @@ export default function Invoices() {
     },
     { header: 'Customer', render: (r) => <span className="font-medium">{r.customer_name || '—'}</span> },
     {
+      header: 'Invoice Date',
+      render: (r) => {
+        const date = r.invoice_date;
+        if (!date) return '—';
+        const d = new Date(date + 'T12:00:00');
+        return isNaN(d.getTime()) ? '—' : format(d, 'MMM d, yyyy');
+      }
+    },
+    {
       header: 'Delivered',
       render: (r) => {
         const load = loadsMap[r.load_id];
