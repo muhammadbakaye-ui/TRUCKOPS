@@ -155,31 +155,16 @@ Return a structured JSON with the following fields (use null if not found):
           if (existing) customerId = existing.id;
         }
 
-        // Fix dates: if extracted date has no year or a wrong year, assume current year
+        // Always force current year on all stop dates — documents rarely show a year explicitly
         const currentYear = new Date().getFullYear();
         const fixDate = (dateStr) => {
           if (!dateStr) return dateStr;
-          // If already YYYY-MM-DD with current or reasonable year, keep it
           const fullMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-          if (fullMatch) {
-            const yr = parseInt(fullMatch[1]);
-            // If year is suspiciously old or future (>1 year out), replace with current year
-            if (yr < 2020 || yr > currentYear + 1) {
-              return `${currentYear}-${fullMatch[2]}-${fullMatch[3]}`;
-            }
-            return dateStr;
-          }
-          // Handle MM/DD or MM-DD (no year)
+          if (fullMatch) return `${currentYear}-${fullMatch[2]}-${fullMatch[3]}`;
           const shortMatch = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
-          if (shortMatch) {
-            return `${currentYear}-${shortMatch[1].padStart(2,'0')}-${shortMatch[2].padStart(2,'0')}`;
-          }
-          // Handle MM/DD/YY or MM-DD-YY
+          if (shortMatch) return `${currentYear}-${shortMatch[1].padStart(2,'0')}-${shortMatch[2].padStart(2,'0')}`;
           const slashMatch = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
-          if (slashMatch) {
-            const yr = slashMatch[3].length === 2 ? 2000 + parseInt(slashMatch[3]) : parseInt(slashMatch[3]);
-            return `${yr < 2020 ? currentYear : yr}-${slashMatch[1].padStart(2,'0')}-${slashMatch[2].padStart(2,'0')}`;
-          }
+          if (slashMatch) return `${currentYear}-${slashMatch[1].padStart(2,'0')}-${slashMatch[2].padStart(2,'0')}`;
           return dateStr;
         };
         if (extracted.stops) {
