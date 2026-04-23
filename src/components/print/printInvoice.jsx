@@ -156,16 +156,6 @@ export function printInvoice({ company, invoice, lineItems, stops }) {
     @page { margin: 0.3in; }
   </style>
 </head>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    document.onselectstart = null;
-    document.onmousedown = null;
-    if (document.body) {
-      document.body.style.webkitUserSelect = 'text';
-      document.body.style.userSelect = 'text';
-    }
-  });
-</script>
 <body>
 <div class="page">
 

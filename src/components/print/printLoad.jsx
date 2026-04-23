@@ -103,16 +103,6 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
     }
   </style>
 </head>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    document.onselectstart = null;
-    document.onmousedown = null;
-    if (document.body) {
-      document.body.style.webkitUserSelect = 'text';
-      document.body.style.userSelect = 'text';
-    }
-  });
-</script>
 <body>
 <div class="page">
 
