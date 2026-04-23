@@ -77,6 +77,8 @@ export function UploadProvider({ children }) {
           extraction_status: 'pending',
         });
 
+        if (cancelRefs.current[id]) break;
+
         const extracted = await base44.integrations.Core.InvokeLLM({
           prompt: `Extract all load/shipment data from this ${docType === 'rate_confirmation' ? 'rate confirmation' : 'bill of lading'} document.
 Return a structured JSON with the following fields (use null if not found):
@@ -129,7 +131,11 @@ Return a structured JSON with the following fields (use null if not found):
           }
         });
 
-        if (cancelRefs.current[id]) break;
+        if (cancelRefs.current[id]) {
+          // Clean up the pending doc we already created
+          await base44.entities.Document.delete(doc.id).catch(() => {});
+          break;
+        }
 
         const loads = await base44.entities.Load.list('-created_date', 1);
         const lastNum = loads.length > 0
