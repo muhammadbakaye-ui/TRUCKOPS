@@ -96,7 +96,7 @@ Return a structured JSON with the following fields (use null if not found):
 - commodity (string) - type of freight
 - weight (number) - weight in lbs
 - equipment_type (string: dry_van, reefer, flatbed, step_deck, lowboy, tanker, other)
-- stops (array of objects with: stop_type (pickup/delivery/stop), company_name, street, city, state, zip, appointment_date (YYYY-MM-DD), time_from, time_to, reference_number, bol_number, po_number)
+- stops (array of objects with: stop_type (pickup/delivery/stop), company_name, street, city, state, zip, appointment_date (YYYY-MM-DD format, always use ${new Date().getFullYear()} as the year if the year is not explicitly stated in the document), time_from, time_to, reference_number, bol_number, po_number)
 - special_instructions (string)
 - hazmat (boolean)`,
           file_urls: [file_url],
@@ -153,6 +153,37 @@ Return a structured JSON with the following fields (use null if not found):
             c.company_name.toLowerCase().includes(extracted.customer_name.toLowerCase().substring(0, 6))
           );
           if (existing) customerId = existing.id;
+        }
+
+        // Fix dates: if extracted date has no year or a wrong year, assume current year
+        const currentYear = new Date().getFullYear();
+        const fixDate = (dateStr) => {
+          if (!dateStr) return dateStr;
+          // If already YYYY-MM-DD with current or reasonable year, keep it
+          const fullMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+          if (fullMatch) {
+            const yr = parseInt(fullMatch[1]);
+            // If year is suspiciously old or future (>1 year out), replace with current year
+            if (yr < 2020 || yr > currentYear + 1) {
+              return `${currentYear}-${fullMatch[2]}-${fullMatch[3]}`;
+            }
+            return dateStr;
+          }
+          // Handle MM/DD or MM-DD (no year)
+          const shortMatch = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
+          if (shortMatch) {
+            return `${currentYear}-${shortMatch[1].padStart(2,'0')}-${shortMatch[2].padStart(2,'0')}`;
+          }
+          // Handle MM/DD/YY or MM-DD-YY
+          const slashMatch = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+          if (slashMatch) {
+            const yr = slashMatch[3].length === 2 ? 2000 + parseInt(slashMatch[3]) : parseInt(slashMatch[3]);
+            return `${yr < 2020 ? currentYear : yr}-${slashMatch[1].padStart(2,'0')}-${slashMatch[2].padStart(2,'0')}`;
+          }
+          return dateStr;
+        };
+        if (extracted.stops) {
+          extracted.stops = extracted.stops.map(s => ({ ...s, appointment_date: fixDate(s.appointment_date) }));
         }
 
         const firstStop = extracted.stops?.find(s => s.stop_type === 'pickup');
