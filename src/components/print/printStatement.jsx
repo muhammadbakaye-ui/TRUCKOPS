@@ -252,20 +252,25 @@ export function printStatement({ company, statement, allLines }) {
 <script>
 function savePdf() {
   var bar = document.querySelector('.download-bar');
+  if (!window.jspdf) { alert('PDF library still loading, please try again in a moment.'); return; }
   bar.style.display = 'none';
-  var { jsPDF } = window.jspdf;
-  var doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
-  var el = document.querySelector('.page');
-  doc.html(el, {
-    callback: function(doc) {
-      bar.style.display = 'flex';
-      doc.save('${docTitle.replace(/'/g, '')}.pdf');
-    },
-    x: 36,
-    y: 36,
-    width: 540,
-    windowWidth: el.scrollWidth
-  });
+  try {
+    var doc = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
+    var el = document.querySelector('.page');
+    doc.html(el, {
+      callback: function(d) {
+        bar.style.display = 'flex';
+        d.save('${docTitle.replace(/'/g, '')}.pdf');
+      },
+      x: 36,
+      y: 36,
+      width: 540,
+      windowWidth: el.offsetWidth || 816
+    });
+  } catch(e) {
+    bar.style.display = 'flex';
+    alert('PDF generation failed: ' + e.message);
+  }
 }
 </script>
 
