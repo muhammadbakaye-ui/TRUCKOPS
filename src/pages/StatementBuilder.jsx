@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, Cloud, CloudOff } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Save, ArrowLeft, Plus, Trash2, CheckCircle, Fuel, Truck, Printer, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, Plus, Trash2, CheckCircle, Fuel, Truck, Printer, Eye, EyeOff, Zap } from 'lucide-react';
 import { logAudit } from '../components/shared/AuditLogger';
 import LoadPickerModal from '../components/print/LoadPickerModal';
 import { toast } from 'sonner';
@@ -265,6 +265,54 @@ export default function StatementBuilder() {
     } catch (err) { toast.error('Failed to load fuel'); } finally { setLoadingFuel(false); }
   };
 
+  const [autoLoading, setAutoLoading] = useState(false);
+
+  const handleAutoLoadWeek = async () => {
+    if (!form.driver_id) return toast.error('Select a driver first');
+    if (!form.period_start || !form.period_end) return toast.error('Select a statement date first');
+    setAutoLoading(true);
+    try {
+      const driver = drivers.find(d => d.id === form.driver_id);
+      const allLoads = await base44.entities.Load.filter({ driver_1_id: form.driver_id }, 'pickup_date', 500);
+      const weekLoads = allLoads.filter(l =>
+        !l.canceled && l.status !== 'canceled' &&
+        l.pickup_date && l.pickup_date >= form.period_start && l.pickup_date <= form.period_end
+      );
+      const existingIds = new Set(tripLines.map(l => l.source_id).filter(Boolean));
+      const newLines = weekLoads
+        .filter(l => !existingIds.has(l.id))
+        .map((l, i) => {
+          const extractTripNum = (desc) => { if (!desc) return null; const m = desc.match(/_(\d{3})_/); return m ? m[1] : null; };
+          const tripNum = l.trip_number || extractTripNum(l.external_load_number) || extractTripNum(l.customer_reference_number) || extractTripNum(l.internal_load_number);
+          const loadRevenue = l.driver_rate || l.invoice_amount || l.freight_rate || 0;
+          let driverPay = loadRevenue;
+          if (driver?.pay_type && driver?.pay_rate) {
+            if (driver.pay_type === 'percentage') driverPay = loadRevenue * (driver.pay_rate / 100);
+            else if (driver.pay_type === 'per_mile' && l.billable_miles) driverPay = l.billable_miles * driver.pay_rate;
+            else if (driver.pay_type === 'flat_rate') driverPay = driver.pay_rate;
+          }
+          const externalNum = l.external_load_number || '';
+          const loadRef = tripNum ? `${tripNum} / ${externalNum || l.internal_load_number}` : (externalNum || l.internal_load_number || '');
+          return {
+            _key: `trip_${l.id || Date.now()}_${i}`,
+            line_type: 'trip', source_id: l.id, source_type: 'load',
+            date: l.pickup_date || '',
+            description: l.customer_name ? `${loadRef} — ${l.customer_name}` : loadRef,
+            route: `${l.pickup_city || ''}${l.pickup_state ? `, ${l.pickup_state}` : ''} → ${l.delivery_city || ''}${l.delivery_state ? `, ${l.delivery_state}` : ''}`,
+            amount: driverPay,
+            internal_load_number: l.internal_load_number || '',
+          };
+        });
+      if (newLines.length === 0) return toast.info('No new loads found for this week');
+      setTripLines(prev => [...prev, ...newLines].sort((a, b) => (a.date || '').localeCompare(b.date || '')));
+      toast.success(`Auto-added ${newLines.length} load${newLines.length !== 1 ? 's' : ''} for this week`);
+    } catch (err) {
+      toast.error('Failed to load: ' + err.message);
+    } finally {
+      setAutoLoading(false);
+    }
+  };
+
   const addDefaultDeduction = (def) => setDeductionLines(prev => [...prev, { _key: `ded_${Date.now()}`, line_type: 'deduction', date: form.statement_date || new Date().toISOString().split('T')[0], description: def.description, amount: def.amount }]);
   const addCustomDeduction = () => setDeductionLines(prev => [...prev, { _key: `ded_${Date.now()}`, line_type: 'deduction', date: new Date().toISOString().split('T')[0], description: '', amount: 0 }]);
   const addCustomFuel = () => setFuelLines(prev => [...prev, { _key: `fuel_${Date.now()}`, line_type: 'fuel', date: form.statement_date || new Date().toISOString().split('T')[0], description: '', card_number: '', location_name: '', city_state: '', amount: 0 }]);
@@ -401,6 +449,9 @@ export default function StatementBuilder() {
             <CardHeader className="py-3.5 px-5 flex flex-row items-center justify-between border-b">
               <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Settlement Items ({tripLines.length})</CardTitle>
               <div className="flex gap-1">
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={handleAutoLoadWeek} disabled={!form.driver_id || !form.period_start || autoLoading} title="Auto-add all loads due this week">
+                  {autoLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />} Auto Week
+                </Button>
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => { if (!form.driver_id) { toast.error('Select a driver first'); return; } setLoadPickerOpen(true); }} disabled={!form.driver_id}>
                   <Truck className="w-3 h-3" /> Pick Loads
                 </Button>
