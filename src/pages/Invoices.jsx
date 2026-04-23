@@ -201,7 +201,9 @@ export default function Invoices() {
       render: (r) => {
         const load = loadsMap[r.load_id];
         const date = load?.delivery_date;
-        return date ? format(new Date(date + 'T12:00:00'), 'MMM d, yyyy') : '—';
+        if (!date) return '—';
+        const d = new Date(date + 'T12:00:00');
+        return isNaN(d.getTime()) ? '—' : format(d, 'MMM d, yyyy');
       }
     },
     { header: 'Amount', render: (r) => r.total ? <span className="font-medium">${r.total.toLocaleString()}</span> : '—' },
