@@ -95,10 +95,11 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 
     @page {
       size: letter;
-      margin: 0.5in;
+      margin: 0.4in 0.5in;
     }
     @media print {
-      body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .status-badge { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .info-box-hdr { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
       .page { padding: 0; margin: 0; }
     }
   </style>

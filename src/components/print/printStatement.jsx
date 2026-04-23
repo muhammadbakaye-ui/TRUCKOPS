@@ -125,9 +125,8 @@ export function printStatement({ company, statement, allLines }) {
     .btn-print { background: #1a3a6b; color: #fff; border: none; padding: 10px 22px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.25); letter-spacing: 0.5px; }
     .btn-print:hover { background: #14306a; }
 
-    @page { size: letter; margin: 0.5in; }
+    @page { size: letter; margin: 0.4in 0.5in; }
     @media print {
-      body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
       .page { padding: 0; }
       .download-bar { display: none !important; }
     }

@@ -153,7 +153,10 @@ export function printInvoice({ company, invoice, lineItems, stops }) {
       color: #1a56db;
     }
 
-    @page { size: letter; margin: 0.5in; }
+    @page { size: letter; margin: 0.4in 0.5in; }
+    @media print {
+      table.load-table th { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    }
   </style>
 </head>
 <body>
