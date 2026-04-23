@@ -123,7 +123,9 @@ export function printStatement({ company, statement, allLines }) {
     /* DOWNLOAD BAR */
     .download-bar { position: fixed; bottom: 24px; right: 32px; display: flex; gap: 10px; z-index: 9999; }
     .btn-print { background: #1a3a6b; color: #fff; border: none; padding: 10px 22px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.25); letter-spacing: 0.5px; }
+    .btn-pdf { background: #166534; color: #fff; border: none; padding: 10px 22px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.25); letter-spacing: 0.5px; }
     .btn-print:hover { background: #14306a; }
+    .btn-pdf:hover { background: #14532d; }
 
     @page { size: letter; margin: 0.4in 0.5in; }
     @media print {
@@ -242,8 +244,30 @@ export function printStatement({ company, statement, allLines }) {
 
 <!-- DOWNLOAD BUTTON -->
 <div class="download-bar">
-  <button class="btn-print" onclick="window.print()">⬇ Download / Print PDF</button>
+  <button class="btn-pdf" onclick="savePdf()">⬇ Save as PDF</button>
+  <button class="btn-print" onclick="window.print()">🖨 Print</button>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+function savePdf() {
+  var bar = document.querySelector('.download-bar');
+  bar.style.display = 'none';
+  var { jsPDF } = window.jspdf;
+  var doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
+  var el = document.querySelector('.page');
+  doc.html(el, {
+    callback: function(doc) {
+      bar.style.display = 'flex';
+      doc.save('${docTitle.replace(/'/g, '')}.pdf');
+    },
+    x: 36,
+    y: 36,
+    width: 540,
+    windowWidth: el.scrollWidth
+  });
+}
+</script>
 
 </body>
 </html>`;
