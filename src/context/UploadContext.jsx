@@ -58,6 +58,12 @@ export function UploadProvider({ children }) {
 
     const processedResults = [];
 
+    // Fetch the starting load number once before the loop to avoid race conditions
+    const seedLoads = await base44.entities.Load.list('-created_date', 1);
+    let loadNumCounter = seedLoads.length > 0
+      ? parseInt(seedLoads[0].internal_load_number?.replace(/\D/g, '') || '1000')
+      : 1000;
+
     for (const file of files) {
       if (cancelRefs.current[id]) break;
 
@@ -137,11 +143,8 @@ Return a structured JSON with the following fields (use null if not found):
           break;
         }
 
-        const loads = await base44.entities.Load.list('-created_date', 1);
-        const lastNum = loads.length > 0
-          ? parseInt(loads[0].internal_load_number?.replace(/\D/g, '') || '1000')
-          : 1000;
-        const newLoadNum = `L-${lastNum + processedResults.length + 1}`;
+        loadNumCounter += 1;
+        const newLoadNum = `L-${loadNumCounter}`;
 
         let customerId = null;
         if (extracted.customer_name) {
