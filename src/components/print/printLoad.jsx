@@ -36,7 +36,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; user-select: text !important; -webkit-user-select: text !important; }
     body { font-family: Arial, sans-serif; font-size: 10px; color: #111; background: #fff; }
-    .page { width: 100%; padding: 32px 48px; display: flex; flex-direction: column; min-height: 100vh; }
+    .page { width: 100%; padding: 32px 48px; display: flex; flex-direction: column; }
 
     /* HEADER */
     .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 10px; border-bottom: 3px solid #1a3a6b; margin-bottom: 10px; }
@@ -95,11 +95,11 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 
     @page {
       size: letter;
-      margin: 0;
+      margin: 0.5in;
     }
     @media print {
       body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-      .page { padding: 0.5in; }
+      .page { padding: 0; margin: 0; }
     }
   </style>
 </head>

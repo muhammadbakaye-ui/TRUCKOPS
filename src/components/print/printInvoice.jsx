@@ -153,7 +153,7 @@ export function printInvoice({ company, invoice, lineItems, stops }) {
       color: #1a56db;
     }
 
-    @page { margin: 0.3in; }
+    @page { size: letter; margin: 0.5in; }
   </style>
 </head>
 <body>

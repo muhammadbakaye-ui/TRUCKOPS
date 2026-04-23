@@ -69,7 +69,7 @@ export function printStatement({ company, statement, allLines }) {
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; user-select: text !important; -webkit-user-select: text !important; }
     body { font-family: Arial, sans-serif; font-size: 11px; color: #000; background: #fff; }
-    .page { width: 100%; padding: 32px 48px; }
+    .page { width: 100%; padding: 32px 48px; max-width: 100%; }
 
     /* HEADER */
     .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
@@ -125,10 +125,10 @@ export function printStatement({ company, statement, allLines }) {
     .btn-print { background: #1a3a6b; color: #fff; border: none; padding: 10px 22px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.25); letter-spacing: 0.5px; }
     .btn-print:hover { background: #14306a; }
 
-    @page { size: letter; margin: 0; }
+    @page { size: letter; margin: 0.5in; }
     @media print {
       body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-      .page { padding: 0.5in; }
+      .page { padding: 0; }
       .download-bar { display: none !important; }
     }
   </style>
