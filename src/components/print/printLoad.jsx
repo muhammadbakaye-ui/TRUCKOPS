@@ -32,7 +32,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>${load.external_load_number || load.internal_load_number || 'Load'}</title>
+  <title>${load.external_load_number || load.internal_load_number || 'Load'} - Load Invoice</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; user-select: text !important; -webkit-user-select: text !important; }
     body { font-family: Arial, sans-serif; font-size: 10px; color: #111; background: #fff; }
@@ -201,14 +201,9 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 </body>
 </html>`;
 
-  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.target = '_blank';
-  a.rel = 'noopener';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  const win = window.open('', '_blank');
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+  }
 }

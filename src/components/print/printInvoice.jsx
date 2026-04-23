@@ -32,7 +32,7 @@ export function printInvoice({ company, invoice, lineItems, stops }) {
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Invoice ${invoice.invoice_number || ''}</title>
+  <title>Invoice ${invoice.invoice_number || ''} - ${invoice.customer_name || ''}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; user-select: text !important; -webkit-user-select: text !important; }
     body {
@@ -272,14 +272,9 @@ export function printInvoice({ company, invoice, lineItems, stops }) {
 </body>
 </html>`;
 
-  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.target = '_blank';
-  a.rel = 'noopener';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  const win = window.open('', '_blank');
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+  }
 }
