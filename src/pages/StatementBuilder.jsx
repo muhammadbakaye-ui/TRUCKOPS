@@ -65,6 +65,7 @@ export default function StatementBuilder() {
   const autoSaveTimerRef = useRef(null);
   const savedIdRef = useRef(statementId);
   const initialLoadRef = useRef(true);
+  const isSavingRef = useRef(false);
 
   // Reset everything when navigating to a new blank statement
   useEffect(() => {
@@ -191,12 +192,15 @@ export default function StatementBuilder() {
   const scheduleAutoSave = useCallback(() => {
     if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     autoSaveTimerRef.current = setTimeout(async () => {
+      if (isSavingRef.current) return; // skip if a save is already in progress
+      isSavingRef.current = true;
       setAutoSaving(true);
       try {
         await persistStatement(formRef.current, tripLinesRef.current, deductionLinesRef.current, fuelLinesRef.current);
         setLastAutoSaved(new Date());
       } catch (e) { /* silent */ } finally {
         setAutoSaving(false);
+        isSavingRef.current = false;
       }
     }, 2500);
   }, [persistStatement]);
@@ -208,6 +212,8 @@ export default function StatementBuilder() {
   }, [form, tripLines, deductionLines, fuelLines]);
 
   const handleSave = async () => {
+    if (isSavingRef.current) return;
+    isSavingRef.current = true;
     setSaving(true);
     if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     try {
@@ -222,6 +228,7 @@ export default function StatementBuilder() {
       toast.error('Error: ' + err.message);
     } finally {
       setSaving(false);
+      isSavingRef.current = false;
     }
   };
 
@@ -382,6 +389,8 @@ export default function StatementBuilder() {
             variant={form.published ? "default" : "outline"}
             size="sm" className="h-8 gap-1"
             onClick={async () => {
+              if (isSavingRef.current) return;
+              isSavingRef.current = true;
               const newPublished = !form.published;
               setForm(prev => ({ ...prev, published: newPublished }));
               setSaving(true);
@@ -396,6 +405,7 @@ export default function StatementBuilder() {
                 toast.error('Error: ' + err.message);
               } finally {
                 setSaving(false);
+                isSavingRef.current = false;
               }
             }}
             disabled={saving}
