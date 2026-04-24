@@ -1,0 +1,88 @@
+{
+  "name": "Driver",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "zip": {
+      "type": "string"
+    },
+    "cdl_number": {
+      "type": "string"
+    },
+    "pay_type": {
+      "type": "string",
+      "enum": [
+        "percentage",
+        "per_mile",
+        "flat_rate",
+        "custom"
+      ],
+      "default": "percentage"
+    },
+    "pay_rate": {
+      "type": "number",
+      "description": "Rate value - percentage, cents per mile, or flat amount"
+    },
+    "recurring_deductions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "frequency": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ytd_gross_legacy": {
+      "type": "number",
+      "default": 0,
+      "description": "Year-to-date gross from previous system (Jan 1 - today)"
+    },
+    "assigned_truck_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "terminated"
+      ],
+      "default": "active"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "portal_token": {
+      "type": "string",
+      "description": "Unique secure token for read-only driver portal access"
+    }
+  },
+  "required": [
+    "full_name"
+  ]
+}

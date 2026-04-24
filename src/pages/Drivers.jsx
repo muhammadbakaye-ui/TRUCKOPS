@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, Link, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
 import SearchInput from '../components/shared/SearchInput';
 import DataTable from '../components/shared/DataTable';
 import StatusBadge from '../components/shared/StatusBadge';
@@ -133,7 +134,49 @@ export default function Drivers() {
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [generatingToken, setGeneratingToken] = useState(null);
   const queryClient = useQueryClient();
+
+  const handleCopyPortalLink = async (driver, e) => {
+    e.stopPropagation();
+    if (!driver.portal_token) {
+      // Generate token first
+      setGeneratingToken(driver.id);
+      try {
+        const res = await base44.functions.invoke('generateDriverToken', { driver_id: driver.id });
+        const token = res.data.token;
+        const url = `${window.location.origin}/DriverPublicPortal?token=${token}`;
+        await navigator.clipboard.writeText(url);
+        toast.success('Portal link generated & copied!');
+        queryClient.invalidateQueries({ queryKey: ['drivers'] });
+      } catch (err) {
+        toast.error('Failed to generate link');
+      } finally {
+        setGeneratingToken(null);
+      }
+    } else {
+      const url = `${window.location.origin}/DriverPublicPortal?token=${driver.portal_token}`;
+      await navigator.clipboard.writeText(url);
+      toast.success('Portal link copied!');
+    }
+  };
+
+  const handleRegenerateToken = async (driver, e) => {
+    e.stopPropagation();
+    setGeneratingToken(driver.id);
+    try {
+      const res = await base44.functions.invoke('generateDriverToken', { driver_id: driver.id });
+      const token = res.data.token;
+      const url = `${window.location.origin}/DriverPublicPortal?token=${token}`;
+      await navigator.clipboard.writeText(url);
+      toast.success('New portal link generated & copied!');
+      queryClient.invalidateQueries({ queryKey: ['drivers'] });
+    } catch (err) {
+      toast.error('Failed to regenerate link');
+    } finally {
+      setGeneratingToken(null);
+    }
+  };
 
   const { data: drivers = [], isLoading } = useQuery({
     queryKey: ['drivers'],
@@ -193,6 +236,31 @@ export default function Drivers() {
     { header: 'Pay Type', render: (r) => r.pay_type ? r.pay_type.replace(/_/g, ' ') : '—' },
     { header: 'Pay Rate', render: (r) => r.pay_rate || '—' },
     { header: 'Status', render: (r) => <StatusBadge status={r.status} /> },
+    { header: 'Portal Link', render: (r) => (
+      <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+        <Button
+          variant="outline" size="sm"
+          className="h-7 text-[11px] gap-1 px-2"
+          onClick={(e) => handleCopyPortalLink(r, e)}
+          disabled={generatingToken === r.id}
+          title={r.portal_token ? 'Copy portal link' : 'Generate & copy portal link'}
+        >
+          {generatingToken === r.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Link className="w-3 h-3" />}
+          {r.portal_token ? 'Copy Link' : 'Get Link'}
+        </Button>
+        {r.portal_token && (
+          <Button
+            variant="ghost" size="sm"
+            className="h-7 w-7 p-0"
+            onClick={(e) => handleRegenerateToken(r, e)}
+            disabled={generatingToken === r.id}
+            title="Regenerate link (invalidates old link)"
+          >
+            <RefreshCw className="w-3 h-3 text-muted-foreground" />
+          </Button>
+        )}
+      </div>
+    )},
   ];
 
   return (
