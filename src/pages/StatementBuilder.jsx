@@ -267,45 +267,76 @@ export default function StatementBuilder() {
 
   const [autoLoading, setAutoLoading] = useState(false);
 
+  // Returns a map of loadId -> statement_date for loads already on OTHER statements
+  const fetchTakenLoadIds = async () => {
+    const currentId = savedIdRef.current;
+    // Get all statement lines of type 'load' across all statements
+    const allLines = await base44.entities.StatementLine.filter({ source_type: 'load' }, 'created_date', 2000);
+    // Get all statements to resolve their dates
+    const allStatements = await base44.entities.DriverStatement.list('-created_date', 500);
+    const stmtMap = {};
+    for (const s of allStatements) stmtMap[s.id] = s;
+    const takenMap = {}; // loadId -> { statement_date, driver_name, statement_id }
+    for (const line of allLines) {
+      if (!line.source_id) continue;
+      if (currentId && line.statement_id === currentId) continue; // skip current statement
+      const stmt = stmtMap[line.statement_id];
+      if (stmt) takenMap[line.source_id] = { statement_date: stmt.statement_date, driver_name: stmt.driver_name, statement_id: stmt.id };
+    }
+    return takenMap;
+  };
+
+  const buildTripLineFromLoad = (l, driver, i) => {
+    const extractTripNum = (desc) => { if (!desc) return null; const m = desc.match(/_(\d{3})_/); return m ? m[1] : null; };
+    const tripNum = l.trip_number || extractTripNum(l.external_load_number) || extractTripNum(l.customer_reference_number) || extractTripNum(l.internal_load_number);
+    const loadRevenue = l.driver_rate || l.invoice_amount || l.freight_rate || 0;
+    let driverPay = loadRevenue;
+    if (driver?.pay_type && driver?.pay_rate) {
+      if (driver.pay_type === 'percentage') driverPay = loadRevenue * (driver.pay_rate / 100);
+      else if (driver.pay_type === 'per_mile' && l.billable_miles) driverPay = l.billable_miles * driver.pay_rate;
+      else if (driver.pay_type === 'flat_rate') driverPay = driver.pay_rate;
+    }
+    const externalNum = l.external_load_number || '';
+    const loadRef = tripNum ? `${tripNum} / ${externalNum || l.internal_load_number}` : (externalNum || l.internal_load_number || '');
+    return {
+      _key: `trip_${l.id || Date.now()}_${i}`,
+      line_type: 'trip', source_id: l.id, source_type: 'load',
+      date: l.pickup_date || '',
+      description: l.customer_name ? `${loadRef} — ${l.customer_name}` : loadRef,
+      route: `${l.pickup_city || ''}${l.pickup_state ? `, ${l.pickup_state}` : ''} → ${l.delivery_city || ''}${l.delivery_state ? `, ${l.delivery_state}` : ''}`,
+      amount: driverPay,
+      internal_load_number: l.internal_load_number || '',
+    };
+  };
+
   const handleAutoLoadWeek = async () => {
     if (!form.driver_id) return toast.error('Select a driver first');
     if (!form.period_start || !form.period_end) return toast.error('Select a statement date first');
     setAutoLoading(true);
     try {
       const driver = drivers.find(d => d.id === form.driver_id);
-      const allLoads = await base44.entities.Load.filter({ driver_1_id: form.driver_id }, 'pickup_date', 500);
+      const [allLoads, takenMap] = await Promise.all([
+        base44.entities.Load.filter({ driver_1_id: form.driver_id }, 'pickup_date', 500),
+        fetchTakenLoadIds(),
+      ]);
       const weekLoads = allLoads.filter(l =>
         !l.canceled && l.status !== 'canceled' &&
         l.pickup_date && l.pickup_date >= form.period_start && l.pickup_date <= form.period_end
       );
       const existingIds = new Set(tripLines.map(l => l.source_id).filter(Boolean));
+      // Auto load silently skips loads already on another statement
+      const skipped = weekLoads.filter(l => !existingIds.has(l.id) && takenMap[l.id]);
       const newLines = weekLoads
-        .filter(l => !existingIds.has(l.id))
-        .map((l, i) => {
-          const extractTripNum = (desc) => { if (!desc) return null; const m = desc.match(/_(\d{3})_/); return m ? m[1] : null; };
-          const tripNum = l.trip_number || extractTripNum(l.external_load_number) || extractTripNum(l.customer_reference_number) || extractTripNum(l.internal_load_number);
-          const loadRevenue = l.driver_rate || l.invoice_amount || l.freight_rate || 0;
-          let driverPay = loadRevenue;
-          if (driver?.pay_type && driver?.pay_rate) {
-            if (driver.pay_type === 'percentage') driverPay = loadRevenue * (driver.pay_rate / 100);
-            else if (driver.pay_type === 'per_mile' && l.billable_miles) driverPay = l.billable_miles * driver.pay_rate;
-            else if (driver.pay_type === 'flat_rate') driverPay = driver.pay_rate;
-          }
-          const externalNum = l.external_load_number || '';
-          const loadRef = tripNum ? `${tripNum} / ${externalNum || l.internal_load_number}` : (externalNum || l.internal_load_number || '');
-          return {
-            _key: `trip_${l.id || Date.now()}_${i}`,
-            line_type: 'trip', source_id: l.id, source_type: 'load',
-            date: l.pickup_date || '',
-            description: l.customer_name ? `${loadRef} — ${l.customer_name}` : loadRef,
-            route: `${l.pickup_city || ''}${l.pickup_state ? `, ${l.pickup_state}` : ''} → ${l.delivery_city || ''}${l.delivery_state ? `, ${l.delivery_state}` : ''}`,
-            amount: driverPay,
-            internal_load_number: l.internal_load_number || '',
-          };
-        });
-      if (newLines.length === 0) return toast.info('No new loads found for this week');
-      setTripLines(prev => [...prev, ...newLines].sort((a, b) => (a.date || '').localeCompare(b.date || '')));
-      toast.success(`Auto-added ${newLines.length} load${newLines.length !== 1 ? 's' : ''} for this week`);
+        .filter(l => !existingIds.has(l.id) && !takenMap[l.id])
+        .map((l, i) => buildTripLineFromLoad(l, driver, i));
+      if (newLines.length === 0 && skipped.length === 0) return toast.info('No new loads found for this week');
+      if (newLines.length > 0) {
+        setTripLines(prev => [...prev, ...newLines].sort((a, b) => (a.date || '').localeCompare(b.date || '')));
+        toast.success(`Auto-added ${newLines.length} load${newLines.length !== 1 ? 's' : ''} for this week`);
+      }
+      if (skipped.length > 0) {
+        toast.warning(`${skipped.length} load${skipped.length !== 1 ? 's' : ''} skipped — already on another statement`);
+      }
     } catch (err) {
       toast.error('Failed to load: ' + err.message);
     } finally {
@@ -548,6 +579,8 @@ export default function StatementBuilder() {
         periodEnd={form.period_end}
         existingSourceIds={new Set(tripLines.map(l => l.source_id).filter(Boolean))}
         onAdd={handleLoadsAdded}
+        fetchTakenLoadIds={fetchTakenLoadIds}
+        buildTripLineFromLoad={buildTripLineFromLoad}
       />
     </div>
   );
