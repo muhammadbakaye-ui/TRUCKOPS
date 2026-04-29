@@ -41,7 +41,8 @@ export default function Reports() {
   const { data: fuel = [] } = useQuery({ queryKey: ['fuel-report'], queryFn: () => base44.entities.FuelTransaction.list('-created_date', 1000) });
 
   const cutoff = subDays(new Date(), parseInt(period));
-  const recentLoads = loads.filter(l => l.created_date && new Date(l.created_date) >= cutoff);
+  const cutoffStr = format(cutoff, 'yyyy-MM-dd');
+  const recentLoads = loads.filter(l => l.pickup_date ? l.pickup_date >= cutoffStr : (l.created_date && new Date(l.created_date) >= cutoff));
   const recentInvoices = invoices.filter(i => i.created_date && new Date(i.created_date) >= cutoff);
 
   const totalRevenue = recentInvoices.reduce((s, i) => s + (i.total || 0), 0);
