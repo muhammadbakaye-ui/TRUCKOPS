@@ -143,7 +143,7 @@ export default function Reports() {
           <CardContent className="flex items-center justify-center">
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
-                <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={65} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`} labelLine={false} fontSize={10}>
+                <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={65} label={({ name, percent }) => { const val = percent * 100; return `${name} ${val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)}%`; }} labelLine={false} fontSize={10}>
                   {statusData.map((entry, i) => <Cell key={i} fill={getInvoiceStatusColor(entry.name)} />)}
                 </Pie>
                 <Tooltip />
