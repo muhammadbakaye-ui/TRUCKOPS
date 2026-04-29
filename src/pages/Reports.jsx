@@ -45,7 +45,7 @@ export default function Reports() {
   const recentInvoices = invoices.filter(i => i.created_date && new Date(i.created_date) >= cutoff);
 
   const totalRevenue = recentInvoices.reduce((s, i) => s + (i.total || 0), 0);
-  const paidRevenue = recentInvoices.filter(i => i.status === 'paid').reduce((s, i) => s + (i.total || 0), 0);
+  const collectedRevenue = totalRevenue * 0.10; // Company keeps 10% of every load
   const avgLoadValue = recentLoads.length ? (totalRevenue / recentLoads.length) : 0;
 
   // Revenue by customer — fuzzy grouped
@@ -113,7 +113,7 @@ export default function Reports() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
         <StatBox label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} sub={`${recentInvoices.length} invoices`} />
-        <StatBox label="Collected" value={`$${paidRevenue.toLocaleString()}`} sub={`${Math.round(totalRevenue ? paidRevenue / totalRevenue * 100 : 0)}% of total`} />
+        <StatBox label="Collected" value={`$${collectedRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} sub="10% of total" />
         <StatBox label="Loads" value={recentLoads.length} sub={`Avg $${Math.round(avgLoadValue).toLocaleString()}/load`} />
         <StatBox label="Active Drivers" value={drivers.filter(d => d.status === 'active').length} sub={`${driverData.length} with loads`} />
       </div>
@@ -143,7 +143,7 @@ export default function Reports() {
           <CardContent className="flex items-center justify-center">
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
-                <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={65} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={10}>
+                <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={65} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`} labelLine={false} fontSize={10}>
                   {statusData.map((entry, i) => <Cell key={i} fill={getInvoiceStatusColor(entry.name)} />)}
                 </Pie>
                 <Tooltip />

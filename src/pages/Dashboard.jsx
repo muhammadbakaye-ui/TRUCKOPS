@@ -24,7 +24,7 @@ export default function Dashboard() {
 
   const { data: invoices = [] } = useQuery({
     queryKey: ['invoices-dash'],
-    queryFn: () => base44.entities.Invoice.list('-created_date', 50),
+    queryFn: () => base44.entities.Invoice.list('-created_date', 2000),
   });
 
   const { data: drivers = [] } = useQuery({
