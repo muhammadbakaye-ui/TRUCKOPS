@@ -35,7 +35,7 @@ export default function Reports() {
     });
   };
 
-  const { data: loads = [] } = useQuery({ queryKey: ['loads-report'], queryFn: () => base44.entities.Load.list('-created_date', 1000) });
+  const { data: loads = [] } = useQuery({ queryKey: ['loads-report'], queryFn: () => base44.entities.Load.list('-created_date', 5000) });
   const { data: invoices = [] } = useQuery({ queryKey: ['invoices-report'], queryFn: () => base44.entities.Invoice.list('-created_date', 1000) });
   const { data: drivers = [] } = useQuery({ queryKey: ['drivers-report'], queryFn: () => base44.entities.Driver.list() });
   const { data: fuel = [] } = useQuery({ queryKey: ['fuel-report'], queryFn: () => base44.entities.FuelTransaction.list('-created_date', 1000) });
