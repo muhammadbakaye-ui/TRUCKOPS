@@ -3,7 +3,8 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Truck, Calendar, Fuel, ChevronDown, ChevronUp, AlertCircle, DollarSign } from 'lucide-react';
+import { Loader2, Truck, Calendar, Fuel, ChevronDown, ChevronUp, AlertCircle, DollarSign, Download } from 'lucide-react';
+import { printStatement } from '@/components/print/printStatement';
 import { format, parse } from 'date-fns';
 
 const fmt = (n) => `$${(Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -17,7 +18,15 @@ const statusConfig = {
 
 function StatementCard({ statement, lines }) {
   const [expanded, setExpanded] = useState(false);
+  const [printing, setPrinting] = useState(false);
   const cfg = statusConfig[statement.status] || statusConfig.draft;
+
+  const handleDownloadPdf = (e) => {
+    e.stopPropagation();
+    setPrinting(true);
+    printStatement({ company: {}, statement, allLines: lines });
+    setTimeout(() => setPrinting(false), 1000);
+  };
 
   const tripLines = lines.filter(l => l.line_type === 'trip' || l.line_type === 'adjustment');
   const creditLines = lines.filter(l => l.line_type === 'credit');
@@ -46,7 +55,19 @@ function StatementCard({ statement, lines }) {
             <p className="text-base font-bold text-primary">{fmt(statement.final_check_amount)}</p>
             <p className="text-[10px] text-muted-foreground">net pay</p>
           </div>
-          {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+          <div className="flex items-center gap-1.5">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
+              onClick={handleDownloadPdf}
+              disabled={printing}
+              title="Download PDF"
+            >
+              {printing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+            </Button>
+            {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+          </div>
         </div>
       </button>
 
