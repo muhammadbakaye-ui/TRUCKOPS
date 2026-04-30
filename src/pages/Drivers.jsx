@@ -231,7 +231,7 @@ export default function Drivers() {
 
   const { data: trucks = [] } = useQuery({
     queryKey: ['trucks'],
-    queryFn: () => base44.entities.Truck.list('-created_date', 200),
+    queryFn: () => base44.entities.Truck.filter({ status: 'active' }, 'unit_number', 200),
   });
 
   const saveMutation = useMutation({
