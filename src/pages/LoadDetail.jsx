@@ -72,6 +72,7 @@ export default function LoadDetail() {
       if (!loadId || isNew) return [];
       const s = await base44.entities.LoadStop.filter({ load_id: loadId }, 'stop_order', 20);
       setStops(s);
+      initialLoadRef.current = true; // reset so the next render is treated as "initial" and skips auto-save
       return s;
     },
     enabled: !!loadId && !isNew,
