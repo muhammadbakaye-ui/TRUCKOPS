@@ -49,6 +49,12 @@ export default function Reports() {
   const collectedRevenue = totalRevenue * 0.10; // Company keeps 10% of every load
   const avgLoadValue = recentLoads.length ? (totalRevenue / recentLoads.length) : 0;
 
+  // Absolute earnings: sum of all invoices as if every load were paid
+  const absoluteRevenue = recentInvoices.reduce((s, i) => s + (i.total || i.subtotal || 0), 0) +
+    recentLoads.filter(l => l.invoice_status === 'not_invoiced' || !l.invoice_status)
+               .reduce((s, l) => s + (l.invoice_amount || l.freight_rate || 0), 0);
+  const absoluteCollected = absoluteRevenue * 0.10;
+
   // Revenue by customer — fuzzy grouped
   const customerGroups = groupByCustomer(recentInvoices, i => i.customer_name);
   const customerData = Object.entries(customerGroups)
@@ -79,11 +85,19 @@ export default function Reports() {
   });
   const driverData = Object.values(driverLoads).sort((a, b) => b.revenue - a.revenue).slice(0, 8);
 
-  const StatBox = ({ label, value, sub }) => (
+  const StatBox = ({ label, value, sub, absolute }) => (
     <Card className="p-3 md:p-4">
       <p className="text-[10px] md:text-[11px] font-medium text-muted-foreground uppercase tracking-wider leading-tight">{label}</p>
       <p className="text-lg md:text-2xl font-bold mt-0.5 md:mt-1">{value}</p>
       {sub && <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5">{sub}</p>}
+      {absolute && (
+        <p
+          className="text-[10px] md:text-xs font-semibold mt-1"
+          style={{ background: 'linear-gradient(135deg, #888 0%, #e8e8e8 40%, #aaa 70%, #666 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+        >
+          {absolute}
+        </p>
+      )}
     </Card>
   );
 
@@ -113,8 +127,8 @@ export default function Reports() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
-        <StatBox label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} sub={`${recentInvoices.length} invoices`} />
-        <StatBox label="Collected" value={`$${collectedRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} sub="10% of total" />
+        <StatBox label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} sub={`${recentInvoices.length} invoices`} absolute={`($${absoluteRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`} />
+        <StatBox label="Collected" value={`$${collectedRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} sub="10% of total" absolute={`($${absoluteCollected.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`} />
         <StatBox label="Loads" value={recentLoads.length} sub={`Avg $${Math.round(avgLoadValue).toLocaleString()}/load`} />
         <StatBox label="Active Drivers" value={drivers.filter(d => d.status === 'active').length} sub={`${driverData.length} with loads`} />
       </div>
