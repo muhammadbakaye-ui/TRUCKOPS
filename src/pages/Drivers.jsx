@@ -7,13 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Loader2, Plus, Link, RefreshCw } from 'lucide-react';
+import { Loader2, Plus, Link, RefreshCw, QrCode, Copy, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import SearchInput from '../components/shared/SearchInput';
 import DataTable from '../components/shared/DataTable';
 import StatusBadge from '../components/shared/StatusBadge';
 import PageHeader from '../components/shared/PageHeader';
 import { logAudit } from '../components/shared/AuditLogger';
+import { QRCodeSVG } from 'qrcode.react';
 
 function DriverFormDialog({ open, onClose, editing, trucks, onSave, saving }) {
   const [form, setForm] = useState({});
@@ -130,25 +131,71 @@ function DriverFormDialog({ open, onClose, editing, trucks, onSave, saving }) {
   );
 }
 
+function DriverQRModal({ driver, url, onClose }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const smsLink = `sms:${driver.phone?.replace(/\D/g, '') || ''}?body=${encodeURIComponent(`Hi ${driver.full_name}, here's your TruckOps driver portal link: ${url}`)}`;
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="text-sm">Portal Access — {driver.full_name}</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col items-center gap-4 py-2">
+          <div className="p-3 bg-white rounded-xl border shadow-sm">
+            <QRCodeSVG value={url} size={200} level="M" />
+          </div>
+          <p className="text-xs text-muted-foreground text-center">
+            Driver scans this QR code on their phone to open their portal — no login needed.
+          </p>
+          <div className="w-full space-y-2">
+            <button
+              onClick={handleCopy}
+              className="w-full flex items-center justify-center gap-2 h-9 rounded-lg border border-input bg-background text-xs font-medium hover:bg-muted transition-colors"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? 'Copied!' : 'Copy Link'}
+            </button>
+            {driver.phone && (
+              <a
+                href={smsLink}
+                className="w-full flex items-center justify-center gap-2 h-9 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+              >
+                📱 Send via SMS
+              </a>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function Drivers() {
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [generatingToken, setGeneratingToken] = useState(null);
+  const [qrDriver, setQrDriver] = useState(null); // { driver, url }
   const queryClient = useQueryClient();
 
-  const handleCopyPortalLink = async (driver, e) => {
+  const handleShowPortalQR = async (driver, e) => {
     e.stopPropagation();
     if (!driver.portal_token) {
-      // Generate token first
       setGeneratingToken(driver.id);
       try {
         const res = await base44.functions.invoke('generateDriverToken', { driver_id: driver.id });
         const token = res.data.token;
         const url = `${window.location.origin}/DriverPublicPortal?token=${token}`;
-        await navigator.clipboard.writeText(url);
-        toast.success('Portal link generated & copied!');
         queryClient.invalidateQueries({ queryKey: ['drivers'] });
+        setQrDriver({ driver: { ...driver, portal_token: token }, url });
       } catch (err) {
         toast.error('Failed to generate link');
       } finally {
@@ -156,8 +203,7 @@ export default function Drivers() {
       }
     } else {
       const url = `${window.location.origin}/DriverPublicPortal?token=${driver.portal_token}`;
-      await navigator.clipboard.writeText(url);
-      toast.success('Portal link copied!');
+      setQrDriver({ driver, url });
     }
   };
 
@@ -241,12 +287,12 @@ export default function Drivers() {
         <Button
           variant="outline" size="sm"
           className="h-7 text-[11px] gap-1 px-2"
-          onClick={(e) => handleCopyPortalLink(r, e)}
+          onClick={(e) => handleShowPortalQR(r, e)}
           disabled={generatingToken === r.id}
-          title={r.portal_token ? 'Copy portal link' : 'Generate & copy portal link'}
+          title={r.portal_token ? 'Show QR & share portal link' : 'Generate portal link'}
         >
-          {generatingToken === r.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Link className="w-3 h-3" />}
-          {r.portal_token ? 'Copy Link' : 'Get Link'}
+          {generatingToken === r.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <QrCode className="w-3 h-3" />}
+          {r.portal_token ? 'Share' : 'Get Link'}
         </Button>
         {r.portal_token && (
           <Button
@@ -278,6 +324,13 @@ export default function Drivers() {
         <SearchInput value={search} onChange={setSearch} placeholder="Search drivers..." className="w-72" />
       </div>
       <DataTable columns={columns} data={filtered} isLoading={isLoading} onRowClick={(row) => { setEditing(row); setDialogOpen(true); }} emptyMessage="No drivers found" />
+      {qrDriver && (
+        <DriverQRModal
+          driver={qrDriver.driver}
+          url={qrDriver.url}
+          onClose={() => setQrDriver(null)}
+        />
+      )}
       <DriverFormDialog
         open={dialogOpen}
         onClose={() => { setDialogOpen(false); setEditing(null); }}
