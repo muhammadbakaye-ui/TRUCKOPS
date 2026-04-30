@@ -329,12 +329,9 @@ export default function Loads() {
     setSavingBulk(false);
   };
 
-  const uniqueDrivers = [...new Set(loads
-    .filter(l => l.driver_1_name)
-    .map(l => l.driver_1_name))].sort();
-  const uniqueTrucks = [...new Set(loads
-    .filter(l => l.truck_number)
-    .map(l => l.truck_number))].sort();
+  // Build driver/truck filter options from actual DB records (not stale load text fields)
+  const uniqueDrivers = drivers.map(d => d.full_name).sort();
+  const uniqueTrucks = trucks.map(t => t.unit_number).sort();
   const uniqueTrips = [...new Set(loads
     .filter(l => l.trip_number)
     .map(l => l.trip_number))].sort();
