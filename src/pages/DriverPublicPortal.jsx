@@ -196,7 +196,8 @@ export default function DriverPublicPortal() {
   const { driver, truck, statements, statementLines, fuelTransactions } = data;
 
   const totalNetPay = statements.reduce((s, st) => s + (st.final_check_amount || 0), 0);
-  const totalGross = statements.reduce((s, st) => s + (st.gross_total || 0), 0);
+  const latestStatement = statements[0] || null;
+  const totalGross = latestStatement ? (latestStatement.gross_total || 0) : 0;
 
   // Group statement lines by statement_id
   const linesByStatement = {};
@@ -227,7 +228,7 @@ export default function DriverPublicPortal() {
           <p className="text-lg font-bold text-primary">{fmt(totalNetPay)}</p>
         </div>
         <div>
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Total Gross</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Latest Gross</p>
           <p className="text-lg font-bold text-green-600">{fmt(totalGross)}</p>
         </div>
         <div>
