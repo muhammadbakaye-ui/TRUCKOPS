@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Truck, Calendar, Fuel, ChevronDown, ChevronUp, AlertCircle, Printer } from 'lucide-react';
+import { Loader2, Truck, Calendar, Fuel, ChevronDown, ChevronUp, AlertCircle, Printer, Upload, FileText, CheckCircle2, X } from 'lucide-react';
 import { printStatement } from '@/components/print/printStatement';
 import { format, parse } from 'date-fns';
 
@@ -150,6 +150,140 @@ function StatementCard({ statement, lines }) {
   );
 }
 
+function DocUploadTab({ driver }) {
+  const [docType, setDocType] = useState('bol');
+  const [file, setFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploaded, setUploaded] = useState([]);
+  const [error, setError] = useState(null);
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0] || null);
+    setError(null);
+  };
+
+  const handleUpload = async () => {
+    if (!file) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      await base44.entities.DriverDocument.create({
+        driver_id: driver.id,
+        driver_name: driver.full_name,
+        document_type: docType,
+        file_name: file.name,
+        file_url,
+      });
+      setUploaded(prev => [...prev, { name: file.name, type: docType }]);
+      setFile(null);
+      // Reset file input
+      const input = document.getElementById('portal-file-input');
+      if (input) input.value = '';
+    } catch (err) {
+      setError('Upload failed. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="py-3 px-4 border-b">
+          <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Upload Document</CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 space-y-4">
+          <div>
+            <p className="text-xs text-muted-foreground mb-3">Submit your BOLs or Rate Confirmations directly to dispatch.</p>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-foreground mb-1.5 block">Document Type</label>
+                <div className="flex gap-2">
+                  {[{ value: 'bol', label: 'BOL' }, { value: 'rate_confirmation', label: 'Rate Confirmation' }].map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setDocType(opt.value)}
+                      className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition-colors ${
+                        docType === opt.value
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-background text-foreground border-border hover:bg-muted'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-foreground mb-1.5 block">Select File</label>
+                <label
+                  htmlFor="portal-file-input"
+                  className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-border rounded-xl cursor-pointer hover:bg-muted/30 transition-colors"
+                >
+                  {file ? (
+                    <div className="flex items-center gap-2 px-3 text-center">
+                      <FileText className="w-5 h-5 text-primary shrink-0" />
+                      <span className="text-xs text-foreground font-medium truncate max-w-[200px]">{file.name}</span>
+                      <button onClick={(e) => { e.preventDefault(); setFile(null); const input = document.getElementById('portal-file-input'); if (input) input.value = ''; }}>
+                        <X className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="w-6 h-6 text-muted-foreground mb-1" />
+                      <span className="text-xs text-muted-foreground">Tap to select a photo or PDF</span>
+                    </>
+                  )}
+                </label>
+                <input
+                  id="portal-file-input"
+                  type="file"
+                  accept="image/*,application/pdf"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </div>
+
+              {error && <p className="text-xs text-destructive">{error}</p>}
+
+              <button
+                onClick={handleUpload}
+                disabled={!file || uploading}
+                className="w-full h-10 rounded-lg bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-opacity"
+              >
+                {uploading ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</> : <><Upload className="w-4 h-4" /> Submit Document</>}
+              </button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {uploaded.length > 0 && (
+        <Card>
+          <CardHeader className="py-3 px-4 border-b">
+            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Uploaded This Session</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y">
+              {uploaded.map((u, i) => (
+                <div key={i} className="flex items-center gap-3 px-4 py-3 text-xs">
+                  <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{u.name}</p>
+                    <p className="text-muted-foreground text-[11px]">{u.type === 'bol' ? 'BOL' : 'Rate Confirmation'}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
 export default function DriverPublicPortal() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -239,6 +373,7 @@ export default function DriverPublicPortal() {
           {[
             { key: 'statements', label: 'My Statements', TabIcon: Calendar },
             { key: 'fuel', label: 'Fuel Transactions', TabIcon: Fuel },
+            { key: 'upload', label: 'Upload Docs', TabIcon: Upload },
           ].map(({ key, label, TabIcon }) => (
             <button
               key={key}
@@ -277,6 +412,8 @@ export default function DriverPublicPortal() {
               )}
             </>
           )}
+
+          {activeTab === 'upload' && <DocUploadTab driver={driver} />}
 
           {activeTab === 'fuel' && (
             <>
