@@ -125,7 +125,7 @@ export function printDriverPerformanceReport({ drivers, loads, period, periodLab
   </style>
 </head>
 <body>
-  <button class="print-btn" onclick="window.print()">🖨 Print / Save PDF</button>
+  <button class="print-btn" onclick="window.print()">🖨 Print</button>
 
   <div class="report-header">
     <div>

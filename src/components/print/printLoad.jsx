@@ -198,35 +198,8 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 
   <!-- DOWNLOAD BUTTON -->
   <div class="download-bar">
-    <button class="btn-pdf" onclick="savePdf()">⬇ Save as PDF</button>
     <button class="btn-print" onclick="window.print()">🖨 Print</button>
   </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script>
-function savePdf() {
-  var bar = document.querySelector('.download-bar');
-  if (!window.jspdf) { alert('PDF library still loading, please try again in a moment.'); return; }
-  bar.style.display = 'none';
-  try {
-    var doc = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
-    var el = document.querySelector('.page');
-    doc.html(el, {
-      callback: function(d) {
-        bar.style.display = 'flex';
-        d.save('${(load.external_load_number || load.internal_load_number || 'Load').replace(/'/g, "")}.pdf');
-      },
-      x: 36,
-      y: 36,
-      width: 540,
-      windowWidth: el.offsetWidth || 816
-    });
-  } catch(e) {
-    bar.style.display = 'flex';
-    alert('PDF generation failed: ' + e.message);
-  }
-}
-</script>
 
 </body>
 </html>`;

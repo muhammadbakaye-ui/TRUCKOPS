@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Truck, Calendar, Fuel, ChevronDown, ChevronUp, AlertCircle, DollarSign, Download } from 'lucide-react';
+import { Loader2, Truck, Calendar, Fuel, ChevronDown, ChevronUp, AlertCircle, Printer } from 'lucide-react';
 import { printStatement } from '@/components/print/printStatement';
 import { format, parse } from 'date-fns';
 
@@ -18,14 +18,11 @@ const statusConfig = {
 
 function StatementCard({ statement, lines }) {
   const [expanded, setExpanded] = useState(false);
-  const [printing, setPrinting] = useState(false);
   const cfg = statusConfig[statement.status] || statusConfig.draft;
 
-  const handleDownloadPdf = (e) => {
+  const handlePrint = (e) => {
     e.stopPropagation();
-    setPrinting(true);
     printStatement({ company: {}, statement, allLines: lines });
-    setTimeout(() => setPrinting(false), 1000);
   };
 
   const tripLines = lines.filter(l => l.line_type === 'trip' || l.line_type === 'adjustment');
@@ -60,11 +57,10 @@ function StatementCard({ statement, lines }) {
               size="sm"
               variant="ghost"
               className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
-              onClick={handleDownloadPdf}
-              disabled={printing}
-              title="Download PDF"
+              onClick={handlePrint}
+              title="Print"
             >
-              {printing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+              <Printer className="w-3.5 h-3.5" />
             </Button>
             {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
           </div>

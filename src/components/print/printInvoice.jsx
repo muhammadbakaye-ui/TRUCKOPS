@@ -276,35 +276,8 @@ export function printInvoice({ company, invoice, lineItems, stops }) {
 
 <!-- DOWNLOAD BAR -->
 <div class="download-bar" style="position:fixed;bottom:24px;right:32px;display:flex;gap:10px;z-index:9999;">
-  <button onclick="savePdf()" style="background:#166534;color:#fff;border:none;padding:10px 22px;font-size:13px;font-weight:bold;border-radius:6px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.25);">⬇ Save as PDF</button>
   <button onclick="window.print()" style="background:#1a3a6b;color:#fff;border:none;padding:10px 22px;font-size:13px;font-weight:bold;border-radius:6px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.25);">🖨 Print</button>
 </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script>
-function savePdf() {
-  var bar = document.querySelector('.download-bar');
-  if (!window.jspdf) { alert('PDF library still loading, please try again in a moment.'); return; }
-  bar.style.display = 'none';
-  try {
-    var doc = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
-    var el = document.querySelector('.page');
-    doc.html(el, {
-      callback: function(d) {
-        bar.style.display = 'flex';
-        d.save('Invoice-${(invoice.invoice_number || '').replace(/'/g, '')}.pdf');
-      },
-      x: 36,
-      y: 36,
-      width: 540,
-      windowWidth: el.offsetWidth || 816
-    });
-  } catch(e) {
-    bar.style.display = 'flex';
-    alert('PDF generation failed: ' + e.message);
-  }
-}
-</script>
 
 </body>
 </html>`;
