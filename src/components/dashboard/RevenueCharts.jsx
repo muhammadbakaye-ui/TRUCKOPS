@@ -120,18 +120,18 @@ export default function RevenueCharts({ loads, drivers, invoices = [] }) {
           </div>
           <div className="text-right">
             <p className="text-lg font-bold text-foreground">{fmtDollar(current)}</p>
-            {pctChange !== null && (
-              <div className={`flex items-center justify-end gap-1 text-xs font-medium ${pctChange > 0 ? 'text-green-600' : pctChange < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
-                {pctChange > 0 ? <TrendingUp className="w-3 h-3" /> : pctChange < 0 ? <TrendingDown className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
-                {pctChange > 0 ? '+' : ''}{pctChange.toFixed(1)}% vs last month
-              </div>
-            )}
             <p
               className="text-[11px] font-semibold mt-0.5"
               style={{ background: 'linear-gradient(135deg, #888 0%, #e8e8e8 40%, #aaa 70%, #666 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
             >
               ({fmtDollar(absoluteTotal)})
             </p>
+            {pctChange !== null && (
+              <div className={`flex items-center justify-end gap-1 text-xs font-medium ${pctChange > 0 ? 'text-green-600' : pctChange < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                {pctChange > 0 ? <TrendingUp className="w-3 h-3" /> : pctChange < 0 ? <TrendingDown className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
+                {pctChange > 0 ? '+' : ''}{pctChange.toFixed(1)}% vs last month
+              </div>
+            )}
           </div>
         </CardHeader>
         <CardContent className="px-2 pb-4">

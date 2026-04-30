@@ -89,15 +89,15 @@ export default function Reports() {
     <Card className="p-3 md:p-4">
       <p className="text-[10px] md:text-[11px] font-medium text-muted-foreground uppercase tracking-wider leading-tight">{label}</p>
       <p className="text-lg md:text-2xl font-bold mt-0.5 md:mt-1">{value}</p>
-      {sub && <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5">{sub}</p>}
       {absolute && (
         <p
-          className="text-[10px] md:text-xs font-semibold mt-1"
+          className="text-[10px] md:text-xs font-semibold mt-0.5"
           style={{ background: 'linear-gradient(135deg, #888 0%, #e8e8e8 40%, #aaa 70%, #666 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
         >
           {absolute}
         </p>
       )}
+      {sub && <p className="text-[10px] md:text-xs text-muted-foreground mt-0.5">{sub}</p>}
     </Card>
   );
 
