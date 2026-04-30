@@ -9,6 +9,7 @@ import NotificationBell from './NotificationBell';
 import TourButton from '../tutorial/TourButton';
 import AppTour, { ADMIN_TOUR_STEPS, UPLOAD_TOUR_STEPS } from '../tutorial/AppTour';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function TopBar({ pageTitle, currentPageName }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -16,6 +17,7 @@ export default function TopBar({ pageTitle, currentPageName }) {
   const [showUploadTour, setShowUploadTour] = useState(false);
   const navigate = useNavigate();
   const { logout } = useSession();
+  const queryClient = useQueryClient();
 
   const startTour = () => setShowTour(true);
 
@@ -44,7 +46,8 @@ export default function TopBar({ pageTitle, currentPageName }) {
     }
   };
 
-  const handleReload = () => {
+  const handleReload = async () => {
+    await queryClient.invalidateQueries();
     navigate(0);
   };
 
