@@ -52,6 +52,19 @@ export default function RevenueCharts({ loads, drivers, invoices = [] }) {
   const previous = monthlyData[monthlyData.length - 2]?.revenue || 0;
   const pctChange = previous > 0 ? ((current - previous) / previous) * 100 : null;
 
+  // Absolute: total of all loads as if every one were paid (sum of invoice_amount across all months shown)
+  const absoluteTotal = useMemo(() => {
+    return monthlyData.reduce((s, m) => {
+      const start = m.key + '-01';
+      const end = m.key + '-31';
+      const monthLoads = loads.filter(l => {
+        const d = l.pickup_date || '';
+        return d >= start && d <= end && !l.canceled;
+      });
+      return s + monthLoads.reduce((ms, l) => ms + (Number(l.invoice_amount) || Number(l.freight_rate) || 0), 0);
+    }, 0);
+  }, [loads, monthlyData]);
+
   // Top drivers by revenue (current month + last month combined for relevance)
   const topDriversData = useMemo(() => {
     const last2Start = format(startOfMonth(subMonths(new Date(), 1)), 'yyyy-MM-dd');
@@ -113,6 +126,12 @@ export default function RevenueCharts({ loads, drivers, invoices = [] }) {
                 {pctChange > 0 ? '+' : ''}{pctChange.toFixed(1)}% vs last month
               </div>
             )}
+            <p
+              className="text-[11px] font-semibold mt-0.5"
+              style={{ background: 'linear-gradient(135deg, #888 0%, #e8e8e8 40%, #aaa 70%, #666 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+            >
+              ({fmtDollar(absoluteTotal)})
+            </p>
           </div>
         </CardHeader>
         <CardContent className="px-2 pb-4">
