@@ -97,6 +97,7 @@ Return a structured JSON with the following fields (use null if not found):
 - weight (number) - weight in lbs
 - equipment_type (string: dry_van, reefer, flatbed, step_deck, lowboy, tanker, other)
 - stops (array of objects with: stop_type (pickup/delivery/stop), company_name, street, city, state, zip, appointment_date (YYYY-MM-DD format, always use ${new Date().getFullYear()} as the year if the year is not explicitly stated in the document), time_from, time_to, reference_number, bol_number, po_number)
+- customer_po (string) - the Customer PO number (may be labeled "Customer PO", "PO #", "Customer PO #", etc.)
 - special_instructions (string)
 - hazmat (boolean)`,
           file_urls: [file_url],
@@ -104,6 +105,7 @@ Return a structured JSON with the following fields (use null if not found):
             type: 'object',
             properties: {
               load_number: { type: 'string' },
+              customer_po: { type: 'string' },
               customer_name: { type: 'string' },
               contact_name: { type: 'string' },
               freight_rate: { type: 'number' },
@@ -177,6 +179,7 @@ Return a structured JSON with the following fields (use null if not found):
         const load = await base44.entities.Load.create({
           internal_load_number: newLoadNum,
           external_load_number: extracted.load_number,
+          customer_reference_number: extracted.customer_po,
           customer_name: extracted.customer_name,
           customer_id: customerId,
           contact_name: extracted.contact_name,
