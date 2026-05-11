@@ -66,13 +66,13 @@ export default function UploadProgressFloat() {
               </div>
             )}
 
-            {job.results.length > 0 && isDone && (
+            {(job.results.length > 0 || job.errors?.length > 0) && isDone && (
               <div className="space-y-1 pt-1 border-t">
                 {job.results.slice(0, 3).map((r, i) => (
                   <button
                     key={i}
                     className="flex items-center gap-1.5 text-[10px] text-primary hover:underline w-full text-left"
-                    onClick={() => navigate(createPageUrl(`LoadDetail?id=${r.load.id}`))}
+                    onClick={() => navigate(`/LoadDetail?id=${r.load.id}`)}
                   >
                     <FileText className="w-3 h-3 flex-shrink-0" />
                     <span className="font-mono font-semibold">{r.load.internal_load_number}</span>
@@ -80,7 +80,20 @@ export default function UploadProgressFloat() {
                   </button>
                 ))}
                 {job.results.length > 3 && (
-                  <span className="text-[10px] text-muted-foreground">+{job.results.length - 3} more</span>
+                  <span className="text-[10px] text-muted-foreground">+{job.results.length - 3} more loads</span>
+                )}
+                {job.errors?.length > 0 && (
+                  <div className="pt-1 border-t space-y-0.5">
+                    {job.errors.slice(0, 3).map((e, i) => (
+                      <div key={i} className="flex items-center gap-1.5 text-[10px] text-destructive">
+                        <XCircle className="w-3 h-3 flex-shrink-0" />
+                        <span className="truncate">{e.name}</span>
+                      </div>
+                    ))}
+                    {job.errors.length > 3 && (
+                      <span className="text-[10px] text-destructive">+{job.errors.length - 3} more failed</span>
+                    )}
+                  </div>
                 )}
               </div>
             )}

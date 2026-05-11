@@ -30,6 +30,18 @@ export function UploadProvider({ children }) {
     updateJob(jobId, { status: 'cancelled' });
   }, [updateJob]);
 
+  // Helper: retry an async fn up to `retries` times with exponential backoff
+  const withRetry = async (fn, retries = 3, delayMs = 1500) => {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        return await fn();
+      } catch (err) {
+        if (attempt === retries) throw err;
+        await new Promise(r => setTimeout(r, delayMs * attempt));
+      }
+    }
+  };
+
   // Main processing function — runs in background, survives navigation
   const submitUpload = useCallback(async ({
     files, docType, selectedDriverId, selectedTruckId, tripNumber, manualAmount, driverAmount, drivers, trucks,
@@ -46,6 +58,7 @@ export function UploadProvider({ children }) {
       current: 0,
       currentFileName: '',
       results: [],
+      errors: [],
       status: 'processing',
       docType,
       driverName: driverObj?.full_name || null,
@@ -57,24 +70,43 @@ export function UploadProvider({ children }) {
     setJobs(prev => [...prev, job]);
 
     const processedResults = [];
+    const failedFiles = [];
 
-    // Fetch the starting load number once before the loop to avoid race conditions
+    // Pre-fetch company list once for the entire batch (avoids 50 separate fetches)
+    const allCompanies = await base44.entities.Company.list();
+
+    // Fetch the highest existing load number fresh before starting
     const seedLoads = await base44.entities.Load.list('-created_date', 1);
     let loadNumCounter = seedLoads.length > 0
       ? parseInt(seedLoads[0].internal_load_number?.replace(/\D/g, '') || '1000')
       : 1000;
 
+    const currentYear = new Date().getFullYear();
+
+    const fixDate = (dateStr) => {
+      if (!dateStr) return dateStr;
+      const fullMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (fullMatch) return `${currentYear}-${fullMatch[2]}-${fullMatch[3]}`;
+      const shortMatch = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
+      if (shortMatch) return `${currentYear}-${shortMatch[1].padStart(2,'0')}-${shortMatch[2].padStart(2,'0')}`;
+      const slashMatch = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+      if (slashMatch) return `${currentYear}-${slashMatch[1].padStart(2,'0')}-${slashMatch[2].padStart(2,'0')}`;
+      return dateStr;
+    };
+
     for (const file of files) {
       if (cancelRefs.current[id]) break;
 
-      const fileIndex = processedResults.length + 1;
+      const fileIndex = processedResults.length + failedFiles.length + 1;
       setJobs(prev => prev.map(j => j.id === id ? { ...j, current: fileIndex, currentFileName: file.name } : j));
 
       try {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        // Step 1: Upload file (with retry)
+        const { file_url } = await withRetry(() => base44.integrations.Core.UploadFile({ file }));
 
         if (cancelRefs.current[id]) break;
 
+        // Step 2: Create pending document record
         const doc = await base44.entities.Document.create({
           document_type: docType,
           file_name: file.name,
@@ -85,7 +117,8 @@ export function UploadProvider({ children }) {
 
         if (cancelRefs.current[id]) break;
 
-        const extracted = await base44.integrations.Core.InvokeLLM({
+        // Step 3: LLM extraction (with retry — most likely step to fail transiently)
+        const extracted = await withRetry(() => base44.integrations.Core.InvokeLLM({
           prompt: `Extract all load/shipment data from this ${docType === 'rate_confirmation' ? 'rate confirmation' : 'bill of lading'} document.
 Return a structured JSON with the following fields (use null if not found):
 - load_number (string) - the main load/order/reference number (e.g. "Load #", "Order #", "Load Number")
@@ -137,38 +170,30 @@ Return a structured JSON with the following fields (use null if not found):
               }
             }
           }
-        });
+        }), 3, 2000);
 
         if (cancelRefs.current[id]) {
-          // Clean up the pending doc we already created
           await base44.entities.Document.delete(doc.id).catch(() => {});
           break;
         }
 
-        loadNumCounter += 1;
+        // Step 4: Assign load number — re-fetch latest to avoid collisions across sessions
+        const latestLoads = await base44.entities.Load.list('-created_date', 1);
+        const latestNum = latestLoads.length > 0
+          ? parseInt(latestLoads[0].internal_load_number?.replace(/\D/g, '') || '1000')
+          : 1000;
+        loadNumCounter = Math.max(loadNumCounter, latestNum) + 1;
         const newLoadNum = `L-${loadNumCounter}`;
 
+        // Step 5: Match company from pre-fetched list
         let customerId = null;
         if (extracted.customer_name) {
-          const companies = await base44.entities.Company.list();
-          const existing = companies.find(c =>
-            c.company_name.toLowerCase().includes(extracted.customer_name.toLowerCase().substring(0, 6))
-          );
+          const needle = extracted.customer_name.toLowerCase().substring(0, 6);
+          const existing = allCompanies.find(c => c.company_name.toLowerCase().includes(needle));
           if (existing) customerId = existing.id;
         }
 
-        // Always force current year on all stop dates — documents rarely show a year explicitly
-        const currentYear = new Date().getFullYear();
-        const fixDate = (dateStr) => {
-          if (!dateStr) return dateStr;
-          const fullMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-          if (fullMatch) return `${currentYear}-${fullMatch[2]}-${fullMatch[3]}`;
-          const shortMatch = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
-          if (shortMatch) return `${currentYear}-${shortMatch[1].padStart(2,'0')}-${shortMatch[2].padStart(2,'0')}`;
-          const slashMatch = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
-          if (slashMatch) return `${currentYear}-${slashMatch[1].padStart(2,'0')}-${slashMatch[2].padStart(2,'0')}`;
-          return dateStr;
-        };
+        // Step 6: Fix stop dates
         if (extracted.stops) {
           extracted.stops = extracted.stops.map(s => ({ ...s, appointment_date: fixDate(s.appointment_date) }));
         }
@@ -176,6 +201,7 @@ Return a structured JSON with the following fields (use null if not found):
         const firstStop = extracted.stops?.find(s => s.stop_type === 'pickup');
         const lastStop = [...(extracted.stops || [])].reverse().find(s => s.stop_type === 'delivery');
 
+        // Step 7: Create load
         const load = await base44.entities.Load.create({
           internal_load_number: newLoadNum,
           external_load_number: extracted.load_number,
@@ -207,11 +233,13 @@ Return a structured JSON with the following fields (use null if not found):
           ...(tripNumber ? { trip_number: tripNumber } : {}),
         });
 
+        // Step 8: Create all stops in parallel
         const stops = extracted.stops || [];
-        for (let i = 0; i < stops.length; i++) {
-          await base44.entities.LoadStop.create({ ...stops[i], load_id: load.id, stop_order: i + 1 });
-        }
+        await Promise.all(
+          stops.map((s, i) => base44.entities.LoadStop.create({ ...s, load_id: load.id, stop_order: i + 1 }))
+        );
 
+        // Step 9: Update document with extraction results
         await base44.entities.Document.update(doc.id, {
           related_id: load.id,
           extraction_json: JSON.stringify(extracted),
@@ -223,17 +251,29 @@ Return a structured JSON with the following fields (use null if not found):
         processedResults.push({ load, extracted, stops });
         toast.success(`Load ${newLoadNum} created!`);
 
-        setJobs(prev => prev.map(j => j.id === id ? { ...j, current: fileIndex, results: [...processedResults] } : j));
+        setJobs(prev => prev.map(j => j.id === id
+          ? { ...j, current: processedResults.length + failedFiles.length, results: [...processedResults], errors: [...failedFiles] }
+          : j
+        ));
       } catch (err) {
+        failedFiles.push({ name: file.name, error: err.message });
+        setJobs(prev => prev.map(j => j.id === id
+          ? { ...j, errors: [...failedFiles] }
+          : j
+        ));
         toast.error(`Failed: ${file.name} — ${err.message}`);
       }
     }
 
     const wasCancelled = cancelRefs.current[id];
     setJobs(prev => prev.map(j => j.id === id
-      ? { ...j, status: wasCancelled ? 'cancelled' : 'done', current: processedResults.length, results: processedResults }
+      ? { ...j, status: wasCancelled ? 'cancelled' : 'done', current: processedResults.length, results: processedResults, errors: failedFiles }
       : j
     ));
+
+    if (failedFiles.length > 0 && !wasCancelled) {
+      toast.error(`${failedFiles.length} file(s) failed. Check the upload panel for details.`);
+    }
 
     return processedResults;
   }, []);
