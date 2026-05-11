@@ -86,7 +86,7 @@ function AppShell({ children, currentPageName }) {
       <GlobalBroadcastListener />
       <div className="flex h-screen overflow-hidden bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         {/* Sidebar: hidden on mobile, visible on md+ */}
-        <div className="hidden lg:flex">
+        <div className="hidden md:flex">
           <Sidebar
             currentPage={currentPageName}
             collapsed={collapsed}
@@ -96,7 +96,7 @@ function AppShell({ children, currentPageName }) {
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           <TopBar pageTitle={pageTitles[currentPageName] || currentPageName} currentPageName={currentPageName} />
           {/* Extra bottom padding on mobile to clear the bottom nav */}
-          <main ref={mainRef} className="flex-1 overflow-auto px-2 lg:px-0 pb-16 lg:pb-0">
+          <main ref={mainRef} className="flex-1 overflow-auto px-2 lg:px-0 pb-16 md:pb-0">
             {children}
           </main>
         </div>
