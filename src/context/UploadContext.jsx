@@ -88,7 +88,8 @@ export function UploadProvider({ children }) {
         const extracted = await base44.integrations.Core.InvokeLLM({
           prompt: `Extract all load/shipment data from this ${docType === 'rate_confirmation' ? 'rate confirmation' : 'bill of lading'} document.
 Return a structured JSON with the following fields (use null if not found):
-- load_number (string) - the load or order number from broker/shipper
+- load_number (string) - the main load/order/reference number (e.g. "Load #", "Order #", "Load Number")
+- customer_po (string) - IMPORTANT: the Customer PO number explicitly labeled as "Customer PO", "Customer PO #", "PO Number", or "PO #" — this is separate from the load number. On rate confirmations this often appears near the top next to or below the Load #. Extract it even if it looks like a number. Return null only if this label is truly absent from the document.
 - customer_name (string) - broker or shipper company name  
 - contact_name (string) - contact person
 - freight_rate (number) - total freight rate in dollars
@@ -97,7 +98,6 @@ Return a structured JSON with the following fields (use null if not found):
 - weight (number) - weight in lbs
 - equipment_type (string: dry_van, reefer, flatbed, step_deck, lowboy, tanker, other)
 - stops (array of objects with: stop_type (pickup/delivery/stop), company_name, street, city, state, zip, appointment_date (YYYY-MM-DD format, always use ${new Date().getFullYear()} as the year if the year is not explicitly stated in the document), time_from, time_to, reference_number, bol_number, po_number)
-- customer_po (string) - the Customer PO number (may be labeled "Customer PO", "PO #", "Customer PO #", etc.)
 - special_instructions (string)
 - hazmat (boolean)`,
           file_urls: [file_url],
