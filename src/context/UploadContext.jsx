@@ -97,7 +97,7 @@ Return a structured JSON with the following fields (use null if not found):
 - commodity (string) - type of freight
 - weight (number) - weight in lbs
 - equipment_type (string: dry_van, reefer, flatbed, step_deck, lowboy, tanker, other)
-- stops (array of objects with: stop_type (pickup/delivery/stop), company_name, street, city, state, zip, appointment_date (YYYY-MM-DD format, always use ${new Date().getFullYear()} as the year if the year is not explicitly stated in the document), time_from, time_to, reference_number, bol_number, po_number)
+- stops (array of objects with: stop_type (pickup/delivery/stop), company_name, street, city, state, zip, appointment_date (YYYY-MM-DD format, always use ${new Date().getFullYear()} as the year if the year is not explicitly stated in the document), time_from, time_to, reference_number (only a ref # explicitly listed FOR THIS SPECIFIC STOP — do NOT copy the top-level Load # or Customer PO here), bol_number (BOL number specific to this stop), po_number (PO number specific to this stop))
 - special_instructions (string)
 - hazmat (boolean)`,
           file_urls: [file_url],
