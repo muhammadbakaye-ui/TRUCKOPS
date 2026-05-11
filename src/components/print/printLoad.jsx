@@ -165,7 +165,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
     </div>
     <div class="stop-body">
       <div><div class="sf-lbl">Address</div><div class="sf-val">${[s.street, s.city, s.state, s.zip].filter(Boolean).join(', ') || '—'}</div></div>
-      <div><div class="sf-lbl">Ref / BOL #</div><div class="sf-val">${(() => { const clean = (v) => v && v.toLowerCase() !== 'none' ? v : null; return clean(s.reference_number) || clean(s.bol_number) || clean(load.customer_reference_number) || '—'; })()}</div></div>
+      <div><div class="sf-lbl">Ref / BOL #</div><div class="sf-val">${(() => { const clean = (v) => { const s = v && String(v).trim().toLowerCase(); return s && s !== 'none' && s !== 'null' ? v : null; }; return clean(s.reference_number) || clean(s.bol_number) || clean(load.customer_reference_number) || '—'; })()}</div></div>
       <div><div class="sf-lbl">Notes</div><div class="sf-val" style="font-weight:normal;">${s.memo || '—'}</div></div>
     </div>
   </div>`).join('')}
