@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { Upload, Loader2, FileText, CheckCircle, ArrowRight, X, XCircle, Truck, User, Hash, DollarSign, Tag } from 'lucide-react';
+import { Upload, Loader2, FileText, CheckCircle, X, XCircle, Truck, User, Hash, DollarSign, Tag, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import PageHeader from '../components/shared/PageHeader';
 import { useUploadContext } from '../context/UploadContext';
 
@@ -26,6 +26,7 @@ export default function UploadDocument() {
   const [tripNumber, setTripNumber] = useState('');
   const [manualAmount, setManualAmount] = useState('');
   const [driverAmount, setDriverAmount] = useState('');
+  const [showOverrides, setShowOverrides] = useState(false);
 
   useEffect(() => {
     base44.entities.Driver.filter({ status: 'active' }).then(setDrivers);
@@ -42,16 +43,13 @@ export default function UploadDocument() {
         if (item.type.startsWith('image/')) {
           const file = item.getAsFile();
           if (file) {
-            // Give it a meaningful name with timestamp
             const ext = item.type.split('/')[1] || 'png';
             const named = new File([file], `pasted-image-${Date.now()}.${ext}`, { type: item.type });
             imageFiles.push(named);
           }
         }
       }
-      if (imageFiles.length > 0) {
-        handleFiles(imageFiles);
-      }
+      if (imageFiles.length > 0) handleFiles(imageFiles);
     };
     window.addEventListener('paste', handlePaste);
     return () => window.removeEventListener('paste', handlePaste);
@@ -67,33 +65,25 @@ export default function UploadDocument() {
 
   const handleProcess = () => {
     if (files.length === 0) return;
-    submitUpload({
-      files,
-      docType,
-      selectedDriverId,
-      selectedTruckId,
-      tripNumber,
-      manualAmount,
-      driverAmount,
-      drivers,
-      trucks,
-    });
+    submitUpload({ files, docType, selectedDriverId, selectedTruckId, tripNumber, manualAmount, driverAmount, drivers, trucks });
     setFiles([]);
   };
 
+  const hasOverrides = manualAmount || driverAmount || tripNumber;
   const activeJobs = jobs.filter(j => j.status === 'processing' || j.status === 'done' || j.status === 'cancelled');
 
   return (
     <div className="p-4 space-y-4 flex gap-5 items-start">
       {/* LEFT: Upload form */}
-      <div className="flex-1 min-w-0 space-y-4 max-w-2xl">
+      <div className="flex-1 min-w-0 space-y-5 max-w-2xl">
         <PageHeader title="Upload Document" description="Upload a rate confirmation or BOL to auto-create a load" />
 
-        <div className="flex flex-wrap gap-3 items-center">
-          <div className="flex gap-2 items-center">
-            <Label className="text-xs">Document Type</Label>
+        {/* Primary options */}
+        <div className="flex flex-wrap gap-4 items-end">
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-xs text-muted-foreground">Document Type</Label>
             <Select value={docType} onValueChange={setDocType}>
-              <SelectTrigger className="h-8 text-xs w-48"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-9 text-sm w-52"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="rate_confirmation">Rate Confirmation</SelectItem>
                 <SelectItem value="bol">Bill of Lading</SelectItem>
@@ -102,44 +92,60 @@ export default function UploadDocument() {
             </Select>
           </div>
 
-          <div className="flex gap-2 items-center">
-            <Label className="text-xs">Driver</Label>
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-xs text-muted-foreground">Driver <span className="opacity-50">(optional)</span></Label>
             <Select value={selectedDriverId} onValueChange={setSelectedDriverId}>
-              <SelectTrigger className="h-8 text-xs w-44"><SelectValue placeholder="(optional)" /></SelectTrigger>
+              <SelectTrigger className="h-9 text-sm w-48"><SelectValue placeholder="Not assigned" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value={null}>None</SelectItem>
+                <SelectItem value={null}>Not assigned</SelectItem>
                 {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
 
-          <div className="flex gap-2 items-center">
-            <Label className="text-xs">Trip #</Label>
-            <Input value={tripNumber} onChange={e => setTripNumber(e.target.value)} placeholder="(optional)" className="h-8 text-xs w-32" />
-          </div>
-
-          <div className="flex gap-2 items-center">
-            <Label className="text-xs">Invoice $</Label>
-            <Input value={manualAmount} onChange={e => setManualAmount(e.target.value)} placeholder="(override)" type="number" className="h-8 text-xs w-32" />
-          </div>
-
-          <div className="flex gap-2 items-center">
-            <Label className="text-xs">Driver $</Label>
-            <Input value={driverAmount} onChange={e => setDriverAmount(e.target.value)} placeholder="(optional)" type="number" className="h-8 text-xs w-32" />
-          </div>
-
-          <div className="flex gap-2 items-center">
-            <Label className="text-xs">Truck</Label>
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-xs text-muted-foreground">Truck <span className="opacity-50">(optional)</span></Label>
             <Select value={selectedTruckId} onValueChange={setSelectedTruckId}>
-              <SelectTrigger className="h-8 text-xs w-36"><SelectValue placeholder="(optional)" /></SelectTrigger>
+              <SelectTrigger className="h-9 text-sm w-40"><SelectValue placeholder="Not assigned" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value={null}>None</SelectItem>
+                <SelectItem value={null}>Not assigned</SelectItem>
                 {trucks.map(t => <SelectItem key={t.id} value={t.id}>#{t.unit_number}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
+
+          {/* Overrides toggle button */}
+          <button
+            type="button"
+            onClick={() => setShowOverrides(v => !v)}
+            className="flex items-center gap-1.5 h-9 px-3 rounded-md border border-border text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors self-end"
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            Overrides
+            {showOverrides ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            {hasOverrides && <span className="w-1.5 h-1.5 rounded-full bg-primary ml-0.5" />}
+          </button>
         </div>
 
+        {/* Override fields */}
+        {showOverrides && (
+          <div className="flex flex-wrap gap-4 items-end p-4 bg-muted/40 rounded-lg border border-border">
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-xs text-muted-foreground">Invoice Amount Override</Label>
+              <Input value={manualAmount} onChange={e => setManualAmount(e.target.value)} placeholder="Auto from document" type="number" className="h-9 text-sm w-44" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-xs text-muted-foreground">Driver Pay Override</Label>
+              <Input value={driverAmount} onChange={e => setDriverAmount(e.target.value)} placeholder="Auto from document" type="number" className="h-9 text-sm w-44" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-xs text-muted-foreground">Trip #</Label>
+              <Input value={tripNumber} onChange={e => setTripNumber(e.target.value)} placeholder="Optional" className="h-9 text-sm w-36" />
+            </div>
+          </div>
+        )}
+
+        {/* Drop zone */}
         <Card
           data-tour="upload-dropzone"
           className={`border-2 border-dashed transition-colors cursor-pointer ${dragging ? 'border-primary bg-primary/5' : 'border-border'} ${files.length > 0 ? 'border-green-500 bg-green-500/5' : ''}`}
@@ -157,11 +163,7 @@ export default function UploadDocument() {
                   {files.map((f, i) => (
                     <div key={i} className="flex items-center justify-between gap-2 bg-green-500/10 rounded px-2 py-1 text-xs">
                       <span className="truncate text-foreground">{f.name} <span className="text-muted-foreground">({(f.size / 1024).toFixed(0)} KB)</span></span>
-                      <button
-                        className="flex-shrink-0 text-muted-foreground hover:text-destructive"
-                        onClick={() => setFiles(prev => prev.filter((_, idx) => idx !== i))}
-                        title="Remove"
-                      >
+                      <button className="flex-shrink-0 text-muted-foreground hover:text-destructive" onClick={() => setFiles(prev => prev.filter((_, idx) => idx !== i))} title="Remove">
                         <X className="w-3 h-3" />
                       </button>
                     </div>
@@ -197,7 +199,6 @@ export default function UploadDocument() {
             const isDone = job.status === 'done';
             const isCancelled = job.status === 'cancelled';
             const isProcessing = job.status === 'processing';
-
             const driverLabel = drivers.find(d => d.full_name === job.driverName)?.full_name || job.driverName;
 
             return (
@@ -210,11 +211,7 @@ export default function UploadDocument() {
                       ? <XCircle className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                       : <Loader2 className="w-3.5 h-3.5 animate-spin text-primary flex-shrink-0" />}
                     <span className="text-xs font-semibold truncate">
-                      {isDone
-                        ? `${job.results.length}/${job.total} created`
-                        : isCancelled
-                        ? `Cancelled (${job.results.length} done)`
-                        : `Processing ${job.current}/${job.total}`}
+                      {isDone ? `${job.results.length}/${job.total} created` : isCancelled ? `Cancelled (${job.results.length} done)` : `Processing ${job.current}/${job.total}`}
                     </span>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
@@ -231,17 +228,12 @@ export default function UploadDocument() {
                   </div>
                 </CardHeader>
                 <CardContent className="px-3 py-2.5 space-y-2">
-                  {/* Progress bar */}
                   {isProcessing && (
                     <div className="space-y-1">
                       <Progress value={pct} className="h-1.5" />
-                      {job.currentFileName && (
-                        <p className="text-[10px] text-muted-foreground truncate">{job.currentFileName}</p>
-                      )}
+                      {job.currentFileName && <p className="text-[10px] text-muted-foreground truncate">{job.currentFileName}</p>}
                     </div>
                   )}
-
-                  {/* Job metadata */}
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                       <Tag className="w-2.5 h-2.5 flex-shrink-0" />
@@ -280,8 +272,6 @@ export default function UploadDocument() {
                       </div>
                     )}
                   </div>
-
-                  {/* Created loads */}
                   {job.results.length > 0 && (
                     <div className="space-y-1 pt-1 border-t">
                       {job.results.map((r, i) => (
