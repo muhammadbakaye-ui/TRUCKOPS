@@ -17,9 +17,11 @@ const PLANS = [
     bg: 'bg-blue-50',
     description: 'Owner-operators / tiny fleets',
     features: [
-      '6 drivers, 6 trucks',
-      'Invoices',
-      'Basic load tracking',
+      'Up to 6 drivers & 6 trucks',
+      'Load tracking',
+      'Invoicing',
+      'Company & driver directory',
+      'Document uploads',
     ],
   },
   {
@@ -33,11 +35,13 @@ const PLANS = [
     bg: 'bg-primary/5',
     description: 'Small trucking companies',
     popular: true,
+    includedFrom: 'Basic',
     features: [
-      '20 drivers, 20 trucks',
-      'Driver statements',
-      'Fuel imports',
+      'Up to 20 drivers & 20 trucks',
+      'Driver pay statements',
+      'Fuel card imports',
       'Duplicate load detection',
+      'Audit log',
     ],
   },
   {
@@ -50,12 +54,13 @@ const PLANS = [
     border: 'border-amber-200',
     bg: 'bg-amber-50',
     description: 'Growing companies',
+    includedFrom: 'Professional',
     features: [
       'Unlimited drivers & trucks',
-      'OCR scanning',
+      'OCR document scanning',
       'Advanced reports',
       'Priority support',
-      'Cloud backup, updates included',
+      'Cloud backup & updates included',
     ],
   },
   {
@@ -69,14 +74,10 @@ const PLANS = [
     border: 'border-emerald-200',
     bg: 'bg-emerald-50',
     description: 'Pay once, use forever',
+    includedFrom: 'Enterprise',
     features: [
-      'Unlimited drivers & trucks',
-      'All features included',
-      'Invoices & driver statements',
-      'Fuel imports & OCR scanning',
-      'Advanced reports',
-      'Priority support',
-      'All future updates included',
+      'All future features & updates',
+      'Lifetime priority support',
     ],
   },
 ];
@@ -167,6 +168,12 @@ export default function Pricing() {
                 <span className="text-slate-400 text-sm">{plan.oneTime ? ' one-time' : '/mo'}</span>
               </div>
               <ul className="space-y-2 mb-6">
+                {plan.includedFrom && (
+                  <li className="flex items-center gap-2 text-sm font-semibold text-primary/90 bg-primary/10 rounded-lg px-2 py-1.5 mb-1">
+                    <Check className="w-4 h-4 text-primary shrink-0" />
+                    Everything in {plan.includedFrom}
+                  </li>
+                )}
                 {plan.features.map((f) => (
                   <li key={f} className="flex items-start gap-2 text-sm text-slate-300">
                     <Check className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
