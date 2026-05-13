@@ -72,7 +72,6 @@ Deno.serve(async (req) => {
       if (existing.length > 0) {
         return Response.json({ success: false, message: 'An account with this email already exists' }, { status: 400 });
       }
-      const verificationToken = generateToken();
       const newAdmin = await base44.asServiceRole.entities.Admin.create({
         first_name: first_name.trim(),
         last_name: last_name.trim(),
@@ -80,21 +79,10 @@ Deno.serve(async (req) => {
         password_hash: passwordHash,
         company_name: company_name.trim(),
         active: true,
-        email_verified: false,
-        verification_token: verificationToken,
+        email_verified: true,
       });
 
-      // Send verification email
-      const appUrl = Deno.env.get('APP_URL') || 'https://app.base44.com';
-      const verifyLink = `${appUrl}/verify-email?token=${verificationToken}`;
-      await sendEmail(
-        base44,
-        email.toLowerCase().trim(),
-        'Verify your FleetDesk Pro email',
-        `Hi ${first_name},\n\nWelcome to FleetDesk Pro! Please verify your email address by clicking the link below:\n\n${verifyLink}\n\nThis link will remain active until you verify your account.\n\nIf you did not create this account, you can safely ignore this email.\n\n— The FleetDesk Pro Team`
-      );
-
-      return Response.json({ success: true, admin_id: newAdmin.id, admin_name: `${first_name} ${last_name}`, message: 'Account created. Please check your email to verify your account before logging in.' });
+      return Response.json({ success: true, admin_id: newAdmin.id, admin_name: `${first_name} ${last_name}`, message: 'Account created successfully. You can now sign in.' });
     }
 
     // ── VERIFY EMAIL ──

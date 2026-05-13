@@ -119,15 +119,15 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour }) {
 
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
 
-          {/* ── SUCCESS: Email verification sent ── */}
+          {/* ── SUCCESS: Account created ── */}
           {mode === 'signup_sent' && (
             <div className="p-8 text-center space-y-4">
               <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
-              <h2 className="text-xl font-bold text-foreground">Check your email!</h2>
+              <h2 className="text-xl font-bold text-foreground">Account Created!</h2>
               <p className="text-sm text-muted-foreground">
-                We sent a verification link to <strong>{formData.email}</strong>. Click it to activate your account, then come back and sign in.
+                Your account has been created successfully. You can now sign in.
               </p>
-              <Button className="w-full" onClick={() => switchMode('login')}>Back to Sign In</Button>
+              <Button className="w-full" onClick={() => switchMode('login')}>Sign In</Button>
             </div>
           )}
 
