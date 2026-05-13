@@ -45,34 +45,36 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
-    <PageTransition>
-      <Routes>
-        <Route path="/" element={
+    <Routes>
+      <Route path="/" element={
+        <PageTransition>
           <LayoutWrapper currentPageName={mainPageKey}>
             <MainPage />
           </LayoutWrapper>
-        } />
-        {Object.entries(Pages).map(([path, Page]) => (
-          <Route
-            key={path}
-            path={`/${path}`}
-            element={
+        </PageTransition>
+      } />
+      {Object.entries(Pages).map(([path, Page]) => (
+        <Route
+          key={path}
+          path={`/${path}`}
+          element={
+            <PageTransition>
               <LayoutWrapper currentPageName={path}>
                 <Page />
               </LayoutWrapper>
-            }
-          />
-        ))}
-        <Route path="/DeletedItems" element={<LayoutWrapper currentPageName="DeletedItems"><DeletedItems /></LayoutWrapper>} />
-        <Route path="/SystemAdmins" element={<LayoutWrapper currentPageName="SystemAdmins"><SystemAdmins /></LayoutWrapper>} />
-        <Route path="/DriverPublicPortal" element={<DriverPublicPortal />} />
-        <Route path="/pricing" element={<Pricing />} />
-        <Route path="/SubscriptionSuccess" element={<SubscriptionSuccess />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="*" element={<PageNotFound />} />
-      </Routes>
-    </PageTransition>
+            </PageTransition>
+          }
+        />
+      ))}
+      <Route path="/DeletedItems" element={<PageTransition><LayoutWrapper currentPageName="DeletedItems"><DeletedItems /></LayoutWrapper></PageTransition>} />
+      <Route path="/SystemAdmins" element={<PageTransition><LayoutWrapper currentPageName="SystemAdmins"><SystemAdmins /></LayoutWrapper></PageTransition>} />
+      <Route path="/DriverPublicPortal" element={<PageTransition><DriverPublicPortal /></PageTransition>} />
+      <Route path="/pricing" element={<PageTransition><Pricing /></PageTransition>} />
+      <Route path="/SubscriptionSuccess" element={<PageTransition><SubscriptionSuccess /></PageTransition>} />
+      <Route path="/verify-email" element={<PageTransition><VerifyEmail /></PageTransition>} />
+      <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
+      <Route path="*" element={<PageNotFound />} />
+    </Routes>
   );
 };
 
