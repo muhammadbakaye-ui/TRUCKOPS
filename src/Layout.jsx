@@ -74,12 +74,7 @@ function AppShell({ children, currentPageName }) {
   useEffect(() => {
     if (!session) return;
     if (session.role !== 'admin') return;
-    const subscriptionStatus = session.subscription_status;
-    const hasActiveSubscription = subscriptionStatus === 'active' || subscriptionStatus === 'trialing';
-    const EXEMPT_PATHS = ['/', '/pricing', '/SubscriptionSuccess', '/verify-email', '/reset-password'];
-    if (!hasActiveSubscription && !EXEMPT_PATHS.includes(location.pathname)) {
-      navigate('/pricing', { replace: true });
-    }
+    // Preview mode allows full app access without subscription
   }, [session, location.pathname, navigate]);
 
   if (!session) {
