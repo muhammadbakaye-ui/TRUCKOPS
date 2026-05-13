@@ -7,62 +7,73 @@ import { base44 } from '@/api/base44Client';
 
 const PLANS = [
   {
-    key: 'starter',
-    name: 'Starter',
-    price: 49,
+    key: 'basic',
+    name: 'Basic',
+    price: 16,
+    priceLabel: '$16/mo',
     icon: Zap,
     color: 'text-blue-500',
     border: 'border-blue-200',
     bg: 'bg-blue-50',
-    description: 'Perfect for small owner-operators',
+    description: 'Owner-operators / tiny fleets',
     features: [
-      'Up to 2 drivers',
-      '1 truck',
-      'Load & invoice management',
-      'Driver portal access',
-      'Basic reports',
-      '14-day free trial',
+      '6 drivers, 6 trucks',
+      'Invoices',
+      'Basic load tracking',
     ],
   },
   {
     key: 'professional',
     name: 'Professional',
-    price: 99,
+    price: 49,
+    priceLabel: '$49/mo',
     icon: Shield,
     color: 'text-primary',
     border: 'border-primary/30',
     bg: 'bg-primary/5',
-    description: 'For growing fleets',
+    description: 'Small trucking companies',
     popular: true,
     features: [
-      'Up to 10 drivers',
-      'Unlimited trucks & trailers',
-      'Full load & invoice management',
+      '20 drivers, 20 trucks',
       'Driver statements',
-      'Fuel import & tracking',
-      'Advanced reports',
-      'Document uploads',
-      '14-day free trial',
+      'Fuel imports',
+      'Duplicate load detection',
     ],
   },
   {
     key: 'enterprise',
     name: 'Enterprise',
-    price: 199,
+    price: 99,
+    priceLabel: '$99/mo',
     icon: Building2,
     color: 'text-amber-500',
     border: 'border-amber-200',
     bg: 'bg-amber-50',
-    description: 'For large fleets & dispatch companies',
+    description: 'Growing companies',
     features: [
-      'Unlimited drivers',
-      'Unlimited trucks & trailers',
-      'All Professional features',
-      'Multi-admin support',
+      'Unlimited drivers & trucks',
+      'OCR scanning',
+      'Advanced reports',
       'Priority support',
-      'Custom onboarding',
-      'Audit log',
-      '14-day free trial',
+      'Cloud backup, updates included',
+    ],
+  },
+  {
+    key: 'lifetime',
+    name: 'Lifetime',
+    price: 199,
+    priceLabel: '$199 one-time',
+    oneTime: true,
+    icon: Shield,
+    color: 'text-emerald-500',
+    border: 'border-emerald-200',
+    bg: 'bg-emerald-50',
+    description: 'People who hate subscriptions',
+    features: [
+      'Unlimited drivers & trucks',
+      '1 device / account',
+      'Limited updates',
+      'No priority support',
     ],
   },
 ];
@@ -124,7 +135,7 @@ export default function Pricing() {
       </div>
 
       {/* Plans */}
-      <div className="max-w-5xl mx-auto px-4 pb-12 grid md:grid-cols-3 gap-6">
+      <div className="max-w-5xl mx-auto px-4 pb-12 grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         {PLANS.map((plan) => {
           const Icon = plan.icon;
           const isSelected = selectedPlan === plan.key;
@@ -150,7 +161,7 @@ export default function Pricing() {
               <div className="text-slate-400 text-sm mb-4">{plan.description}</div>
               <div className="mb-6">
                 <span className="text-4xl font-extrabold">${plan.price}</span>
-                <span className="text-slate-400 text-sm">/month</span>
+                <span className="text-slate-400 text-sm">{plan.oneTime ? ' one-time' : '/mo'}</span>
               </div>
               <ul className="space-y-2 mb-6">
                 {plan.features.map((f) => (
@@ -177,7 +188,11 @@ export default function Pricing() {
         <div className="max-w-md mx-auto px-4 pb-16">
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
             <h2 className="text-lg font-bold mb-1">Start your free trial</h2>
-            <p className="text-slate-400 text-sm mb-5">14 days free, then ${PLANS.find(p => p.key === selectedPlan)?.price}/month</p>
+            <p className="text-slate-400 text-sm mb-5">
+              {PLANS.find(p => p.key === selectedPlan)?.oneTime
+                ? `One-time payment of $${PLANS.find(p => p.key === selectedPlan)?.price}`
+                : `14 days free, then $${PLANS.find(p => p.key === selectedPlan)?.price}/month`}
+            </p>
             <form onSubmit={handleCheckout} className="space-y-4">
               <div>
                 <Label className="text-white/80 text-sm">Company Name</Label>
