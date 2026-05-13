@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useHasSubscription } from '../components/shared/SubscriptionGate';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -185,6 +187,17 @@ export default function Drivers() {
   const [generatingToken, setGeneratingToken] = useState(null);
   const [qrDriver, setQrDriver] = useState(null); // { driver, url }
   const queryClient = useQueryClient();
+  const hasSubscription = useHasSubscription();
+  const navigate = useNavigate();
+
+  const requireSubscription = () => {
+    if (!hasSubscription) {
+      toast.error('Subscribe to create and edit data. Redirecting to plans...', { duration: 3000 });
+      setTimeout(() => navigate('/pricing'), 1500);
+      return false;
+    }
+    return true;
+  };
 
   const handleShowPortalQR = async (driver, e) => {
     e.stopPropagation();
@@ -315,7 +328,7 @@ export default function Drivers() {
         title="Drivers"
         description={`${drivers.length} total drivers`}
         actions={
-          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { setEditing(null); setDialogOpen(true); }}>
+          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { if (!requireSubscription()) return; setEditing(null); setDialogOpen(true); }}>
             <Plus className="w-3.5 h-3.5" /> Add Driver
           </Button>
         }
@@ -323,7 +336,7 @@ export default function Drivers() {
       <div className="mb-3">
         <SearchInput value={search} onChange={setSearch} placeholder="Search drivers..." className="w-72" />
       </div>
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} onRowClick={(row) => { setEditing(row); setDialogOpen(true); }} emptyMessage="No drivers found" />
+      <DataTable columns={columns} data={filtered} isLoading={isLoading} onRowClick={(row) => { if (!requireSubscription()) return; setEditing(row); setDialogOpen(true); }} emptyMessage="No drivers found" />
       {qrDriver && (
         <DriverQRModal
           driver={qrDriver.driver}

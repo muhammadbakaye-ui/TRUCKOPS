@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { useHasSubscription } from '../components/shared/SubscriptionGate';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
@@ -122,6 +123,16 @@ function InvoiceStatusSelect({ load, queryClient }) {
 export default function Loads() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const hasSubscription = useHasSubscription();
+
+  const requireSubscription = () => {
+    if (!hasSubscription) {
+      toast.error('Subscribe to create and edit loads. Redirecting to plans...', { duration: 3000 });
+      setTimeout(() => navigate('/pricing'), 1500);
+      return false;
+    }
+    return true;
+  };
   const [search, setSearch] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('search') || localStorage.getItem('loads_search') || '';
@@ -378,7 +389,7 @@ export default function Loads() {
         title="Loads"
         description={`${filtered.length} of ${loads.length}${loads.length >= 1000 ? '+' : ''} loads`}
         actions={
-          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => navigate(createPageUrl('LoadDetail?new=1'))}>
+          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { if (!requireSubscription()) return; navigate(createPageUrl('LoadDetail?new=1')); }}>
             <Plus className="w-3.5 h-3.5" /> New Load
           </Button>
         }

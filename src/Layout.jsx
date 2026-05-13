@@ -10,6 +10,7 @@ import useAndroidBackButton from './hooks/useAndroidBackButton';
 import GlobalBroadcastListener from './components/shared/GlobalBroadcastListener';
 import { UploadProvider } from './context/UploadContext';
 import UploadProgressFloat from './components/shared/UploadProgressFloat';
+import { PreviewModeBanner } from './components/shared/SubscriptionGate';
 
 const pageTitles = {
   Dashboard: 'Dashboard',
@@ -94,6 +95,7 @@ function AppShell({ children, currentPageName }) {
           />
         </div>
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <PreviewModeBanner />
           <TopBar pageTitle={pageTitles[currentPageName] || currentPageName} currentPageName={currentPageName} />
           {/* Extra bottom padding on mobile to clear the bottom nav */}
           <main ref={mainRef} className="flex-1 overflow-auto px-2 lg:px-0 pb-16 md:pb-0">

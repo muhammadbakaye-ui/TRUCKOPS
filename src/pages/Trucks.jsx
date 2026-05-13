@@ -8,11 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Loader2, Plus } from 'lucide-react';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 import SearchInput from '../components/shared/SearchInput';
 import DataTable from '../components/shared/DataTable';
 import StatusBadge from '../components/shared/StatusBadge';
 import PageHeader from '../components/shared/PageHeader';
 import { logAudit } from '../components/shared/AuditLogger';
+import { useHasSubscription } from '../components/shared/SubscriptionGate';
 
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
@@ -115,6 +118,17 @@ export default function Trucks() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const hasSubscription = useHasSubscription();
+
+  const requireSubscription = () => {
+    if (!hasSubscription) {
+      toast.error('Subscribe to create and edit data. Redirecting to plans...', { duration: 3000 });
+      setTimeout(() => navigate('/pricing'), 1500);
+      return false;
+    }
+    return true;
+  };
 
   const { data: trucks = [], isLoading } = useQuery({
     queryKey: ['trucks'],
