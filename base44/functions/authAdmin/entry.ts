@@ -112,25 +112,31 @@ Deno.serve(async (req) => {
       const appUrl = Deno.env.get('APP_URL') || 'https://app.base44.com';
       const verifyLink = `${appUrl}/verify-email?token=${verificationToken}`;
 
-      await sendResendEmail(
-        email.toLowerCase().trim(),
-        'Verify your TruckOps email',
-        `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #1e40af;">Welcome to TruckOps, ${first_name}!</h2>
-            <p>Thanks for signing up. Please verify your email address to activate your account.</p>
-            <a href="${verifyLink}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin: 16px 0;">
-              Verify Email Address
-            </a>
-            <p style="color: #6b7280; font-size: 14px;">Or copy and paste this link:<br/><a href="${verifyLink}">${verifyLink}</a></p>
-            <p style="color: #6b7280; font-size: 14px;">If you didn't create this account, you can safely ignore this email.</p>
-            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-            <p style="color: #9ca3af; font-size: 12px;">— The TruckOps Team</p>
-          </div>
-        `
-      );
+      let emailWarning = null;
+      try {
+        await sendResendEmail(
+          email.toLowerCase().trim(),
+          'Verify your TruckOps email',
+          `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2 style="color: #1e40af;">Welcome to TruckOps, ${first_name}!</h2>
+              <p>Thanks for signing up. Please verify your email address to activate your account.</p>
+              <a href="${verifyLink}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin: 16px 0;">
+                Verify Email Address
+              </a>
+              <p style="color: #6b7280; font-size: 14px;">Or copy and paste this link:<br/><a href="${verifyLink}">${verifyLink}</a></p>
+              <p style="color: #6b7280; font-size: 14px;">If you didn't create this account, you can safely ignore this email.</p>
+              <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+              <p style="color: #9ca3af; font-size: 12px;">— The TruckOps Team</p>
+            </div>
+          `
+        );
+      } catch (emailErr) {
+        console.error('Verification email failed (non-fatal):', emailErr.message);
+        emailWarning = 'Account created but verification email could not be sent. Please contact support.';
+      }
 
-      return Response.json({ success: true, admin_id: newAdmin.id, message: 'Account created. Please check your email to verify your account.' });
+      return Response.json({ success: true, admin_id: newAdmin.id, message: 'Account created. Please check your email to verify your account.', email_warning: emailWarning });
     }
 
     // ── VERIFY EMAIL ──
@@ -153,25 +159,29 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.Admin.update(admins[0].id, { reset_token: resetToken, reset_token_expires: expires });
         const appUrl = Deno.env.get('APP_URL') || 'https://app.base44.com';
         const resetLink = `${appUrl}/reset-password?token=${resetToken}`;
-        await sendResendEmail(
-          email.toLowerCase().trim(),
-          'Reset your TruckOps password',
-          `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h2 style="color: #1e40af;">Reset Your Password</h2>
-              <p>Hi ${admins[0].first_name},</p>
-              <p>We received a request to reset your password. Click the button below to set a new one:</p>
-              <a href="${resetLink}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin: 16px 0;">
-                Reset Password
-              </a>
-              <p style="color: #6b7280; font-size: 14px;">This link expires in 1 hour.</p>
-              <p style="color: #6b7280; font-size: 14px;">Or copy and paste this link:<br/><a href="${resetLink}">${resetLink}</a></p>
-              <p style="color: #6b7280; font-size: 14px;">If you didn't request this, you can safely ignore this email.</p>
-              <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-              <p style="color: #9ca3af; font-size: 12px;">— The TruckOps Team</p>
-            </div>
-          `
-        );
+        try {
+          await sendResendEmail(
+            email.toLowerCase().trim(),
+            'Reset your TruckOps password',
+            `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #1e40af;">Reset Your Password</h2>
+                <p>Hi ${admins[0].first_name},</p>
+                <p>We received a request to reset your password. Click the button below to set a new one:</p>
+                <a href="${resetLink}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin: 16px 0;">
+                  Reset Password
+                </a>
+                <p style="color: #6b7280; font-size: 14px;">This link expires in 1 hour.</p>
+                <p style="color: #6b7280; font-size: 14px;">Or copy and paste this link:<br/><a href="${resetLink}">${resetLink}</a></p>
+                <p style="color: #6b7280; font-size: 14px;">If you didn't request this, you can safely ignore this email.</p>
+                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+                <p style="color: #9ca3af; font-size: 12px;">— The TruckOps Team</p>
+              </div>
+            `
+          );
+        } catch (emailErr) {
+          console.error('Password reset email failed (non-fatal):', emailErr.message);
+        }
       }
       return Response.json({ success: true, message: 'If an account with that email exists, you will receive a password reset link shortly.' });
     }
