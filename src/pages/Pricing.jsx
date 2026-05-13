@@ -83,45 +83,42 @@ const PLANS = [
 ];
 
 export default function Pricing() {
-  const navigate = useNavigate();
-  const [selectedPlan, setSelectedPlan] = useState(null);
-  const [companyName, setCompanyName] = useState('');
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+   const navigate = useNavigate();
+   const [selectedPlan, setSelectedPlan] = useState(null);
+   const [loading, setLoading] = useState(false);
+   const [error, setError] = useState('');
 
-  const handleCheckout = async (e) => {
-    e.preventDefault();
-    if (!selectedPlan || !companyName || !email) return;
+   const handleCheckout = async () => {
+     if (!selectedPlan) return;
 
-    const isInIframe = window.self !== window.top;
-    if (isInIframe) {
-      alert('Checkout must be completed from the published app. Please open the app directly to subscribe.');
-      return;
-    }
+     const isInIframe = window.self !== window.top;
+     if (isInIframe) {
+       alert('Checkout must be completed from the published app. Please open the app directly to subscribe.');
+       return;
+     }
 
-    setLoading(true);
-    setError('');
-    try {
-      const res = await base44.functions.invoke('stripeCheckout', {
-        action: 'create_checkout',
-        plan: selectedPlan,
-        company_name: companyName,
-        admin_email: email,
-        success_url: `${window.location.origin}/signup-success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${window.location.origin}/pricing`,
-      });
-      if (res.data?.url) {
-        window.location.href = res.data.url;
-      } else {
-        setError('Failed to start checkout. Please try again.');
-      }
-    } catch (err) {
-      setError(err.message || 'Something went wrong.');
-    } finally {
-      setLoading(false);
-    }
-  };
+     setLoading(true);
+     setError('');
+     try {
+       const res = await base44.functions.invoke('stripeCheckout', {
+         action: 'create_checkout',
+         plan: selectedPlan,
+         company_name: '',
+         admin_email: '',
+         success_url: `${window.location.origin}/signup-success?session_id={CHECKOUT_SESSION_ID}`,
+         cancel_url: `${window.location.origin}/pricing`,
+       });
+       if (res.data?.url) {
+         window.location.href = res.data.url;
+       } else {
+         setError('Failed to start checkout. Please try again.');
+       }
+     } catch (err) {
+       setError(err.message || 'Something went wrong.');
+     } finally {
+       setLoading(false);
+     }
+   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
@@ -196,59 +193,39 @@ export default function Pricing() {
         })}
       </div>
 
-      {/* Signup form */}
-      {selectedPlan && (
-        <div className="max-w-md mx-auto px-4 pb-8">
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h2 className="text-lg font-bold mb-1">Start your free trial</h2>
-            <p className="text-slate-400 text-sm mb-5">
-              {PLANS.find(p => p.key === selectedPlan)?.oneTime
-                ? `One-time payment of $${PLANS.find(p => p.key === selectedPlan)?.price}`
-                : `3 days free, then $${PLANS.find(p => p.key === selectedPlan)?.price}/month`}
-            </p>
-            <form onSubmit={handleCheckout} className="space-y-4">
-              <div>
-                <Label className="text-white/80 text-sm">Company Name</Label>
-                <Input
-                  className="mt-1.5 bg-white/10 border-white/20 text-white placeholder:text-white/30 h-11"
-                  placeholder="Your trucking company name"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <Label className="text-white/80 text-sm">Work Email</Label>
-                <Input
-                  type="email"
-                  className="mt-1.5 bg-white/10 border-white/20 text-white placeholder:text-white/30 h-11"
-                  placeholder="you@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              {error && (
-                <div className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2">
-                  {error}
-                </div>
-              )}
-              <Button
-                type="submit"
-                className="w-full h-11 font-bold text-sm"
-                disabled={loading || !companyName || !email}
-              >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Start Free Trial →'}
-              </Button>
-              <p className="text-center text-xs text-slate-500">
-                {PLANS.find(p => p.key === selectedPlan)?.oneTime
-                  ? 'One-time payment. No recurring charges.'
-                  : 'Card required. Cancel anytime before trial ends.'}
-              </p>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Checkout button */}
+       {selectedPlan && (
+         <div className="max-w-md mx-auto px-4 pb-8">
+           <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+             <h2 className="text-lg font-bold mb-1">
+               {PLANS.find(p => p.key === selectedPlan)?.name} Plan
+             </h2>
+             <p className="text-slate-400 text-sm mb-5">
+               {PLANS.find(p => p.key === selectedPlan)?.oneTime
+                 ? `One-time payment of $${PLANS.find(p => p.key === selectedPlan)?.price}`
+                 : `3 days free, then $${PLANS.find(p => p.key === selectedPlan)?.price}/month`}
+             </p>
+             {error && (
+               <div className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2 mb-4">
+                 {error}
+               </div>
+             )}
+             <Button
+               onClick={handleCheckout}
+               className="w-full h-11 font-bold text-sm"
+               disabled={loading}
+             >
+               {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : ''}
+               {PLANS.find(p => p.key === selectedPlan)?.oneTime ? 'Pay Now →' : 'Start Free Trial →'}
+             </Button>
+             <p className="text-center text-xs text-slate-500 mt-3">
+               {PLANS.find(p => p.key === selectedPlan)?.oneTime
+                 ? 'One-time payment. No recurring charges.'
+                 : 'Card required. Cancel anytime before trial ends.'}
+             </p>
+           </div>
+         </div>
+       )}
 
       {/* Preview App CTA - Always visible */}
       <div className="max-w-md mx-auto px-4 pb-12">

@@ -195,6 +195,7 @@ export default function StatementBuilder() {
 
   // Auto-save: debounce 2.5s, uses refs to avoid stale closures
   const scheduleAutoSave = useCallback(() => {
+    if (isInPreview) return; // disable auto-save in preview mode
     if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     autoSaveTimerRef.current = setTimeout(async () => {
       if (isSavingRef.current) return; // skip if a save is already in progress

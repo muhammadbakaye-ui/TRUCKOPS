@@ -108,9 +108,9 @@ export default function LoadDetail() {
   }, [isNew]);
 
   // Auto-save as draft whenever form/stops change
-  const performAutoSave = useCallback(async (currentForm, currentStops) => {
-    if (!currentForm) return;
-    setAutoSaving(true);
+   const performAutoSave = useCallback(async (currentForm, currentStops) => {
+     if (!currentForm || isInPreview) return;
+     setAutoSaving(true);
     try {
       const currentId = savedLoadIdRef.current;
         if (!currentId) {
