@@ -35,15 +35,12 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors
+  // Handle authentication errors (skip auth_required — this app uses custom admin auth)
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
-      navigateToLogin();
-      return null;
     }
+    // auth_required and other errors: fall through and let custom LoginScreen handle it
   }
 
   // Render the main app
