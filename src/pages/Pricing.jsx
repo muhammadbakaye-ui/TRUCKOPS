@@ -17,7 +17,7 @@ const PLANS = [
     bg: 'bg-blue-50',
     description: 'Owner-operators / tiny fleets',
     features: [
-      'Up to 6 drivers & 6 trucks',
+      'Up to 3 drivers & 3 trucks',
       'Load tracking',
       'Invoicing',
       'Company & driver directory',
@@ -37,7 +37,7 @@ const PLANS = [
     popular: true,
     includedFrom: 'Basic',
     features: [
-      'Up to 20 drivers & 20 trucks',
+      'Up to 10 drivers & 10 trucks',
       'Driver pay statements',
       'Fuel card imports',
       'Duplicate load detection',
