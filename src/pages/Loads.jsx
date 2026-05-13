@@ -385,7 +385,7 @@ export default function Loads() {
         title="Loads"
         description={`${filtered.length} of ${loads.length}${loads.length >= 1000 ? '+' : ''} loads`}
         actions={
-          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { if (!checkFeatureAccess(isInPreview)) return; navigate(createPageUrl('LoadDetail?new=1')); }}>
+          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => navigate(createPageUrl('LoadDetail?new=1'))}>
             <Plus className="w-3.5 h-3.5" /> New Load
           </Button>
         }

@@ -169,7 +169,7 @@ export default function DriverStatements() {
         title="Driver Statements"
         description={`${statements.length} total statements`}
         actions={
-          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { if (!checkFeatureAccess(isInPreview)) return; navigate(createPageUrl('StatementBuilder')); }}>
+          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => navigate(createPageUrl('StatementBuilder'))}>
             <Plus className="w-3.5 h-3.5" /> New Statement
           </Button>
         }
