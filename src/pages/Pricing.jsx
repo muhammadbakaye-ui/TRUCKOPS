@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Check, Zap, Shield, Building2, Loader2, Truck } from 'lucide-react';
+import { Check, Zap, Shield, Building2, Loader2, Truck, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -83,6 +84,7 @@ const PLANS = [
 ];
 
 export default function Pricing() {
+  const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
@@ -124,8 +126,19 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
+      {/* Back button */}
+      <div className="px-6 pt-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-1.5 text-slate-400 hover:text-white transition-colors text-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
+      </div>
+
       {/* Header */}
-      <div className="text-center py-16 px-4">
+      <div className="text-center py-12 px-4">
         <div className="flex items-center justify-center gap-2 mb-6">
           <Truck className="w-8 h-8 text-primary" />
           <span className="text-2xl font-bold">TruckOps</span>
