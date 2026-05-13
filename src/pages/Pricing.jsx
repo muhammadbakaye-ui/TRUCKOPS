@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, Zap, Shield, Building2, Loader2, Truck, ArrowLeft } from 'lucide-react';
+import { Check, Zap, Shield, Building2, Loader2, Truck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -125,16 +125,7 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
-      {/* Top bar */}
-      <div className="px-6 pt-6 flex items-center justify-between">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-1.5 text-slate-400 hover:text-white transition-colors text-sm"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back
-        </button>
-      </div>
+
 
       {/* Header */}
       <div className="text-center py-12 px-4">
@@ -258,6 +249,17 @@ export default function Pricing() {
           </div>
         </div>
       )}
+
+      {/* Preview App CTA */}
+      <div className="max-w-md mx-auto px-4 mb-12">
+        <Button
+          onClick={() => navigate('/')}
+          variant="outline"
+          className="w-full h-12 font-bold text-sm border-white/30 text-white hover:bg-white/10"
+        >
+          Preview App → Dashboard
+        </Button>
+      </div>
 
       {/* Footer */}
       <div className="text-center pb-12 text-slate-600 text-xs">
