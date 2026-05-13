@@ -198,7 +198,7 @@ export default function Pricing() {
 
       {/* Signup form */}
       {selectedPlan && (
-        <div className="max-w-md mx-auto px-4 pb-16">
+        <div className="max-w-md mx-auto px-4 pb-8">
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
             <h2 className="text-lg font-bold mb-1">Start your free trial</h2>
             <p className="text-slate-400 text-sm mb-5">
@@ -250,8 +250,8 @@ export default function Pricing() {
         </div>
       )}
 
-      {/* Preview App CTA */}
-      <div className="max-w-md mx-auto px-4 mb-12">
+      {/* Preview App CTA - Always visible */}
+      <div className="max-w-md mx-auto px-4 pb-12">
         <Button
           onClick={() => navigate('/')}
           variant="outline"
