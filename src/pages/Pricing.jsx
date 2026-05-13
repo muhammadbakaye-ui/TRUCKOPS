@@ -27,8 +27,8 @@ const PLANS = [
   {
     key: 'professional',
     name: 'Professional',
-    price: 99,
-    priceLabel: '$99/mo',
+    price: 49,
+    priceLabel: '$49/mo',
     icon: Shield,
     color: 'text-primary',
     border: 'border-primary/30',
