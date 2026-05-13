@@ -13,6 +13,8 @@ import { logAudit } from '../components/shared/AuditLogger';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useHasSubscription } from '../components/shared/SubscriptionGate';
+import { usePreviewGate, PreviewFeatureDialog } from '../components/shared/PreviewFeatureGate';
+import { useSession } from '../components/shared/AppSession';
 import { toast } from 'sonner';
 
 const COMPANY_FIELDS = [
@@ -43,16 +45,9 @@ export default function Companies() {
   const [editing, setEditing] = useState(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const hasSubscription = useHasSubscription();
-
-  const requireSubscription = () => {
-    if (!hasSubscription) {
-      toast.error('Subscribe to create and edit data. Redirecting to plans...', { duration: 3000 });
-      setTimeout(() => navigate('/pricing'), 1500);
-      return false;
-    }
-    return true;
-  };
+  const { session } = useSession();
+  const { showDialog, checkFeatureAccess, handleSubscribe, handleDismiss } = usePreviewGate();
+  const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
 
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ['companies'],
@@ -97,11 +92,12 @@ export default function Companies() {
 
   return (
     <div className="p-4">
+      <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
       <PageHeader
         title="Companies / Brokers"
         description={`${companies.length} total companies`}
         actions={
-          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { if (!requireSubscription()) return; setEditing(null); setDialogOpen(true); }}>
+          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { if (!checkFeatureAccess(isInPreview)) return; setEditing(null); setDialogOpen(true); }}>
             <Plus className="w-3.5 h-3.5" /> Add Company
           </Button>
         }
@@ -115,7 +111,7 @@ export default function Companies() {
         columns={columns}
         data={filtered}
         isLoading={isLoading}
-        onRowClick={(row) => { if (!requireSubscription()) return; setEditing(row); setDialogOpen(true); }}
+        onRowClick={(row) => { if (!checkFeatureAccess(isInPreview)) return; setEditing(row); setDialogOpen(true); }}
         emptyMessage="No companies found"
       />
 

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { usePreviewGate, PreviewFeatureDialog } from '../components/shared/PreviewFeatureGate';
+import { useSession } from '../components/shared/AppSession';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
@@ -44,6 +46,9 @@ export default function LoadDetail() {
   const loadId = searchParams.get('id');
   const isNew = searchParams.get('new') === '1';
   const queryClient = useQueryClient();
+  const { session } = useSession();
+  const { showDialog, checkFeatureAccess, handleSubscribe, handleDismiss } = usePreviewGate();
+  const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
   const [form, setForm] = useState(null);
   const [stops, setStops] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -230,6 +235,7 @@ export default function LoadDetail() {
 
   return (
     <div className="p-4 space-y-4 max-w-5xl">
+      <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
       <div className="flex items-center gap-3 flex-wrap">
         <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => navigate(createPageUrl('Loads'))}>
           <ArrowLeft className="w-3.5 h-3.5" /> Loads
@@ -250,7 +256,7 @@ export default function LoadDetail() {
           </span>
         )}
         <div className="ml-auto flex gap-2">
-          <Button size="sm" className="h-8 gap-1" onClick={handleSave} disabled={saving}>
+           <Button size="sm" className="h-8 gap-1" onClick={() => { if (!checkFeatureAccess(isInPreview)) return; handleSave(); }} disabled={saving}>
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             {form.status === 'draft' ? 'Save' : 'Save'}
           </Button>

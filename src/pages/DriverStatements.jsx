@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { usePreviewGate, PreviewFeatureDialog } from '../components/shared/PreviewFeatureGate';
+import { useSession } from '../components/shared/AppSession';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
@@ -26,6 +28,9 @@ const periodLabel = (start, end) => `${fmt(start)} – ${fmtFull(end)}`;
 export default function DriverStatements() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { session } = useSession();
+  const { showDialog, checkFeatureAccess, handleSubscribe, handleDismiss } = usePreviewGate();
+  const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
   const [updatingId, setUpdatingId] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
 
@@ -159,11 +164,12 @@ export default function DriverStatements() {
 
   return (
     <div className="p-4 space-y-3">
+      <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
       <PageHeader
         title="Driver Statements"
         description={`${statements.length} total statements`}
         actions={
-          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => navigate(createPageUrl('StatementBuilder'))}>
+          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { if (!checkFeatureAccess(isInPreview)) return; navigate(createPageUrl('StatementBuilder')); }}>
             <Plus className="w-3.5 h-3.5" /> New Statement
           </Button>
         }
@@ -299,8 +305,8 @@ export default function DriverStatements() {
                         <tr
                           key={stmt.id}
                           className="border-b last:border-0 hover:bg-muted/30 cursor-pointer transition-colors"
-                          onClick={() => navigate(createPageUrl(`StatementBuilder?id=${stmt.id}`))}
-                        >
+                          onClick={() => { if (!checkFeatureAccess(isInPreview)) return; navigate(createPageUrl(`StatementBuilder?id=${stmt.id}`)); }}
+                          >
                           <td className="p-2">
                             <Checkbox
                               checked={selected.has(stmt.id)}
