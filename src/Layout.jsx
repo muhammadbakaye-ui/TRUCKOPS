@@ -73,6 +73,17 @@ function AppShell({ children, currentPageName }) {
     return <LoginScreen />;
   }
 
+  // Redirect non-subscribed admins to pricing (preview gate)
+  const subscriptionStatus = session.subscription_status;
+  const hasActiveSubscription = subscriptionStatus === 'active' || subscriptionStatus === 'trialing';
+  if (session.role === 'admin' && !hasActiveSubscription) {
+    const onPricingPage = window.location.pathname === '/pricing' || window.location.pathname === '/SubscriptionSuccess';
+    if (!onPricingPage) {
+      window.location.replace('/pricing');
+      return null;
+    }
+  }
+
   if (session.role === 'driver') {
     return (
       <>
