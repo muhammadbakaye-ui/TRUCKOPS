@@ -16,6 +16,8 @@ import StatusBadge from '../components/shared/StatusBadge';
 import PageHeader from '../components/shared/PageHeader';
 import { logAudit } from '../components/shared/AuditLogger';
 import { useHasSubscription } from '../components/shared/SubscriptionGate';
+import { usePreviewGate, PreviewFeatureDialog } from '../components/shared/PreviewFeatureGate';
+import { useSession } from '../components/shared/AppSession';
 
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
@@ -114,21 +116,14 @@ function TruckFormDialog({ open, onClose, editing, drivers, onSave, saving }) {
 }
 
 export default function Trucks() {
-  const [search, setSearch] = useState('');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
-  const hasSubscription = useHasSubscription();
-
-  const requireSubscription = () => {
-    if (!hasSubscription) {
-      toast.error('Subscribe to create and edit data. Redirecting to plans...', { duration: 3000 });
-      setTimeout(() => navigate('/pricing'), 1500);
-      return false;
-    }
-    return true;
-  };
+   const [search, setSearch] = useState('');
+   const [dialogOpen, setDialogOpen] = useState(false);
+   const [editing, setEditing] = useState(null);
+   const queryClient = useQueryClient();
+   const navigate = useNavigate();
+   const { session } = useSession();
+   const { showDialog, checkFeatureAccess, handleSubscribe, handleDismiss } = usePreviewGate();
+   const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
 
   const { data: trucks = [], isLoading } = useQuery({
     queryKey: ['trucks'],
@@ -143,6 +138,7 @@ export default function Trucks() {
   const saveMutation = useMutation({
     mutationFn: async (data) => {
       let truckId;
+      const isNewTruck = !editing;
       if (editing) {
         await base44.entities.Truck.update(editing.id, data);
         truckId = editing.id;
@@ -163,12 +159,19 @@ export default function Trucks() {
       if (data.assigned_driver_id) {
         await base44.entities.Driver.update(data.assigned_driver_id, { assigned_truck_id: truckId });
       }
+
+      return { isNewTruck };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['trucks'] });
       queryClient.invalidateQueries({ queryKey: ['drivers'] });
       setDialogOpen(false);
       setEditing(null);
+
+      // Show subscription popup only after creating new truck in preview mode
+      if (result.isNewTruck && isInPreview) {
+        handleSubscribe();
+      }
     }
   });
 
@@ -194,6 +197,7 @@ export default function Trucks() {
 
   return (
     <div className="p-4">
+      <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
       <PageHeader
         title="Trucks"
         description={`${trucks.length} total trucks`}
