@@ -12,8 +12,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Logo from './Logo';
+import { PlayCircle } from 'lucide-react';
 
-export default function AdminAuthOptions({ onBack, onSuccess }) {
+export default function AdminAuthOptions({ onBack, onSuccess, onShowTour }) {
   const [mode, setMode] = useState('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -172,9 +173,11 @@ export default function AdminAuthOptions({ onBack, onSuccess }) {
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Signing In...' : 'Sign In'}
                 </Button>
-                <Button type="button" variant="ghost" onClick={onBack} className="w-full" disabled={loading}>
-                  Back
-                </Button>
+                {onBack && (
+                  <Button type="button" variant="ghost" onClick={onBack} className="w-full" disabled={loading}>
+                    Back
+                  </Button>
+                )}
               </form>
             )}
 
@@ -268,13 +271,34 @@ export default function AdminAuthOptions({ onBack, onSuccess }) {
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Creating Account...' : 'Create Account'}
                 </Button>
-                <Button type="button" variant="ghost" onClick={onBack} className="w-full" disabled={loading}>
-                  Back
-                </Button>
+                {onBack && (
+                  <Button type="button" variant="ghost" onClick={onBack} className="w-full" disabled={loading}>
+                    Back
+                  </Button>
+                )}
               </form>
             )}
           </div>
         </div>
+
+        <p className="text-center text-xs text-white/30 mt-4">
+          New customer?{' '}
+          <a href="/pricing" className="text-blue-400/70 hover:text-blue-400 underline transition-colors">
+            Start free trial
+          </a>
+        </p>
+
+        {onShowTour && (
+          <div className="flex justify-center mt-3">
+            <button
+              onClick={onShowTour}
+              className="flex items-center gap-1.5 text-xs text-white/30 hover:text-white/60 transition-colors"
+            >
+              <PlayCircle className="w-3.5 h-3.5" />
+              View App Tour
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
