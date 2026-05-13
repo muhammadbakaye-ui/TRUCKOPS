@@ -15,7 +15,7 @@ const PLANS = [
     color: 'text-blue-500',
     border: 'border-blue-200',
     bg: 'bg-blue-50',
-    description: 'Owner-operators / tiny fleets — 6 drivers, 6 trucks, invoices, basic load tracking',
+    description: 'Owner-operators / tiny fleets',
     features: [
       'Up to 3 drivers & 3 trucks',
       'Load tracking',
@@ -27,13 +27,13 @@ const PLANS = [
   {
     key: 'professional',
     name: 'Professional',
-    price: 99,
-    priceLabel: '$99/mo',
+    price: 49,
+    priceLabel: '$49/mo',
     icon: Shield,
     color: 'text-primary',
     border: 'border-primary/30',
     bg: 'bg-primary/5',
-    description: 'Up to 10 drivers, unlimited trucks, full feature access',
+    description: 'Small trucking companies',
     popular: true,
     includedFrom: 'Basic',
     features: [
@@ -159,12 +159,14 @@ export default function Pricing() {
                 </div>
               )}
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${plan.bg} ${plan.color}`}>
-                 <Icon className="w-5 h-5" />
-               </div>
-               <div className="mb-4 text-slate-400 text-sm">Try {plan.name} Plan</div>
-               <div className="mb-4 text-3xl font-extrabold">3 days free</div>
-               <div className="text-slate-400 text-sm mb-6">Then ${plan.price} {plan.oneTime ? 'one-time' : 'per month'} starting {new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</div>
-               <div className="text-slate-300 text-sm mb-6">{plan.description}</div>
+                <Icon className="w-5 h-5" />
+              </div>
+              <div className="mb-1 text-lg font-bold">{plan.name}</div>
+              <div className="text-slate-400 text-sm mb-4">{plan.description}</div>
+              <div className="mb-6">
+                <span className="text-4xl font-extrabold">${plan.price}</span>
+                <span className="text-slate-400 text-sm">{plan.oneTime ? ' one-time' : '/mo'}</span>
+              </div>
               <ul className="space-y-2 mb-6">
                 {plan.includedFrom && (
                   <li className="flex items-center gap-2 text-sm font-semibold text-primary/90 bg-primary/10 rounded-lg px-2 py-1.5 mb-1">
