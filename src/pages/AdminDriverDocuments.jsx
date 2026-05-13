@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
+import { usePreviewGate, PreviewFeatureDialog } from '../components/shared/PreviewFeatureGate';
+import { useSession } from '../components/shared/AppSession';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,6 +15,9 @@ import PageHeader from '../components/shared/PageHeader';
 
 export default function AdminDriverDocuments() {
   const queryClient = useQueryClient();
+  const { session } = useSession();
+  const { showDialog, checkFeatureAccess, handleSubscribe, handleDismiss } = usePreviewGate();
+  const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [driverFilter, setDriverFilter] = useState('all');
@@ -97,6 +102,7 @@ export default function AdminDriverDocuments() {
 
   return (
     <div className="p-4 space-y-4">
+      <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
       <PageHeader
         title="Driver Documents"
         description={`${filtered.length} document${filtered.length !== 1 ? 's' : ''} from ${driverGroups.length} driver${driverGroups.length !== 1 ? 's' : ''}`}
@@ -218,7 +224,9 @@ export default function AdminDriverDocuments() {
                                 </a>
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive">
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => {
+                                      if (!checkFeatureAccess(isInPreview)) return;
+                                    }}>
                                       <Trash2 className="w-3 h-3" />
                                     </Button>
                                   </AlertDialogTrigger>
