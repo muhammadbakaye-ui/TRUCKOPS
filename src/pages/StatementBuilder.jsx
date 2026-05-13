@@ -217,6 +217,7 @@ export default function StatementBuilder() {
   }, [form, tripLines, deductionLines, fuelLines]);
 
   const handleSave = async () => {
+    if (!checkFeatureAccess(isInPreview)) return;
     if (isSavingRef.current) return;
     isSavingRef.current = true;
     setSaving(true);
@@ -372,7 +373,7 @@ export default function StatementBuilder() {
 
   return (
     <div className="p-6 space-y-5 max-w-screen-2xl">
-      <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
+      {showDialog && <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />}
       {/* Top bar */}
       <div className="flex items-center gap-3 flex-wrap">
         <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => navigate(createPageUrl('DriverStatements'))}>
@@ -499,9 +500,9 @@ export default function StatementBuilder() {
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={handleAutoLoadWeek} disabled={!form.driver_id || !form.period_start || autoLoading} title="Auto-add all loads due this week">
                   {autoLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />} Auto Week
                 </Button>
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => { if (!checkFeatureAccess(isInPreview)) return; if (!form.driver_id) { toast.error('Select a driver first'); return; } setLoadPickerOpen(true); }} disabled={!form.driver_id}>
-                  <Truck className="w-3 h-3" /> Pick Loads
-                </Button>
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => { if (!form.driver_id) { toast.error('Select a driver first'); return; } setLoadPickerOpen(true); }} disabled={!form.driver_id}>
+                   <Truck className="w-3 h-3" /> Pick Loads
+                 </Button>
               </div>
             </CardHeader>
             <CardContent className="px-5 pb-5">
@@ -538,10 +539,7 @@ export default function StatementBuilder() {
             <CardHeader className="py-3.5 px-5 flex flex-row items-center justify-between border-b">
               <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Fuel ({fuelLines.length})</CardTitle>
               <div className="flex gap-1">
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => {
-                  if (!checkFeatureAccess(isInPreview)) return;
-                  loadDriverFuel();
-                }} disabled={loadingFuel || !form.driver_id}>
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={loadDriverFuel} disabled={loadingFuel || !form.driver_id}>
                   {loadingFuel ? <Loader2 className="w-3 h-3 animate-spin" /> : <Fuel className="w-3 h-3" />} Load Fuel
                 </Button>
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addCustomFuel}><Plus className="w-3 h-3" /> Add</Button>

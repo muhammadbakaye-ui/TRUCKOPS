@@ -166,6 +166,7 @@ export default function LoadDetail() {
 
   // Proper save: promote status from draft to active (or keep whatever status user set)
   const handleSave = async () => {
+    if (!checkFeatureAccess(isInPreview)) return;
     setSaving(true);
     try {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
@@ -235,7 +236,7 @@ export default function LoadDetail() {
 
   return (
     <div className="p-4 space-y-4 max-w-5xl">
-      <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
+      {showDialog && <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />}
       <div className="flex items-center gap-3 flex-wrap">
         <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => navigate(createPageUrl('Loads'))}>
           <ArrowLeft className="w-3.5 h-3.5" /> Loads
@@ -256,7 +257,7 @@ export default function LoadDetail() {
           </span>
         )}
         <div className="ml-auto flex gap-2">
-           <Button size="sm" className="h-8 gap-1" onClick={() => { if (!checkFeatureAccess(isInPreview)) return; handleSave(); }} disabled={saving}>
+           <Button size="sm" className="h-8 gap-1" onClick={handleSave} disabled={saving}>
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             {form.status === 'draft' ? 'Save' : 'Save'}
           </Button>
