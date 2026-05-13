@@ -5,8 +5,8 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
 const PLANS = {
   basic:        { price_id: 'price_1TWX4zAVTDsGyJQn5XGTK66o', name: 'Basic Plan',        amount: 1600,  mode: 'subscription' },
-  professional: { price_id: 'price_1TWVptPOzpjOvXb6Jz16tkva', name: 'Professional Plan', amount: 4900,  mode: 'subscription' },
-  enterprise:   { price_id: 'price_1TWVpuPOzpjOvXb6z7s62CBI', name: 'Enterprise Plan',   amount: 9900,  mode: 'subscription' },
+  professional: { price_id: 'price_1TWWjlAVTDsGyJQnlC9PFxDL', name: 'Professional Plan', amount: 4900,  mode: 'subscription' },
+  enterprise:   { price_id: 'price_1TWWjlAVTDsGyJQnA6RopREh', name: 'Enterprise Plan',   amount: 9900,  mode: 'subscription' },
   lifetime:     { price_id: 'price_1TWX52AVTDsGyJQnQKTbPbGH', name: 'Lifetime Plan',     amount: 19900, mode: 'payment' },
 };
 

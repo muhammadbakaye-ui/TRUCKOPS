@@ -124,13 +124,13 @@ export default function Pricing() {
       <div className="text-center py-16 px-4">
         <div className="flex items-center justify-center gap-2 mb-6">
           <Truck className="w-8 h-8 text-primary" />
-          <span className="text-2xl font-bold">FleetDesk Pro</span>
+          <span className="text-2xl font-bold">TruckOps</span>
         </div>
         <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
           Simple, transparent pricing
         </h1>
         <p className="text-slate-400 text-lg max-w-xl mx-auto">
-          Everything your trucking operation needs, in one platform. Start free for 14 days — no credit card required upfront.
+          Everything your trucking operation needs, in one platform. Start free — no credit card required upfront.
         </p>
       </div>
 
@@ -235,7 +235,7 @@ export default function Pricing() {
 
       {/* Footer */}
       <div className="text-center pb-12 text-slate-600 text-xs">
-        © {new Date().getFullYear()} FleetDesk Pro. All rights reserved.
+        © {new Date().getFullYear()} TruckOps. All rights reserved.
       </div>
     </div>
   );

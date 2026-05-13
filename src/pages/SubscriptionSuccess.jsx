@@ -8,7 +8,7 @@ export default function SubscriptionSuccess() {
       <div className="max-w-md w-full text-center">
         <div className="flex items-center justify-center gap-2 mb-8">
           <Truck className="w-7 h-7 text-primary" />
-          <span className="text-xl font-bold">FleetDesk Pro</span>
+          <span className="text-xl font-bold">TruckOps</span>
         </div>
 
         <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-6">
@@ -17,7 +17,7 @@ export default function SubscriptionSuccess() {
 
         <h1 className="text-3xl font-extrabold mb-3">You're in!</h1>
         <p className="text-slate-400 mb-6">
-          Your FleetDesk Pro account has been created. Check your email — we've sent your login credentials so you can get started right away.
+          Your TruckOps account has been created. Check your email — we've sent your login credentials so you can get started right away.
         </p>
 
         <div className="bg-white/5 border border-white/10 rounded-xl p-5 mb-8 flex items-start gap-3 text-left">
