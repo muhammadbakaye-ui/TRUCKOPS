@@ -244,6 +244,7 @@ export default function Drivers() {
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
+      if (!editing && !checkFeatureAccess(isInPreview)) return;
       let driverId;
       if (editing) {
         await base44.entities.Driver.update(editing.id, data);
