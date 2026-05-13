@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { Check, Zap, Shield, Building2, Loader2, Truck, ArrowLeft, X } from 'lucide-react';
+import { Check, Zap, Shield, Building2, Loader2, Truck, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { base44 } from '@/api/base44Client';
-import { useSession } from '@/components/shared/AppSession';
-
 const PLANS = [
   {
     key: 'basic',
@@ -86,10 +84,8 @@ const PLANS = [
 
 export default function Pricing() {
   const navigate = useNavigate();
-  const { session } = useSession();
-  const isLoggedIn = !!(session?.admin_id);
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [companyName, setCompanyName] = useState(session?.company_name || '');
+  const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -138,15 +134,6 @@ export default function Pricing() {
           <ArrowLeft className="w-4 h-4" />
           Back
         </button>
-        {isLoggedIn && (
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-1.5 text-slate-400 hover:text-white transition-colors text-sm"
-          >
-            <X className="w-4 h-4" />
-            Continue in Preview Mode
-          </button>
-        )}
       </div>
 
       {/* Header */}
