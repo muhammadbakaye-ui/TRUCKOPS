@@ -11,8 +11,27 @@ function generateToken() {
   return Array.from(crypto.getRandomValues(new Uint8Array(24))).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function sendEmail(base44, to, subject, body) {
-  await base44.asServiceRole.integrations.Core.SendEmail({ to, subject, body });
+async function sendResendEmail(to, subject, html) {
+  const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: 'TruckOps <onboarding@resend.dev>',
+      to: [to],
+      subject,
+      html,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    console.error('Resend error:', err);
+    throw new Error(`Email send failed: ${err}`);
+  }
+  return await res.json();
 }
 
 Deno.serve(async (req) => {
@@ -72,6 +91,8 @@ Deno.serve(async (req) => {
       if (existing.length > 0) {
         return Response.json({ success: false, message: 'An account with this email already exists' }, { status: 400 });
       }
+
+      const verificationToken = generateToken();
       const newAdmin = await base44.asServiceRole.entities.Admin.create({
         first_name: first_name.trim(),
         last_name: last_name.trim(),
@@ -79,10 +100,32 @@ Deno.serve(async (req) => {
         password_hash: passwordHash,
         company_name: company_name.trim(),
         active: true,
-        email_verified: true,
+        email_verified: false,
+        verification_token: verificationToken,
       });
 
-      return Response.json({ success: true, admin_id: newAdmin.id, admin_name: `${first_name} ${last_name}`, message: 'Account created successfully. You can now sign in.' });
+      const appUrl = Deno.env.get('APP_URL') || 'https://app.base44.com';
+      const verifyLink = `${appUrl}/verify-email?token=${verificationToken}`;
+
+      await sendResendEmail(
+        email.toLowerCase().trim(),
+        'Verify your TruckOps email',
+        `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #1e40af;">Welcome to TruckOps, ${first_name}!</h2>
+            <p>Thanks for signing up. Please verify your email address to activate your account.</p>
+            <a href="${verifyLink}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin: 16px 0;">
+              Verify Email Address
+            </a>
+            <p style="color: #6b7280; font-size: 14px;">Or copy and paste this link:<br/><a href="${verifyLink}">${verifyLink}</a></p>
+            <p style="color: #6b7280; font-size: 14px;">If you didn't create this account, you can safely ignore this email.</p>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+            <p style="color: #9ca3af; font-size: 12px;">— The TruckOps Team</p>
+          </div>
+        `
+      );
+
+      return Response.json({ success: true, admin_id: newAdmin.id, message: 'Account created. Please check your email to verify your account.' });
     }
 
     // ── VERIFY EMAIL ──
@@ -99,18 +142,30 @@ Deno.serve(async (req) => {
     if (action === 'forgot_password') {
       if (!email) return Response.json({ success: false, message: 'Email is required' }, { status: 400 });
       const admins = await base44.asServiceRole.entities.Admin.filter({ email: email.toLowerCase().trim() });
-      // Always return success to prevent email enumeration
       if (admins.length > 0) {
         const resetToken = generateToken();
-        const expires = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
+        const expires = new Date(Date.now() + 60 * 60 * 1000).toISOString();
         await base44.asServiceRole.entities.Admin.update(admins[0].id, { reset_token: resetToken, reset_token_expires: expires });
         const appUrl = Deno.env.get('APP_URL') || 'https://app.base44.com';
         const resetLink = `${appUrl}/reset-password?token=${resetToken}`;
-        await sendEmail(
-          base44,
+        await sendResendEmail(
           email.toLowerCase().trim(),
-          'Reset your FleetDesk Pro password',
-          `Hi ${admins[0].first_name},\n\nWe received a request to reset your password. Click the link below to set a new password:\n\n${resetLink}\n\nThis link expires in 1 hour. If you didn't request this, you can safely ignore this email.\n\n— The FleetDesk Pro Team`
+          'Reset your TruckOps password',
+          `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2 style="color: #1e40af;">Reset Your Password</h2>
+              <p>Hi ${admins[0].first_name},</p>
+              <p>We received a request to reset your password. Click the button below to set a new one:</p>
+              <a href="${resetLink}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin: 16px 0;">
+                Reset Password
+              </a>
+              <p style="color: #6b7280; font-size: 14px;">This link expires in 1 hour.</p>
+              <p style="color: #6b7280; font-size: 14px;">Or copy and paste this link:<br/><a href="${resetLink}">${resetLink}</a></p>
+              <p style="color: #6b7280; font-size: 14px;">If you didn't request this, you can safely ignore this email.</p>
+              <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+              <p style="color: #9ca3af; font-size: 12px;">— The TruckOps Team</p>
+            </div>
+          `
         );
       }
       return Response.json({ success: true, message: 'If an account with that email exists, you will receive a password reset link shortly.' });
