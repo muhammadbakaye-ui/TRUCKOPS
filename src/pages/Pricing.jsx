@@ -15,7 +15,7 @@ const PLANS = [
     color: 'text-blue-500',
     border: 'border-blue-200',
     bg: 'bg-blue-50',
-    description: 'Owner-operators / tiny fleets',
+    description: 'Owner-operators / tiny fleets — 6 drivers, 6 trucks, invoices, basic load tracking',
     features: [
       'Up to 3 drivers & 3 trucks',
       'Load tracking',
@@ -27,13 +27,13 @@ const PLANS = [
   {
     key: 'professional',
     name: 'Professional',
-    price: 49,
-    priceLabel: '$49/mo',
+    price: 99,
+    priceLabel: '$99/mo',
     icon: Shield,
     color: 'text-primary',
     border: 'border-primary/30',
     bg: 'bg-primary/5',
-    description: 'Small trucking companies',
+    description: 'Up to 10 drivers, unlimited trucks, full feature access',
     popular: true,
     includedFrom: 'Basic',
     features: [
