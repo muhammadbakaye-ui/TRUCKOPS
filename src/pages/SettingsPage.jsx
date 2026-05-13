@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Loader2, Save, Trash2, LogOut } from 'lucide-react';
+import BillingTab from '../components/settings/BillingTab';
 import BroadcastPanel from '../components/settings/BroadcastPanel';
 import PageHeader from '../components/shared/PageHeader';
 import LoginHistoryTab from '../components/settings/LoginHistoryTab';
@@ -134,6 +135,16 @@ export default function SettingsPage() {
          >
            Broadcast
          </button>
+         <button
+           onClick={() => setActiveTab('billing')}
+           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+             activeTab === 'billing'
+               ? 'border-primary text-primary'
+               : 'border-transparent text-muted-foreground hover:text-foreground'
+           }`}
+         >
+           Billing
+         </button>
        </div>
 
       <div className="space-y-4 mt-4">
@@ -216,6 +227,7 @@ export default function SettingsPage() {
 
         {activeTab === 'security' && currentUser && <LoginHistoryTab userEmail={currentUser.email} />}
         {activeTab === 'broadcast' && <BroadcastPanel />}
+        {activeTab === 'billing' && <BillingTab />}
 
         {activeTab === 'account' && (
           <Card className="border-destructive/40">

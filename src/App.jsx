@@ -2,6 +2,8 @@ import { Toaster } from "@/components/ui/toaster"
 import DeletedItems from './pages/DeletedItems';
 import SystemAdmins from './pages/SystemAdmins';
 import DriverPublicPortal from './pages/DriverPublicPortal';
+import Pricing from './pages/Pricing';
+import SubscriptionSuccess from './pages/SubscriptionSuccess';
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { pagesConfig } from './pages.config'
@@ -65,6 +67,8 @@ const AuthenticatedApp = () => {
         <Route path="/DeletedItems" element={<LayoutWrapper currentPageName="DeletedItems"><DeletedItems /></LayoutWrapper>} />
         <Route path="/SystemAdmins" element={<LayoutWrapper currentPageName="SystemAdmins"><SystemAdmins /></LayoutWrapper>} />
         <Route path="/DriverPublicPortal" element={<DriverPublicPortal />} />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/SubscriptionSuccess" element={<SubscriptionSuccess />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </PageTransition>

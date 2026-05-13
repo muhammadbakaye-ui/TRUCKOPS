@@ -49,7 +49,11 @@ export default function AdminAuthOptions({ onBack, onSuccess }) {
         password_hash: pHash,
       });
       if (response.data.success) {
-        onSuccess(response.data.admin_id, response.data.admin_name);
+        onSuccess(response.data.admin_id, response.data.admin_name, {
+          tenant_id: response.data.tenant_id,
+          subscription_status: response.data.subscription_status,
+          plan: response.data.plan,
+        });
       } else {
         setError(response.data.message || 'Login failed');
       }

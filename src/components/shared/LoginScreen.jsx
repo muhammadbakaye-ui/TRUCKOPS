@@ -77,8 +77,8 @@ export default function LoginScreen() {
   if (showAdminAuth) {
     return <AdminAuthOptions
       onBack={() => { setShowAdminAuth(false); setUsername(''); setPassword(''); }}
-      onSuccess={(adminId, adminName) => {
-        login({ role: 'admin', admin_id: adminId, admin_name: adminName });
+      onSuccess={(adminId, adminName, extra = {}) => {
+        login({ role: 'admin', admin_id: adminId, admin_name: adminName, ...extra });
       }}
     />;
   }
@@ -170,6 +170,15 @@ export default function LoginScreen() {
         <p className="text-center text-xs text-sidebar-foreground/30 mt-6">
           {mode === 'driver' ? 'Contact your dispatcher for login credentials.' : ''}
         </p>
+
+        {mode === 'admin' && (
+          <p className="text-center text-xs text-sidebar-foreground/40 mt-2">
+            Don't have an account?{' '}
+            <a href="/pricing" className="text-primary/70 hover:text-primary underline transition-colors">
+              Start free trial
+            </a>
+          </p>
+        )}
 
         <div className="flex justify-center mt-4">
           <button

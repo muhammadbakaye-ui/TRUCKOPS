@@ -1,0 +1,39 @@
+{
+  "name": "Admin",
+  "type": "object",
+  "properties": {
+    "first_name": {
+      "type": "string"
+    },
+    "last_name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "display_email": {
+      "type": "string",
+      "description": "Email shown to other admins"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "password_hash": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "tenant_id": {
+      "type": "string",
+      "description": "Links this admin to their Subscription/tenant record"
+    }
+  },
+  "required": [
+    "first_name",
+    "last_name",
+    "email",
+    "password_hash"
+  ]
+}

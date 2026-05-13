@@ -27,7 +27,23 @@ Deno.serve(async (req) => {
       if (!admin || inputHash !== admin.password_hash) {
         return Response.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
       }
-      return Response.json({ success: true, admin_id: admin.id, admin_name: `${admin.first_name} ${admin.last_name}` });
+
+      // Check subscription status if tenant_id is set
+      let subscriptionStatus = null;
+      let plan = null;
+      if (admin.tenant_id) {
+        const subs = await base44.asServiceRole.entities.Subscription.filter({ tenant_id: admin.tenant_id });
+        if (subs.length) {
+          subscriptionStatus = subs[0].status;
+          plan = subs[0].plan;
+          // Block access if subscription is canceled or unpaid (not trialing or active)
+          if (subscriptionStatus === 'canceled' || subscriptionStatus === 'unpaid') {
+            return Response.json({ success: false, message: 'Your subscription is inactive. Please renew your plan to continue.' }, { status: 403 });
+          }
+        }
+      }
+
+      return Response.json({ success: true, admin_id: admin.id, admin_name: `${admin.first_name} ${admin.last_name}`, tenant_id: admin.tenant_id || null, subscription_status: subscriptionStatus, plan });
     }
 
     if (action === 'create_admin') {

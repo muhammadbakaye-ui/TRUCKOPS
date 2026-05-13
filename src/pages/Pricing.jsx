@@ -1,0 +1,227 @@
+import React, { useState } from 'react';
+import { Check, Zap, Shield, Building2, Loader2, Truck } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { base44 } from '@/api/base44Client';
+
+const PLANS = [
+  {
+    key: 'starter',
+    name: 'Starter',
+    price: 49,
+    icon: Zap,
+    color: 'text-blue-500',
+    border: 'border-blue-200',
+    bg: 'bg-blue-50',
+    description: 'Perfect for small owner-operators',
+    features: [
+      'Up to 2 drivers',
+      '1 truck',
+      'Load & invoice management',
+      'Driver portal access',
+      'Basic reports',
+      '14-day free trial',
+    ],
+  },
+  {
+    key: 'professional',
+    name: 'Professional',
+    price: 99,
+    icon: Shield,
+    color: 'text-primary',
+    border: 'border-primary/30',
+    bg: 'bg-primary/5',
+    description: 'For growing fleets',
+    popular: true,
+    features: [
+      'Up to 10 drivers',
+      'Unlimited trucks & trailers',
+      'Full load & invoice management',
+      'Driver statements',
+      'Fuel import & tracking',
+      'Advanced reports',
+      'Document uploads',
+      '14-day free trial',
+    ],
+  },
+  {
+    key: 'enterprise',
+    name: 'Enterprise',
+    price: 199,
+    icon: Building2,
+    color: 'text-amber-500',
+    border: 'border-amber-200',
+    bg: 'bg-amber-50',
+    description: 'For large fleets & dispatch companies',
+    features: [
+      'Unlimited drivers',
+      'Unlimited trucks & trailers',
+      'All Professional features',
+      'Multi-admin support',
+      'Priority support',
+      'Custom onboarding',
+      'Audit log',
+      '14-day free trial',
+    ],
+  },
+];
+
+export default function Pricing() {
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [companyName, setCompanyName] = useState('');
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleCheckout = async (e) => {
+    e.preventDefault();
+    if (!selectedPlan || !companyName || !email) return;
+
+    const isInIframe = window.self !== window.top;
+    if (isInIframe) {
+      alert('Checkout must be completed from the published app. Please open the app directly to subscribe.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    try {
+      const res = await base44.functions.invoke('stripeCheckout', {
+        action: 'create_checkout',
+        plan: selectedPlan,
+        company_name: companyName,
+        admin_email: email,
+        success_url: `${window.location.origin}/signup-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${window.location.origin}/pricing`,
+      });
+      if (res.data?.url) {
+        window.location.href = res.data.url;
+      } else {
+        setError('Failed to start checkout. Please try again.');
+      }
+    } catch (err) {
+      setError(err.message || 'Something went wrong.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
+      {/* Header */}
+      <div className="text-center py-16 px-4">
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <Truck className="w-8 h-8 text-primary" />
+          <span className="text-2xl font-bold">FleetDesk Pro</span>
+        </div>
+        <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
+          Simple, transparent pricing
+        </h1>
+        <p className="text-slate-400 text-lg max-w-xl mx-auto">
+          Everything your trucking operation needs, in one platform. Start free for 14 days — no credit card required upfront.
+        </p>
+      </div>
+
+      {/* Plans */}
+      <div className="max-w-5xl mx-auto px-4 pb-12 grid md:grid-cols-3 gap-6">
+        {PLANS.map((plan) => {
+          const Icon = plan.icon;
+          const isSelected = selectedPlan === plan.key;
+          return (
+            <div
+              key={plan.key}
+              onClick={() => setSelectedPlan(plan.key)}
+              className={`relative rounded-2xl border-2 p-6 cursor-pointer transition-all duration-200 ${
+                isSelected
+                  ? 'border-primary bg-primary/10 scale-105 shadow-2xl shadow-primary/20'
+                  : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/8'
+              }`}
+            >
+              {plan.popular && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
+                  MOST POPULAR
+                </div>
+              )}
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${plan.bg} ${plan.color}`}>
+                <Icon className="w-5 h-5" />
+              </div>
+              <div className="mb-1 text-lg font-bold">{plan.name}</div>
+              <div className="text-slate-400 text-sm mb-4">{plan.description}</div>
+              <div className="mb-6">
+                <span className="text-4xl font-extrabold">${plan.price}</span>
+                <span className="text-slate-400 text-sm">/month</span>
+              </div>
+              <ul className="space-y-2 mb-6">
+                {plan.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-slate-300">
+                    <Check className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <div className={`w-full text-center py-2 rounded-lg text-sm font-semibold border transition-colors ${
+                isSelected
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'border-white/20 text-white hover:border-white/40'
+              }`}>
+                {isSelected ? 'Selected' : 'Select Plan'}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Signup form */}
+      {selectedPlan && (
+        <div className="max-w-md mx-auto px-4 pb-16">
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <h2 className="text-lg font-bold mb-1">Start your free trial</h2>
+            <p className="text-slate-400 text-sm mb-5">14 days free, then ${PLANS.find(p => p.key === selectedPlan)?.price}/month</p>
+            <form onSubmit={handleCheckout} className="space-y-4">
+              <div>
+                <Label className="text-white/80 text-sm">Company Name</Label>
+                <Input
+                  className="mt-1.5 bg-white/10 border-white/20 text-white placeholder:text-white/30 h-11"
+                  placeholder="Your trucking company name"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label className="text-white/80 text-sm">Work Email</Label>
+                <Input
+                  type="email"
+                  className="mt-1.5 bg-white/10 border-white/20 text-white placeholder:text-white/30 h-11"
+                  placeholder="you@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              {error && (
+                <div className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2">
+                  {error}
+                </div>
+              )}
+              <Button
+                type="submit"
+                className="w-full h-11 font-bold text-sm"
+                disabled={loading || !companyName || !email}
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Start Free Trial →'}
+              </Button>
+              <p className="text-center text-xs text-slate-500">No credit card required to start. Cancel anytime.</p>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="text-center pb-12 text-slate-600 text-xs">
+        © {new Date().getFullYear()} FleetDesk Pro. All rights reserved.
+      </div>
+    </div>
+  );
+}
