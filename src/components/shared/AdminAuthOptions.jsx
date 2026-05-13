@@ -321,10 +321,7 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour }) {
           )}
         </div>
 
-        <p className="text-center text-xs text-white/30 mt-4">
-          New customer?{' '}
-          <a href="/pricing" className="text-blue-400/70 hover:text-blue-400 underline transition-colors">Start free trial</a>
-        </p>
+
 
         {onShowTour && (
           <div className="flex justify-center mt-3">
