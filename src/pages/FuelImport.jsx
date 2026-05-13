@@ -4,6 +4,8 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, Loader2, Trash2, RefreshCw } from 'lucide-react';
+import { usePreviewGate, PreviewFeatureDialog } from '../components/shared/PreviewFeatureGate';
+import { useSession } from '../components/shared/AppSession';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import DataTable from '../components/shared/DataTable';
@@ -14,6 +16,10 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 
 export default function FuelImport() {
+  const { session } = useSession();
+  const { showDialog, checkFeatureAccess, handleSubscribe, handleDismiss } = usePreviewGate();
+  const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
+  
   const [dragging, setDragging] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState(() => localStorage.getItem('fuel_selected_batch') || null);
@@ -21,6 +27,16 @@ export default function FuelImport() {
   const [selectedBatches, setSelectedBatches] = useState(new Set());
   const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
+  
+  const handleUploadClick = () => {
+    if (!checkFeatureAccess(isInPreview)) return;
+    fileInputRef.current?.click();
+  };
+  
+  const handleDropZoneClick = () => {
+    if (!checkFeatureAccess(isInPreview)) return;
+    fileInputRef.current?.click();
+  };
 
   useEffect(() => {
     if (selectedBatch) {
@@ -543,6 +559,7 @@ Return only the JSON with the transactions array.`,
 
   return (
     <div className="p-4 space-y-4">
+      <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
       <PageHeader title="Fuel Import" description="Import fuel card transaction files" />
 
       {/* Upload zone */}
@@ -550,8 +567,14 @@ Return only the JSON with the transactions array.`,
         className={`border-2 border-dashed transition-colors cursor-pointer ${dragging ? 'border-primary bg-primary/5' : 'border-border'}`}
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
-        onDrop={onDrop}
-        onClick={() => !processing && fileInputRef.current?.click()}
+        onDrop={(e) => {
+          if (!checkFeatureAccess(isInPreview)) {
+            e.preventDefault();
+            return;
+          }
+          onDrop(e);
+        }}
+        onClick={() => !processing && handleDropZoneClick()}
       >
         <CardContent className="flex flex-col items-center justify-center py-10 gap-3">
           {processing ? (
@@ -567,7 +590,9 @@ Return only the JSON with the transactions array.`,
               <p className="text-xs text-muted-foreground">Upload multiple files at once — AI will extract all transactions</p>
             </>
           )}
-          <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.csv,.xlsx,.xls" multiple onChange={(e) => handleFiles(e.target.files)} />
+          <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.csv,.xlsx,.xls" multiple onChange={(e) => {
+            if (checkFeatureAccess(isInPreview)) handleFiles(e.target.files);
+          }} />
         </CardContent>
       </Card>
 

@@ -71,11 +71,7 @@ function AppShell({ children, currentPageName }) {
   const navigate = useNavigate();
   useAndroidBackButton();
 
-  useEffect(() => {
-    if (!session) return;
-    if (session.role !== 'admin') return;
-    // Preview mode allows full app access without subscription
-  }, [session, location.pathname, navigate]);
+  // No subscription redirect - preview mode is open
 
   if (!session) {
     return <LoginScreen />;

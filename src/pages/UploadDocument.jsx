@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
+import { usePreviewGate, PreviewFeatureDialog } from '../components/shared/PreviewFeatureGate';
+import { useSession } from '../components/shared/AppSession';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,11 +16,19 @@ import { useUploadContext } from '../context/UploadContext';
 
 export default function UploadDocument() {
   const navigate = useNavigate();
+  const { session } = useSession();
+  const { showDialog, checkFeatureAccess, handleSubscribe, handleDismiss } = usePreviewGate();
+  const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
   const { jobs, submitUpload, cancelJob, dismissJob } = useUploadContext();
   const [dragging, setDragging] = useState(false);
   const [files, setFiles] = useState([]);
   const [docType, setDocType] = useState('rate_confirmation');
   const fileInputRef = useRef(null);
+  
+  const handleDropZoneClick = () => {
+    if (!checkFeatureAccess(isInPreview)) return;
+    fileInputRef.current?.click();
+  };
   const [drivers, setDrivers] = useState([]);
   const [trucks, setTrucks] = useState([]);
   const [selectedDriverId, setSelectedDriverId] = useState('');
@@ -74,6 +84,7 @@ export default function UploadDocument() {
 
   return (
     <div className="p-4 space-y-4 flex gap-5 items-start">
+      <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
       {/* LEFT: Upload form */}
       <div className="flex-1 min-w-0 space-y-5 max-w-2xl">
         <PageHeader title="Upload Document" description="Upload a rate confirmation or BOL to auto-create a load" />
@@ -151,8 +162,14 @@ export default function UploadDocument() {
           className={`border-2 border-dashed transition-colors cursor-pointer ${dragging ? 'border-primary bg-primary/5' : 'border-border'} ${files.length > 0 ? 'border-green-500 bg-green-500/5' : ''}`}
           onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
           onDragLeave={() => setDragging(false)}
-          onDrop={onDrop}
-          onClick={() => fileInputRef.current?.click()}
+          onDrop={(e) => {
+            if (!checkFeatureAccess(isInPreview)) {
+              e.preventDefault();
+              return;
+            }
+            onDrop(e);
+          }}
+          onClick={() => handleDropZoneClick()}
         >
           <CardContent className="flex flex-col items-center justify-center py-10 gap-3">
             {files.length > 0 ? (
@@ -178,7 +195,9 @@ export default function UploadDocument() {
                 <p className="text-xs text-muted-foreground">PDF, image, or document formats supported · Multiple files OK · Ctrl+V to paste image</p>
               </>
             )}
-            <input ref={fileInputRef} type="file" className="hidden" multiple accept=".pdf,.png,.jpg,.jpeg,.tiff,.doc,.docx" onChange={(e) => handleFiles(Array.from(e.target.files))} />
+            <input ref={fileInputRef} type="file" className="hidden" multiple accept=".pdf,.png,.jpg,.jpeg,.tiff,.doc,.docx" onChange={(e) => {
+              if (checkFeatureAccess(isInPreview)) handleFiles(Array.from(e.target.files));
+            }} />
           </CardContent>
         </Card>
 
