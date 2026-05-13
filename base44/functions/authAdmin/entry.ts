@@ -88,8 +88,13 @@ Deno.serve(async (req) => {
         base44.asServiceRole.entities.Admin.filter({ email: email.toLowerCase().trim() }),
         password_hash ? Promise.resolve(password_hash) : hashPassword(password),
       ]);
+      // If existing unverified account, allow re-registration (overwrite it)
       if (existing.length > 0) {
-        return Response.json({ success: false, message: 'An account with this email already exists' }, { status: 400 });
+        if (existing[0].email_verified) {
+          return Response.json({ success: false, message: 'An account with this email already exists' }, { status: 400 });
+        }
+        // Delete the unverified account so we can recreate it
+        await base44.asServiceRole.entities.Admin.delete(existing[0].id);
       }
 
       const verificationToken = generateToken();

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 
 async function hashPassword(password) {
@@ -20,6 +20,10 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour }) {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
+  const countdownRef = useRef(null);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -37,6 +41,39 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour }) {
   };
 
   const switchMode = (m) => { setMode(m); setError(''); };
+
+  const startResendCountdown = () => {
+    setResendCountdown(30);
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    countdownRef.current = setInterval(() => {
+      setResendCountdown(prev => {
+        if (prev <= 1) { clearInterval(countdownRef.current); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const handleResendVerification = async () => {
+    setResendLoading(true);
+    setResendSuccess(false);
+    try {
+      const pHash = await hashPassword(formData.password);
+      await base44.functions.invoke('authAdmin', {
+        action: 'create_admin',
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        company_name: formData.companyName,
+        email: formData.email,
+        password_hash: pHash,
+      });
+      setResendSuccess(true);
+      startResendCountdown();
+    } catch (err) {
+      // silently fail on resend
+    } finally {
+      setResendLoading(false);
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -86,6 +123,7 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour }) {
       });
       if (response.data.success) {
         setMode('verify_email');
+        startResendCountdown();
       } else {
         setError(response.data.message || 'Sign up failed');
       }
@@ -121,13 +159,46 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour }) {
 
           {/* ── SUCCESS: Verify email ── */}
           {mode === 'verify_email' && (
-            <div className="p-8 text-center space-y-4">
-              <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
-              <h2 className="text-xl font-bold text-foreground">Check Your Email!</h2>
+            <div className="p-8 text-center space-y-5">
+              <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto">
+                <CheckCircle className="w-8 h-8 text-blue-500" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Verify your email</h2>
+                <p className="text-sm text-muted-foreground mt-2">
+                  A verification link has been sent to
+                </p>
+                <p className="text-sm font-semibold text-foreground mt-1">{formData.email}</p>
+              </div>
               <p className="text-sm text-muted-foreground">
-                We sent a verification link to <strong>{formData.email}</strong>. Click the link in that email to activate your account, then come back to sign in.
+                Click the link in that email to activate your account, then come back here to sign in.
               </p>
-              <p className="text-xs text-muted-foreground">Didn't get it? Check your spam folder.</p>
+
+              {/* Resend */}
+              <div className="space-y-2">
+                {resendSuccess && (
+                  <p className="text-xs text-green-600 font-medium">Verification email resent!</p>
+                )}
+                {resendCountdown > 0 ? (
+                  <p className="text-xs text-muted-foreground">Resend available in {resendCountdown}s</p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={resendLoading}
+                    className="text-xs text-primary hover:underline disabled:opacity-50"
+                  >
+                    {resendLoading ? 'Sending...' : "Didn't receive it? Resend email"}
+                  </button>
+                )}
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-left">
+                <p className="text-xs text-amber-700">
+                  <strong>Can't find the email?</strong> Check your <strong>spam or junk folder</strong> — it may have been filtered automatically.
+                </p>
+              </div>
+
               <Button className="w-full" onClick={() => switchMode('login')}>Back to Sign In</Button>
             </div>
           )}
