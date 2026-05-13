@@ -190,9 +190,8 @@ export default function Drivers() {
   const [qrDriver, setQrDriver] = useState(null); // { driver, url }
   const queryClient = useQueryClient();
   const { session } = useSession();
-  const { showDialog, checkFeatureAccess, handleSubscribe, handleDismiss } = usePreviewGate();
+  const { showDialog, setShowDialog, checkFeatureAccess, handleDismiss, navigate } = usePreviewGate();
   const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
-  const navigate = useNavigate();
 
   const handleShowPortalQR = async (driver, e) => {
     e.stopPropagation();
@@ -275,7 +274,7 @@ export default function Drivers() {
 
       // Show subscription popup only after creating new driver in preview mode
       if (result.isNewDriver && isInPreview) {
-        handleSubscribe();
+        setShowDialog(true);
       }
     }
   });
@@ -327,7 +326,7 @@ export default function Drivers() {
 
   return (
     <div className="p-4">
-      <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
+      <PreviewFeatureDialog open={showDialog} onSubscribe={() => navigate('/pricing')} onDismiss={handleDismiss} />
       <PageHeader
         title="Drivers"
         description={`${drivers.length} total drivers`}

@@ -120,9 +120,8 @@ export default function Trucks() {
    const [dialogOpen, setDialogOpen] = useState(false);
    const [editing, setEditing] = useState(null);
    const queryClient = useQueryClient();
-   const navigate = useNavigate();
    const { session } = useSession();
-   const { showDialog, checkFeatureAccess, handleSubscribe, handleDismiss } = usePreviewGate();
+   const { showDialog, setShowDialog, checkFeatureAccess, handleDismiss, navigate } = usePreviewGate();
    const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
 
   const { data: trucks = [], isLoading } = useQuery({
@@ -137,8 +136,13 @@ export default function Trucks() {
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
-      let truckId;
       const isNewTruck = !editing;
+      // Block creation of new truck in preview mode
+      if (isNewTruck && isInPreview) {
+        throw new Error('preview_mode');
+      }
+
+      let truckId;
       if (editing) {
         await base44.entities.Truck.update(editing.id, data);
         truckId = editing.id;
@@ -167,10 +171,10 @@ export default function Trucks() {
       queryClient.invalidateQueries({ queryKey: ['drivers'] });
       setDialogOpen(false);
       setEditing(null);
-
-      // Show subscription popup only after creating new truck in preview mode
-      if (result.isNewTruck && isInPreview) {
-        handleSubscribe();
+    },
+    onError: (error) => {
+      if (error.message === 'preview_mode') {
+        setShowDialog(true);
       }
     }
   });
@@ -197,7 +201,7 @@ export default function Trucks() {
 
   return (
     <div className="p-4">
-      <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
+      <PreviewFeatureDialog open={showDialog} onSubscribe={() => navigate('/pricing')} onDismiss={handleDismiss} />
       <PageHeader
         title="Trucks"
         description={`${trucks.length} total trucks`}
