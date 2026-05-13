@@ -130,7 +130,7 @@ export default function Pricing() {
           Simple, transparent pricing
         </h1>
         <p className="text-slate-400 text-lg max-w-xl mx-auto">
-          Everything your trucking operation needs, in one platform. Start free — no credit card required upfront.
+          Everything your trucking operation needs, in one platform. Start free for 3 days — no credit card required upfront.
         </p>
       </div>
 
@@ -191,7 +191,7 @@ export default function Pricing() {
             <p className="text-slate-400 text-sm mb-5">
               {PLANS.find(p => p.key === selectedPlan)?.oneTime
                 ? `One-time payment of $${PLANS.find(p => p.key === selectedPlan)?.price}`
-                : `14 days free, then $${PLANS.find(p => p.key === selectedPlan)?.price}/month`}
+                : `3 days free, then $${PLANS.find(p => p.key === selectedPlan)?.price}/month`}
             </p>
             <form onSubmit={handleCheckout} className="space-y-4">
               <div>

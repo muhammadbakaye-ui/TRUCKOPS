@@ -38,7 +38,7 @@ export default function SubscriptionSuccess() {
         </Button>
 
         <p className="text-xs text-slate-600 mt-4">
-          Your 14-day free trial starts now. No charge until your trial ends.
+          Your 3-day free trial starts now. No charge until your trial ends.
         </p>
       </div>
     </div>
