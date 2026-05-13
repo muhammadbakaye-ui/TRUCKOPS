@@ -42,11 +42,11 @@ export default function Sidebar({ currentPage, collapsed, onToggle }) {
       <div className="h-14 flex items-center px-4 border-b border-sidebar-border">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <Truck className="w-6 h-6 text-sidebar-primary" />
+            <img src="https://media.base44.com/images/public/6a0409fc37a632ab53db20fd/fcd8c7ffa_image.png" alt="logo" className="w-6 h-6 object-contain" />
             <span className="font-bold text-sidebar-primary-foreground text-sm tracking-wide">TRUCKOPS</span>
           </div>
         )}
-        {collapsed && <Truck className="w-6 h-6 text-sidebar-primary mx-auto" />}
+        {collapsed && <img src="https://media.base44.com/images/public/6a0409fc37a632ab53db20fd/fcd8c7ffa_image.png" alt="logo" className="w-6 h-6 object-contain mx-auto" />}
       </div>
       {!collapsed && (
         <div className="px-4 pb-2 border-b border-sidebar-border">
