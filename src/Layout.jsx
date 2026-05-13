@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { SessionProvider, useSession } from './components/shared/AppSession';
 import Sidebar from './components/layout/Sidebar';
 import TopBar from './components/layout/TopBar';
@@ -67,21 +67,23 @@ function AppShell({ children, currentPageName }) {
   const { session } = useSession();
   const [collapsed, setCollapsed] = useState(false);
   const mainRef = useMainScrollRestoration(currentPageName);
+  const location = useLocation();
+  const navigate = useNavigate();
   useAndroidBackButton();
+
+  useEffect(() => {
+    if (!session) return;
+    if (session.role !== 'admin') return;
+    const subscriptionStatus = session.subscription_status;
+    const hasActiveSubscription = subscriptionStatus === 'active' || subscriptionStatus === 'trialing';
+    const EXEMPT_PATHS = ['/pricing', '/SubscriptionSuccess', '/verify-email', '/reset-password'];
+    if (!hasActiveSubscription && !EXEMPT_PATHS.includes(location.pathname)) {
+      navigate('/pricing', { replace: true });
+    }
+  }, [session, location.pathname, navigate]);
 
   if (!session) {
     return <LoginScreen />;
-  }
-
-  // Redirect non-subscribed admins to pricing (preview gate)
-  const subscriptionStatus = session.subscription_status;
-  const hasActiveSubscription = subscriptionStatus === 'active' || subscriptionStatus === 'trialing';
-  if (session.role === 'admin' && !hasActiveSubscription) {
-    const onPricingPage = window.location.pathname === '/pricing' || window.location.pathname === '/SubscriptionSuccess';
-    if (!onPricingPage) {
-      window.location.replace('/pricing');
-      return null;
-    }
   }
 
   if (session.role === 'driver') {
