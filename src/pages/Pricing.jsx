@@ -254,8 +254,7 @@ export default function Pricing() {
       <div className="max-w-md mx-auto px-4 pb-12">
         <Button
           onClick={() => navigate('/')}
-          variant="outline"
-          className="w-full h-12 font-bold text-sm border-white/30 text-white hover:bg-white/10"
+          className="w-full h-12 font-bold text-sm bg-primary hover:bg-primary/90"
         >
           Preview App → Dashboard
         </Button>

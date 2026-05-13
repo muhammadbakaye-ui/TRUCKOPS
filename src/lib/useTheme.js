@@ -2,7 +2,7 @@
 const THEME_KEY = 'app-theme';
 
 export function initTheme() {
-  const saved = localStorage.getItem(THEME_KEY) || 'light';
+  const saved = localStorage.getItem(THEME_KEY) || 'very-dark';
   applyTheme(saved);
 }
 
@@ -18,7 +18,7 @@ export function applyTheme(theme) {
 }
 
 export function getTheme() {
-  return localStorage.getItem(THEME_KEY) || 'light';
+  return localStorage.getItem(THEME_KEY) || 'very-dark';
 }
 
 import { useState, useEffect } from 'react';
