@@ -68,12 +68,15 @@ const PLANS = [
     color: 'text-emerald-500',
     border: 'border-emerald-200',
     bg: 'bg-emerald-50',
-    description: 'People who hate subscriptions',
+    description: 'Pay once, use forever',
     features: [
       'Unlimited drivers & trucks',
-      '1 device / account',
-      'Limited updates',
-      'No priority support',
+      'All features included',
+      'Invoices & driver statements',
+      'Fuel imports & OCR scanning',
+      'Advanced reports',
+      'Priority support',
+      'All future updates included',
     ],
   },
 ];
@@ -227,7 +230,11 @@ export default function Pricing() {
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Start Free Trial →'}
               </Button>
-              <p className="text-center text-xs text-slate-500">No credit card required to start. Cancel anytime.</p>
+              <p className="text-center text-xs text-slate-500">
+                {PLANS.find(p => p.key === selectedPlan)?.oneTime
+                  ? 'One-time payment. No recurring charges.'
+                  : 'Card required. Cancel anytime before trial ends.'}
+              </p>
             </form>
           </div>
         </div>
