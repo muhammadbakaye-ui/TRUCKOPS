@@ -244,8 +244,8 @@ export default function Drivers() {
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
-      if (!editing && !checkFeatureAccess(isInPreview)) return;
       let driverId;
+      const isNewDriver = !editing;
       if (editing) {
         await base44.entities.Driver.update(editing.id, data);
         driverId = editing.id;
@@ -264,12 +264,19 @@ export default function Drivers() {
       if (data.assigned_truck_id) {
         await base44.entities.Truck.update(data.assigned_truck_id, { assigned_driver_id: driverId });
       }
+
+      return { isNewDriver };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['drivers'] });
       queryClient.invalidateQueries({ queryKey: ['trucks'] });
       setDialogOpen(false);
       setEditing(null);
+
+      // Show subscription popup only after creating new driver in preview mode
+      if (result.isNewDriver && isInPreview) {
+        handleSubscribe();
+      }
     }
   });
 
