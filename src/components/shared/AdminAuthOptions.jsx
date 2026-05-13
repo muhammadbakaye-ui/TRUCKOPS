@@ -90,7 +90,7 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour }) {
         setError(response.data.message || 'Sign up failed');
       }
     } catch (err) {
-      setError('Sign up failed. Please try again.');
+      setError(err?.response?.data?.message || err?.message || 'Sign up failed. Please try again.');
     } finally {
       setLoading(false);
     }
