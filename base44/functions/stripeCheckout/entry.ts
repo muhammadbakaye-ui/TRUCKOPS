@@ -16,18 +16,20 @@ Deno.serve(async (req) => {
     const { action, plan, company_name, admin_email, success_url, cancel_url, tenant_id } = body;
 
     if (action === 'create_checkout') {
-      if (!plan || !PLANS[plan]) {
-        return Response.json({ error: 'Invalid plan' }, { status: 400 });
-      }
-      if (!company_name || !admin_email) {
-        return Response.json({ error: 'Company name and email are required' }, { status: 400 });
-      }
+       if (!plan || !PLANS[plan]) {
+         return Response.json({ error: 'Invalid plan' }, { status: 400 });
+       }
 
-      const customer = await stripe.customers.create({
-        email: admin_email,
-        name: company_name,
-        metadata: { plan, company_name },
-      });
+       const customerData = {
+         metadata: { plan },
+       };
+       if (admin_email) customerData.email = admin_email;
+       if (company_name) {
+         customerData.name = company_name;
+         customerData.metadata.company_name = company_name;
+       }
+
+       const customer = await stripe.customers.create(customerData);
 
       const planData = PLANS[plan];
       const isSubscription = planData.mode === 'subscription';
