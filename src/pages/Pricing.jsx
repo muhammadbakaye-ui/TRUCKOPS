@@ -130,7 +130,7 @@ export default function Pricing() {
           Simple, transparent pricing
         </h1>
         <p className="text-slate-400 text-lg max-w-xl mx-auto">
-          Everything your trucking operation needs, in one platform. Start free for 3 days — no credit card required upfront.
+          Everything your trucking operation needs, in one platform. Start free for 3 days — cancel anytime before your trial ends.
         </p>
       </div>
 
