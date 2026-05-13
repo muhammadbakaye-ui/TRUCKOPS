@@ -324,7 +324,7 @@ export default function Drivers() {
         title="Drivers"
         description={`${drivers.length} total drivers`}
         actions={
-          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { if (!checkFeatureAccess(isInPreview)) return; setEditing(null); setDialogOpen(true); }}>
+          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { setEditing(null); setDialogOpen(true); }}>
             <Plus className="w-3.5 h-3.5" /> Add Driver
           </Button>
         }
@@ -332,7 +332,7 @@ export default function Drivers() {
       <div className="mb-3">
         <SearchInput value={search} onChange={setSearch} placeholder="Search drivers..." className="w-72" />
       </div>
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} onRowClick={(row) => { if (!checkFeatureAccess(isInPreview)) return; setEditing(row); setDialogOpen(true); }} emptyMessage="No drivers found" />
+      <DataTable columns={columns} data={filtered} isLoading={isLoading} onRowClick={(row) => { setEditing(row); setDialogOpen(true); }} emptyMessage="No drivers found" />
       {qrDriver && (
         <DriverQRModal
           driver={qrDriver.driver}
