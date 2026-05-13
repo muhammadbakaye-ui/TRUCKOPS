@@ -4,6 +4,8 @@ import SystemAdmins from './pages/SystemAdmins';
 import DriverPublicPortal from './pages/DriverPublicPortal';
 import Pricing from './pages/Pricing';
 import SubscriptionSuccess from './pages/SubscriptionSuccess';
+import VerifyEmail from './pages/VerifyEmail';
+import ResetPassword from './pages/ResetPassword';
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { pagesConfig } from './pages.config'
@@ -69,6 +71,8 @@ const AuthenticatedApp = () => {
         <Route path="/DriverPublicPortal" element={<DriverPublicPortal />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/SubscriptionSuccess" element={<SubscriptionSuccess />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </PageTransition>

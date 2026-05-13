@@ -16,7 +16,8 @@ export default function TopBar({ pageTitle, currentPageName }) {
   const [showTour, setShowTour] = useState(false);
   const [showUploadTour, setShowUploadTour] = useState(false);
   const navigate = useNavigate();
-  const { logout } = useSession();
+  const { logout, session } = useSession();
+  const companyName = session?.company_name || '';
   const queryClient = useQueryClient();
 
   const startTour = () => setShowTour(true);
@@ -69,7 +70,7 @@ export default function TopBar({ pageTitle, currentPageName }) {
             </Button>
           </div>
           <div>
-            <p className="text-[10px] text-muted-foreground font-medium tracking-wide leading-none mb-0.5">Unity Transportation LLC</p>
+            {companyName && <p className="text-[10px] text-muted-foreground font-medium tracking-wide leading-none mb-0.5">{companyName}</p>}
             <h1 className="text-sm font-semibold text-foreground leading-none">{pageTitle}</h1>
           </div>
         </div>

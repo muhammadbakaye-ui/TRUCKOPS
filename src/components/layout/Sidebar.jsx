@@ -7,6 +7,7 @@ import {
   Settings, History, Upload, ChevronLeft, ChevronRight, FolderOpen, Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useSession } from '../shared/AppSession';
 
 const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
@@ -33,6 +34,9 @@ const navItems = [
 ];
 
 export default function Sidebar({ currentPage, collapsed, onToggle }) {
+  const { session } = useSession();
+  const companyName = session?.company_name || '';
+
   return (
     <div data-tour="sidebar" className={cn(
       "h-screen bg-sidebar flex flex-col border-r border-sidebar-border transition-all duration-200 flex-shrink-0",
@@ -50,7 +54,7 @@ export default function Sidebar({ currentPage, collapsed, onToggle }) {
       </div>
       {!collapsed && (
         <div className="px-4 pb-2 border-b border-sidebar-border">
-          <span className="text-[9px] text-sidebar-foreground/40 font-medium tracking-widest uppercase">Unity Transportation LLC</span>
+          <span className="text-[9px] text-sidebar-foreground/40 font-medium tracking-widest uppercase">{companyName}</span>
         </div>
       )}
 
