@@ -4,12 +4,20 @@ import { PLANS } from '@/lib/pricingPlans';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 
+/**
+ * PricingShowcase - PUBLIC LANDING PAGE ONLY
+ * - "Learn More" buttons scroll to comparison section
+ * - No checkout, no redirects, no Select Plan, no Get Started
+ * - Card divs have NO onClick handlers
+ * - Only button handlers have e.stopPropagation()
+ */
 export default function PricingShowcase() {
   const [highlightedPlan, setHighlightedPlan] = useState(null);
   const comparisonRef = useRef(null);
   const { ref: comparisonInViewRef, inView: comparisonInView } = useInView({ threshold: 0.1, triggerOnce: false });
 
-  const handleLearnMore = (planKey) => {
+  const handleLearnMore = (e, planKey) => {
+    e.stopPropagation();
     setHighlightedPlan(planKey);
     setTimeout(() => {
       comparisonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -80,10 +88,7 @@ export default function PricingShowcase() {
               </ul>
 
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleLearnMore(plan.key);
-                }}
+                onClick={(e) => handleLearnMore(e, plan.key)}
                 className="w-full py-2 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-colors"
               >
                 Learn More

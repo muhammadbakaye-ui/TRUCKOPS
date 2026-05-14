@@ -4,6 +4,15 @@ import { PLANS } from '@/lib/pricingPlans';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
 
+/**
+ * PricingDashboard - LOGGED IN USERS ONLY (dashboard page + subscribe popup)
+ * - "Select Plan" buttons expand checkout inline
+ * - "Checkout" button goes directly to Stripe
+ * - No scroll, no localStorage, no Learn More, no Get Started
+ * - Card divs have NO onClick handlers
+ * - Only button handlers have e.stopPropagation()
+ * - Same component used in both dashboard pricing page and once-per-visit popup
+ */
 export default function PricingDashboard() {
   const [expandedPlan, setExpandedPlan] = useState(null);
   const [loadingPlan, setLoadingPlan] = useState(null);
@@ -21,7 +30,8 @@ export default function PricingDashboard() {
     }
   };
 
-  const handleSelectPlan = (planKey) => {
+  const handleSelectPlan = (e, planKey) => {
+    e.stopPropagation();
     if (expandedPlan === planKey) {
       setExpandedPlan(null);
     } else {
@@ -30,7 +40,9 @@ export default function PricingDashboard() {
     }
   };
 
-  const handleCheckout = async (plan) => {
+  const handleCheckout = async (e, plan) => {
+    e.stopPropagation();
+    
     const accountInfo = getAccountInfo();
     if (!accountInfo.email || !accountInfo.company) {
       setError('Unable to retrieve account information.');
@@ -69,7 +81,7 @@ export default function PricingDashboard() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-16">
       <div className="text-center mb-16">
-        <h2 className="text-4xl font-extrabold mb-4 text-foreground">Upgrade Your Plan</h2>
+        <h2 className="text-4xl font-extrabold mb-4 text-foreground">Upgrade your plan</h2>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
           Select a plan to upgrade your account and unlock more features.
         </p>
@@ -130,10 +142,7 @@ export default function PricingDashboard() {
               </ul>
 
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSelectPlan(plan.key);
-                }}
+                onClick={(e) => handleSelectPlan(e, plan.key)}
                 className="w-full py-2 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-colors flex items-center justify-between"
               >
                 Select Plan
@@ -155,10 +164,7 @@ export default function PricingDashboard() {
                       </div>
                     )}
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCheckout(plan);
-                      }}
+                      onClick={(e) => handleCheckout(e, plan)}
                       disabled={loadingPlan === plan.key}
                       className="w-full py-2 px-4 rounded-lg bg-green-600 hover:bg-green-700 disabled:bg-green-600/50 text-white font-semibold transition-colors flex items-center justify-center gap-2"
                     >

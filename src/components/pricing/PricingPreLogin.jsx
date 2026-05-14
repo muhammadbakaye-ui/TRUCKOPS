@@ -2,18 +2,26 @@ import { Check } from 'lucide-react';
 import { PLANS } from '@/lib/pricingPlans';
 import { useNavigate } from 'react-router-dom';
 
+/**
+ * PricingPreLogin - SIGNUP/LOGIN PAGE ONLY
+ * - "Get Started" buttons save plan to localStorage and redirect to signup
+ * - No checkout, no scroll, no Learn More, no Select Plan
+ * - Card divs have NO onClick handlers
+ * - Only button handlers have e.stopPropagation()
+ */
 export default function PricingPreLogin() {
   const navigate = useNavigate();
 
-  const handleGetStarted = (planKey) => {
+  const handleGetStarted = (e, planKey) => {
+    e.stopPropagation();
     localStorage.setItem('selectedPlan', planKey);
-    navigate('/login?plan=' + planKey + '&message=create-account');
+    navigate('/login?plan=' + planKey);
   };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-16">
       <div className="text-center mb-16">
-        <h2 className="text-4xl font-extrabold mb-4 text-foreground">Choose Your Plan</h2>
+        <h2 className="text-4xl font-extrabold mb-4 text-foreground">Choose your plan before getting started</h2>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
           Create an account to get started with the plan that fits your operation.
         </p>
@@ -71,10 +79,7 @@ export default function PricingPreLogin() {
               </ul>
 
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleGetStarted(plan.key);
-                }}
+                onClick={(e) => handleGetStarted(e, plan.key)}
                 className="w-full py-2 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-colors"
               >
                 Get Started
