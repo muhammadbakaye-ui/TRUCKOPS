@@ -112,11 +112,11 @@ export default function Pricing() {
 
   const handleLearnMore = (planKey) => {
     setHighlightedPlan(planKey);
-    if (comparisonRef.current) {
-      setTimeout(() => {
+    setTimeout(() => {
+      if (comparisonRef.current) {
         comparisonRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
-    }
+      }
+    }, 50);
     setTimeout(() => setHighlightedPlan(null), 3000);
   };
 
@@ -226,7 +226,7 @@ export default function Pricing() {
               return (
                 <div
                   key={plan.key}
-                  className="relative rounded-2xl border-2 border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/8 p-6 cursor-pointer transition-all duration-200 flex flex-col"
+                  className="relative rounded-2xl border-2 border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/8 p-6 transition-all duration-200 flex flex-col"
                   onClick={() => handleSelectPlan(plan.key)}
                 >
                   {plan.popular && (
