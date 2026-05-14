@@ -97,10 +97,25 @@ export default function Pricing() {
   })();
 
   const handleSelectPlan = (planKey) => {
+    if (!isLoggedIn) {
+      // Redirect to login/signup, then come back with plan pre-selected
+      window.location.href = `/?signup=1&plan=${planKey}`;
+      return;
+    }
     setSelectedPlan(planKey);
     setStep('details');
     setError('');
   };
+
+  // On mount, check if returning from login with a plan pre-selected
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const plan = params.get('plan');
+    if (plan && isLoggedIn && PLANS.find(p => p.key === plan)) {
+      setSelectedPlan(plan);
+      setStep('details');
+    }
+  }, []);
 
   const handleCheckout = async (e) => {
     e.preventDefault();
