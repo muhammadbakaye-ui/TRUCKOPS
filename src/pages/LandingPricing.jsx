@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
+import { useState } from 'react';
 import LandingNav from '@/components/landing/LandingNav';
 import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
@@ -82,7 +83,7 @@ const useCases = [
   }
 ];
 
-function PlanCard({ plan, index }) {
+function PlanCard({ plan, index, onLearnMore }) {
   const { ref, inView } = useInView({ threshold: 0.1, triggerOnce: false });
 
   return (
@@ -114,7 +115,10 @@ function PlanCard({ plan, index }) {
           </li>
         ))}
       </ul>
-      <button disabled className="w-full py-2 px-4 rounded-lg bg-sidebar-primary/50 text-white font-semibold cursor-not-allowed opacity-60">
+      <button 
+        onClick={() => onLearnMore(plan.name)}
+        className="w-full py-2 px-4 rounded-lg bg-sidebar-primary hover:bg-sidebar-primary/90 text-white font-semibold transition-colors"
+      >
         Learn More
       </button>
     </motion.div>
@@ -123,8 +127,21 @@ function PlanCard({ plan, index }) {
 
 export default function LandingPricingPage() {
   const navigate = useNavigate();
+  const [highlightedPlan, setHighlightedPlan] = useState(null);
   const { ref: headerRef, inView: headerInView } = useInView({ threshold: 0.1, triggerOnce: false });
   const { ref: usecaseRef, inView: usecaseInView } = useInView({ threshold: 0.1, triggerOnce: false });
+
+  const handleLearnMore = (planName) => {
+    setHighlightedPlan(planName);
+    const element = usecaseRef.current;
+    if (element) {
+      setTimeout(() => {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+    // Auto-remove highlight after animation
+    setTimeout(() => setHighlightedPlan(null), 3000);
+  };
 
   return (
     <div className="min-h-screen bg-very-dark">
@@ -152,7 +169,7 @@ export default function LandingPricingPage() {
       <div className="py-20 px-4">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {plans.map((plan, index) => (
-            <PlanCard key={index} plan={plan} index={index} />
+            <PlanCard key={index} plan={plan} index={index} onLearnMore={handleLearnMore} />
           ))}
         </div>
       </div>
@@ -174,18 +191,33 @@ export default function LandingPricingPage() {
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {useCases.map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={usecaseInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: i * 0.1, duration: 0.6 }}
-                className="bg-sidebar-accent border border-sidebar-border rounded-xl p-6"
-              >
-                <h3 className="text-lg font-semibold text-sidebar-primary mb-3">{item.plan}</h3>
-                <p className="text-sidebar-foreground/80 leading-relaxed">{item.usecase}</p>
-              </motion.div>
-            ))}
+            {useCases.map((item, i) => {
+              const isHighlighted = highlightedPlan === item.plan;
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={usecaseInView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ delay: i * 0.1, duration: 0.6 }}
+                  className={`bg-sidebar-accent border rounded-xl p-6 transition-all ${
+                    isHighlighted 
+                      ? 'border-sidebar-primary shadow-2xl shadow-sidebar-primary/50' 
+                      : 'border-sidebar-border'
+                  }`}
+                >
+                  {isHighlighted && (
+                    <motion.div
+                      initial={{ scale: 0.95, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.4 }}
+                      className="absolute inset-0 rounded-xl bg-sidebar-primary/5 pointer-events-none"
+                    />
+                  )}
+                  <h3 className="text-lg font-semibold text-sidebar-primary mb-3">{item.plan}</h3>
+                  <p className="text-sidebar-foreground/80 leading-relaxed">{item.usecase}</p>
+                </motion.div>
+              );
+            })}
           </div>
         </motion.div>
       </div>
