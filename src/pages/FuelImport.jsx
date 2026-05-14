@@ -356,7 +356,7 @@ Return only the JSON with the transactions array.`,
 
   const handleDeleteBatch = async (batch) => {
     try {
-      const batchTransactions = await base44.entities.FuelTransaction.filter({ batch_id: batch.id });
+      const batchTransactions = await base44.entities.FuelTransaction.filter({ batch_id: batch.id }, '-transaction_date', 1000);
       
       for (const tx of batchTransactions) {
         const entityLabel = `${tx.matched_driver_name || tx.driver_name_raw} - ${tx.transaction_date}`;

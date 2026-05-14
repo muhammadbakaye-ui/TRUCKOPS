@@ -83,7 +83,7 @@ export default function Invoices() {
 
   const { data: loads = [] } = useQuery({
     queryKey: ['loads-for-invoices'],
-    queryFn: () => base44.entities.Load.list('-created_date', 1000),
+    queryFn: () => base44.entities.Load.list('-created_date', 500),
   });
 
   const loadsMap = useMemo(() => {
@@ -151,6 +151,7 @@ export default function Invoices() {
     } catch (err) {
       toast.error('Bulk update failed: ' + err.message);
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      // intentionally leave bulkStatusMode open so user can retry
     } finally {
       setBulkSaving(false);
     }

@@ -85,8 +85,8 @@ export default function LoadDetail() {
 
   const { data: drivers = [] } = useQuery({ queryKey: ['drivers'], queryFn: () => base44.entities.Driver.filter({ status: 'active' }, 'full_name', 200) });
   const { data: trucks = [] } = useQuery({ queryKey: ['trucks'], queryFn: () => base44.entities.Truck.filter({ status: 'active' }, 'unit_number', 200) });
-  const { data: trailers = [] } = useQuery({ queryKey: ['trailers'], queryFn: () => base44.entities.Trailer.list() });
-  const { data: companies = [] } = useQuery({ queryKey: ['companies'], queryFn: () => base44.entities.Company.list() });
+  const { data: trailers = [] } = useQuery({ queryKey: ['trailers'], queryFn: () => base44.entities.Trailer.filter({ status: 'active' }, 'unit_number', 200) });
+  const { data: companies = [] } = useQuery({ queryKey: ['companies'], queryFn: () => base44.entities.Company.list('company_name', 500) });
   const { data: carrierCompany = [] } = useQuery({ queryKey: ['settings-company'], queryFn: () => base44.entities.Company.filter({ company_type: 'carrier' }, '-created_date', 1) });
 
   const handlePrint = () => {

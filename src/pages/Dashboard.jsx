@@ -23,23 +23,14 @@ export default function Dashboard() {
     queryFn: () => base44.entities.Load.list('-delivery_date', 50),
   });
 
-  const { data: unpaidInvoicesData = [] } = useQuery({
-    queryKey: ['invoices-dash-unpaid'],
-    queryFn: () => base44.entities.Invoice.filter({ status: 'draft' }, '-created_date', 500)
-      .then(async (drafts) => {
-        const [sent, overdue, partial] = await Promise.all([
-          base44.entities.Invoice.filter({ status: 'sent' }, '-created_date', 500),
-          base44.entities.Invoice.filter({ status: 'overdue' }, '-created_date', 500),
-          base44.entities.Invoice.filter({ status: 'partial' }, '-created_date', 500),
-        ]);
-        return [...drafts, ...sent, ...overdue, ...partial];
-      }),
-  });
-
+  // Single query for all invoices — used for charts and unpaid count
   const { data: allInvoices = [] } = useQuery({
     queryKey: ['invoices-dash-all'],
     queryFn: () => base44.entities.Invoice.list('-created_date', 500),
   });
+
+  // Derive unpaid from the same dataset — no extra network calls
+  const unpaidInvoicesData = allInvoices.filter(i => ['draft', 'sent', 'overdue', 'partial'].includes(i.status));
 
   const { data: drivers = [] } = useQuery({
     queryKey: ['drivers-dash'],
