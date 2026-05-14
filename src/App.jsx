@@ -67,7 +67,6 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/features" element={<LandingFeatures />} />
-      <Route path="/pricing" element={<LandingPricing />} />
       <Route path="/about" element={<LandingAbout />} />
       {Object.entries(Pages).map(([path, Page]) => (
         <Route
