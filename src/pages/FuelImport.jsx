@@ -79,9 +79,10 @@ export default function FuelImport() {
   };
 
   const processFile = async (file) => {
+    let batch = null;
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      const batch = await base44.entities.FuelBatch.create({
+      batch = await base44.entities.FuelBatch.create({
         file_name: file.name,
         file_url,
         import_date: new Date().toISOString().split('T')[0],
@@ -255,6 +256,12 @@ Return only the JSON with the transactions array.`,
       // Don't invalidate here, will be done after all files processed
       setSelectedBatch(batch.id);
     } catch (err) {
+      // Mark the batch as failed so it doesn't stay stuck in "processing"
+      if (batch?.id) {
+        try {
+          await base44.entities.FuelBatch.update(batch.id, { status: 'failed' });
+        } catch { /* best-effort */ }
+      }
       throw err;
     }
   };

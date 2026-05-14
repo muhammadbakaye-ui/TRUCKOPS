@@ -141,10 +141,10 @@ export default function Loads() {
     return saved ? new Set(JSON.parse(saved)) : null; // null = all open by default
   });
 
-  const toggleDate = (dateKey) => {
+  const toggleDate = (dateKey, currentSortedKeys) => {
     setExpandedDates(prev => {
       // If null (all open), initialize with all keys except this one (collapsed)
-      const allKeys = sortedDateKeys || [];
+      const allKeys = currentSortedKeys || [];
       const current = prev === null ? new Set(allKeys) : new Set(prev);
       if (current.has(dateKey)) { current.delete(dateKey); } else { current.add(dateKey); }
       localStorage.setItem('loads_expanded_dates', JSON.stringify([...current]));
@@ -285,6 +285,7 @@ export default function Loads() {
   const handleSaveBulkEdit = async () => {
     setSavingBulk(true);
     const idsToUpdate = [...selected];
+    try {
     await Promise.all(idsToUpdate.map(id => {
       const val = bulkEdits[id];
       if (bulkEditMode === 'amount') {
@@ -323,7 +324,12 @@ export default function Loads() {
     setBulkEditMode(null);
     setBulkEdits({});
     setSelected(new Set());
-    setSavingBulk(false);
+    } catch (err) {
+      toast.error('Bulk save failed: ' + err.message);
+      queryClient.invalidateQueries({ queryKey: ['loads'] });
+    } finally {
+      setSavingBulk(false);
+    }
   };
 
   // Build driver/truck filter options from actual DB records (not stale load text fields)
@@ -539,7 +545,7 @@ export default function Loads() {
             <Card key={dateKey}>
               <CardHeader
                 className="py-3 px-4 cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={() => toggleDate(dateKey)}
+                onClick={() => toggleDate(dateKey, sortedDateKeys)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">

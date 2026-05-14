@@ -281,22 +281,26 @@ export default function StatementBuilder() {
 
   const [autoLoading, setAutoLoading] = useState(false);
 
-  // Returns a map of loadId -> statement_date for loads already on OTHER statements
+  // Returns a map of loadId -> statement_date for loads already on OTHER statements for this driver
   const fetchTakenLoadIds = async () => {
     const currentId = savedIdRef.current;
-    // Get all statement lines of type 'load' across all statements
-    const allLines = await base44.entities.StatementLine.filter({ source_type: 'load' }, 'created_date', 2000);
-    // Get all statements to resolve their dates
-    const allStatements = await base44.entities.DriverStatement.list('-created_date', 500);
-    const stmtMap = {};
-    for (const s of allStatements) stmtMap[s.id] = s;
-    const takenMap = {}; // loadId -> { statement_date, driver_name, statement_id }
-    for (const line of allLines) {
-      if (!line.source_id) continue;
-      if (currentId && line.statement_id === currentId) continue; // skip current statement
-      const stmt = stmtMap[line.statement_id];
-      if (stmt) takenMap[line.source_id] = { statement_date: stmt.statement_date, driver_name: stmt.driver_name, statement_id: stmt.id };
-    }
+    const driverId = formRef.current?.driver_id;
+    if (!driverId) return {};
+
+    // Only look at statements for this specific driver — avoids pulling all 2000 lines
+    const driverStatements = await base44.entities.DriverStatement.filter({ driver_id: driverId }, '-created_date', 100);
+    const otherStatements = driverStatements.filter(s => s.id !== currentId);
+    if (otherStatements.length === 0) return {};
+
+    const takenMap = {};
+    await Promise.all(otherStatements.map(async (stmt) => {
+      const lines = await base44.entities.StatementLine.filter({ statement_id: stmt.id, source_type: 'load' }, 'date', 200);
+      for (const line of lines) {
+        if (line.source_id) {
+          takenMap[line.source_id] = { statement_date: stmt.statement_date, driver_name: stmt.driver_name, statement_id: stmt.id };
+        }
+      }
+    }));
     return takenMap;
   };
 

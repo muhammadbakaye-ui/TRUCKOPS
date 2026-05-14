@@ -17,14 +17,28 @@ import { format } from 'date-fns';
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  const { data: loads = [] } = useQuery({
-    queryKey: ['loads-dash'],
-    queryFn: () => base44.entities.Load.list('-delivery_date', 2000),
+  // Load only what the dashboard actually renders — not full datasets
+  const { data: recentLoads = [] } = useQuery({
+    queryKey: ['loads-dash-recent'],
+    queryFn: () => base44.entities.Load.list('-delivery_date', 50),
   });
 
-  const { data: invoices = [] } = useQuery({
-    queryKey: ['invoices-dash'],
-    queryFn: () => base44.entities.Invoice.list('-created_date', 2000),
+  const { data: unpaidInvoicesData = [] } = useQuery({
+    queryKey: ['invoices-dash-unpaid'],
+    queryFn: () => base44.entities.Invoice.filter({ status: 'draft' }, '-created_date', 500)
+      .then(async (drafts) => {
+        const [sent, overdue, partial] = await Promise.all([
+          base44.entities.Invoice.filter({ status: 'sent' }, '-created_date', 500),
+          base44.entities.Invoice.filter({ status: 'overdue' }, '-created_date', 500),
+          base44.entities.Invoice.filter({ status: 'partial' }, '-created_date', 500),
+        ]);
+        return [...drafts, ...sent, ...overdue, ...partial];
+      }),
+  });
+
+  const { data: allInvoices = [] } = useQuery({
+    queryKey: ['invoices-dash-all'],
+    queryFn: () => base44.entities.Invoice.list('-created_date', 500),
   });
 
   const { data: drivers = [] } = useQuery({
@@ -42,6 +56,10 @@ export default function Dashboard() {
     queryFn: () => base44.entities.Company.list(),
   });
 
+  // Alias for chart and stats — use the smaller recent set for display
+  const loads = recentLoads;
+  const invoices = allInvoices;
+
   const { data: fuelBatches = [] } = useQuery({
     queryKey: ['fuel-dash'],
     queryFn: () => base44.entities.FuelBatch.list('-created_date', 10),
@@ -57,8 +75,8 @@ export default function Dashboard() {
     queryFn: () => base44.entities.AuditLog.list('-created_date', 10),
   });
 
-  const unpaidInvoices = invoices.filter(i => ['draft', 'sent', 'overdue', 'partial'].includes(i.status));
-  const recentLoads = loads.slice(0, 8);
+  const unpaidInvoices = unpaidInvoicesData;
+  const displayLoads = recentLoads.slice(0, 8);
   const draftStatements = statements.filter(s => s.status === 'draft');
   const activeDrivers = drivers.filter(d => d.status === 'active');
   const activeTrucks = trucks.filter(t => t.status === 'active');
@@ -88,7 +106,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="px-4 pb-3">
             <div className="space-y-1">
-              {recentLoads.map(load => (
+              {displayLoads.map(load => (
                 <div 
                   key={load.id}
                   className="flex items-center justify-between py-2 px-3 rounded hover:bg-muted/50 cursor-pointer text-[13px]"
@@ -111,7 +129,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               ))}
-              {recentLoads.length === 0 && (
+              {displayLoads.length === 0 && (
                 <div className="text-center py-8 text-sm text-muted-foreground">
                   No loads yet. <Button variant="link" className="text-sm p-0 h-auto" onClick={() => navigate(createPageUrl('UploadDocument'))}>Upload a document</Button> to get started.
                 </div>
