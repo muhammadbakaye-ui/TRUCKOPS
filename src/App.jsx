@@ -12,6 +12,7 @@ import Terms from './pages/Terms';
 import SubscriptionSuccess from './pages/SubscriptionSuccess';
 import VerifyEmail from './pages/VerifyEmail';
 import ResetPassword from './pages/ResetPassword';
+import LoginScreen from './components/shared/LoginScreen';
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { pagesConfig } from './pages.config'
@@ -52,10 +53,42 @@ const AuthenticatedApp = () => {
   // Check if running in Electron - skip landing page
   const isElectron = window.electron !== undefined || navigator.userAgent.includes('Electron');
 
+  // For Electron users without session, redirect to login
+  if (isElectron && !session && location.pathname === '/') {
+    return (
+      <Routes>
+        <Route path="/" element={<LoginScreen />} />
+        {Object.entries(Pages).map(([path, Page]) => (
+          <Route
+            key={path}
+            path={`/${path}`}
+            element={
+              <PageTransition>
+                <LayoutWrapper currentPageName={path}>
+                  <Page />
+                </LayoutWrapper>
+              </PageTransition>
+            }
+          />
+        ))}
+        <Route path="/DeletedItems" element={<PageTransition><LayoutWrapper currentPageName="DeletedItems"><DeletedItems /></LayoutWrapper></PageTransition>} />
+        <Route path="/SystemAdmins" element={<PageTransition><LayoutWrapper currentPageName="SystemAdmins"><SystemAdmins /></LayoutWrapper></PageTransition>} />
+        <Route path="/DriverPublicPortal" element={<PageTransition><DriverPublicPortal /></PageTransition>} />
+        <Route path="/pricing" element={<PageTransition><Pricing /></PageTransition>} />
+        <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
+        <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
+        <Route path="/SubscriptionSuccess" element={<PageTransition><SubscriptionSuccess /></PageTransition>} />
+        <Route path="/verify-email" element={<PageTransition><VerifyEmail /></PageTransition>} />
+        <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    );
+  }
+
   // Render the main app
   return (
     <Routes>
-      <Route path="/" element={isElectron ? (session ? <Navigate to="/Dashboard" /> : <></>) : <Landing />} />
+      <Route path="/" element={isElectron && session ? <Navigate to="/Dashboard" /> : <Landing />} />
       <Route path="/features" element={<LandingFeatures />} />
       <Route path="/pricing" element={<LandingPricing />} />
       <Route path="/about" element={<LandingAbout />} />
