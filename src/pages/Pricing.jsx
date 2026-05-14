@@ -112,16 +112,10 @@ export default function Pricing() {
 
   const handleLearnMore = (planKey) => {
     setHighlightedPlan(planKey);
-    // Wait for state to update, then scroll
-    setTimeout(() => {
-      const element = document.getElementById('comparison-section');
-      if (element) {
-        const yOffset = -100;
-        const y = element.getBoundingClientRect().top + window.scrollY + yOffset;
-        window.scrollTo({ top: y, behavior: 'smooth' });
-      }
-    }, 50);
-    // Keep highlight for 3 seconds
+    // Scroll using the ref directly
+    if (comparisonRef.current) {
+      comparisonRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
     setTimeout(() => setHighlightedPlan(null), 3000);
   };
 
