@@ -30,23 +30,17 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
 
-const AuthenticatedApp = () => {
-  // Always call hook at top level (required by React)
+const ElectronApp = () => {
+  return (
+    <Routes>
+      <Route path="/" element={<LoginScreen />} />
+      <Route path="*" element={<PageNotFound />} />
+    </Routes>
+  );
+};
+
+const WebApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
-
-  // Detect Electron (via URL param or window object set by Electron)
-  const urlParams = new URLSearchParams(window.location.search);
-  const isElectron = urlParams.get('platform') === 'electron' || !!window.isElectron;
-
-  // For Electron, skip all auth and just show login
-  if (isElectron) {
-    return (
-      <Routes>
-        <Route path="/" element={<LoginScreen />} />
-        <Route path="*" element={<PageNotFound />} />
-      </Routes>
-    );
-  }
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -99,6 +93,11 @@ const AuthenticatedApp = () => {
   );
 };
 
+const AuthenticatedApp = () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const isElectron = urlParams.get('platform') === 'electron' || !!window.isElectron;
+  return isElectron ? <ElectronApp /> : <WebApp />;
+};
 
 function App() {
 
