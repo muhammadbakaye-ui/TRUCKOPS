@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import Logo from './Logo';
 
 export default function AdminAuthOptions({ onBack, onSuccess, onShowTour, initialMode = 'login' }) {
-  const [mode, setMode] = useState(initialMode); // login | signup | forgot | forgot_sent | verify_email
+  const [mode, setMode] = useState(initialMode); // login | signup | forgot | forgot_sent
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -126,8 +126,13 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour, initia
         password_hash: pHash,
       });
       if (response.data.success) {
-        setMode('verify_email');
-        startResendCountdown();
+        onSuccess(response.data.admin_id, response.data.admin_name, {
+          tenant_id: response.data.tenant_id,
+          subscription_status: response.data.subscription_status,
+          plan: response.data.plan,
+          company_name: formData.companyName,
+          admin_email: formData.email.toLowerCase().trim(),
+        });
       } else {
         setError(response.data.message || 'Sign up failed');
       }
@@ -169,40 +174,7 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour, initia
             transition={{ duration: 0.18, ease: 'easeInOut' }}
           >
 
-          {/* ── SUCCESS: Verify email ── */}
-          {mode === 'verify_email' && (
-            <div className="p-8 text-center space-y-5">
-              <div className="w-14 h-14 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto">
-                <CheckCircle className="w-8 h-8 text-blue-400" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-sidebar-foreground">Verify your email</h2>
-                <p className="text-sm text-sidebar-foreground/50 mt-2">A verification link has been sent to</p>
-                <p className="text-sm font-semibold text-sidebar-foreground mt-1">{formData.email}</p>
-              </div>
-              <p className="text-sm text-sidebar-foreground/50">
-                Click the link in that email to activate your account, then come back here to sign in.
-              </p>
-              <div className="space-y-2">
-                {resendSuccess && (
-                  <p className="text-xs text-green-400 font-medium">Verification email resent!</p>
-                )}
-                {resendCountdown > 0 ? (
-                  <p className="text-xs text-sidebar-foreground/40">Resend available in {resendCountdown}s</p>
-                ) : (
-                  <button type="button" onClick={handleResendVerification} disabled={resendLoading} className="text-xs text-sidebar-primary hover:underline disabled:opacity-50">
-                    {resendLoading ? 'Sending...' : "Didn't receive it? Resend email"}
-                  </button>
-                )}
-              </div>
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg px-4 py-3 text-left">
-                <p className="text-xs text-amber-400">
-                  <strong>Can't find the email?</strong> Check your <strong>spam or junk folder</strong> — it may have been filtered automatically.
-                </p>
-              </div>
-              <Button className="w-full" onClick={() => switchMode('login')}>Back to Sign In</Button>
-            </div>
-          )}
+
 
           {/* ── SUCCESS: Forgot password sent ── */}
           {mode === 'forgot_sent' && (
