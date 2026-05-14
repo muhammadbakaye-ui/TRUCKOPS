@@ -53,15 +53,17 @@ export default function LandingHero({ onContinue }) {
           {!isElectron && (
             <button
               disabled
-              className="relative inline-flex items-center justify-center text-sidebar-primary px-6 py-3 rounded-lg cursor-not-allowed overflow-hidden border border-sidebar-primary"
+              className="relative inline-flex flex-col items-center justify-center text-sidebar-primary px-6 py-3 rounded-lg cursor-not-allowed overflow-hidden border border-sidebar-primary"
               style={{
-                backgroundImage: 'repeating-linear-gradient(45deg, #000 0px, #000 10px, #FBBF24 10px, #FBBF24 20px)'
+                backgroundImage: 'repeating-linear-gradient(45deg, #000 0px, #000 10px, #FBBF24 10px, #FBBF24 20px)',
+                textShadow: '0 0 3px rgba(0,0,0,0.8), 0 0 6px rgba(0,0,0,0.6)'
               }}
             >
-              <div className="relative flex items-center gap-2">
+              <div className="relative flex items-center gap-1">
                 <Download className="w-4 h-4" />
-                <span>Download Now (coming soon)</span>
+                <span>Download Now</span>
               </div>
+              <span className="text-xs">(coming soon)</span>
             </button>
           )}
           <Button
