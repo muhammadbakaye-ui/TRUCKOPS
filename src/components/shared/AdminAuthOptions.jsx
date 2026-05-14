@@ -9,6 +9,7 @@ async function hashPassword(password) {
 }
 
 import { Eye, EyeOff, PlayCircle, CheckCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -159,6 +160,14 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour, initia
         </div>
 
         <div className="bg-sidebar-accent border border-sidebar-border rounded-2xl shadow-2xl overflow-hidden">
+          <AnimatePresence mode="wait">
+          <motion.div
+            key={mode}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.18, ease: 'easeInOut' }}
+          >
 
           {/* ── SUCCESS: Verify email ── */}
           {mode === 'verify_email' && (
@@ -311,6 +320,8 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour, initia
               </div>
             </>
           )}
+          </motion.div>
+          </AnimatePresence>
         </div>
 
         <p className="text-center text-xs text-white/30 mt-4">
