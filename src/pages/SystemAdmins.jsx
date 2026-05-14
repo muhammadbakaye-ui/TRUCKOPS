@@ -8,7 +8,10 @@ import PageHeader from '@/components/shared/PageHeader';
 export default function SystemAdmins() {
   const { data: admins = [], isLoading } = useQuery({
     queryKey: ['admins'],
-    queryFn: () => base44.entities.Admin.list(),
+    queryFn: async () => {
+      const res = await base44.functions.invoke('authAdmin', { action: 'list_admins' });
+      return res.data?.admins || [];
+    },
   });
 
   return (

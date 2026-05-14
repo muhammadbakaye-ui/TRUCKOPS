@@ -58,21 +58,17 @@ Deno.serve(async (req) => {
       }
       let subscriptionStatus = null;
       let plan = null;
+      let companyName = admin.company_name || '';
       if (admin.tenant_id) {
         const subs = await base44.asServiceRole.entities.Subscription.filter({ tenant_id: admin.tenant_id });
         if (subs.length) {
           subscriptionStatus = subs[0].status;
           plan = subs[0].plan;
+          if (!companyName) companyName = subs[0].company_name || '';
           if (subscriptionStatus === 'canceled' || subscriptionStatus === 'unpaid') {
             return Response.json({ success: false, message: 'Your subscription is inactive. Please visit our pricing page to reactivate your plan.', code: 'subscription_inactive' }, { status: 403 });
           }
         }
-      }
-      // Get company_name from subscription record (webhook-created accounts store it there)
-      let companyName = admin.company_name || '';
-      if (!companyName && admin.tenant_id) {
-        const subs = await base44.asServiceRole.entities.Subscription.filter({ tenant_id: admin.tenant_id });
-        if (subs.length) companyName = subs[0].company_name || '';
       }
 
       return Response.json({
