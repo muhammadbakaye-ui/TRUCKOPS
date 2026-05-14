@@ -10,7 +10,8 @@ import useAndroidBackButton from './hooks/useAndroidBackButton';
 import GlobalBroadcastListener from './components/shared/GlobalBroadcastListener';
 import { UploadProvider } from './context/UploadContext';
 import UploadProgressFloat from './components/shared/UploadProgressFloat';
-import { PreviewModeBanner } from './components/shared/SubscriptionGate';
+import { PreviewModeBanner, useHasSubscription } from './components/shared/SubscriptionGate';
+import SubscriptionModal from './components/shared/SubscriptionModal';
 
 const pageTitles = {
   Dashboard: 'Dashboard',
@@ -66,10 +67,23 @@ function useMainScrollRestoration(currentPageName) {
 function AppShell({ children, currentPageName }) {
   const { session } = useSession();
   const [collapsed, setCollapsed] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const mainRef = useMainScrollRestoration(currentPageName);
   const location = useLocation();
   const navigate = useNavigate();
+  const hasSubscription = useHasSubscription();
   useAndroidBackButton();
+
+  // Show subscription modal on first login (session exists but no subscription)
+  useEffect(() => {
+    if (session && !hasSubscription && currentPageName !== 'Dashboard') {
+      const modalDismissed = sessionStorage.getItem('subscription_modal_dismissed');
+      if (!modalDismissed) {
+        setShowSubscriptionModal(true);
+        sessionStorage.setItem('subscription_modal_dismissed', 'true');
+      }
+    }
+  }, [session, hasSubscription, currentPageName]);
 
   // No subscription redirect - preview mode is open
 
@@ -89,6 +103,10 @@ function AppShell({ children, currentPageName }) {
   return (
     <>
       <GlobalBroadcastListener />
+      <SubscriptionModal 
+        isOpen={showSubscriptionModal} 
+        onDismiss={() => setShowSubscriptionModal(false)} 
+      />
       <div className="flex h-screen overflow-hidden bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         {/* Sidebar: hidden on mobile, visible on md+ */}
         <div className="hidden md:flex">

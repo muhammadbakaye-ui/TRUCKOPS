@@ -263,13 +263,15 @@ export default function Pricing() {
                 Create Account (No Credit Card)
               </Button>
             )}
-            <Button
-              onClick={() => navigate('/')}
-              variant="ghost"
-              className="w-full h-10 font-medium text-sm text-slate-400 hover:text-slate-300"
-            >
-              Preview App → Dashboard
-            </Button>
+            {isLoggedIn && (
+              <Button
+                onClick={() => navigate('/Dashboard')}
+                variant="ghost"
+                className="w-full h-10 font-medium text-sm text-slate-400 hover:text-slate-300"
+              >
+                Back to Dashboard
+              </Button>
+            )}
           </div>
 
           {/* Footer */}
