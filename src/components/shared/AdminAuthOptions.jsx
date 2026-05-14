@@ -21,10 +21,7 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour, initia
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [resendCountdown, setResendCountdown] = useState(0);
-  const [resendLoading, setResendLoading] = useState(false);
-  const [resendSuccess, setResendSuccess] = useState(false);
-  const countdownRef = useRef(null);
+
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -43,38 +40,7 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour, initia
 
   const switchMode = (m) => { setMode(m); setError(''); };
 
-  const startResendCountdown = () => {
-    setResendCountdown(30);
-    if (countdownRef.current) clearInterval(countdownRef.current);
-    countdownRef.current = setInterval(() => {
-      setResendCountdown(prev => {
-        if (prev <= 1) { clearInterval(countdownRef.current); return 0; }
-        return prev - 1;
-      });
-    }, 1000);
-  };
 
-  const handleResendVerification = async () => {
-    setResendLoading(true);
-    setResendSuccess(false);
-    try {
-      const pHash = await hashPassword(formData.password);
-      await base44.functions.invoke('authAdmin', {
-        action: 'create_admin',
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        company_name: formData.companyName,
-        email: formData.email,
-        password_hash: pHash,
-      });
-      setResendSuccess(true);
-      startResendCountdown();
-    } catch (err) {
-      // silently fail on resend
-    } finally {
-      setResendLoading(false);
-    }
-  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
