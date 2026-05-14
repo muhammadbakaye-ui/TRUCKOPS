@@ -18,11 +18,14 @@ export default function PricingDashboard() {
   const [loadingPlan, setLoadingPlan] = useState(null);
   const [error, setError] = useState('');
 
-  const getAccountInfo = () => {
+  const getAccountInfo = async () => {
     try {
-      const session = JSON.parse(localStorage.getItem('truckops_session'));
+      const user = await base44.auth.me();
+      if (!user) return { email: '', company: '' };
+      
+      const session = JSON.parse(localStorage.getItem('truckops_session') || '{}');
       return {
-        email: session?.admin_email || '',
+        email: user.email || session?.admin_email || '',
         company: session?.company_name || '',
       };
     } catch {
@@ -43,21 +46,27 @@ export default function PricingDashboard() {
   const handleCheckout = async (e, plan) => {
     e.stopPropagation();
     
-    const accountInfo = getAccountInfo();
-    if (!accountInfo.email || !accountInfo.company) {
-      setError('Unable to retrieve account information.');
-      return;
-    }
-
-    const isInIframe = window.self !== window.top;
-    if (isInIframe) {
-      alert('Checkout must be completed from the published app. Please open the app directly to subscribe.');
-      return;
+    try {
+      const isInIframe = window.self !== window.top;
+      if (isInIframe) {
+        alert('Checkout must be completed from the published app. Please open the app directly to subscribe.');
+        return;
+      }
+    } catch (e) {
+      // Can't detect iframe in some cross-origin scenarios, proceed anyway
     }
 
     setLoadingPlan(plan.key);
     setError('');
+    
     try {
+      const accountInfo = await getAccountInfo();
+      if (!accountInfo.email || !accountInfo.company) {
+        setError('Unable to retrieve account information.');
+        setLoadingPlan(null);
+        return;
+      }
+
       const res = await base44.functions.invoke('stripeCheckout', {
         action: 'create_checkout',
         plan: plan.key,

@@ -151,10 +151,19 @@ Deno.serve(async (req) => {
           `
         );
       } catch (emailErr) {
-        console.error('Verification email failed (non-fatal):', emailErr.message);
-      }
+         console.error('Verification email failed (non-fatal):', emailErr.message);
+       }
 
-      return Response.json({ success: true, admin_id: newAdmin.id, message: 'Account created. Please check your email to verify your account.' });
+       return Response.json({ 
+         success: true, 
+         admin_id: newAdmin.id, 
+         admin_name: `${first_name} ${last_name}`,
+         company_name: company_name.trim(),
+         tenant_id: null,
+         subscription_status: null,
+         plan: null,
+         message: 'Account created. Please check your email to verify your account.' 
+       });
     }
 
     // ── VERIFY EMAIL ──

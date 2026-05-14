@@ -2,7 +2,6 @@ import { useState, useRef } from 'react';
 import { Check } from 'lucide-react';
 import { PLANS } from '@/lib/pricingPlans';
 import { motion } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
 
 /**
  * PricingShowcase - PUBLIC LANDING PAGE ONLY
@@ -14,7 +13,6 @@ import { useInView } from 'react-intersection-observer';
 export default function PricingShowcase() {
   const [highlightedPlan, setHighlightedPlan] = useState(null);
   const comparisonRef = useRef(null);
-  const { ref: comparisonInViewRef, inView: comparisonInView } = useInView({ threshold: 0.1, triggerOnce: false });
 
   const handleLearnMore = (e, planKey) => {
     e.stopPropagation();
@@ -101,9 +99,8 @@ export default function PricingShowcase() {
       {/* Comparison Section */}
       <div ref={comparisonRef} className="border-t border-border pt-20">
         <motion.div
-          ref={comparisonInViewRef}
           initial={{ opacity: 0 }}
-          animate={comparisonInView ? { opacity: 1 } : {}}
+          whileInView={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
         >
           <h2 className="text-4xl font-bold text-foreground mb-4 text-center">Which Plan Is Right for You?</h2>
@@ -119,7 +116,7 @@ export default function PricingShowcase() {
                   key={plan.key}
                   onClick={(e) => e.stopPropagation()}
                   initial={{ opacity: 0, y: 20 }}
-                  animate={comparisonInView ? { opacity: 1, y: 0 } : {}}
+                  whileInView={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1, duration: 0.6 }}
                   className={`bg-card border rounded-xl p-6 transition-all cursor-default ${
                     isHighlighted ? 'border-primary shadow-2xl shadow-primary/50' : 'border-border'

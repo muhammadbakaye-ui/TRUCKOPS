@@ -119,7 +119,7 @@ function PlanCard({ plan, index, onSelectPlan }) {
          onClick={() => onSelectPlan(plan.name)}
          className="w-full py-2 px-4 rounded-lg bg-sidebar-primary hover:bg-sidebar-primary/90 text-white font-semibold transition-colors"
        >
-         Select Plan
+         Learn More
        </button>
      </motion.div>
    );
