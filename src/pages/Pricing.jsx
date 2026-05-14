@@ -114,9 +114,10 @@ export default function Pricing() {
     setHighlightedPlan(planKey);
     setTimeout(() => {
       if (comparisonRef.current) {
-        comparisonRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const top = comparisonRef.current.getBoundingClientRect().top + window.scrollY;
+        window.scrollTo({ top, behavior: 'smooth' });
       }
-    }, 50);
+    }, 0);
     setTimeout(() => setHighlightedPlan(null), 3000);
   };
 
