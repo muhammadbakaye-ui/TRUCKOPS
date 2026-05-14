@@ -1,39 +1,67 @@
 import { motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
 export default function LandingNav({ onContinue }) {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogoClick = () => {
+    if (location.pathname === '/') {
+      window.location.reload();
+    } else {
+      navigate('/');
+    }
+  };
+
+  const handleNavClick = (path) => {
+    navigate(path);
+    setIsOpen(false);
+  };
 
   return (
     <motion.nav
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="fixed top-0 left-0 right-0 bg-sidebar-background/95 backdrop-blur-md border-b border-sidebar-border z-50"
+      className="fixed top-0 left-0 right-0 bg-very-dark/95 backdrop-blur-md border-b border-sidebar-border z-50"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <div className="flex items-center gap-2">
+          {/* Logo - Clickable */}
+          <button
+            onClick={handleLogoClick}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
+          >
             <div className="h-8 w-8 bg-sidebar-primary rounded-lg flex items-center justify-center text-white font-bold">
               T
             </div>
             <span className="text-xl font-bold text-sidebar-primary-foreground">TruckOps</span>
-          </div>
+          </button>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-sidebar-foreground hover:text-sidebar-primary transition-colors text-sm font-medium">
+            <button
+              onClick={() => handleNavClick('/features')}
+              className="text-sidebar-foreground hover:text-sidebar-primary transition-colors text-sm font-medium"
+            >
               Features
-            </a>
-            <a href="#pricing" className="text-sidebar-foreground hover:text-sidebar-primary transition-colors text-sm font-medium">
+            </button>
+            <button
+              onClick={() => handleNavClick('/pricing')}
+              className="text-sidebar-foreground hover:text-sidebar-primary transition-colors text-sm font-medium"
+            >
               Pricing
-            </a>
-            <a href="#about" className="text-sidebar-foreground hover:text-sidebar-primary transition-colors text-sm font-medium">
+            </button>
+            <button
+              onClick={() => handleNavClick('/about')}
+              className="text-sidebar-foreground hover:text-sidebar-primary transition-colors text-sm font-medium"
+            >
               About
-            </a>
+            </button>
             <Button
               onClick={onContinue}
               variant="default"
@@ -60,15 +88,24 @@ export default function LandingNav({ onContinue }) {
             exit={{ opacity: 0, y: -10 }}
             className="md:hidden border-t border-sidebar-border py-4 space-y-3"
           >
-            <a href="#features" className="block text-sidebar-foreground hover:text-sidebar-primary text-sm font-medium px-0 py-2">
+            <button
+              onClick={() => handleNavClick('/features')}
+              className="block text-sidebar-foreground hover:text-sidebar-primary text-sm font-medium px-0 py-2 w-full text-left"
+            >
               Features
-            </a>
-            <a href="#pricing" className="block text-sidebar-foreground hover:text-sidebar-primary text-sm font-medium px-0 py-2">
+            </button>
+            <button
+              onClick={() => handleNavClick('/pricing')}
+              className="block text-sidebar-foreground hover:text-sidebar-primary text-sm font-medium px-0 py-2 w-full text-left"
+            >
               Pricing
-            </a>
-            <a href="#about" className="block text-sidebar-foreground hover:text-sidebar-primary text-sm font-medium px-0 py-2">
+            </button>
+            <button
+              onClick={() => handleNavClick('/about')}
+              className="block text-sidebar-foreground hover:text-sidebar-primary text-sm font-medium px-0 py-2 w-full text-left"
+            >
               About
-            </a>
+            </button>
             <Button
               onClick={onContinue}
               variant="default"

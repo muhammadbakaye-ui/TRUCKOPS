@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 
 export default function LandingHero({ onContinue }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sidebar-background via-sidebar-accent to-sidebar-background flex items-center justify-center px-4 pt-20">
+    <div className="min-h-screen bg-gradient-to-br from-very-dark via-sidebar-accent to-very-dark flex items-center justify-center px-4 pt-20">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}

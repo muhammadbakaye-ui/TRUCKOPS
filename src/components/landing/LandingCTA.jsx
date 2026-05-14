@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
 export default function LandingCTA({ onContinue }) {
-  const { ref, inView } = useInView({ threshold: 0.3, triggerOnce: true });
+  const { ref, inView } = useInView({ threshold: 0.3, triggerOnce: false });
 
   return (
     <div className="py-20 px-4 bg-gradient-to-r from-sidebar-primary to-sidebar-primary/80">

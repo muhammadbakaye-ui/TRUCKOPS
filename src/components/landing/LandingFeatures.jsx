@@ -36,7 +36,7 @@ const features = [
 ];
 
 function FeatureCard({ icon: Icon, title, description, index }) {
-  const { ref, inView } = useInView({ threshold: 0.1, triggerOnce: true });
+  const { ref, inView } = useInView({ threshold: 0.1, triggerOnce: false });
 
   return (
     <motion.div
@@ -56,10 +56,10 @@ function FeatureCard({ icon: Icon, title, description, index }) {
 }
 
 export default function LandingFeatures() {
-  const { ref, inView } = useInView({ threshold: 0.1, triggerOnce: true });
+  const { ref, inView } = useInView({ threshold: 0.1, triggerOnce: false });
 
   return (
-    <div className="py-20 px-4 bg-sidebar-background">
+    <div className="py-20 px-4 bg-very-dark">
       <motion.div
         ref={ref}
         initial={{ opacity: 0 }}

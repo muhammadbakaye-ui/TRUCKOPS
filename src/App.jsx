@@ -1,5 +1,8 @@
 import { Toaster } from "@/components/ui/toaster"
 import Landing from './pages/Landing';
+import LandingFeatures from './pages/LandingFeatures';
+import LandingPricing from './pages/LandingPricing';
+import LandingAbout from './pages/LandingAbout';
 import DeletedItems from './pages/DeletedItems';
 import SystemAdmins from './pages/SystemAdmins';
 import DriverPublicPortal from './pages/DriverPublicPortal';
@@ -50,6 +53,9 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/features" element={<LandingFeatures />} />
+      <Route path="/pricing" element={<LandingPricing />} />
+      <Route path="/about" element={<LandingAbout />} />
       {Object.entries(Pages).map(([path, Page]) => (
         <Route
           key={path}
