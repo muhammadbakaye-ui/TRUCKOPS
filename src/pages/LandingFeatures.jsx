@@ -6,11 +6,6 @@ import { Zap, BarChart3, Users, FileText, Fuel, TrendingUp, Clock, Shield, Smart
 
 const features = [
   {
-    icon: Zap,
-    title: 'Real-Time Load Tracking',
-    description: 'Track every load from dispatch to delivery with live GPS integration and instant status updates. Get notifications when loads are picked up, in transit, or delivered.'
-  },
-  {
     icon: Users,
     title: 'Complete Driver Management',
     description: 'Manage driver profiles, licenses, medical certificates, pay rates, and performance metrics. Track driver history and compliance documents all in one secure place.'
