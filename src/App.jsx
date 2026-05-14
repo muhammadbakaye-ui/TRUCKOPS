@@ -15,7 +15,7 @@ import ResetPassword from './pages/ResetPassword';
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
@@ -30,7 +30,7 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   : <>{children}</>;
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, session } = useAuth();
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -49,10 +49,14 @@ const AuthenticatedApp = () => {
     // auth_required and other errors: fall through and let custom LoginScreen handle it
   }
 
+  // Check if running in Electron and user is authenticated
+  const isElectron = window.electron !== undefined || navigator.userAgent.includes('Electron');
+  const isAuthenticatedAdmin = session && session.role !== 'driver';
+
   // Render the main app
   return (
     <Routes>
-      <Route path="/" element={<Landing />} />
+      <Route path="/" element={isElectron && isAuthenticatedAdmin ? <Navigate to="/Dashboard" /> : <Landing />} />
       <Route path="/features" element={<LandingFeatures />} />
       <Route path="/pricing" element={<LandingPricing />} />
       <Route path="/about" element={<LandingAbout />} />
