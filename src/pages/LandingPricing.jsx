@@ -83,65 +83,62 @@ const useCases = [
   }
 ];
 
-function PlanCard({ plan, index, onLearnMore }) {
-  const { ref, inView } = useInView({ threshold: 0.1, triggerOnce: false });
+function PlanCard({ plan, index, onSelectPlan }) {
+   const { ref, inView } = useInView({ threshold: 0.1, triggerOnce: false });
 
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 30 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ delay: (index % 2) * 0.1, duration: 0.6 }}
-      className={`rounded-xl border p-8 transition-all ${
-        plan.highlighted
-          ? 'bg-sidebar-primary/10 border-sidebar-primary shadow-xl'
-          : 'bg-sidebar-accent border-sidebar-border'
-      }`}
-    >
-      {plan.highlighted && (
-        <div className="text-sidebar-primary text-sm font-semibold mb-4">MOST POPULAR</div>
-      )}
-      <h3 className="text-2xl font-bold text-sidebar-primary-foreground mb-2">{plan.name}</h3>
-      <p className="text-sidebar-foreground/70 text-sm mb-6">{plan.description}</p>
-      <div className="mb-6">
-        <span className="text-4xl font-bold text-sidebar-primary-foreground">{plan.price}</span>
-        <span className="text-sidebar-foreground/60 ml-2">{plan.period}</span>
-      </div>
-      <ul className="space-y-3 mb-8">
-        {plan.features.map((feature, i) => (
-          <li key={i} className="flex items-center gap-3 text-sidebar-foreground/80">
-            <Check className="w-5 h-5 text-sidebar-primary flex-shrink-0" />
-            {feature}
-          </li>
-        ))}
-      </ul>
-      <button 
-        onClick={() => onLearnMore(plan.name)}
-        className="w-full py-2 px-4 rounded-lg bg-sidebar-primary hover:bg-sidebar-primary/90 text-white font-semibold transition-colors"
-      >
-        Learn More
-      </button>
-    </motion.div>
-  );
-}
+   return (
+     <motion.div
+       ref={ref}
+       initial={{ opacity: 0, y: 30 }}
+       animate={inView ? { opacity: 1, y: 0 } : {}}
+       transition={{ delay: (index % 2) * 0.1, duration: 0.6 }}
+       className={`rounded-xl border p-8 transition-all ${
+         plan.highlighted
+           ? 'bg-sidebar-primary/10 border-sidebar-primary shadow-xl'
+           : 'bg-sidebar-accent border-sidebar-border'
+       }`}
+     >
+       {plan.highlighted && (
+         <div className="text-sidebar-primary text-sm font-semibold mb-4">MOST POPULAR</div>
+       )}
+       <h3 className="text-2xl font-bold text-sidebar-primary-foreground mb-2">{plan.name}</h3>
+       <p className="text-sidebar-foreground/70 text-sm mb-6">{plan.description}</p>
+       <div className="mb-6">
+         <span className="text-4xl font-bold text-sidebar-primary-foreground">{plan.price}</span>
+         <span className="text-sidebar-foreground/60 ml-2">{plan.period}</span>
+       </div>
+       <ul className="space-y-3 mb-8">
+         {plan.features.map((feature, i) => (
+           <li key={i} className="flex items-center gap-3 text-sidebar-foreground/80">
+             <Check className="w-5 h-5 text-sidebar-primary flex-shrink-0" />
+             {feature}
+           </li>
+         ))}
+       </ul>
+       <button 
+         onClick={() => onSelectPlan(plan.name)}
+         className="w-full py-2 px-4 rounded-lg bg-sidebar-primary hover:bg-sidebar-primary/90 text-white font-semibold transition-colors"
+       >
+         Select Plan
+       </button>
+     </motion.div>
+   );
+ }
 
 export default function LandingPricingPage() {
-  const navigate = useNavigate();
-  const [highlightedPlan, setHighlightedPlan] = useState(null);
-  const { ref: headerRef, inView: headerInView } = useInView({ threshold: 0.1, triggerOnce: false });
-  const { ref: usecaseRef, inView: usecaseInView } = useInView({ threshold: 0.1, triggerOnce: false });
+   const navigate = useNavigate();
+   const { ref: headerRef, inView: headerInView } = useInView({ threshold: 0.1, triggerOnce: false });
+   const { ref: usecaseRef, inView: usecaseInView } = useInView({ threshold: 0.1, triggerOnce: false });
 
-  const handleLearnMore = (planName) => {
-    setHighlightedPlan(planName);
-    const element = usecaseRef.current;
-    if (element) {
-      setTimeout(() => {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
-    }
-    // Auto-remove highlight after animation
-    setTimeout(() => setHighlightedPlan(null), 3000);
-  };
+   const handleSelectPlan = (planName) => {
+     const planKeyMap = {
+       'Basic': 'basic',
+       'Professional': 'professional',
+       'Enterprise': 'enterprise',
+       'Lifetime': 'lifetime'
+     };
+     navigate(`/pricing?plan=${planKeyMap[planName]}`);
+   };
 
   return (
     <div className="min-h-screen bg-very-dark">
@@ -169,7 +166,7 @@ export default function LandingPricingPage() {
       <div className="py-20 px-4">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {plans.map((plan, index) => (
-            <PlanCard key={index} plan={plan} index={index} onLearnMore={handleLearnMore} />
+            <PlanCard key={index} plan={plan} index={index} onSelectPlan={handleSelectPlan} />
           ))}
         </div>
       </div>
@@ -191,34 +188,19 @@ export default function LandingPricingPage() {
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {useCases.map((item, i) => {
-              const isHighlighted = highlightedPlan === item.plan;
-              return (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={usecaseInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ delay: i * 0.1, duration: 0.6 }}
-                  className={`bg-sidebar-accent border rounded-xl p-6 transition-all ${
-                    isHighlighted 
-                      ? 'border-sidebar-primary shadow-2xl shadow-sidebar-primary/50' 
-                      : 'border-sidebar-border'
-                  }`}
-                >
-                  {isHighlighted && (
-                    <motion.div
-                      initial={{ scale: 0.95, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.4 }}
-                      className="absolute inset-0 rounded-xl bg-sidebar-primary/5 pointer-events-none"
-                    />
-                  )}
-                  <h3 className="text-lg font-semibold text-sidebar-primary mb-3">{item.plan}</h3>
-                  <p className="text-sidebar-foreground/80 leading-relaxed">{item.usecase}</p>
-                </motion.div>
-              );
-            })}
-          </div>
+             {useCases.map((item, i) => (
+               <motion.div
+                 key={i}
+                 initial={{ opacity: 0, y: 20 }}
+                 animate={usecaseInView ? { opacity: 1, y: 0 } : {}}
+                 transition={{ delay: i * 0.1, duration: 0.6 }}
+                 className="bg-sidebar-accent border border-sidebar-border rounded-xl p-6"
+               >
+                 <h3 className="text-lg font-semibold text-sidebar-primary mb-3">{item.plan}</h3>
+                 <p className="text-sidebar-foreground/80 leading-relaxed">{item.usecase}</p>
+               </motion.div>
+             ))}
+           </div>
         </motion.div>
       </div>
     </div>
