@@ -112,10 +112,12 @@ export default function Pricing() {
 
   const handleLearnMore = (planKey) => {
     setHighlightedPlan(planKey);
-    // Scroll using the ref directly
-    if (comparisonRef.current) {
-      comparisonRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(() => {
+      if (comparisonRef.current) {
+        comparisonRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
     setTimeout(() => setHighlightedPlan(null), 3000);
   };
 
