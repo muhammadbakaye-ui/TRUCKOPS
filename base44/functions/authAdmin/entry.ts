@@ -20,7 +20,7 @@ async function sendResendEmail(to, subject, html) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'TruckOps <noreply@mytruckops.com>',
+      from: 'TruckOps <onboarding@resend.dev>',
       to: [to],
       subject,
       html,
