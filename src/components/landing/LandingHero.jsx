@@ -3,6 +3,8 @@ import { Download, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function LandingHero({ onContinue }) {
+  const isElectron = typeof window !== 'undefined' && (new URLSearchParams(window.location.search).get('platform') === 'electron' || !!window.isElectron);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-very-dark via-sidebar-accent to-very-dark flex items-center justify-center px-4 pt-20">
       <motion.div
@@ -48,21 +50,23 @@ export default function LandingHero({ onContinue }) {
           transition={{ delay: 0.5, duration: 0.6 }}
           className="flex flex-col sm:flex-row gap-4 justify-center"
         >
-          <a
-            href="https://github.com/muhammadbakaye-ui/TRUCKOPS/releases/download/v1.0.0/TruckOps.Setup.1.0.0.exe"
-            download
-            className="inline-flex items-center justify-center gap-2 bg-sidebar-primary hover:bg-sidebar-primary/90 text-white px-8 py-6 text-lg rounded-lg"
-          >
-            <Download className="w-5 h-5" />
-            Download Now
-          </a>
+          {!isElectron && (
+            <a
+              href="https://github.com/muhammadbakaye-ui/TRUCKOPS/releases/download/v1.0.0/TruckOps.Setup.1.0.0.exe"
+              download
+              className="inline-flex items-center justify-center gap-2 bg-sidebar-primary hover:bg-sidebar-primary/90 text-white px-8 py-6 text-lg rounded-lg"
+            >
+              <Download className="w-5 h-5" />
+              Download Now
+            </a>
+          )}
           <Button
             onClick={onContinue}
             variant="outline"
             size="lg"
             className="border-sidebar-primary text-sidebar-primary hover:bg-sidebar-primary/10 px-8 py-6 text-lg rounded-lg flex items-center gap-2"
           >
-            Continue in Browser
+            {isElectron ? 'Continue to App' : 'Continue in Browser'}
             <ArrowRight className="w-5 h-5" />
           </Button>
         </motion.div>
