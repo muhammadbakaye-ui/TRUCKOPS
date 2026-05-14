@@ -50,6 +50,7 @@ export default function LandingHero({ onContinue }) {
         >
           <Button
             size="lg"
+            onClick={() => window.open('https://github.com/muhammadbakaye-ui/TRUCKOPS/releases/download/v1.0.0/TruckOps.Setup.1.0.0.exe', '_blank')}
             className="bg-sidebar-primary hover:bg-sidebar-primary/90 text-white px-8 py-6 text-lg rounded-lg flex items-center gap-2"
           >
             <Download className="w-5 h-5" />
