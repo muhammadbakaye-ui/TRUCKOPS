@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/toaster"
+import Landing from './pages/Landing';
 import DeletedItems from './pages/DeletedItems';
 import SystemAdmins from './pages/SystemAdmins';
 import DriverPublicPortal from './pages/DriverPublicPortal';
@@ -48,13 +49,7 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      <Route path="/" element={
-        <PageTransition>
-          <LayoutWrapper currentPageName={mainPageKey}>
-            <MainPage />
-          </LayoutWrapper>
-        </PageTransition>
-      } />
+      <Route path="/" element={<Landing />} />
       {Object.entries(Pages).map(([path, Page]) => (
         <Route
           key={path}
