@@ -48,14 +48,14 @@ export default function LandingHero({ onContinue }) {
           transition={{ delay: 0.5, duration: 0.6 }}
           className="flex flex-col sm:flex-row gap-4 justify-center"
         >
-          <Button
-            size="lg"
-            onClick={() => window.open('https://github.com/muhammadbakaye-ui/TRUCKOPS/releases/download/v1.0.0/TruckOps.Setup.1.0.0.exe', '_blank')}
-            className="bg-sidebar-primary hover:bg-sidebar-primary/90 text-white px-8 py-6 text-lg rounded-lg flex items-center gap-2"
+          <a
+            href="https://github.com/muhammadbakaye-ui/TRUCKOPS/releases/download/v1.0.0/TruckOps.Setup.1.0.0.exe"
+            download
+            className="inline-flex items-center justify-center gap-2 bg-sidebar-primary hover:bg-sidebar-primary/90 text-white px-8 py-6 text-lg rounded-lg"
           >
             <Download className="w-5 h-5" />
             Download Now
-          </Button>
+          </a>
           <Button
             onClick={onContinue}
             variant="outline"
