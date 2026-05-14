@@ -13,7 +13,7 @@ export default function Landing() {
       catch { return false; }
     })();
     
-    navigate(isLoggedIn ? '/Dashboard' : '/pricing');
+    navigate(isLoggedIn ? '/Dashboard' : '/pricing-landing');
   };
 
   return (
