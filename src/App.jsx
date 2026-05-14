@@ -30,19 +30,25 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
 
-const ElectronApp = () => {
-  return (
-    <Routes>
-      <Route path="/" element={<LoginScreen />} />
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
-  );
-};
-
-const WebApp = () => {
+const AuthenticatedApp = () => {
+  // Call hook unconditionally at top level (required by React)
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
 
-  // Show loading spinner while checking app public settings or auth
+  const urlParams = new URLSearchParams(window.location.search);
+  const isElectron = urlParams.get('platform') === 'electron' || !!window.isElectron;
+
+  // Electron version: login only, no marketing pages
+  if (isElectron) {
+    return (
+      <Routes>
+        <Route path="/" element={<LoginScreen />} />
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    );
+  }
+
+  // Web version: full app with auth
+
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
@@ -51,15 +57,12 @@ const WebApp = () => {
     );
   }
 
-  // Handle authentication errors (skip auth_required — this app uses custom admin auth)
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     }
-    // auth_required and other errors: fall through and let custom LoginScreen handle it
   }
 
-  // Render the main app
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
@@ -91,12 +94,6 @@ const WebApp = () => {
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
-};
-
-const AuthenticatedApp = () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const isElectron = urlParams.get('platform') === 'electron' || !!window.isElectron;
-  return isElectron ? <ElectronApp /> : <WebApp />;
 };
 
 function App() {
