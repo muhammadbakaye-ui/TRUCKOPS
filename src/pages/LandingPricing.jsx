@@ -82,12 +82,8 @@ const useCases = [
   }
 ];
 
-function PlanCard({ plan, index, navigate }) {
+function PlanCard({ plan, index }) {
   const { ref, inView } = useInView({ threshold: 0.1, triggerOnce: false });
-
-  const handleSelectPlan = () => {
-    navigate(`/pricing?plan=${plan.name.toLowerCase()}`);
-  };
 
   return (
     <motion.div
@@ -95,10 +91,10 @@ function PlanCard({ plan, index, navigate }) {
       initial={{ opacity: 0, y: 30 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ delay: (index % 2) * 0.1, duration: 0.6 }}
-      className={`rounded-xl border p-8 transition-all cursor-pointer hover:shadow-lg ${
+      className={`rounded-xl border p-8 transition-all ${
         plan.highlighted
           ? 'bg-sidebar-primary/10 border-sidebar-primary shadow-xl'
-          : 'bg-sidebar-accent border-sidebar-border hover:border-sidebar-primary'
+          : 'bg-sidebar-accent border-sidebar-border'
       }`}
     >
       {plan.highlighted && (
@@ -118,14 +114,8 @@ function PlanCard({ plan, index, navigate }) {
           </li>
         ))}
       </ul>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          handleSelectPlan();
-        }}
-        className="w-full py-2 px-4 rounded-lg bg-sidebar-primary text-white font-semibold hover:bg-sidebar-primary/90 transition-colors"
-      >
-        Subscribe Now →
+      <button disabled className="w-full py-2 px-4 rounded-lg bg-sidebar-primary/50 text-white font-semibold cursor-not-allowed opacity-60">
+        Learn More
       </button>
     </motion.div>
   );
@@ -162,7 +152,7 @@ export default function LandingPricingPage() {
       <div className="py-20 px-4">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {plans.map((plan, index) => (
-            <PlanCard key={index} plan={plan} index={index} navigate={navigate} />
+            <PlanCard key={index} plan={plan} index={index} />
           ))}
         </div>
       </div>

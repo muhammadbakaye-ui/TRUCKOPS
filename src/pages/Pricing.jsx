@@ -86,7 +86,7 @@ const PLANS = [
 export default function Pricing() {
   const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [step, setStep] = useState('plans'); // 'plans' | 'details' | 'checkout'
+  const [step, setStep] = useState('plans'); // 'plans' | 'details'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [details, setDetails] = useState({ company_name: '', admin_email: '' });
@@ -115,7 +115,10 @@ export default function Pricing() {
       return;
     }
     setSelectedPlan(planKey);
-    setStep('details');
+    // For logged-in users, proceed directly to checkout
+    const accountInfo = getAccountInfo();
+    setDetails({ company_name: accountInfo.company, admin_email: accountInfo.email });
+    handleCheckoutDirect(planKey, accountInfo.company, accountInfo.email);
     setError('');
   };
 
@@ -124,30 +127,14 @@ export default function Pricing() {
     const params = new URLSearchParams(window.location.search);
     const plan = params.get('plan');
     if (plan && isLoggedIn && PLANS.find(p => p.key === plan)) {
+      const accountInfo = getAccountInfo();
       setSelectedPlan(plan);
-      if (isLoggedIn) {
-        // Auto-checkout for logged-in users
-        const accountInfo = getAccountInfo();
-        setDetails({ company_name: accountInfo.company, admin_email: accountInfo.email });
-        setStep('checkout');
-      } else {
-        setStep('details');
-      }
+      setDetails({ company_name: accountInfo.company, admin_email: accountInfo.email });
+      handleCheckoutDirect(plan, accountInfo.company, accountInfo.email);
     }
   }, []);
 
-  const handleCheckout = async (e) => {
-    e?.preventDefault?.();
-    if (!details.company_name.trim() || !details.admin_email.trim()) {
-      setError('Company name and email are required.');
-      return;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(details.admin_email.trim())) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-
+  const handleCheckoutDirect = async (plan, company, email) => {
     const isInIframe = window.self !== window.top;
     if (isInIframe) {
       alert('Checkout must be completed from the published app. Please open the app directly to subscribe.');
@@ -155,13 +142,12 @@ export default function Pricing() {
     }
 
     setLoading(true);
-    setError('');
     try {
       const res = await base44.functions.invoke('stripeCheckout', {
         action: 'create_checkout',
-        plan: selectedPlan,
-        company_name: details.company_name.trim(),
-        admin_email: details.admin_email.trim().toLowerCase(),
+        plan: plan,
+        company_name: company,
+        admin_email: email,
         success_url: `${window.location.origin}/SubscriptionSuccess?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${window.location.origin}/pricing`,
       });
@@ -175,6 +161,20 @@ export default function Pricing() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCheckout = async (e) => {
+    e.preventDefault();
+    if (!details.company_name.trim() || !details.admin_email.trim()) {
+      setError('Company name and email are required.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(details.admin_email.trim())) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    handleCheckoutDirect(selectedPlan, details.company_name.trim(), details.admin_email.trim().toLowerCase());
   };
 
   const selectedPlanData = PLANS.find(p => p.key === selectedPlan);
@@ -347,57 +347,7 @@ export default function Pricing() {
         </div>
       )}
 
-      {step === 'checkout' && selectedPlanData && (
-        <div className="max-w-md mx-auto px-4 pb-16">
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold mb-2">Ready to get started?</h2>
-              <p className="text-slate-400 text-sm">
-                You're upgrading to <strong className="text-white">{selectedPlanData.name}</strong>
-              </p>
-            </div>
 
-            <div className="bg-white/10 rounded-lg p-4 mb-6 space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-400">Plan</span>
-                <span className="font-semibold">{selectedPlanData.name}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-400">Email</span>
-                <span className="font-semibold">{details.admin_email}</span>
-              </div>
-              <div className="flex justify-between text-sm pt-3 border-t border-white/10">
-                <span className="text-slate-400">Price</span>
-                <span className="text-lg font-bold">
-                  {selectedPlanData.oneTime ? `$${selectedPlanData.price}` : `$${selectedPlanData.price}/mo`}
-                </span>
-              </div>
-            </div>
-
-            {error && (
-              <div className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2 mb-4">
-                {error}
-              </div>
-            )}
-
-            <Button
-              onClick={() => handleCheckout()}
-              className="w-full h-11 font-bold text-sm mb-3"
-              disabled={loading}
-            >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              {selectedPlanData.oneTime ? 'Proceed to Payment →' : 'Proceed to Checkout →'}
-            </Button>
-
-            <button
-              onClick={() => setStep('plans')}
-              className="w-full h-10 text-sm font-medium text-slate-400 hover:text-slate-300 transition-colors"
-            >
-              Back
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
