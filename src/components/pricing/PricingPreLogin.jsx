@@ -5,9 +5,9 @@ import { useNavigate } from 'react-router-dom';
 export default function PricingPreLogin() {
   const navigate = useNavigate();
 
-  const handleGetStarted = (plan) => {
-    localStorage.setItem('selectedPlan', plan.key);
-    navigate('/login?plan=' + plan.key);
+  const handleGetStarted = (planKey) => {
+    localStorage.setItem('selectedPlan', planKey);
+    navigate('/login?plan=' + planKey + '&message=create-account');
   };
 
   return (
@@ -25,7 +25,8 @@ export default function PricingPreLogin() {
           return (
             <div
               key={plan.key}
-              className={`relative rounded-2xl border-2 p-6 flex flex-col ${
+              onClick={(e) => e.stopPropagation()}
+              className={`relative rounded-2xl border-2 p-6 flex flex-col cursor-default ${
                 plan.popular
                   ? `${plan.border} ${plan.bg}`
                   : 'border-border bg-card'
@@ -70,7 +71,10 @@ export default function PricingPreLogin() {
               </ul>
 
               <button
-                onClick={() => handleGetStarted(plan)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleGetStarted(plan.key);
+                }}
                 className="w-full py-2 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-colors"
               >
                 Get Started

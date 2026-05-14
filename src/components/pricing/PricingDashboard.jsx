@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export default function PricingDashboard() {
   const [expandedPlan, setExpandedPlan] = useState(null);
-  const [loading, setLoading] = useState(null);
+  const [loadingPlan, setLoadingPlan] = useState(null);
   const [error, setError] = useState('');
 
   const getAccountInfo = () => {
@@ -21,11 +21,11 @@ export default function PricingDashboard() {
     }
   };
 
-  const handleSelectPlan = (plan) => {
-    if (expandedPlan === plan.key) {
+  const handleSelectPlan = (planKey) => {
+    if (expandedPlan === planKey) {
       setExpandedPlan(null);
     } else {
-      setExpandedPlan(plan.key);
+      setExpandedPlan(planKey);
       setError('');
     }
   };
@@ -43,7 +43,7 @@ export default function PricingDashboard() {
       return;
     }
 
-    setLoading(plan.key);
+    setLoadingPlan(plan.key);
     setError('');
     try {
       const res = await base44.functions.invoke('stripeCheckout', {
@@ -62,7 +62,7 @@ export default function PricingDashboard() {
     } catch (err) {
       setError(err.message || 'Something went wrong.');
     } finally {
-      setLoading(null);
+      setLoadingPlan(null);
     }
   };
 
@@ -84,7 +84,8 @@ export default function PricingDashboard() {
             <motion.div
               key={plan.key}
               layout
-              className={`relative rounded-2xl border-2 p-6 flex flex-col transition-all ${
+              onClick={(e) => e.stopPropagation()}
+              className={`relative rounded-2xl border-2 p-6 flex flex-col cursor-default ${
                 plan.popular
                   ? `${plan.border} ${plan.bg}`
                   : 'border-border bg-card'
@@ -129,13 +130,14 @@ export default function PricingDashboard() {
               </ul>
 
               <button
-                onClick={() => handleSelectPlan(plan)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSelectPlan(plan.key);
+                }}
                 className="w-full py-2 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-colors flex items-center justify-between"
               >
                 Select Plan
-                <ChevronDown 
-                  className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
-                />
+                <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
               </button>
 
               <AnimatePresence>
@@ -153,11 +155,14 @@ export default function PricingDashboard() {
                       </div>
                     )}
                     <button
-                      onClick={() => handleCheckout(plan)}
-                      disabled={loading === plan.key}
-                      className="w-full py-2 px-4 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold transition-colors flex items-center justify-center gap-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCheckout(plan);
+                      }}
+                      disabled={loadingPlan === plan.key}
+                      className="w-full py-2 px-4 rounded-lg bg-green-600 hover:bg-green-700 disabled:bg-green-600/50 text-white font-semibold transition-colors flex items-center justify-center gap-2"
                     >
-                      {loading === plan.key ? (
+                      {loadingPlan === plan.key ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
                           Processing...

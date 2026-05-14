@@ -6,21 +6,20 @@ import { useInView } from 'react-intersection-observer';
 
 export default function PricingShowcase() {
   const [highlightedPlan, setHighlightedPlan] = useState(null);
-  const usecaseRef = useRef(null);
-  const { ref: usecaseInViewRef, inView: usecaseInView } = useInView({ threshold: 0.1, triggerOnce: false });
+  const comparisonRef = useRef(null);
+  const { ref: comparisonInViewRef, inView: comparisonInView } = useInView({ threshold: 0.1, triggerOnce: false });
 
   const handleLearnMore = (planKey) => {
     setHighlightedPlan(planKey);
-    if (usecaseRef.current) {
-      setTimeout(() => {
-        usecaseRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
-    }
+    setTimeout(() => {
+      comparisonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
     setTimeout(() => setHighlightedPlan(null), 3000);
   };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-16">
+      {/* Header */}
       <div className="text-center mb-16">
         <h2 className="text-4xl font-extrabold mb-4 text-foreground">Simple, transparent pricing</h2>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -28,13 +27,15 @@ export default function PricingShowcase() {
         </p>
       </div>
 
+      {/* Plans Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
         {PLANS.map((plan) => {
           const Icon = plan.icon;
           return (
             <div
               key={plan.key}
-              className={`relative rounded-2xl border-2 p-6 flex flex-col ${
+              onClick={(e) => e.stopPropagation()}
+              className={`relative rounded-2xl border-2 p-6 flex flex-col cursor-default ${
                 plan.popular
                   ? `${plan.border} ${plan.bg}`
                   : 'border-border bg-card'
@@ -79,7 +80,10 @@ export default function PricingShowcase() {
               </ul>
 
               <button
-                onClick={() => handleLearnMore(plan.key)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleLearnMore(plan.key);
+                }}
                 className="w-full py-2 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-colors"
               >
                 Learn More
@@ -89,16 +93,18 @@ export default function PricingShowcase() {
         })}
       </div>
 
-      {/* Which plan is right section */}
-      <div ref={usecaseRef} className="border-t border-border pt-20">
+      {/* Comparison Section */}
+      <div ref={comparisonRef} className="border-t border-border pt-20">
         <motion.div
-          ref={usecaseInViewRef}
+          ref={comparisonInViewRef}
           initial={{ opacity: 0 }}
-          animate={usecaseInView ? { opacity: 1 } : {}}
+          animate={comparisonInView ? { opacity: 1 } : {}}
           transition={{ duration: 0.8 }}
         >
           <h2 className="text-4xl font-bold text-foreground mb-4 text-center">Which Plan Is Right for You?</h2>
-          <p className="text-lg text-muted-foreground text-center mb-12">Here's how to pick the right plan for your operation</p>
+          <p className="text-lg text-muted-foreground text-center mb-12">
+            Here's how to pick the right plan for your operation
+          </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {PLANS.map((plan) => {
@@ -106,13 +112,12 @@ export default function PricingShowcase() {
               return (
                 <motion.div
                   key={plan.key}
+                  onClick={(e) => e.stopPropagation()}
                   initial={{ opacity: 0, y: 20 }}
-                  animate={usecaseInView ? { opacity: 1, y: 0 } : {}}
+                  animate={comparisonInView ? { opacity: 1, y: 0 } : {}}
                   transition={{ delay: 0.1, duration: 0.6 }}
-                  className={`bg-card border rounded-xl p-6 transition-all ${
-                    isHighlighted 
-                      ? 'border-primary shadow-2xl shadow-primary/50' 
-                      : 'border-border'
+                  className={`bg-card border rounded-xl p-6 transition-all cursor-default ${
+                    isHighlighted ? 'border-primary shadow-2xl shadow-primary/50' : 'border-border'
                   }`}
                 >
                   {isHighlighted && (
