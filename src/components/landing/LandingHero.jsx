@@ -51,14 +51,16 @@ export default function LandingHero({ onContinue }) {
           className="flex flex-col sm:flex-row gap-4 justify-center"
         >
           {!isElectron && (
-            <a
-              href="https://github.com/muhammadbakaye-ui/TRUCKOPS/releases/download/v1.0.0/TruckOps.Setup.1.0.0.exe"
-              download
-              className="inline-flex items-center justify-center gap-2 bg-sidebar-primary hover:bg-sidebar-primary/90 text-white px-8 py-6 text-lg rounded-lg"
-            >
-              <Download className="w-5 h-5" />
-              Download Now
-            </a>
+            <div className="inline-flex flex-col items-center gap-2">
+              <button
+                disabled
+                className="inline-flex items-center justify-center gap-2 bg-slate-400 text-white px-8 py-6 text-lg rounded-lg cursor-not-allowed opacity-60"
+              >
+                <Download className="w-5 h-5" />
+                Download Now
+              </button>
+              <span className="text-sm text-sidebar-foreground/60">(coming soon)</span>
+            </div>
           )}
           <Button
             onClick={onContinue}
