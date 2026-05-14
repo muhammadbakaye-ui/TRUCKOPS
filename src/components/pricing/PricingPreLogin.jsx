@@ -1,24 +1,21 @@
 import { Check } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { PLANS } from '@/lib/pricingPlans';
+import { useNavigate } from 'react-router-dom';
 
 export default function PricingPreLogin() {
   const navigate = useNavigate();
 
-  const handleSelectPlan = (planKey) => {
-    // Store the selected plan in localStorage
-    localStorage.setItem('selected_plan', planKey);
-    // Redirect to signup/login with a message
-    navigate('/?signup=1&plan=' + planKey);
+  const handleGetStarted = (plan) => {
+    localStorage.setItem('selectedPlan', plan.key);
+    navigate('/login?plan=' + plan.key);
   };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-16">
       <div className="text-center mb-16">
-        <h2 className="text-4xl font-extrabold mb-4 text-foreground">Choose your plan</h2>
+        <h2 className="text-4xl font-extrabold mb-4 text-foreground">Choose Your Plan</h2>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Create an account to get started with your chosen plan. Start free for 3 days.
+          Create an account to get started with the plan that fits your operation.
         </p>
       </div>
 
@@ -72,12 +69,12 @@ export default function PricingPreLogin() {
                 ))}
               </ul>
 
-              <Button
-                onClick={() => handleSelectPlan(plan.key)}
-                className="w-full h-10 font-semibold"
+              <button
+                onClick={() => handleGetStarted(plan)}
+                className="w-full py-2 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-colors"
               >
-                Get Started →
-              </Button>
+                Get Started
+              </button>
             </div>
           );
         })}

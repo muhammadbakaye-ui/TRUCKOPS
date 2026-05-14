@@ -1,7 +1,24 @@
+import { useState, useRef } from 'react';
 import { Check } from 'lucide-react';
 import { PLANS } from '@/lib/pricingPlans';
+import { motion } from 'framer-motion';
+import { useInView } from 'react-intersection-observer';
 
 export default function PricingShowcase() {
+  const [highlightedPlan, setHighlightedPlan] = useState(null);
+  const usecaseRef = useRef(null);
+  const { ref: usecaseInViewRef, inView: usecaseInView } = useInView({ threshold: 0.1, triggerOnce: false });
+
+  const handleLearnMore = (planKey) => {
+    setHighlightedPlan(planKey);
+    if (usecaseRef.current) {
+      setTimeout(() => {
+        usecaseRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+    setTimeout(() => setHighlightedPlan(null), 3000);
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-16">
       <div className="text-center mb-16">
@@ -11,7 +28,7 @@ export default function PricingShowcase() {
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
         {PLANS.map((plan) => {
           const Icon = plan.icon;
           return (
@@ -46,7 +63,7 @@ export default function PricingShowcase() {
                 <p className="text-sm text-foreground mt-1">{plan.bestFor}</p>
               </div>
 
-              <ul className="space-y-2 flex-1">
+              <ul className="space-y-2 flex-1 mb-6">
                 {plan.includedFrom && (
                   <li className="flex items-center gap-2 text-sm font-semibold text-primary bg-primary/10 rounded-lg px-2 py-1.5 mb-2">
                     <Check className="w-4 h-4 shrink-0" />
@@ -60,9 +77,59 @@ export default function PricingShowcase() {
                   </li>
                 ))}
               </ul>
+
+              <button
+                onClick={() => handleLearnMore(plan.key)}
+                className="w-full py-2 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-colors"
+              >
+                Learn More
+              </button>
             </div>
           );
         })}
+      </div>
+
+      {/* Which plan is right section */}
+      <div ref={usecaseRef} className="border-t border-border pt-20">
+        <motion.div
+          ref={usecaseInViewRef}
+          initial={{ opacity: 0 }}
+          animate={usecaseInView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.8 }}
+        >
+          <h2 className="text-4xl font-bold text-foreground mb-4 text-center">Which Plan Is Right for You?</h2>
+          <p className="text-lg text-muted-foreground text-center mb-12">Here's how to pick the right plan for your operation</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {PLANS.map((plan) => {
+              const isHighlighted = highlightedPlan === plan.key;
+              return (
+                <motion.div
+                  key={plan.key}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={usecaseInView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ delay: 0.1, duration: 0.6 }}
+                  className={`bg-card border rounded-xl p-6 transition-all ${
+                    isHighlighted 
+                      ? 'border-primary shadow-2xl shadow-primary/50' 
+                      : 'border-border'
+                  }`}
+                >
+                  {isHighlighted && (
+                    <motion.div
+                      initial={{ scale: 0.95, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.4 }}
+                      className="absolute inset-0 rounded-xl bg-primary/5 pointer-events-none"
+                    />
+                  )}
+                  <h3 className="text-lg font-semibold text-primary mb-3">{plan.name}</h3>
+                  <p className="text-foreground/80 leading-relaxed">{plan.bestFor}</p>
+                </motion.div>
+              );
+            })}
+          </div>
+        </motion.div>
       </div>
     </div>
   );

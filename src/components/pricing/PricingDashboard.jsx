@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Check, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { base44 } from '@/api/base44Client';
+import { Check, Loader2, ChevronDown } from 'lucide-react';
 import { PLANS } from '@/lib/pricingPlans';
+import { base44 } from '@/api/base44Client';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function PricingDashboard() {
-   const [loading, setLoading] = useState(false);
-   const [error, setError] = useState('');
+  const [expandedPlan, setExpandedPlan] = useState(null);
+  const [loading, setLoading] = useState(null);
+  const [error, setError] = useState('');
 
   const getAccountInfo = () => {
     try {
@@ -17,6 +18,15 @@ export default function PricingDashboard() {
       };
     } catch {
       return { email: '', company: '' };
+    }
+  };
+
+  const handleSelectPlan = (plan) => {
+    if (expandedPlan === plan.key) {
+      setExpandedPlan(null);
+    } else {
+      setExpandedPlan(plan.key);
+      setError('');
     }
   };
 
@@ -33,7 +43,7 @@ export default function PricingDashboard() {
       return;
     }
 
-    setLoading(true);
+    setLoading(plan.key);
     setError('');
     try {
       const res = await base44.functions.invoke('stripeCheckout', {
@@ -52,7 +62,7 @@ export default function PricingDashboard() {
     } catch (err) {
       setError(err.message || 'Something went wrong.');
     } finally {
-      setLoading(false);
+      setLoading(null);
     }
   };
 
@@ -66,18 +76,20 @@ export default function PricingDashboard() {
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-         {PLANS.map((plan) => {
-           const Icon = plan.icon;
+        {PLANS.map((plan) => {
+          const Icon = plan.icon;
+          const isExpanded = expandedPlan === plan.key;
 
-           return (
-             <div
-               key={plan.key}
-               className={`relative rounded-2xl border-2 p-6 flex flex-col transition-all ${
-                 plan.popular
-                   ? `${plan.border} ${plan.bg}`
-                   : 'border-border bg-card'
-               }`}
-             >
+          return (
+            <motion.div
+              key={plan.key}
+              layout
+              className={`relative rounded-2xl border-2 p-6 flex flex-col transition-all ${
+                plan.popular
+                  ? `${plan.border} ${plan.bg}`
+                  : 'border-border bg-card'
+              }`}
+            >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
                   MOST POPULAR
@@ -116,27 +128,48 @@ export default function PricingDashboard() {
                 ))}
               </ul>
 
-              {error && (
-                <div className="text-red-600 text-xs bg-red-50 border border-red-200 rounded px-2 py-1.5 mb-4">
-                  {error}
-                </div>
-              )}
-
-              <Button
-                onClick={() => handleCheckout(plan)}
-                disabled={loading}
-                className="w-full"
+              <button
+                onClick={() => handleSelectPlan(plan)}
+                className="w-full py-2 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-colors flex items-center justify-between"
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    Processing...
-                  </>
-                ) : (
-                  `${plan.oneTime ? 'Pay Now' : 'Start Free Trial'} →`
+                Select Plan
+                <ChevronDown 
+                  className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                />
+              </button>
+
+              <AnimatePresence>
+                {isExpanded && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden border-t border-border pt-4"
+                  >
+                    {error && (
+                      <div className="text-red-600 text-xs bg-red-50 border border-red-200 rounded px-2 py-1.5 mb-3">
+                        {error}
+                      </div>
+                    )}
+                    <button
+                      onClick={() => handleCheckout(plan)}
+                      disabled={loading === plan.key}
+                      className="w-full py-2 px-4 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold transition-colors flex items-center justify-center gap-2"
+                    >
+                      {loading === plan.key ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        'Checkout'
+                      )}
+                    </button>
+                  </motion.div>
                 )}
-              </Button>
-            </div>
+              </AnimatePresence>
+            </motion.div>
           );
         })}
       </div>
