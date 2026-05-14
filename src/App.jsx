@@ -31,12 +31,12 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   : <>{children}</>;
 
 const AuthenticatedApp = () => {
-  // Check if running in Electron via URL parameter
-  const urlParams = new URLSearchParams(window.location.search);
-  const isElectron = urlParams.get('platform') === 'electron';
-
   // Always call hook at top level (required by React)
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
+
+  // Detect Electron (via URL param or window object set by Electron)
+  const urlParams = new URLSearchParams(window.location.search);
+  const isElectron = urlParams.get('platform') === 'electron' || !!window.isElectron;
 
   // For Electron, skip all auth and just show login
   if (isElectron) {
