@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Check, Zap, Shield, Building2, Loader2, Truck, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -90,6 +90,8 @@ export default function Pricing() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [details, setDetails] = useState({ company_name: '', admin_email: '' });
+  const [highlightedPlan, setHighlightedPlan] = useState(null);
+  const comparisonRef = useRef(null);
 
   const isLoggedIn = (() => {
     try { return !!JSON.parse(localStorage.getItem('truckops_session')); }
@@ -106,6 +108,16 @@ export default function Pricing() {
     } catch {
       return { email: '', company: '' };
     }
+  };
+
+  const handleLearnMore = (planKey) => {
+    setHighlightedPlan(planKey);
+    if (comparisonRef.current) {
+      setTimeout(() => {
+        comparisonRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+    setTimeout(() => setHighlightedPlan(null), 3000);
   };
 
   const handleSelectPlan = (planKey) => {
@@ -245,12 +257,39 @@ export default function Pricing() {
                       </li>
                     ))}
                   </ul>
-                  <div className="w-full text-center py-2 rounded-lg text-sm font-semibold border border-white/20 text-white hover:border-white/40 transition-colors">
-                    {plan.oneTime ? 'Get Lifetime Access →' : 'Start Free Trial →'}
-                  </div>
+                  <button
+                   type="button"
+                   onClick={(e) => {
+                     e.stopPropagation();
+                     handleLearnMore(plan.key);
+                   }}
+                   className="w-full text-center py-2 rounded-lg text-sm font-semibold border border-white/20 text-white hover:border-white/40 transition-colors"
+                 >
+                   Learn More
+                 </button>
                 </div>
               );
             })}
+          </div>
+
+          {/* Plan Comparison Section */}
+          <div ref={comparisonRef} className="max-w-5xl mx-auto px-4 pb-12">
+            <h2 className="text-3xl font-bold text-center mb-8">Which Plan Is Right for You?</h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              {PLANS.map((plan) => (
+                <div
+                  key={plan.key}
+                  className={`rounded-2xl p-6 border-2 transition-all duration-300 ${
+                    highlightedPlan === plan.key
+                      ? 'border-primary/80 bg-primary/10 shadow-2xl shadow-primary/30'
+                      : 'border-white/10 bg-white/5'
+                  }`}
+                >
+                  <h3 className="text-xl font-bold mb-3 text-primary">{plan.name}</h3>
+                  <p className="text-slate-300 leading-relaxed">{plan.description}</p>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Bottom CTAs */}
