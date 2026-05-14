@@ -132,23 +132,28 @@ export default function Invoices() {
   const handleBulkStatusUpdate = async (newStatus) => {
     setBulkSaving(true);
     const idsToUpdate = [...selected];
-    await Promise.all(
-      idsToUpdate.map(async (id) => {
-        const inv = invoices.find(i => i.id === id);
-        await base44.entities.Invoice.update(id, { status: newStatus });
-        // Sync load's invoice_status
-        if (inv?.load_id) {
-          const statusMap = { draft: 'invoiced', priority: 'priority', sent: 'sent', partial: 'partial', paid: 'paid', overdue: 'overdue', canceled: 'canceled' };
-          await base44.entities.Load.update(inv.load_id, { invoice_status: statusMap[newStatus] || 'invoiced' });
-        }
-      })
-    );
-    queryClient.invalidateQueries({ queryKey: ['invoices'] });
-    queryClient.invalidateQueries({ queryKey: ['loads'] });
-    toast.success(`Updated ${idsToUpdate.length} invoice${idsToUpdate.length !== 1 ? 's' : ''}`);
-    setSelected(new Set());
-    setBulkStatusMode(null);
-    setBulkSaving(false);
+    try {
+      await Promise.all(
+        idsToUpdate.map(async (id) => {
+          const inv = invoices.find(i => i.id === id);
+          await base44.entities.Invoice.update(id, { status: newStatus });
+          if (inv?.load_id) {
+            const statusMap = { draft: 'invoiced', priority: 'priority', sent: 'sent', partial: 'partial', paid: 'paid', overdue: 'overdue', canceled: 'canceled' };
+            await base44.entities.Load.update(inv.load_id, { invoice_status: statusMap[newStatus] || 'invoiced' });
+          }
+        })
+      );
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['loads'] });
+      toast.success(`Updated ${idsToUpdate.length} invoice${idsToUpdate.length !== 1 ? 's' : ''}`);
+      setSelected(new Set());
+      setBulkStatusMode(null);
+    } catch (err) {
+      toast.error('Bulk update failed: ' + err.message);
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    } finally {
+      setBulkSaving(false);
+    }
   };
 
   const columns = [

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -15,11 +15,10 @@ import { logAudit } from '../components/shared/AuditLogger';
 import { toast } from 'sonner';
 import { printInvoice } from '../components/print/printInvoice';
 
-const urlParams = new URLSearchParams(window.location.search);
-const invoiceId = urlParams.get('id');
-
 export default function InvoiceDetail() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const invoiceId = searchParams.get('id');
   const queryClient = useQueryClient();
   const [form, setForm] = useState(null);
   const [lineItems, setLineItems] = useState([]);

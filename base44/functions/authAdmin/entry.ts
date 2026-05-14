@@ -145,8 +145,8 @@ Deno.serve(async (req) => {
     // ── VERIFY EMAIL ──
     if (action === 'verify_email') {
       if (!token) return Response.json({ success: false, message: 'Token is required' }, { status: 400 });
-      const allAdmins = await base44.asServiceRole.entities.Admin.list('-created_date', 500);
-      const admin = allAdmins.find(a => a.verification_token === token);
+      const matches = await base44.asServiceRole.entities.Admin.filter({ verification_token: token });
+      const admin = matches[0] || null;
       if (!admin) return Response.json({ success: false, message: 'Invalid or expired verification link.' }, { status: 400 });
       await base44.asServiceRole.entities.Admin.update(admin.id, { email_verified: true, verification_token: '' });
       return Response.json({ success: true, message: 'Email verified successfully! You can now log in.' });
@@ -192,8 +192,8 @@ Deno.serve(async (req) => {
     // ── RESET PASSWORD WITH TOKEN ──
     if (action === 'reset_password_token') {
       if (!token || (!new_password && !new_password_hash)) return Response.json({ success: false, message: 'Token and new password are required' }, { status: 400 });
-      const allAdmins = await base44.asServiceRole.entities.Admin.list('-created_date', 500);
-      const admin = allAdmins.find(a => a.reset_token === token);
+      const matches = await base44.asServiceRole.entities.Admin.filter({ reset_token: token });
+      const admin = matches[0] || null;
       if (!admin) return Response.json({ success: false, message: 'Invalid or expired reset link.' }, { status: 400 });
       if (admin.reset_token_expires && new Date() > new Date(admin.reset_token_expires)) {
         return Response.json({ success: false, message: 'This reset link has expired. Please request a new one.' }, { status: 400 });

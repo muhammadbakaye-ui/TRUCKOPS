@@ -3,9 +3,18 @@ import React, { createContext, useContext, useState } from 'react';
 const SESSION_KEY = 'truckops_session';
 export const SessionContext = createContext(null);
 
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
 export function SessionProvider({ children }) {
   const [session, setSession] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }
+    try {
+      const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+      if (s && s.loginTime && Date.now() - s.loginTime > SESSION_TTL_MS) {
+        localStorage.removeItem(SESSION_KEY);
+        return null;
+      }
+      return s;
+    }
     catch { return null; }
   });
 

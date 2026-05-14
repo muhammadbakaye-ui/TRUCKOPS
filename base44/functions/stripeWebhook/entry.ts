@@ -25,11 +25,11 @@ Deno.serve(async (req) => {
     const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
 
     let event;
-    if (webhookSecret && sig) {
-      event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
-    } else {
-      event = JSON.parse(body);
+    if (!webhookSecret || !sig) {
+      console.error('Missing webhook secret or signature — rejecting request');
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
 
     const base44 = createClientFromRequest(req);
 
@@ -109,11 +109,14 @@ Deno.serve(async (req) => {
       const sub = event.data.object;
       const subs = await base44.asServiceRole.entities.Subscription.filter({ stripe_subscription_id: sub.id });
       if (subs.length) {
-        await base44.asServiceRole.entities.Subscription.update(subs[0].id, {
+        const updatePayload = {
           status: sub.status,
-          current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
           canceled_at: sub.canceled_at ? new Date(sub.canceled_at * 1000).toISOString() : null,
-        });
+        };
+        if (sub.current_period_end) {
+          updatePayload.current_period_end = new Date(sub.current_period_end * 1000).toISOString();
+        }
+        await base44.asServiceRole.entities.Subscription.update(subs[0].id, updatePayload);
         console.log(`Subscription updated: ${sub.id} -> ${sub.status}`);
       }
     }

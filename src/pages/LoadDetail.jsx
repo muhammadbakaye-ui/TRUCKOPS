@@ -108,8 +108,8 @@ export default function LoadDetail() {
   }, [isNew]);
 
   // Auto-save as draft whenever form/stops change
-   const performAutoSave = useCallback(async (currentForm, currentStops) => {
-     if (!currentForm || isInPreview) return;
+   const performAutoSave = useCallback(async (currentForm, currentStops, previewMode) => {
+     if (!currentForm || previewMode) return;
      setAutoSaving(true);
     try {
       const currentId = savedLoadIdRef.current;
@@ -159,7 +159,7 @@ export default function LoadDetail() {
     if (!form) return;
     if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     autoSaveTimerRef.current = setTimeout(() => {
-      performAutoSave(form, stops);
+      performAutoSave(form, stops, isInPreview);
     }, 2500);
     return () => clearTimeout(autoSaveTimerRef.current);
   }, [form, stops]);

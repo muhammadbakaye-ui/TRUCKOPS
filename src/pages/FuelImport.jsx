@@ -610,11 +610,12 @@ Return only the JSON with the transactions array.`,
                 allCount={batches.length}
                 onSelectAll={() => setSelectedBatches(new Set(batches.map(b => b.id)))}
                 onClearSelection={() => setSelectedBatches(new Set())}
-                onConfirmDelete={() => {
-                  const batchesToDelete = batches.filter(b => selectedBatches.has(b.id));
-                  Promise.all(batchesToDelete.map(b => handleDeleteBatch(b))).then(() => {
-                    setSelectedBatches(new Set());
-                  });
+                onConfirmDelete={async () => {
+                const batchesToDelete = batches.filter(b => selectedBatches.has(b.id));
+                for (const b of batchesToDelete) {
+                  try { await handleDeleteBatch(b); } catch { /* individual errors shown by handleDeleteBatch */ }
+                }
+                setSelectedBatches(new Set());
                 }}
                 isDeleting={false}
                 isAllSelected={selectedBatches.size === batches.length}
