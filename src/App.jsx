@@ -49,13 +49,13 @@ const AuthenticatedApp = () => {
     // auth_required and other errors: fall through and let custom LoginScreen handle it
   }
 
-  // Check if running in Electron
+  // Check if running in Electron - skip landing page
   const isElectron = window.electron !== undefined || navigator.userAgent.includes('Electron');
 
   // Render the main app
   return (
     <Routes>
-      <Route path="/" element={isElectron ? <Navigate to="/Dashboard" /> : <Landing />} />
+      <Route path="/" element={isElectron ? null : <Landing />} />
       <Route path="/features" element={<LandingFeatures />} />
       <Route path="/pricing" element={<LandingPricing />} />
       <Route path="/about" element={<LandingAbout />} />
