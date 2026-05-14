@@ -59,11 +59,7 @@ Deno.serve(async (req) => {
        if (!admin || inputHash !== admin.password_hash) {
          return Response.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
        }
-      // Skip email verification check for test accounts
-      const isTestAccount = email.toLowerCase().includes('test') || email.toLowerCase().includes('demo');
-      if (!admin.email_verified && !isTestAccount) {
-        return Response.json({ success: false, message: 'Please verify your email before logging in. Check your inbox for the verification link.', code: 'email_not_verified' }, { status: 403 });
-      }
+
       let subscriptionStatus = null;
       let plan = null;
       let companyName = admin.company_name || '';
@@ -119,9 +115,6 @@ Deno.serve(async (req) => {
       }
 
       const verificationToken = generateToken();
-      // Mark test accounts as verified immediately
-      const isTestAccount = email.toLowerCase().includes('test') || email.toLowerCase().includes('demo');
-
       const newAdmin = await base44.asServiceRole.entities.Admin.create({
         first_name: first_name.trim(),
         last_name: last_name.trim(),
@@ -129,38 +122,14 @@ Deno.serve(async (req) => {
         password_hash: passwordHash,
         company_name: company_name.trim(),
         active: true,
-        email_verified: isTestAccount,
-        verification_token: isTestAccount ? '' : verificationToken,
+        email_verified: true,
+        verification_token: '',
       });
 
       const appUrl = Deno.env.get('APP_URL') || 'https://app.base44.com';
       const verifyLink = `${appUrl}/verify-email?token=${verificationToken}`;
 
-      // Only send verification email if not a test account
-      let emailWarning = null;
-      if (!isTestAccount) {
-        try {
-          await sendResendEmail(
-            email.toLowerCase().trim(),
-            'Verify your TruckOps email',
-            `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <h2 style="color: #1e40af;">Welcome to TruckOps, ${first_name}!</h2>
-                <p>Thanks for signing up. Please verify your email address to activate your account.</p>
-                <a href="${verifyLink}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold; margin: 16px 0;">
-                  Verify Email Address
-                </a>
-                <p style="color: #6b7280; font-size: 14px;">Or copy and paste this link:<br/><a href="${verifyLink}">${verifyLink}</a></p>
-                <p style="color: #6b7280; font-size: 14px;">If you didn't create this account, you can safely ignore this email.</p>
-                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
-                <p style="color: #9ca3af; font-size: 12px;">— The TruckOps Team</p>
-              </div>
-            `
-          );
-        } catch (emailErr) {
-           console.error('Verification email failed (non-fatal):', emailErr.message);
-         }
-      }
+      // Skip verification email - all accounts are auto-verified
 
        // Create a Subscription record for the new account (Enterprise plan for test accounts)
        let tenantId = null;
@@ -195,8 +164,8 @@ Deno.serve(async (req) => {
          tenant_id: tenantId,
          subscription_status: subscriptionStatus,
          plan,
-         message: isTestAccount ? 'Test account created. Ready to use!' : 'Account created. Please check your email to verify your account.' 
-       });
+         message: 'Account created. Ready to use!' 
+         });
     }
 
     // ── VERIFY EMAIL ──
