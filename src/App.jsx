@@ -51,7 +51,8 @@ const AuthenticatedApp = () => {
   }
 
   // Check if running in Electron - skip landing page
-  const isElectron = window.electron !== undefined || navigator.userAgent.includes('Electron');
+  const urlParams = new URLSearchParams(window.location.search);
+  const isElectron = urlParams.get('platform') === 'electron' || window.electron !== undefined || navigator.userAgent.includes('Electron');
 
   // For Electron users without session, redirect to login
   if (isElectron && !session && location.pathname === '/') {
