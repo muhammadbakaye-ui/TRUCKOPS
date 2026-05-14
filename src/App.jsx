@@ -31,7 +31,22 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   : <>{children}</>;
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, isAuthenticated, user } = useAuth();
+  // Check if running in Electron via URL parameter
+  const urlParams = new URLSearchParams(window.location.search);
+  const isElectron = urlParams.get('platform') === 'electron';
+
+  // Always call useAuth at the top level (required by React hooks rules)
+  const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
+
+  // If Electron, show login screen; otherwise show landing page
+  if (isElectron) {
+    return (
+      <Routes>
+        <Route path="/" element={<LoginScreen />} />
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    );
+  }
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -50,14 +65,10 @@ const AuthenticatedApp = () => {
     // auth_required and other errors: fall through and let custom LoginScreen handle it
   }
 
-  // Check if running in Electron - skip landing page
-  const urlParams = new URLSearchParams(window.location.search);
-  const isElectron = urlParams.get('platform') === 'electron' || window.electron !== undefined || navigator.userAgent.includes('Electron');
-
   // Render the main app
   return (
     <Routes>
-      <Route path="/" element={isElectron ? (isAuthenticated ? <Navigate to="/Dashboard" /> : <LoginScreen />) : <Landing />} />
+      <Route path="/" element={<Landing />} />
       <Route path="/features" element={<LandingFeatures />} />
       <Route path="/pricing" element={<LandingPricing />} />
       <Route path="/about" element={<LandingAbout />} />
