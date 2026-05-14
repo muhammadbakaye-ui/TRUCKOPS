@@ -10,6 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Checkbox } from '@/components/ui/checkbox';
 import { Trash2, X, Check, Loader2, Copy } from 'lucide-react';
 import SearchInput from '../components/shared/SearchInput';
+import { useSession } from '../components/shared/AppSession';
 import { toast } from 'sonner';
 import DataTable from '../components/shared/DataTable';
 import StatusBadge from '../components/shared/StatusBadge';
@@ -68,6 +69,7 @@ function InvoiceStatusSelect({ invoice, queryClient }) {
 export default function Invoices() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { session } = useSession();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selected, setSelected] = useState(new Set());
@@ -77,13 +79,15 @@ export default function Invoices() {
   const [copiedId, setCopiedId] = useState(null);
 
   const { data: invoices = [], isLoading } = useQuery({
-    queryKey: ['invoices'],
-    queryFn: () => base44.entities.Invoice.list('-created_date', 500),
+    queryKey: ['invoices', session?.tenant_id],
+    queryFn: () => session?.tenant_id ? base44.entities.Invoice.filter({ tenant_id: session.tenant_id }, '-created_date', 500) : Promise.resolve([]),
+    enabled: !!session?.tenant_id,
   });
 
   const { data: loads = [] } = useQuery({
-    queryKey: ['loads-for-invoices'],
-    queryFn: () => base44.entities.Load.list('-created_date', 500),
+    queryKey: ['loads-for-invoices', session?.tenant_id],
+    queryFn: () => session?.tenant_id ? base44.entities.Load.filter({ tenant_id: session.tenant_id }, '-created_date', 500) : Promise.resolve([]),
+    enabled: !!session?.tenant_id,
   });
 
   const loadsMap = useMemo(() => {

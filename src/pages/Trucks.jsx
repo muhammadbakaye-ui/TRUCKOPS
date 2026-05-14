@@ -125,13 +125,15 @@ export default function Trucks() {
    const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
 
   const { data: trucks = [], isLoading } = useQuery({
-    queryKey: ['trucks'],
-    queryFn: () => base44.entities.Truck.list('-created_date', 200),
+    queryKey: ['trucks', session?.tenant_id],
+    queryFn: () => session?.tenant_id ? base44.entities.Truck.filter({ tenant_id: session.tenant_id }, '-created_date', 200) : Promise.resolve([]),
+    enabled: !!session?.tenant_id,
   });
 
   const { data: drivers = [] } = useQuery({
-    queryKey: ['drivers'],
-    queryFn: () => base44.entities.Driver.list('-created_date', 200),
+    queryKey: ['drivers', session?.tenant_id],
+    queryFn: () => session?.tenant_id ? base44.entities.Driver.filter({ tenant_id: session.tenant_id }, '-created_date', 200) : Promise.resolve([]),
+    enabled: !!session?.tenant_id,
   });
 
   const saveMutation = useMutation({

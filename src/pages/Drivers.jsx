@@ -232,13 +232,15 @@ export default function Drivers() {
   };
 
   const { data: drivers = [], isLoading } = useQuery({
-    queryKey: ['drivers'],
-    queryFn: () => base44.entities.Driver.list('-created_date', 200),
+    queryKey: ['drivers', session?.tenant_id],
+    queryFn: () => session?.tenant_id ? base44.entities.Driver.filter({ tenant_id: session.tenant_id }, '-created_date', 200) : Promise.resolve([]),
+    enabled: !!session?.tenant_id,
   });
 
   const { data: trucks = [] } = useQuery({
-    queryKey: ['trucks'],
-    queryFn: () => base44.entities.Truck.filter({ status: 'active' }, 'unit_number', 200),
+    queryKey: ['trucks', session?.tenant_id],
+    queryFn: () => session?.tenant_id ? base44.entities.Truck.filter({ tenant_id: session.tenant_id, status: 'active' }, 'unit_number', 200) : Promise.resolve([]),
+    enabled: !!session?.tenant_id,
   });
 
   const saveMutation = useMutation({

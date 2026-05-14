@@ -50,8 +50,9 @@ export default function Companies() {
   const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
 
   const { data: companies = [], isLoading } = useQuery({
-    queryKey: ['companies'],
-    queryFn: () => base44.entities.Company.list('-created_date', 200),
+    queryKey: ['companies', session?.tenant_id],
+    queryFn: () => session?.tenant_id ? base44.entities.Company.filter({ tenant_id: session.tenant_id }, '-created_date', 200) : Promise.resolve([]),
+    enabled: !!session?.tenant_id,
   });
 
   const saveMutation = useMutation({
