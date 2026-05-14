@@ -88,6 +88,11 @@ export default function Pricing() {
    const [loading, setLoading] = useState(false);
    const [error, setError] = useState('');
 
+   const isLoggedIn = (() => {
+     try { return !!JSON.parse(localStorage.getItem('truckops_session')); }
+     catch { return false; }
+   })();
+
    const handleCheckout = async () => {
      if (!selectedPlan) return;
 
@@ -227,15 +232,17 @@ export default function Pricing() {
          </div>
        )}
 
-      {/* Create Account CTA */}
-      <div className="max-w-md mx-auto px-4 pb-6">
-        <Button
-          onClick={() => navigate('/')}
-          className="w-full h-12 font-bold text-base bg-emerald-600 hover:bg-emerald-700"
-        >
-          Create Account
-        </Button>
-      </div>
+      {/* Create Account CTA — only show if not logged in */}
+      {!isLoggedIn && (
+        <div className="max-w-md mx-auto px-4 pb-6">
+          <Button
+            onClick={() => navigate('/?signup=1')}
+            className="w-full h-12 font-bold text-base bg-emerald-600 hover:bg-emerald-700"
+          >
+            Create Account
+          </Button>
+        </div>
+      )}
 
       {/* Preview App CTA - Always visible */}
       <div className="max-w-md mx-auto px-4 pb-12">

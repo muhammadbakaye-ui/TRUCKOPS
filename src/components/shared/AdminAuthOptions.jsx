@@ -14,8 +14,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Logo from './Logo';
 
-export default function AdminAuthOptions({ onBack, onSuccess, onShowTour }) {
-  const [mode, setMode] = useState('login'); // login | signup | forgot | forgot_sent | verify_email
+export default function AdminAuthOptions({ onBack, onSuccess, onShowTour, initialMode = 'login' }) {
+  const [mode, setMode] = useState(initialMode); // login | signup | forgot | forgot_sent | verify_email
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);

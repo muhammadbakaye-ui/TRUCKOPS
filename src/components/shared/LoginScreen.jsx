@@ -6,6 +6,7 @@ import AdminAuthOptions from './AdminAuthOptions.jsx';
 export default function LoginScreen() {
   const { login } = useSession();
   const [showSlideshow, setShowSlideshow] = useState(false);
+  const initialMode = new URLSearchParams(window.location.search).get('signup') === '1' ? 'signup' : 'login';
 
   useEffect(() => {
     const seen = localStorage.getItem('truckops_slideshow_seen');
@@ -21,6 +22,7 @@ export default function LoginScreen() {
     <>
       {showSlideshow && <PreLoginSlideshow onClose={closeSlideshow} />}
       <AdminAuthOptions
+        initialMode={initialMode}
         onBack={null}
         onSuccess={(adminId, adminName, extra = {}) => {
           login({ role: 'admin', admin_id: adminId, admin_name: adminName, ...extra });
