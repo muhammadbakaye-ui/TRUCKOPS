@@ -41,18 +41,24 @@ Deno.serve(async (req) => {
     const { action, email, password, password_hash, first_name, last_name, company_name, token, new_password, new_password_hash } = body;
 
     // ── LOGIN ──
-    if (action === 'login') {
-      if (!email || (!password && !password_hash)) {
-        return Response.json({ success: false, message: 'Email and password are required' }, { status: 400 });
-      }
-      const [matchingAdmins, inputHash] = await Promise.all([
-        base44.asServiceRole.entities.Admin.filter({ email: email.toLowerCase().trim() }),
-        password_hash ? Promise.resolve(password_hash) : hashPassword(password),
-      ]);
-      const admin = matchingAdmins.find(a => a.active);
-      if (!admin || inputHash !== admin.password_hash) {
-        return Response.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
-      }
+     if (action === 'login') {
+       if (!email || (!password && !password_hash)) {
+         return Response.json({ success: false, message: 'Email and password are required' }, { status: 400 });
+       }
+       let matchingAdmins, inputHash;
+       try {
+         [matchingAdmins, inputHash] = await Promise.all([
+           base44.asServiceRole.entities.Admin.filter({ email: email.toLowerCase().trim() }),
+           password_hash ? Promise.resolve(password_hash) : hashPassword(password),
+         ]);
+       } catch (dbErr) {
+         console.error('Database error during login:', dbErr.message);
+         return Response.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
+       }
+       const admin = matchingAdmins.find(a => a.active);
+       if (!admin || inputHash !== admin.password_hash) {
+         return Response.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
+       }
       if (!admin.email_verified) {
         return Response.json({ success: false, message: 'Please verify your email before logging in. Check your inbox for the verification link.', code: 'email_not_verified' }, { status: 403 });
       }
@@ -87,17 +93,27 @@ Deno.serve(async (req) => {
       if (!first_name || !last_name || !email || (!password && !password_hash) || !company_name) {
         return Response.json({ success: false, message: 'All fields are required' }, { status: 400 });
       }
-      const [existing, passwordHash] = await Promise.all([
-        base44.asServiceRole.entities.Admin.filter({ email: email.toLowerCase().trim() }),
-        password_hash ? Promise.resolve(password_hash) : hashPassword(password),
-      ]);
+      let existing, passwordHash;
+      try {
+        [existing, passwordHash] = await Promise.all([
+          base44.asServiceRole.entities.Admin.filter({ email: email.toLowerCase().trim() }),
+          password_hash ? Promise.resolve(password_hash) : hashPassword(password),
+        ]);
+      } catch (dbErr) {
+        console.error('Database error during signup:', dbErr.message);
+        return Response.json({ success: false, message: 'An error occurred. Please try again.' }, { status: 500 });
+      }
       // If existing unverified account, allow re-registration (overwrite it)
       if (existing.length > 0) {
         if (existing[0].email_verified) {
           return Response.json({ success: false, message: 'An account with this email already exists' }, { status: 400 });
         }
         // Delete the unverified account so we can recreate it
-        await base44.asServiceRole.entities.Admin.delete(existing[0].id);
+        try {
+          await base44.asServiceRole.entities.Admin.delete(existing[0].id);
+        } catch (delErr) {
+          console.error('Failed to delete unverified account:', delErr.message);
+        }
       }
 
       const verificationToken = generateToken();
@@ -136,10 +152,9 @@ Deno.serve(async (req) => {
         );
       } catch (emailErr) {
         console.error('Verification email failed (non-fatal):', emailErr.message);
-        emailWarning = 'Account created but verification email could not be sent. Please contact support.';
       }
 
-      return Response.json({ success: true, admin_id: newAdmin.id, message: 'Account created. Please check your email to verify your account.', email_warning: emailWarning });
+      return Response.json({ success: true, admin_id: newAdmin.id, message: 'Account created. Please check your email to verify your account.' });
     }
 
     // ── VERIFY EMAIL ──

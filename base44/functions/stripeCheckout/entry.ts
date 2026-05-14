@@ -37,13 +37,15 @@ Deno.serve(async (req) => {
       const planData = PLANS[plan];
       const isSubscription = planData.mode === 'subscription';
 
+      const defaultOrigin = Deno.env.get('APP_URL') || 'https://mytruckops.com';
+      const origin = req.headers.get('origin') || defaultOrigin;
       const sessionParams = {
         customer: customer.id,
         payment_method_types: ['card'],
         line_items: [{ price: planData.price_id, quantity: 1 }],
         mode: planData.mode,
-        success_url: success_url || `${req.headers.get('origin')}/SubscriptionSuccess?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: cancel_url || `${req.headers.get('origin')}/pricing`,
+        success_url: success_url || `${origin}/SubscriptionSuccess?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: cancel_url || `${origin}/pricing`,
         metadata: {
           base44_app_id: Deno.env.get('BASE44_APP_ID'),
           plan,

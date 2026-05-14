@@ -123,8 +123,10 @@ export default function Pricing() {
 
   const handleSelectPlan = (planKey) => {
     if (!isLoggedIn) {
-      // Redirect to login/signup, then come back with plan pre-selected
-      window.location.href = `/?signup=1&plan=${planKey}`;
+      // For non-logged-in users, show details form to collect company & email
+      setSelectedPlan(planKey);
+      setStep('details');
+      setError('');
       return;
     }
     setSelectedPlan(planKey);
@@ -178,6 +180,10 @@ export default function Pricing() {
 
   const handleCheckout = async (e) => {
     e.preventDefault();
+    if (!selectedPlan) {
+      setError('Please select a plan first.');
+      return;
+    }
     if (!details.company_name.trim() || !details.admin_email.trim()) {
       setError('Company name and email are required.');
       return;
@@ -329,6 +335,11 @@ export default function Pricing() {
       {step === 'details' && selectedPlanData && (
         <div className="max-w-md mx-auto px-4 pb-16">
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            {!isLoggedIn && (
+              <div className="bg-amber-500/10 border border-amber-400/20 rounded-lg p-3 mb-6 text-sm text-amber-200">
+                <strong>Note:</strong> After checkout, you'll need to verify your email to access your account.
+              </div>
+            )}
             {/* Plan summary */}
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
               <div>

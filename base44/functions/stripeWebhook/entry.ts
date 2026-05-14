@@ -96,11 +96,15 @@ Deno.serve(async (req) => {
         : null;
 
       // Send welcome email with credentials
-      await base44.asServiceRole.integrations.Core.SendEmail({
-        to: admin_email,
-        subject: `Welcome to TruckOps — Your login details`,
-        body: `Hi ${firstName},\n\nYour TruckOps account for "${company_name}" is ready!\n\nLogin here: ${Deno.env.get('APP_URL') || 'https://mytruckops.com'}\n\nEmail: ${admin_email}\nTemporary password: ${tempPassword}\n\nPlease change your password after your first login.\n\n${isLifetime ? 'You have lifetime access — no recurring charges.' : `3-day free trial — no charge until ${trialEndStr || 'trial ends'}.`}\n\nWelcome aboard!\nThe TruckOps Team`,
-      });
+      try {
+        await base44.asServiceRole.integrations.Core.SendEmail({
+          to: admin_email,
+          subject: `Welcome to TruckOps — Your login details`,
+          body: `Hi ${firstName},\n\nYour TruckOps account for "${company_name}" is ready!\n\nLogin here: ${Deno.env.get('APP_URL') || 'https://mytruckops.com'}\n\nEmail: ${admin_email}\nTemporary password: ${tempPassword}\n\nPlease change your password after your first login.\n\n${isLifetime ? 'You have lifetime access — no recurring charges.' : `3-day free trial — no charge until ${trialEndStr || 'trial ends'}.`}\n\nWelcome aboard!\nThe TruckOps Team`,
+        });
+      } catch (emailErr) {
+        console.error('Welcome email send failed (non-fatal):', emailErr.message);
+      }
 
       console.log(`Tenant created: ${tenantId} for ${admin_email} (${plan}, ${isLifetime ? 'lifetime' : 'subscription'})`);
     }
