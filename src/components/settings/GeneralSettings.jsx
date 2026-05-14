@@ -4,6 +4,7 @@ import { useTimezone, TIMEZONES } from '@/lib/useTimezone';
 import { Sun, Moon, MoonStar } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import StatementSettings from './StatementSettings';
 
 export default function GeneralSettings() {
   const [theme, setTheme] = useTheme();
@@ -82,6 +83,10 @@ export default function GeneralSettings() {
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      <div className="border-t pt-6">
+        <StatementSettings />
       </div>
     </div>
   );

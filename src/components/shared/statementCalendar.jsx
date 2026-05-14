@@ -1,99 +1,123 @@
 /**
- * Statement Period Calendar — computed dynamically from date math.
+ * Statement Period Calendar — fully dynamic, user-configurable.
  *
- * Rules:
- *   - Periods run Sunday → Saturday
- *   - Due date is the Tuesday after the period ends (9 days after Sunday start)
- *   - No hardcoded list — works for any year, any date
+ * All functions accept optional settings:
+ *   weekStart  {number}  0=Sun … 6=Sat  (which day starts the period)
+ *   dueDay     {number}  0=Sun … 6=Sat  (which day of the FOLLOWING week statements are due)
+ *
+ * Defaults: weekStart=0 (Sunday), dueDay=2 (Tuesday)
  */
 
 import { format, addDays, startOfWeek, parseISO } from 'date-fns';
 
+const DEFAULTS = { weekStart: 0, dueDay: 2 };
+
 /**
- * Given any date, return the Sunday that starts its statement week.
+ * Given any date, return the start of its statement week.
  */
-function getWeekSunday(date) {
-  // startOfWeek with weekStartsOn: 0 gives Sunday
-  return startOfWeek(typeof date === 'string' ? parseISO(date) : date, { weekStartsOn: 0 });
+function getWeekStart(date, weekStart = DEFAULTS.weekStart) {
+  const d = typeof date === 'string' ? parseISO(date) : date;
+  return startOfWeek(d, { weekStartsOn: weekStart });
 }
 
 /**
- * Build a period object from a Sunday start date.
+ * Compute the due date offset from period start day.
+ * Due date = first occurrence of dueDay in the FOLLOWING week.
  */
-function buildPeriod(sunday) {
-  const start = format(sunday, 'yyyy-MM-dd');
-  const end = format(addDays(sunday, 6), 'yyyy-MM-dd');   // Saturday
-  const due = format(addDays(sunday, 9), 'yyyy-MM-dd');   // Tuesday of following week
+function computeDueOffset(weekStart, dueDay) {
+  // Period ends 6 days after start (always a full 7-day week)
+  // "Following week" means 7 days after period start
+  // Then find dueDay within that following week
+  const periodEndOffset = 6; // period is always 7 days
+  const nextWeekStart = periodEndOffset + 1; // 7 days after period start
+  let offset = nextWeekStart + ((dueDay - weekStart + 7) % 7);
+  return offset;
+}
+
+/**
+ * Build a period object from a period start date.
+ */
+function buildPeriod(startDate, weekStart = DEFAULTS.weekStart, dueDay = DEFAULTS.dueDay) {
+  const start = format(startDate, 'yyyy-MM-dd');
+  const end = format(addDays(startDate, 6), 'yyyy-MM-dd');
+  const dueOffset = computeDueOffset(weekStart, dueDay);
+  const due = format(addDays(startDate, dueOffset), 'yyyy-MM-dd');
   return { start, end, due };
 }
 
 /**
  * Find the statement period for any given date.
- * @param {string|Date} date
- * @returns {{ start: string, end: string, due: string }}
  */
-export function getPeriodForDate(date) {
-  const sunday = getWeekSunday(date);
-  return buildPeriod(sunday);
+export function getPeriodForDate(date, settings = DEFAULTS) {
+  const { weekStart = DEFAULTS.weekStart, dueDay = DEFAULTS.dueDay } = settings;
+  const start = getWeekStart(date, weekStart);
+  return buildPeriod(start, weekStart, dueDay);
 }
 
 /**
- * Find period by its Tuesday due date.
- * @param {string} dueDate  — 'yyyy-MM-dd'
- * @returns {{ start: string, end: string, due: string } | null}
+ * Find period by its due date string.
+ * Returns null if the given date is not a valid due date.
  */
-export function getPeriodByDueDate(dueDate) {
+export function getPeriodByDueDate(dueDate, settings = DEFAULTS) {
+  const { weekStart = DEFAULTS.weekStart, dueDay = DEFAULTS.dueDay } = settings;
   const due = typeof dueDate === 'string' ? parseISO(dueDate) : dueDate;
-  // Due Tuesday = Sunday start + 9 days → Sunday start = due - 9 days
-  const sunday = addDays(due, -9);
-  const period = buildPeriod(sunday);
+  const dueOffset = computeDueOffset(weekStart, dueDay);
+  // Period start = due - dueOffset days
+  const periodStart = addDays(due, -dueOffset);
+  const period = buildPeriod(periodStart, weekStart, dueDay);
   // Validate: the computed due must match what was passed in
   if (period.due !== format(due, 'yyyy-MM-dd')) return null;
   return period;
 }
 
 /**
- * Generate all Tuesday due dates for a given year (for calendar highlighting).
- * @param {number} year — defaults to current year ± 1
- * @returns {string[]} Array of 'yyyy-MM-dd' due date strings
+ * Check if a given date string is a valid due date.
  */
-export function getAllDueDates(year) {
+export function isValidDueDate(dateStr, settings = DEFAULTS) {
+  return getPeriodByDueDate(dateStr, settings) !== null;
+}
+
+/**
+ * Get all valid due dates for a given year.
+ */
+export function getAllDueDates(year, settings = DEFAULTS) {
+  const { weekStart = DEFAULTS.weekStart, dueDay = DEFAULTS.dueDay } = settings;
   const yr = year || new Date().getFullYear();
   const dates = [];
-  // Start from the first Sunday of the year (or Dec 27 of prior year)
-  let sunday = getWeekSunday(new Date(yr, 0, 1));
-  const end = new Date(yr + 1, 0, 15); // a bit into next year to catch wrap-around
-  while (sunday <= end) {
-    const period = buildPeriod(sunday);
-    // Include due dates that fall in the target year or adjacent
-    if (period.due.startsWith(String(yr)) || period.due.startsWith(String(yr + 1))) {
+  // Start from the period that contains Jan 1 of target year
+  let periodStart = getWeekStart(new Date(yr, 0, 1), weekStart);
+  const cutoff = new Date(yr + 1, 1, 28); // scan through Feb of next year
+  while (periodStart <= cutoff) {
+    const period = buildPeriod(periodStart, weekStart, dueDay);
+    if (period.due.startsWith(String(yr))) {
       dates.push(period.due);
     }
-    sunday = addDays(sunday, 7);
+    periodStart = addDays(periodStart, 7);
   }
   return dates;
 }
 
 /**
  * Get N weeks of periods centered around today (for dropdowns).
- * @param {number} weeksBack  — how many past weeks to include
- * @param {number} weeksAhead — how many future weeks to include
- * @returns {Array<{ start, end, due }>}
  */
-export function getRecentPeriods(weeksBack = 26, weeksAhead = 8) {
+export function getRecentPeriods(weeksBack = 26, weeksAhead = 8, settings = DEFAULTS) {
+  const { weekStart = DEFAULTS.weekStart, dueDay = DEFAULTS.dueDay } = settings;
   const today = new Date();
-  const currentSunday = getWeekSunday(today);
+  const currentStart = getWeekStart(today, weekStart);
   const periods = [];
   for (let i = -weeksBack; i <= weeksAhead; i++) {
-    const sunday = addDays(currentSunday, i * 7);
-    periods.push(buildPeriod(sunday));
+    const start = addDays(currentStart, i * 7);
+    periods.push(buildPeriod(start, weekStart, dueDay));
   }
   return periods;
 }
 
 /**
- * Legacy export — replaced by dynamic calculation.
- * Kept so any code that destructures STATEMENT_PERIODS_2026 doesn't crash.
- * Returns recent periods dynamically instead of a hardcoded list.
+ * Human-readable day name for a day number (0=Sunday).
+ */
+export const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+/**
+ * Legacy export — kept for backward compatibility.
  */
 export const STATEMENT_PERIODS_2026 = getRecentPeriods(52, 26);

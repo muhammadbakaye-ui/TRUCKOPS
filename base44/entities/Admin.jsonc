@@ -46,6 +46,16 @@
     "reset_token_expires": {
       "type": "string",
       "format": "date-time"
+    },
+    "statement_week_start": {
+      "type": "number",
+      "description": "Day of week the statement period starts. 0=Sunday, 1=Monday, ... 6=Saturday",
+      "default": 0
+    },
+    "statement_due_day": {
+      "type": "number",
+      "description": "Day of the FOLLOWING week that statements are due. 0=Sunday, 1=Monday, ... 6=Saturday",
+      "default": 2
     }
   },
   "required": [

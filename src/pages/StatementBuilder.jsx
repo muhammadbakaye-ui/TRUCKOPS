@@ -19,7 +19,8 @@ import LoadPickerModal from '../components/print/LoadPickerModal';
 import { toast } from 'sonner';
 import { printStatement } from '../components/print/printStatement';
 import { format, parse } from 'date-fns';
-import { getPeriodByDueDate, getAllDueDates } from '@/components/shared/statementCalendar';
+import { getPeriodByDueDate, getAllDueDates, DAY_NAMES } from '@/components/shared/statementCalendar';
+import { useStatementSettings } from '@/hooks/useStatementSettings';
 
 const LineRow = React.memo(({ line, onChange, onRemove }) => (
   <div className="grid grid-cols-12 gap-2 items-center py-2 border-b last:border-0">
@@ -57,6 +58,7 @@ export default function StatementBuilder() {
   const queryClient = useQueryClient();
   const { session } = useSession();
   const { showDialog, checkFeatureAccess, handleSubscribe, handleDismiss } = usePreviewGate();
+  const statementSettings = useStatementSettings();
   const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
   const [form, setForm] = useState({ status: 'draft', gross_total: 0, deductions_total: 0, fuel_total: 0, final_check_amount: 0 });
   const [tripLines, setTripLines] = useState([]);
@@ -111,10 +113,14 @@ export default function StatementBuilder() {
 
   const handleDateSelect = (date) => {
     if (!date) return;
-    if (date.getDay() !== 2) { toast.error('Please select a Tuesday (the due date)'); return; }
+    const expectedDueDay = statementSettings.dueDay;
+    if (date.getDay() !== expectedDueDay) {
+      toast.error(`Please select a ${DAY_NAMES[expectedDueDay]} (your configured due day)`);
+      return;
+    }
     const dateStr = format(date, 'yyyy-MM-dd');
-    const period = getPeriodByDueDate(dateStr);
-    if (!period) { toast.error('This Tuesday is not a valid statement due date'); return; }
+    const period = getPeriodByDueDate(dateStr, statementSettings);
+    if (!period) { toast.error('This date is not a valid statement due date'); return; }
     set('statement_date', period.due);
     set('period_start', period.start);
     set('period_end', period.end);
@@ -467,7 +473,7 @@ export default function StatementBuilder() {
                 </Select>
               </div>
               <div>
-                <Label className="text-xs">Due Date (Tuesday)</Label>
+                <Label className="text-xs">Due Date ({DAY_NAMES[statementSettings.dueDay]})</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="h-8 text-xs mt-1 w-full justify-start font-normal">
@@ -480,22 +486,22 @@ export default function StatementBuilder() {
                       mode="single"
                       selected={form.statement_date ? parse(form.statement_date, 'yyyy-MM-dd', new Date()) : undefined}
                       onSelect={handleDateSelect}
-                      modifiers={{ validTuesday: (date) => {
+                      modifiers={{ validDueDay: (date) => {
         const yr = date.getFullYear();
-        return getAllDueDates(yr).includes(format(date, 'yyyy-MM-dd'));
+        return getAllDueDates(yr, statementSettings).includes(format(date, 'yyyy-MM-dd'));
       } }}
-                      modifiersClassNames={{ validTuesday: 'bg-primary/10 font-bold text-primary' }}
+                      modifiersClassNames={{ validDueDay: 'bg-primary/10 font-bold text-primary' }}
                     />
                   </PopoverContent>
                 </Popover>
               </div>
               <div>
-                <Label className="text-xs">Period Start (Sunday)</Label>
-                <Input type="text" value={form.period_start ? `${format(parse(form.period_start, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy')} (Sun)` : ''} readOnly className="h-8 text-xs mt-1 bg-muted" />
+                <Label className="text-xs">Period Start ({DAY_NAMES[statementSettings.weekStart]})</Label>
+                <Input type="text" value={form.period_start ? `${format(parse(form.period_start, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy')} (${DAY_NAMES[statementSettings.weekStart].slice(0,3)})` : ''} readOnly className="h-8 text-xs mt-1 bg-muted" />
               </div>
               <div>
-                <Label className="text-xs">Period End (Saturday)</Label>
-                <Input type="text" value={form.period_end ? `${format(parse(form.period_end, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy')} (Sat)` : ''} readOnly className="h-8 text-xs mt-1 bg-muted" />
+                <Label className="text-xs">Period End ({DAY_NAMES[(statementSettings.weekStart + 6) % 7]})</Label>
+                <Input type="text" value={form.period_end ? `${format(parse(form.period_end, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy')} (${DAY_NAMES[(statementSettings.weekStart + 6) % 7].slice(0,3)})` : ''} readOnly className="h-8 text-xs mt-1 bg-muted" />
               </div>
             </CardContent>
           </Card>
