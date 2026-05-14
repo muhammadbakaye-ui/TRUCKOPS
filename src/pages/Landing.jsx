@@ -8,12 +8,7 @@ export default function Landing() {
   const navigate = useNavigate();
 
   const handleContinue = () => {
-    const isLoggedIn = (() => {
-      try { return !!JSON.parse(localStorage.getItem('truckops_session')); }
-      catch { return false; }
-    })();
-    
-    navigate(isLoggedIn ? '/Dashboard' : '/pricing-landing');
+    navigate('/Dashboard');
   };
 
   return (
