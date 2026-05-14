@@ -35,10 +35,10 @@ const AuthenticatedApp = () => {
   const urlParams = new URLSearchParams(window.location.search);
   const isElectron = urlParams.get('platform') === 'electron';
 
-  // Always call useAuth at the top level (required by React hooks rules)
+  // Always call hook at top level (required by React)
   const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
 
-  // If Electron, show login screen; otherwise show landing page
+  // For Electron, skip all auth and just show login
   if (isElectron) {
     return (
       <Routes>
