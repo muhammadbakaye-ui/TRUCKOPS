@@ -53,12 +53,18 @@ export default function LandingHero({ onContinue }) {
           {!isElectron && (
             <button
               disabled
-              className="relative inline-flex flex-col items-center justify-center gap-2 bg-slate-400 text-white px-8 py-6 text-lg rounded-lg cursor-not-allowed opacity-60 overflow-hidden"
+              className="relative inline-flex flex-col items-center justify-center gap-2 bg-sidebar-primary text-white px-8 py-6 text-lg rounded-lg cursor-not-allowed overflow-hidden"
             >
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute inset-0 h-1 bg-gradient-to-r from-yellow-400 via-yellow-300 to-transparent transform -rotate-45 origin-center" style={{top: '50%', marginTop: '-2px'}}></div>
-                <div className="absolute inset-0 h-1 bg-gradient-to-r from-yellow-400 via-yellow-300 to-transparent transform rotate-45 origin-center" style={{top: '50%', marginTop: '-2px'}}></div>
-              </div>
+              <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 200 200" preserveAspectRatio="none">
+                <defs>
+                  <pattern id="stripes" patternUnits="userSpaceOnUse" width="16" height="16" patternTransform="rotate(45)">
+                    <rect width="8" height="16" fill="#000" />
+                    <rect x="8" width="8" height="16" fill="#FBBF24" />
+                  </pattern>
+                </defs>
+                <rect x="-100" y="50" width="400" height="50" fill="url(#stripes)" />
+                <rect x="-100" y="100" width="400" height="50" fill="url(#stripes)" transform="rotate(90 100 125)" />
+              </svg>
               <div className="relative flex items-center gap-2">
                 <Download className="w-5 h-5" />
                 <div className="flex flex-col text-left">
