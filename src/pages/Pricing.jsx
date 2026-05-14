@@ -112,12 +112,10 @@ export default function Pricing() {
 
   const handleLearnMore = (planKey) => {
     setHighlightedPlan(planKey);
-    setTimeout(() => {
-      if (comparisonRef.current) {
-        const top = comparisonRef.current.getBoundingClientRect().top + window.scrollY;
-        window.scrollTo({ top, behavior: 'smooth' });
-      }
-    }, 0);
+    const element = document.getElementById('comparison-section');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
     setTimeout(() => setHighlightedPlan(null), 3000);
   };
 
@@ -274,7 +272,7 @@ export default function Pricing() {
           </div>
 
           {/* Plan Comparison Section */}
-          <div ref={comparisonRef} className="max-w-5xl mx-auto px-4 pb-12">
+          <div ref={comparisonRef} id="comparison-section" className="max-w-5xl mx-auto px-4 pb-12">
             <h2 className="text-3xl font-bold text-center mb-8">Which Plan Is Right for You?</h2>
             <div className="grid md:grid-cols-2 gap-6">
               {PLANS.map((plan) => (
