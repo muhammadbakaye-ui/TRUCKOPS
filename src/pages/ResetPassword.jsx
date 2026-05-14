@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,6 +21,19 @@ export default function ResetPassword() {
   const [success, setSuccess] = useState(false);
 
   const token = new URLSearchParams(window.location.search).get('token');
+
+  if (!token) {
+    return (
+      <div className="min-h-screen bg-sidebar flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full text-center space-y-4">
+          <XCircle className="w-12 h-12 text-destructive mx-auto" />
+          <h2 className="text-xl font-bold">Invalid Link</h2>
+          <p className="text-sm text-muted-foreground">This password reset link is invalid or has expired.</p>
+          <Button className="w-full" onClick={() => window.location.href = '/'}>Back to Sign In</Button>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -30,16 +30,20 @@ function InvoiceStatusSelect({ invoice, queryClient }) {
   const [saving, setSaving] = useState(false);
   const handleChange = async (value) => {
     setSaving(true);
-    await base44.entities.Invoice.update(invoice.id, { status: value });
-    // Sync the load's invoice_status if linked
-    if (invoice.load_id) {
-      const statusMap = { draft: 'invoiced', priority: 'sent', sent: 'sent', partial: 'partial', paid: 'paid', overdue: 'overdue', canceled: 'canceled' };
-      await base44.entities.Load.update(invoice.load_id, { invoice_status: statusMap[value] || 'invoiced' });
-      queryClient.invalidateQueries({ queryKey: ['loads'] });
+    try {
+      await base44.entities.Invoice.update(invoice.id, { status: value });
+      if (invoice.load_id) {
+        const statusMap = { draft: 'invoiced', priority: 'sent', sent: 'sent', partial: 'partial', paid: 'paid', overdue: 'overdue', canceled: 'canceled' };
+        await base44.entities.Load.update(invoice.load_id, { invoice_status: statusMap[value] || 'invoiced' });
+        queryClient.invalidateQueries({ queryKey: ['loads'] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      toast.success('Status updated');
+    } catch (err) {
+      toast.error('Failed to update status: ' + err.message);
+    } finally {
+      setSaving(false);
     }
-    queryClient.invalidateQueries({ queryKey: ['invoices'] });
-    setSaving(false);
-    toast.success('Status updated');
   };
   const current = invoice.status || 'draft';
   return (

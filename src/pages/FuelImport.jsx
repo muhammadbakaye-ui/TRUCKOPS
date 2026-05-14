@@ -64,9 +64,7 @@ export default function FuelImport() {
     setProcessing(true);
     
     const fileArray = Array.from(files);
-    let totalImported = 0;
-    let totalExceptions = 0;
-    
+
     try {
       for (const file of fileArray) {
         await processFile(file);

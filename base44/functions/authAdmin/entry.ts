@@ -45,11 +45,11 @@ Deno.serve(async (req) => {
       if (!email || (!password && !password_hash)) {
         return Response.json({ success: false, message: 'Email and password are required' }, { status: 400 });
       }
-      const [allAdmins, inputHash] = await Promise.all([
-        base44.asServiceRole.entities.Admin.list('-created_date', 200),
+      const [matchingAdmins, inputHash] = await Promise.all([
+        base44.asServiceRole.entities.Admin.filter({ email: email.toLowerCase().trim() }),
         password_hash ? Promise.resolve(password_hash) : hashPassword(password),
       ]);
-      const admin = allAdmins.find(a => a.active && a.email?.toLowerCase().trim() === email.toLowerCase().trim());
+      const admin = matchingAdmins.find(a => a.active);
       if (!admin || inputHash !== admin.password_hash) {
         return Response.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
       }

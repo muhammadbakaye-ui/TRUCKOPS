@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 export function usePreviewGate() {
    const navigate = useNavigate();
@@ -18,7 +18,12 @@ export function usePreviewGate() {
      setShowDialog(false);
    };
 
-   return { showDialog, setShowDialog, checkFeatureAccess, handleDismiss, navigate };
+   const handleSubscribe = () => {
+     setShowDialog(false);
+     navigate('/pricing');
+   };
+
+   return { showDialog, setShowDialog, checkFeatureAccess, handleDismiss, handleSubscribe, navigate };
 }
 
 export function PreviewFeatureDialog({ open, onSubscribe, onDismiss }) {
@@ -31,10 +36,10 @@ export function PreviewFeatureDialog({ open, onSubscribe, onDismiss }) {
             This feature is only available to subscribers. Subscribe to unlock full access and help support the platform.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <div className="flex gap-3">
+        <AlertDialogFooter>
           <AlertDialogCancel onClick={onDismiss}>Not Now</AlertDialogCancel>
           <AlertDialogAction onClick={onSubscribe}>Subscribe</AlertDialogAction>
-        </div>
+        </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
   );

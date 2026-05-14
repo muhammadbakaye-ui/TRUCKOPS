@@ -19,6 +19,9 @@ Deno.serve(async (req) => {
        if (!plan || !PLANS[plan]) {
          return Response.json({ error: 'Invalid plan' }, { status: 400 });
        }
+       if (!admin_email || !company_name) {
+         return Response.json({ error: 'Email and company name are required' }, { status: 400 });
+       }
 
        const customerData = {
          metadata: { plan },

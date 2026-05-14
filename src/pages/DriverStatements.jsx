@@ -63,10 +63,10 @@ export default function DriverStatements() {
         });
         await base44.entities.DriverStatement.delete(stmt.id);
       }
+      return stmtsArray.length;
     },
-    onSuccess: () => {
+    onSuccess: (count) => {
       queryClient.invalidateQueries({ queryKey: ['statements'] });
-      const count = selected.size;
       toast.success(`${count} statement${count === 1 ? '' : 's'} moved to deleted items`);
       setSelected(new Set());
     },
