@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Check, Zap, Shield, Building2, Loader2, Truck } from 'lucide-react';
+import { Check, Zap, Shield, Building2, Loader2, Truck, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { base44 } from '@/api/base44Client';
+
 const PLANS = [
   {
     key: 'basic',
@@ -83,51 +84,69 @@ const PLANS = [
 ];
 
 export default function Pricing() {
-   const navigate = useNavigate();
-   const [selectedPlan, setSelectedPlan] = useState(null);
-   const [loading, setLoading] = useState(false);
-   const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [step, setStep] = useState('plans'); // 'plans' | 'details'
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [details, setDetails] = useState({ company_name: '', admin_email: '' });
 
-   const isLoggedIn = (() => {
-     try { return !!JSON.parse(localStorage.getItem('truckops_session')); }
-     catch { return false; }
-   })();
+  const isLoggedIn = (() => {
+    try { return !!JSON.parse(localStorage.getItem('truckops_session')); }
+    catch { return false; }
+  })();
 
-   const handleCheckout = async () => {
-     if (!selectedPlan) return;
+  const handleSelectPlan = (planKey) => {
+    setSelectedPlan(planKey);
+    setStep('details');
+    setError('');
+  };
 
-     const isInIframe = window.self !== window.top;
-     if (isInIframe) {
-       alert('Checkout must be completed from the published app. Please open the app directly to subscribe.');
-       return;
-     }
+  const handleCheckout = async (e) => {
+    e.preventDefault();
+    if (!details.company_name.trim() || !details.admin_email.trim()) {
+      setError('Company name and email are required.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(details.admin_email.trim())) {
+      setError('Please enter a valid email address.');
+      return;
+    }
 
-     setLoading(true);
-     setError('');
-     try {
-       const res = await base44.functions.invoke('stripeCheckout', {
-         action: 'create_checkout',
-         plan: selectedPlan,
-         company_name: '',
-         admin_email: '',
-         success_url: `${window.location.origin}/signup-success?session_id={CHECKOUT_SESSION_ID}`,
-         cancel_url: `${window.location.origin}/pricing`,
-       });
-       if (res.data?.url) {
-         window.location.href = res.data.url;
-       } else {
-         setError('Failed to start checkout. Please try again.');
-       }
-     } catch (err) {
-       setError(err.message || 'Something went wrong.');
-     } finally {
-       setLoading(false);
-     }
-   };
+    const isInIframe = window.self !== window.top;
+    if (isInIframe) {
+      alert('Checkout must be completed from the published app. Please open the app directly to subscribe.');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    try {
+      const res = await base44.functions.invoke('stripeCheckout', {
+        action: 'create_checkout',
+        plan: selectedPlan,
+        company_name: details.company_name.trim(),
+        admin_email: details.admin_email.trim().toLowerCase(),
+        success_url: `${window.location.origin}/SubscriptionSuccess?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${window.location.origin}/pricing`,
+      });
+      if (res.data?.url) {
+        window.location.href = res.data.url;
+      } else {
+        setError('Failed to start checkout. Please try again.');
+      }
+    } catch (err) {
+      setError(err.message || 'Something went wrong.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selectedPlanData = PLANS.find(p => p.key === selectedPlan);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white">
-
 
       {/* Header */}
       <div className="text-center py-12 px-4">
@@ -135,130 +154,164 @@ export default function Pricing() {
           <Truck className="w-8 h-8 text-primary" />
           <span className="text-2xl font-bold">TruckOps</span>
         </div>
-        <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
-          Simple, transparent pricing
-        </h1>
-        <p className="text-slate-400 text-lg max-w-xl mx-auto">
-          Everything your trucking operation needs, in one platform. Start free for 3 days — cancel anytime before your trial ends.
-        </p>
+        {step === 'plans' ? (
+          <>
+            <h1 className="text-4xl md:text-5xl font-extrabold mb-4">Simple, transparent pricing</h1>
+            <p className="text-slate-400 text-lg max-w-xl mx-auto">
+              Everything your trucking operation needs, in one platform. Start free for 3 days — cancel anytime before your trial ends.
+            </p>
+          </>
+        ) : (
+          <>
+            <h1 className="text-3xl font-extrabold mb-2">Almost there!</h1>
+            <p className="text-slate-400 text-base max-w-sm mx-auto">
+              Enter your details to set up your <strong className="text-white">{selectedPlanData?.name}</strong> account.
+            </p>
+          </>
+        )}
       </div>
 
-      {/* Plans */}
-      <div className="max-w-5xl mx-auto px-4 pb-12 grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {PLANS.map((plan) => {
-          const Icon = plan.icon;
-          const isSelected = selectedPlan === plan.key;
-          return (
-            <div
-              key={plan.key}
-              onClick={() => setSelectedPlan(plan.key)}
-              className={`relative rounded-2xl border-2 p-6 cursor-pointer transition-all duration-200 ${
-                isSelected
-                  ? 'border-primary bg-primary/10 scale-105 shadow-2xl shadow-primary/20'
-                  : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/8'
-              }`}
-            >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
-                  MOST POPULAR
+      {step === 'plans' && (
+        <>
+          {/* Plans grid */}
+          <div className="max-w-5xl mx-auto px-4 pb-12 grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {PLANS.map((plan) => {
+              const Icon = plan.icon;
+              return (
+                <div
+                  key={plan.key}
+                  className="relative rounded-2xl border-2 border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/8 p-6 cursor-pointer transition-all duration-200 flex flex-col"
+                  onClick={() => handleSelectPlan(plan.key)}
+                >
+                  {plan.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
+                      MOST POPULAR
+                    </div>
+                  )}
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${plan.bg} ${plan.color}`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div className="mb-1 text-lg font-bold">{plan.name}</div>
+                  <div className="text-slate-400 text-sm mb-4">{plan.description}</div>
+                  <div className="mb-6">
+                    <span className="text-4xl font-extrabold">${plan.price}</span>
+                    <span className="text-slate-400 text-sm">{plan.oneTime ? ' one-time' : '/mo'}</span>
+                  </div>
+                  <ul className="space-y-2 mb-6 flex-1">
+                    {plan.includedFrom && (
+                      <li className="flex items-center gap-2 text-sm font-semibold text-primary/90 bg-primary/10 rounded-lg px-2 py-1.5 mb-1">
+                        <Check className="w-4 h-4 text-primary shrink-0" />
+                        Everything in {plan.includedFrom}
+                      </li>
+                    )}
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-start gap-2 text-sm text-slate-300">
+                        <Check className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="w-full text-center py-2 rounded-lg text-sm font-semibold border border-white/20 text-white hover:border-white/40 transition-colors">
+                    {plan.oneTime ? 'Get Lifetime Access →' : 'Start Free Trial →'}
+                  </div>
                 </div>
-              )}
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${plan.bg} ${plan.color}`}>
-                <Icon className="w-5 h-5" />
-              </div>
-              <div className="mb-1 text-lg font-bold">{plan.name}</div>
-              <div className="text-slate-400 text-sm mb-4">{plan.description}</div>
-              <div className="mb-6">
-                <span className="text-4xl font-extrabold">${plan.price}</span>
-                <span className="text-slate-400 text-sm">{plan.oneTime ? ' one-time' : '/mo'}</span>
-              </div>
-              <ul className="space-y-2 mb-6">
-                {plan.includedFrom && (
-                  <li className="flex items-center gap-2 text-sm font-semibold text-primary/90 bg-primary/10 rounded-lg px-2 py-1.5 mb-1">
-                    <Check className="w-4 h-4 text-primary shrink-0" />
-                    Everything in {plan.includedFrom}
-                  </li>
-                )}
-                {plan.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2 text-sm text-slate-300">
-                    <Check className="w-4 h-4 text-green-400 mt-0.5 shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <div className={`w-full text-center py-2 rounded-lg text-sm font-semibold border transition-colors ${
-                isSelected
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'border-white/20 text-white hover:border-white/40'
-              }`}>
-                {isSelected ? 'Selected' : 'Select Plan'}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+              );
+            })}
+          </div>
 
-      {/* Checkout button */}
-       {selectedPlan && (
-         <div className="max-w-md mx-auto px-4 pb-8">
-           <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-             <h2 className="text-lg font-bold mb-1">
-               {PLANS.find(p => p.key === selectedPlan)?.name} Plan
-             </h2>
-             <p className="text-slate-400 text-sm mb-5">
-               {PLANS.find(p => p.key === selectedPlan)?.oneTime
-                 ? `One-time payment of $${PLANS.find(p => p.key === selectedPlan)?.price}`
-                 : `3 days free, then $${PLANS.find(p => p.key === selectedPlan)?.price}/month`}
-             </p>
-             {error && (
-               <div className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2 mb-4">
-                 {error}
-               </div>
-             )}
-             <Button
-               onClick={handleCheckout}
-               className="w-full h-11 font-bold text-sm"
-               disabled={loading}
-             >
-               {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : ''}
-               {PLANS.find(p => p.key === selectedPlan)?.oneTime ? 'Pay Now →' : 'Start Free Trial →'}
-             </Button>
-             <p className="text-center text-xs text-slate-500 mt-3">
-               {PLANS.find(p => p.key === selectedPlan)?.oneTime
-                 ? 'One-time payment. No recurring charges.'
-                 : 'Card required. Cancel anytime before trial ends.'}
-             </p>
-           </div>
-         </div>
-       )}
+          {/* Bottom CTAs */}
+          <div className="max-w-md mx-auto px-4 pb-6 space-y-3">
+            {!isLoggedIn && (
+              <Button
+                onClick={() => navigate('/?signup=1')}
+                className="w-full h-12 font-bold text-base bg-emerald-600 hover:bg-emerald-700"
+              >
+                Create Account (No Credit Card)
+              </Button>
+            )}
+            <Button
+              onClick={() => navigate('/')}
+              variant="ghost"
+              className="w-full h-10 font-medium text-sm text-slate-400 hover:text-slate-300"
+            >
+              Preview App → Dashboard
+            </Button>
+          </div>
 
-      {/* Create Account CTA — only show if not logged in */}
-      {!isLoggedIn && (
-        <div className="max-w-md mx-auto px-4 pb-6">
-          <Button
-            onClick={() => navigate('/?signup=1')}
-            className="w-full h-12 font-bold text-base bg-emerald-600 hover:bg-emerald-700"
-          >
-            Create Account
-          </Button>
-        </div>
+          {/* Footer */}
+          <div className="text-center pb-8 space-y-2 text-slate-600 text-xs px-4">
+            <p>© {new Date().getFullYear()} TruckOps. All rights reserved.</p>
+            <p>
+              <a href="/privacy" className="hover:text-slate-400 underline">Privacy Policy</a>
+              {' · '}
+              <a href="/terms" className="hover:text-slate-400 underline">Terms of Service</a>
+            </p>
+          </div>
+        </>
       )}
 
-      {/* Preview App CTA - Always visible */}
-      <div className="max-w-md mx-auto px-4 pb-12">
-        <Button
-          onClick={() => navigate('/')}
-          variant="ghost"
-          className="w-full h-10 font-medium text-sm text-slate-400 hover:text-slate-300"
-        >
-          Preview App → Dashboard
-        </Button>
-      </div>
+      {step === 'details' && selectedPlanData && (
+        <div className="max-w-md mx-auto px-4 pb-16">
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            {/* Plan summary */}
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+              <div>
+                <div className="font-bold text-lg">{selectedPlanData.name} Plan</div>
+                <div className="text-slate-400 text-sm">
+                  {selectedPlanData.oneTime
+                    ? `$${selectedPlanData.price} one-time payment`
+                    : `3 days free, then $${selectedPlanData.price}/month`}
+                </div>
+              </div>
+              <button onClick={() => setStep('plans')} className="text-slate-400 hover:text-white text-sm flex items-center gap-1">
+                <ArrowLeft className="w-3.5 h-3.5" /> Change
+              </button>
+            </div>
 
-      {/* Footer */}
-      <div className="text-center pb-12 text-slate-600 text-xs">
-        © {new Date().getFullYear()} TruckOps. All rights reserved.
-      </div>
+            <form onSubmit={handleCheckout} className="space-y-4">
+              <div>
+                <Label className="text-sm text-slate-300">Company Name</Label>
+                <Input
+                  value={details.company_name}
+                  onChange={e => setDetails(d => ({ ...d, company_name: e.target.value }))}
+                  placeholder="Your trucking company name"
+                  className="mt-1.5 bg-white/10 border-white/20 text-white placeholder:text-slate-500"
+                  autoFocus
+                  disabled={loading}
+                />
+              </div>
+              <div>
+                <Label className="text-sm text-slate-300">Email Address</Label>
+                <Input
+                  type="email"
+                  value={details.admin_email}
+                  onChange={e => setDetails(d => ({ ...d, admin_email: e.target.value }))}
+                  placeholder="you@yourcompany.com"
+                  className="mt-1.5 bg-white/10 border-white/20 text-white placeholder:text-slate-500"
+                  disabled={loading}
+                />
+                <p className="text-xs text-slate-500 mt-1">Your login credentials will be sent here after payment.</p>
+              </div>
+
+              {error && (
+                <div className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2">
+                  {error}
+                </div>
+              )}
+
+              <Button type="submit" className="w-full h-11 font-bold text-sm" disabled={loading}>
+                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                {selectedPlanData.oneTime ? 'Pay Now →' : 'Start Free Trial →'}
+              </Button>
+              <p className="text-center text-xs text-slate-500">
+                {selectedPlanData.oneTime
+                  ? 'One-time payment. No recurring charges.'
+                  : 'Card required. Cancel anytime before trial ends.'}
+              </p>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -6,8 +6,8 @@ import { CreditCard, ExternalLink, Loader2, CheckCircle, AlertCircle } from 'luc
 import { base44 } from '@/api/base44Client';
 import { useSession } from '../shared/AppSession';
 
-const PLAN_LABELS = { starter: 'Starter', professional: 'Professional', enterprise: 'Enterprise' };
-const PLAN_PRICES = { starter: '$49/mo', professional: '$99/mo', enterprise: '$199/mo' };
+const PLAN_LABELS = { basic: 'Basic', professional: 'Professional', enterprise: 'Enterprise', lifetime: 'Lifetime', starter: 'Starter' };
+const PLAN_PRICES = { basic: '$16/mo', professional: '$49/mo', enterprise: '$99/mo', lifetime: '$199 one-time', starter: '$16/mo' };
 const STATUS_COLORS = {
   active: 'bg-green-100 text-green-700 border-green-200',
   trialing: 'bg-blue-100 text-blue-700 border-blue-200',
@@ -79,7 +79,7 @@ export default function BillingTab() {
           {status === 'trialing' && (
             <div className="mt-3 flex items-center gap-2 text-xs text-blue-600 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
               <CheckCircle className="w-3.5 h-3.5 shrink-0" />
-              You're on a 14-day free trial. Add a payment method to continue after the trial ends.
+              You're on a 3-day free trial. Add a payment method to continue after the trial ends.
             </div>
           )}
           {status === 'past_due' && (

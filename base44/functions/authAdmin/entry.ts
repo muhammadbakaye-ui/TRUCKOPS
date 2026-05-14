@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
           subscriptionStatus = subs[0].status;
           plan = subs[0].plan;
           if (subscriptionStatus === 'canceled' || subscriptionStatus === 'unpaid') {
-            return Response.json({ success: false, message: 'Your subscription is inactive. Please renew your plan to continue.' }, { status: 403 });
+            return Response.json({ success: false, message: 'Your subscription is inactive. Please visit our pricing page to reactivate your plan.', code: 'subscription_inactive' }, { status: 403 });
           }
         }
       }

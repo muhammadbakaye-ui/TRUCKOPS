@@ -93,6 +93,12 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour, initia
           plan: response.data.plan,
           company_name: response.data.company_name,
         });
+      } else if (response.data.code === 'subscription_inactive') {
+        setError(response.data.message || 'Your subscription is inactive.');
+        // Show pricing link after a moment
+        setTimeout(() => {
+          setError('Your subscription is inactive. Click "View Plans" below to reactivate.');
+        }, 100);
       } else {
         setError(response.data.message || 'Login failed');
       }

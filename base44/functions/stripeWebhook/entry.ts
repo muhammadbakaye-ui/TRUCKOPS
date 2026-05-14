@@ -40,12 +40,17 @@ Deno.serve(async (req) => {
       const { plan, company_name, admin_email } = session.metadata || {};
 
       if (!admin_email || !company_name) {
-        console.log('Missing metadata, skipping');
+        console.log('Missing metadata (admin_email or company_name), skipping account creation');
         return Response.json({ received: true });
       }
 
-      // Get subscription details
-      const stripeSub = await stripe.subscriptions.retrieve(session.subscription);
+      const isLifetime = session.mode === 'payment';
+
+      // For subscriptions, fetch subscription details; for lifetime, skip
+      let stripeSub = null;
+      if (!isLifetime && session.subscription) {
+        stripeSub = await stripe.subscriptions.retrieve(session.subscription);
+      }
 
       // Create tenant record
       const tenantId = generateTenantId();
@@ -53,13 +58,13 @@ Deno.serve(async (req) => {
         tenant_id: tenantId,
         company_name,
         admin_email: admin_email.toLowerCase().trim(),
-        plan: plan || 'starter',
-        status: stripeSub.status,
+        plan: plan || 'basic',
+        status: isLifetime ? 'active' : (stripeSub?.status || 'active'),
         stripe_customer_id: session.customer,
-        stripe_subscription_id: session.subscription,
-        stripe_price_id: stripeSub.items.data[0]?.price?.id,
-        trial_ends_at: stripeSub.trial_end ? new Date(stripeSub.trial_end * 1000).toISOString() : null,
-        current_period_end: new Date(stripeSub.current_period_end * 1000).toISOString(),
+        stripe_subscription_id: session.subscription || null,
+        stripe_price_id: stripeSub?.items?.data[0]?.price?.id || null,
+        trial_ends_at: stripeSub?.trial_end ? new Date(stripeSub.trial_end * 1000).toISOString() : null,
+        current_period_end: stripeSub?.current_period_end ? new Date(stripeSub.current_period_end * 1000).toISOString() : null,
       });
 
       // Create admin account for this tenant
@@ -75,17 +80,22 @@ Deno.serve(async (req) => {
         email: admin_email.toLowerCase().trim(),
         password_hash: passwordHash,
         active: true,
+        email_verified: true,
         tenant_id: tenantId,
       });
+
+      const trialEndStr = stripeSub?.trial_end
+        ? new Date(stripeSub.trial_end * 1000).toLocaleDateString()
+        : null;
 
       // Send welcome email with credentials
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: admin_email,
-        subject: `Welcome to FleetDesk Pro — Your login details`,
-        body: `Hi ${firstName},\n\nYour FleetDesk Pro account for "${company_name}" is ready!\n\nLogin here: ${Deno.env.get('APP_URL') || 'your app URL'}\n\nEmail: ${admin_email}\nTemporary password: ${tempPassword}\n\nPlease change your password after your first login.\n\n14-day free trial — no charge until ${stripeSub.trial_end ? new Date(stripeSub.trial_end * 1000).toLocaleDateString() : 'trial ends'}.\n\nWelcome aboard!\nFleetDesk Pro Team`,
+        subject: `Welcome to TruckOps — Your login details`,
+        body: `Hi ${firstName},\n\nYour TruckOps account for "${company_name}" is ready!\n\nLogin here: ${Deno.env.get('APP_URL') || 'https://mytruckops.com'}\n\nEmail: ${admin_email}\nTemporary password: ${tempPassword}\n\nPlease change your password after your first login.\n\n${isLifetime ? 'You have lifetime access — no recurring charges.' : `3-day free trial — no charge until ${trialEndStr || 'trial ends'}.`}\n\nWelcome aboard!\nThe TruckOps Team`,
       });
 
-      console.log(`Tenant created: ${tenantId} for ${admin_email}`);
+      console.log(`Tenant created: ${tenantId} for ${admin_email} (${plan}, ${isLifetime ? 'lifetime' : 'subscription'})`);
     }
 
     if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
@@ -108,8 +118,8 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.Subscription.update(subs[0].id, { status: 'past_due' });
         await base44.asServiceRole.integrations.Core.SendEmail({
           to: subs[0].admin_email,
-          subject: 'FleetDesk Pro — Payment failed',
-          body: `Hi,\n\nYour payment for FleetDesk Pro failed. Please update your billing information to keep your account active.\n\nLog in to manage your billing: your app URL\n\nFleetDesk Pro Team`,
+          subject: 'TruckOps — Payment failed',
+          body: `Hi,\n\nYour payment for TruckOps failed. Please update your billing information to keep your account active.\n\nLog in to manage your billing: ${Deno.env.get('APP_URL') || 'https://mytruckops.com'}\n\nThe TruckOps Team`,
         });
         console.log(`Payment failed for customer: ${invoice.customer}`);
       }

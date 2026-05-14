@@ -71,9 +71,10 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'No subscription found' }, { status: 404 });
       }
 
+      const returnUrl = body.return_url || `${req.headers.get('origin')}/SettingsPage`;
       const portalSession = await stripe.billingPortal.sessions.create({
         customer: subs[0].stripe_customer_id,
-        return_url: return_url || `${req.headers.get('origin')}/SettingsPage`,
+        return_url: returnUrl,
       });
       return Response.json({ url: portalSession.url });
     }
