@@ -95,7 +95,6 @@ function PlanCard({ plan, index, navigate }) {
       initial={{ opacity: 0, y: 30 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ delay: (index % 2) * 0.1, duration: 0.6 }}
-      onClick={handleSelectPlan}
       className={`rounded-xl border p-8 transition-all cursor-pointer hover:shadow-lg ${
         plan.highlighted
           ? 'bg-sidebar-primary/10 border-sidebar-primary shadow-xl'
@@ -119,7 +118,13 @@ function PlanCard({ plan, index, navigate }) {
           </li>
         ))}
       </ul>
-      <button className="w-full py-2 px-4 rounded-lg bg-sidebar-primary text-white font-semibold hover:bg-sidebar-primary/90 transition-colors">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          handleSelectPlan();
+        }}
+        className="w-full py-2 px-4 rounded-lg bg-sidebar-primary text-white font-semibold hover:bg-sidebar-primary/90 transition-colors"
+      >
         Subscribe Now →
       </button>
     </motion.div>
