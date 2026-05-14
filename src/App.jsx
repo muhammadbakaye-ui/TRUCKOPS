@@ -31,7 +31,7 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   : <>{children}</>;
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, session } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, isAuthenticated, user } = useAuth();
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -57,7 +57,7 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      <Route path="/" element={isElectron ? (session ? <Navigate to="/Dashboard" /> : <LoginScreen />) : <Landing />} />
+      <Route path="/" element={isElectron ? (isAuthenticated ? <Navigate to="/Dashboard" /> : <LoginScreen />) : <Landing />} />
       <Route path="/features" element={<LandingFeatures />} />
       <Route path="/pricing" element={<LandingPricing />} />
       <Route path="/about" element={<LandingAbout />} />
