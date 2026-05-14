@@ -51,16 +51,22 @@ export default function LandingHero({ onContinue }) {
           className="flex flex-col sm:flex-row gap-4 justify-center"
         >
           {!isElectron && (
-            <div className="inline-flex flex-col items-center gap-2">
-              <button
-                disabled
-                className="inline-flex items-center justify-center gap-2 bg-slate-400 text-white px-8 py-6 text-lg rounded-lg cursor-not-allowed opacity-60"
-              >
+            <button
+              disabled
+              className="relative inline-flex flex-col items-center justify-center gap-2 bg-slate-400 text-white px-8 py-6 text-lg rounded-lg cursor-not-allowed opacity-60 overflow-hidden"
+            >
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute inset-0 h-1 bg-gradient-to-r from-yellow-400 via-yellow-300 to-transparent transform -rotate-45 origin-center" style={{top: '50%', marginTop: '-2px'}}></div>
+                <div className="absolute inset-0 h-1 bg-gradient-to-r from-yellow-400 via-yellow-300 to-transparent transform rotate-45 origin-center" style={{top: '50%', marginTop: '-2px'}}></div>
+              </div>
+              <div className="relative flex items-center gap-2">
                 <Download className="w-5 h-5" />
-                Download Now
-              </button>
-              <span className="text-sm text-sidebar-foreground/60">(coming soon)</span>
-            </div>
+                <div className="flex flex-col text-left">
+                  <span>Download Now</span>
+                  <span className="text-xs">(coming soon)</span>
+                </div>
+              </div>
+            </button>
           )}
           <Button
             onClick={onContinue}
