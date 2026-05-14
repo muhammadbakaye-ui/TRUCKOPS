@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import { Check, ChevronDown, Loader2 } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
 import { PLANS } from '@/lib/pricingPlans';
 
 export default function PricingDashboard() {
-  const [expandedPlan, setExpandedPlan] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+   const [loading, setLoading] = useState(false);
+   const [error, setError] = useState('');
 
   const getAccountInfo = () => {
     try {
@@ -67,19 +66,18 @@ export default function PricingDashboard() {
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {PLANS.map((plan) => {
-          const Icon = plan.icon;
-          const isExpanded = expandedPlan === plan.key;
+         {PLANS.map((plan) => {
+           const Icon = plan.icon;
 
-          return (
-            <div
-              key={plan.key}
-              className={`relative rounded-2xl border-2 p-6 flex flex-col transition-all ${
-                plan.popular
-                  ? `${plan.border} ${plan.bg}`
-                  : 'border-border bg-card'
-              } ${isExpanded ? 'ring-2 ring-primary' : ''}`}
-            >
+           return (
+             <div
+               key={plan.key}
+               className={`relative rounded-2xl border-2 p-6 flex flex-col transition-all ${
+                 plan.popular
+                   ? `${plan.border} ${plan.bg}`
+                   : 'border-border bg-card'
+               }`}
+             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
                   MOST POPULAR
@@ -103,7 +101,7 @@ export default function PricingDashboard() {
                 <p className="text-sm text-foreground mt-1">{plan.bestFor}</p>
               </div>
 
-              <ul className={`space-y-2 flex-1 mb-6 ${isExpanded ? '' : 'max-h-64 overflow-hidden'}`}>
+              <ul className="space-y-2 flex-1 mb-6">
                 {plan.includedFrom && (
                   <li className="flex items-center gap-2 text-sm font-semibold text-primary bg-primary/10 rounded-lg px-2 py-1.5 mb-2">
                     <Check className="w-4 h-4 shrink-0" />
@@ -118,41 +116,26 @@ export default function PricingDashboard() {
                 ))}
               </ul>
 
-              <Button
-                onClick={() => setExpandedPlan(isExpanded ? null : plan.key)}
-                variant="outline"
-                className="w-full mb-2"
-              >
-                <span className="flex-1">Select Plan</span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-              </Button>
-
-              {isExpanded && (
-                <div className="mt-4 pt-4 border-t border-border space-y-3">
-                  <div className="text-sm font-semibold text-foreground mb-2">Confirm & checkout</div>
-
-                  {error && (
-                    <div className="text-red-600 text-xs bg-red-50 border border-red-200 rounded px-2 py-1.5">
-                      {error}
-                    </div>
-                  )}
-
-                  <Button
-                    onClick={() => handleCheckout(plan)}
-                    disabled={loading}
-                    className="w-full"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        Processing...
-                      </>
-                    ) : (
-                      `${plan.oneTime ? 'Pay Now' : 'Start Free Trial'} →`
-                    )}
-                  </Button>
+              {error && (
+                <div className="text-red-600 text-xs bg-red-50 border border-red-200 rounded px-2 py-1.5 mb-4">
+                  {error}
                 </div>
               )}
+
+              <Button
+                onClick={() => handleCheckout(plan)}
+                disabled={loading}
+                className="w-full"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Processing...
+                  </>
+                ) : (
+                  `${plan.oneTime ? 'Pay Now' : 'Start Free Trial'} →`
+                )}
+              </Button>
             </div>
           );
         })}
