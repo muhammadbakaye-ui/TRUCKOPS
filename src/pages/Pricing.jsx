@@ -86,7 +86,7 @@ const PLANS = [
 export default function Pricing() {
   const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [step, setStep] = useState('plans'); // 'plans' | 'details'
+  const [step, setStep] = useState('plans'); // 'plans' | 'details' | 'checkout'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [details, setDetails] = useState({ company_name: '', admin_email: '' });
@@ -95,6 +95,18 @@ export default function Pricing() {
     try { return !!JSON.parse(localStorage.getItem('truckops_session')); }
     catch { return false; }
   })();
+
+  const getAccountInfo = () => {
+    try {
+      const session = JSON.parse(localStorage.getItem('truckops_session'));
+      return {
+        email: session?.admin_email || '',
+        company: session?.company_name || ''
+      };
+    } catch {
+      return { email: '', company: '' };
+    }
+  };
 
   const handleSelectPlan = (planKey) => {
     if (!isLoggedIn) {
@@ -113,12 +125,19 @@ export default function Pricing() {
     const plan = params.get('plan');
     if (plan && isLoggedIn && PLANS.find(p => p.key === plan)) {
       setSelectedPlan(plan);
-      setStep('details');
+      if (isLoggedIn) {
+        // Auto-checkout for logged-in users
+        const accountInfo = getAccountInfo();
+        setDetails({ company_name: accountInfo.company, admin_email: accountInfo.email });
+        setStep('checkout');
+      } else {
+        setStep('details');
+      }
     }
   }, []);
 
   const handleCheckout = async (e) => {
-    e.preventDefault();
+    e?.preventDefault?.();
     if (!details.company_name.trim() || !details.admin_email.trim()) {
       setError('Company name and email are required.');
       return;
@@ -324,6 +343,58 @@ export default function Pricing() {
                   : 'Card required. Cancel anytime before trial ends.'}
               </p>
             </form>
+          </div>
+        </div>
+      )}
+
+      {step === 'checkout' && selectedPlanData && (
+        <div className="max-w-md mx-auto px-4 pb-16">
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold mb-2">Ready to get started?</h2>
+              <p className="text-slate-400 text-sm">
+                You're upgrading to <strong className="text-white">{selectedPlanData.name}</strong>
+              </p>
+            </div>
+
+            <div className="bg-white/10 rounded-lg p-4 mb-6 space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400">Plan</span>
+                <span className="font-semibold">{selectedPlanData.name}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-400">Email</span>
+                <span className="font-semibold">{details.admin_email}</span>
+              </div>
+              <div className="flex justify-between text-sm pt-3 border-t border-white/10">
+                <span className="text-slate-400">Price</span>
+                <span className="text-lg font-bold">
+                  {selectedPlanData.oneTime ? `$${selectedPlanData.price}` : `$${selectedPlanData.price}/mo`}
+                </span>
+              </div>
+            </div>
+
+            {error && (
+              <div className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2 mb-4">
+                {error}
+              </div>
+            )}
+
+            <Button
+              onClick={() => handleCheckout()}
+              className="w-full h-11 font-bold text-sm mb-3"
+              disabled={loading}
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {selectedPlanData.oneTime ? 'Proceed to Payment →' : 'Proceed to Checkout →'}
+            </Button>
+
+            <button
+              onClick={() => setStep('plans')}
+              className="w-full h-10 text-sm font-medium text-slate-400 hover:text-slate-300 transition-colors"
+            >
+              Back
+            </button>
           </div>
         </div>
       )}

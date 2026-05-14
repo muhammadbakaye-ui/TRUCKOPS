@@ -51,7 +51,7 @@ export default function LandingNav({ onContinue }) {
               Features
             </button>
             <button
-              onClick={() => handleNavClick('/pricing')}
+              onClick={() => handleNavClick('/pricing-landing')}
               className="text-sidebar-foreground hover:text-sidebar-primary transition-colors text-sm font-medium"
             >
               Pricing
@@ -95,7 +95,7 @@ export default function LandingNav({ onContinue }) {
               Features
             </button>
             <button
-              onClick={() => handleNavClick('/pricing')}
+              onClick={() => handleNavClick('/pricing-landing')}
               className="block text-sidebar-foreground hover:text-sidebar-primary text-sm font-medium px-0 py-2 w-full text-left"
             >
               Pricing
