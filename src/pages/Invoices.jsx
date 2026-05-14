@@ -33,7 +33,7 @@ function InvoiceStatusSelect({ invoice, queryClient }) {
     try {
       await base44.entities.Invoice.update(invoice.id, { status: value });
       if (invoice.load_id) {
-        const statusMap = { draft: 'invoiced', priority: 'sent', sent: 'sent', partial: 'partial', paid: 'paid', overdue: 'overdue', canceled: 'canceled' };
+        const statusMap = { draft: 'invoiced', priority: 'priority', sent: 'sent', partial: 'partial', paid: 'paid', overdue: 'overdue', canceled: 'canceled' };
         await base44.entities.Load.update(invoice.load_id, { invoice_status: statusMap[value] || 'invoiced' });
         queryClient.invalidateQueries({ queryKey: ['loads'] });
       }

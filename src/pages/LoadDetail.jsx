@@ -203,7 +203,7 @@ export default function LoadDetail() {
         await logAudit({ action_type: 'update', entity_type: 'Load', entity_id: currentId, entity_label: form.internal_load_number });
         queryClient.invalidateQueries({ queryKey: ['load', currentId] });
         toast.success('Load saved');
-        if (isNew) navigate(createPageUrl(`LoadDetail?id=${currentId}`));
+        if (!loadId) navigate(createPageUrl(`LoadDetail?id=${currentId}`));
       }
     } catch (err) {
       toast.error('Save failed: ' + err.message);
@@ -381,11 +381,15 @@ export default function LoadDetail() {
               </Field>
               <Field label="Driver 2">
                 <Select value={form.driver_2_id || ''} onValueChange={(v) => {
+                  if (v === '__none__') { set('driver_2_id', null); set('driver_2_name', ''); return; }
                   const d = drivers.find(d => d.id === v);
                   set('driver_2_id', v); set('driver_2_name', d?.full_name || '');
                 }}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select driver (optional)" /></SelectTrigger>
-                  <SelectContent>{drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}</SelectContent>
+                  <SelectContent>
+                    <SelectItem value="__none__">— None —</SelectItem>
+                    {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}
+                  </SelectContent>
                 </Select>
               </Field>
               <Field label="Truck">

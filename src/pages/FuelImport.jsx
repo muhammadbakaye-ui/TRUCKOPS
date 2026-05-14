@@ -157,8 +157,8 @@ Return only the JSON with the transactions array.`,
        let exceptions = 0;
 
        // Fetch drivers and trucks once
-       const drivers = await base44.entities.Driver.list();
-       const trucks = await base44.entities.Truck.list();
+       const drivers = await base44.entities.Driver.list('full_name', 300);
+       const trucks = await base44.entities.Truck.list('unit_number', 300);
 
        // Normalize a unit number: lowercase, strip leading zeros and spaces
        const normalizeUnit = (s) => s ? s.toLowerCase().trim().replace(/^0+/, '') : '';
@@ -397,8 +397,8 @@ Return only the JSON with the transactions array.`,
     if (!selectedBatch) return;
     setProcessing(true);
     try {
-      const drivers = await base44.entities.Driver.list();
-      const trucks = await base44.entities.Truck.list();
+      const drivers = await base44.entities.Driver.list('full_name', 300);
+      const trucks = await base44.entities.Truck.list('unit_number', 300);
       const txList = await base44.entities.FuelTransaction.filter({ batch_id: selectedBatch }, '-transaction_date', 500);
 
       const normalizeUnit = (s) => s ? s.toLowerCase().trim().replace(/^0+/, '') : '';

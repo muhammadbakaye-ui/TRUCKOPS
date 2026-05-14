@@ -34,17 +34,17 @@ export default function Dashboard() {
 
   const { data: drivers = [] } = useQuery({
     queryKey: ['drivers-dash'],
-    queryFn: () => base44.entities.Driver.list(),
+    queryFn: () => base44.entities.Driver.list('full_name', 300),
   });
 
   const { data: trucks = [] } = useQuery({
     queryKey: ['trucks-dash'],
-    queryFn: () => base44.entities.Truck.list(),
+    queryFn: () => base44.entities.Truck.list('unit_number', 300),
   });
 
   const { data: companies = [] } = useQuery({
     queryKey: ['companies-dash'],
-    queryFn: () => base44.entities.Company.list(),
+    queryFn: () => base44.entities.Company.list('company_name', 500),
   });
 
   // Alias for chart and stats — use the smaller recent set for display
