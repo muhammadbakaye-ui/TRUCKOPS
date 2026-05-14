@@ -2,9 +2,14 @@ import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import LandingNav from '@/components/landing/LandingNav';
 import { useNavigate } from 'react-router-dom';
-import { Zap, BarChart3, Users, FileText, Fuel, TrendingUp, Clock, Shield, Smartphone } from 'lucide-react';
+import { Package, BarChart3, Users, FileText, Fuel, TrendingUp, Clock, Shield, Smartphone } from 'lucide-react';
 
 const features = [
+  {
+    icon: Package,
+    title: 'Advanced Load Management',
+    description: 'Create, assign, and track loads with multiple stops, customer details, and billing information. Organize loads by status, route, and driver assignment.'
+  },
   {
     icon: Users,
     title: 'Complete Driver Management',
