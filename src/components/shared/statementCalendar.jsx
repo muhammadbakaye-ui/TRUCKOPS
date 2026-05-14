@@ -1,101 +1,99 @@
-// 2026 Statement Period Calendar
-// Each week: Sunday start - Saturday end, with Tuesday due date
-export const STATEMENT_PERIODS_2026 = [
-  // February 2026
-  { start: '2026-02-01', end: '2026-02-07', due: '2026-02-10' },
-  { start: '2026-02-08', end: '2026-02-14', due: '2026-02-17' },
-  { start: '2026-02-15', end: '2026-02-21', due: '2026-02-24' },
-  { start: '2026-02-22', end: '2026-02-28', due: '2026-03-03' },
-  
-  // March 2026
-  { start: '2026-03-01', end: '2026-03-07', due: '2026-03-10' },
-  { start: '2026-03-08', end: '2026-03-14', due: '2026-03-17' },
-  { start: '2026-03-15', end: '2026-03-21', due: '2026-03-24' },
-  { start: '2026-03-22', end: '2026-03-28', due: '2026-03-31' },
-  { start: '2026-03-29', end: '2026-04-04', due: '2026-04-07' },
-  
-  // April 2026
-  { start: '2026-04-05', end: '2026-04-11', due: '2026-04-14' },
-  { start: '2026-04-12', end: '2026-04-18', due: '2026-04-21' },
-  { start: '2026-04-19', end: '2026-04-25', due: '2026-04-28' },
-  { start: '2026-04-26', end: '2026-05-02', due: '2026-05-05' },
-  
-  // May 2026
-  { start: '2026-05-03', end: '2026-05-09', due: '2026-05-12' },
-  { start: '2026-05-10', end: '2026-05-16', due: '2026-05-19' },
-  { start: '2026-05-17', end: '2026-05-23', due: '2026-05-26' },
-  { start: '2026-05-24', end: '2026-05-30', due: '2026-06-02' },
-  { start: '2026-05-31', end: '2026-06-06', due: '2026-06-09' },
-  
-  // June 2026
-  { start: '2026-06-07', end: '2026-06-13', due: '2026-06-16' },
-  { start: '2026-06-14', end: '2026-06-20', due: '2026-06-23' },
-  { start: '2026-06-21', end: '2026-06-27', due: '2026-06-30' },
-  { start: '2026-06-28', end: '2026-07-04', due: '2026-07-07' },
-  
-  // July 2026
-  { start: '2026-07-05', end: '2026-07-11', due: '2026-07-14' },
-  { start: '2026-07-12', end: '2026-07-18', due: '2026-07-21' },
-  { start: '2026-07-19', end: '2026-07-25', due: '2026-07-28' },
-  { start: '2026-07-26', end: '2026-08-01', due: '2026-08-04' },
-  
-  // August 2026
-  { start: '2026-08-02', end: '2026-08-08', due: '2026-08-11' },
-  { start: '2026-08-09', end: '2026-08-15', due: '2026-08-18' },
-  { start: '2026-08-16', end: '2026-08-22', due: '2026-08-25' },
-  { start: '2026-08-23', end: '2026-08-29', due: '2026-09-01' },
-  { start: '2026-08-30', end: '2026-09-05', due: '2026-09-08' },
-  
-  // September 2026
-  { start: '2026-09-06', end: '2026-09-12', due: '2026-09-15' },
-  { start: '2026-09-13', end: '2026-09-19', due: '2026-09-22' },
-  { start: '2026-09-20', end: '2026-09-26', due: '2026-09-29' },
-  { start: '2026-09-27', end: '2026-10-03', due: '2026-10-06' },
-  
-  // October 2026
-  { start: '2026-10-04', end: '2026-10-10', due: '2026-10-13' },
-  { start: '2026-10-11', end: '2026-10-17', due: '2026-10-20' },
-  { start: '2026-10-18', end: '2026-10-24', due: '2026-10-27' },
-  { start: '2026-10-25', end: '2026-10-31', due: '2026-11-03' },
-  
-  // November 2026
-  { start: '2026-11-01', end: '2026-11-07', due: '2026-11-10' },
-  { start: '2026-11-08', end: '2026-11-14', due: '2026-11-17' },
-  { start: '2026-11-15', end: '2026-11-21', due: '2026-11-24' },
-  { start: '2026-11-22', end: '2026-11-28', due: '2026-12-01' },
-  { start: '2026-11-29', end: '2026-12-05', due: '2026-12-08' },
-  
-  // December 2026
-  { start: '2026-12-06', end: '2026-12-12', due: '2026-12-15' },
-  { start: '2026-12-13', end: '2026-12-19', due: '2026-12-22' },
-  { start: '2026-12-20', end: '2026-12-26', due: '2026-12-29' },
-  { start: '2026-12-27', end: '2027-01-02', due: '2027-01-05' },
-];
+/**
+ * Statement Period Calendar — computed dynamically from date math.
+ *
+ * Rules:
+ *   - Periods run Sunday → Saturday
+ *   - Due date is the Tuesday after the period ends (9 days after Sunday start)
+ *   - No hardcoded list — works for any year, any date
+ */
+
+import { format, addDays, startOfWeek, parseISO } from 'date-fns';
 
 /**
- * Find the statement period for a given date
- * @param {string|Date} date - Date to look up
- * @returns {object|null} Period object with start, end, due dates
+ * Given any date, return the Sunday that starts its statement week.
+ */
+function getWeekSunday(date) {
+  // startOfWeek with weekStartsOn: 0 gives Sunday
+  return startOfWeek(typeof date === 'string' ? parseISO(date) : date, { weekStartsOn: 0 });
+}
+
+/**
+ * Build a period object from a Sunday start date.
+ */
+function buildPeriod(sunday) {
+  const start = format(sunday, 'yyyy-MM-dd');
+  const end = format(addDays(sunday, 6), 'yyyy-MM-dd');   // Saturday
+  const due = format(addDays(sunday, 9), 'yyyy-MM-dd');   // Tuesday of following week
+  return { start, end, due };
+}
+
+/**
+ * Find the statement period for any given date.
+ * @param {string|Date} date
+ * @returns {{ start: string, end: string, due: string }}
  */
 export function getPeriodForDate(date) {
-  const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0];
-  return STATEMENT_PERIODS_2026.find(p => dateStr >= p.start && dateStr <= p.end) || null;
+  const sunday = getWeekSunday(date);
+  return buildPeriod(sunday);
 }
 
 /**
- * Find period by due date (Tuesday)
- * @param {string|Date} dueDate - The Tuesday due date
- * @returns {object|null} Period object with start, end, due dates
+ * Find period by its Tuesday due date.
+ * @param {string} dueDate  — 'yyyy-MM-dd'
+ * @returns {{ start: string, end: string, due: string } | null}
  */
 export function getPeriodByDueDate(dueDate) {
-  const dateStr = typeof dueDate === 'string' ? dueDate : dueDate.toISOString().split('T')[0];
-  return STATEMENT_PERIODS_2026.find(p => p.due === dateStr) || null;
+  const due = typeof dueDate === 'string' ? parseISO(dueDate) : dueDate;
+  // Due Tuesday = Sunday start + 9 days → Sunday start = due - 9 days
+  const sunday = addDays(due, -9);
+  const period = buildPeriod(sunday);
+  // Validate: the computed due must match what was passed in
+  if (period.due !== format(due, 'yyyy-MM-dd')) return null;
+  return period;
 }
 
 /**
- * Get all Tuesday due dates for calendar highlighting
- * @returns {string[]} Array of Tuesday due dates in YYYY-MM-DD format
+ * Generate all Tuesday due dates for a given year (for calendar highlighting).
+ * @param {number} year — defaults to current year ± 1
+ * @returns {string[]} Array of 'yyyy-MM-dd' due date strings
  */
-export function getAllDueDates() {
-  return STATEMENT_PERIODS_2026.map(p => p.due);
+export function getAllDueDates(year) {
+  const yr = year || new Date().getFullYear();
+  const dates = [];
+  // Start from the first Sunday of the year (or Dec 27 of prior year)
+  let sunday = getWeekSunday(new Date(yr, 0, 1));
+  const end = new Date(yr + 1, 0, 15); // a bit into next year to catch wrap-around
+  while (sunday <= end) {
+    const period = buildPeriod(sunday);
+    // Include due dates that fall in the target year or adjacent
+    if (period.due.startsWith(String(yr)) || period.due.startsWith(String(yr + 1))) {
+      dates.push(period.due);
+    }
+    sunday = addDays(sunday, 7);
+  }
+  return dates;
 }
+
+/**
+ * Get N weeks of periods centered around today (for dropdowns).
+ * @param {number} weeksBack  — how many past weeks to include
+ * @param {number} weeksAhead — how many future weeks to include
+ * @returns {Array<{ start, end, due }>}
+ */
+export function getRecentPeriods(weeksBack = 26, weeksAhead = 8) {
+  const today = new Date();
+  const currentSunday = getWeekSunday(today);
+  const periods = [];
+  for (let i = -weeksBack; i <= weeksAhead; i++) {
+    const sunday = addDays(currentSunday, i * 7);
+    periods.push(buildPeriod(sunday));
+  }
+  return periods;
+}
+
+/**
+ * Legacy export — replaced by dynamic calculation.
+ * Kept so any code that destructures STATEMENT_PERIODS_2026 doesn't crash.
+ * Returns recent periods dynamically instead of a hardcoded list.
+ */
+export const STATEMENT_PERIODS_2026 = getRecentPeriods(52, 26);

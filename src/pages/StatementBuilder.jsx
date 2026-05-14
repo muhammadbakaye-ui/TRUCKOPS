@@ -480,7 +480,10 @@ export default function StatementBuilder() {
                       mode="single"
                       selected={form.statement_date ? parse(form.statement_date, 'yyyy-MM-dd', new Date()) : undefined}
                       onSelect={handleDateSelect}
-                      modifiers={{ validTuesday: (date) => getAllDueDates().includes(format(date, 'yyyy-MM-dd')) }}
+                      modifiers={{ validTuesday: (date) => {
+        const yr = date.getFullYear();
+        return getAllDueDates(yr).includes(format(date, 'yyyy-MM-dd'));
+      } }}
                       modifiersClassNames={{ validTuesday: 'bg-primary/10 font-bold text-primary' }}
                     />
                   </PopoverContent>
