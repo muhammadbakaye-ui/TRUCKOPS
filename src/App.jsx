@@ -49,14 +49,13 @@ const AuthenticatedApp = () => {
     // auth_required and other errors: fall through and let custom LoginScreen handle it
   }
 
-  // Check if running in Electron and user is authenticated
+  // Check if running in Electron
   const isElectron = window.electron !== undefined || navigator.userAgent.includes('Electron');
-  const isAuthenticatedAdmin = session && session.role !== 'driver';
 
   // Render the main app
   return (
     <Routes>
-      <Route path="/" element={isElectron && isAuthenticatedAdmin ? <Navigate to="/Dashboard" /> : <Landing />} />
+      <Route path="/" element={isElectron ? <Navigate to="/Dashboard" /> : <Landing />} />
       <Route path="/features" element={<LandingFeatures />} />
       <Route path="/pricing" element={<LandingPricing />} />
       <Route path="/about" element={<LandingAbout />} />
