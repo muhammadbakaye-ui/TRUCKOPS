@@ -1,0 +1,72 @@
+{
+  "name": "Company",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant/account identifier for multi-tenancy"
+    },
+    "company_name": {
+      "type": "string",
+      "description": "Company or broker name"
+    },
+    "company_type": {
+      "type": "string",
+      "enum": [
+        "broker",
+        "customer",
+        "carrier",
+        "other"
+      ],
+      "default": "customer"
+    },
+    "contact_name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "address_1": {
+      "type": "string"
+    },
+    "address_2": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "zip": {
+      "type": "string"
+    },
+    "payment_terms": {
+      "type": "string",
+      "enum": [
+        "net_15",
+        "net_30",
+        "net_45",
+        "net_60",
+        "due_on_receipt",
+        "other"
+      ],
+      "default": "net_30"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "company_name",
+    "company_type",
+    "tenant_id"
+  ]
+}

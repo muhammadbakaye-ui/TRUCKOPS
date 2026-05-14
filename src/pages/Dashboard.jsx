@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useQuery } from '@tanstack/react-query';
+import { useSession } from '@/components/shared/AppSession';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,35 +17,42 @@ import { format } from 'date-fns';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { session } = useSession();
+  const tenantId = session?.tenant_id;
 
-  // Load only what the dashboard actually renders — not full datasets
+  // Load only what the dashboard actually renders — filtered by tenant
   const { data: recentLoads = [] } = useQuery({
-    queryKey: ['loads-dash-recent'],
-    queryFn: () => base44.entities.Load.list('-delivery_date', 50),
+    queryKey: ['loads-dash-recent', tenantId],
+    queryFn: () => tenantId ? base44.entities.Load.filter({ tenant_id: tenantId }, '-delivery_date', 50) : Promise.resolve([]),
+    enabled: !!tenantId,
   });
 
   // Single query for all invoices — used for charts and unpaid count
   const { data: allInvoices = [] } = useQuery({
-    queryKey: ['invoices-dash-all'],
-    queryFn: () => base44.entities.Invoice.list('-created_date', 500),
+    queryKey: ['invoices-dash-all', tenantId],
+    queryFn: () => tenantId ? base44.entities.Invoice.filter({ tenant_id: tenantId }, '-created_date', 500) : Promise.resolve([]),
+    enabled: !!tenantId,
   });
 
   // Derive unpaid from the same dataset — no extra network calls
   const unpaidInvoicesData = allInvoices.filter(i => ['draft', 'sent', 'overdue', 'partial'].includes(i.status));
 
   const { data: drivers = [] } = useQuery({
-    queryKey: ['drivers-dash'],
-    queryFn: () => base44.entities.Driver.list('full_name', 300),
+    queryKey: ['drivers-dash', tenantId],
+    queryFn: () => tenantId ? base44.entities.Driver.filter({ tenant_id: tenantId }, 'full_name', 300) : Promise.resolve([]),
+    enabled: !!tenantId,
   });
 
   const { data: trucks = [] } = useQuery({
-    queryKey: ['trucks-dash'],
-    queryFn: () => base44.entities.Truck.list('unit_number', 300),
+    queryKey: ['trucks-dash', tenantId],
+    queryFn: () => tenantId ? base44.entities.Truck.filter({ tenant_id: tenantId }, 'unit_number', 300) : Promise.resolve([]),
+    enabled: !!tenantId,
   });
 
   const { data: companies = [] } = useQuery({
-    queryKey: ['companies-dash'],
-    queryFn: () => base44.entities.Company.list('company_name', 500),
+    queryKey: ['companies-dash', tenantId],
+    queryFn: () => tenantId ? base44.entities.Company.filter({ tenant_id: tenantId }, 'company_name', 500) : Promise.resolve([]),
+    enabled: !!tenantId,
   });
 
   // Alias for chart and stats — use the smaller recent set for display
@@ -52,18 +60,21 @@ export default function Dashboard() {
   const invoices = allInvoices;
 
   const { data: fuelBatches = [] } = useQuery({
-    queryKey: ['fuel-dash'],
-    queryFn: () => base44.entities.FuelBatch.list('-created_date', 10),
+    queryKey: ['fuel-dash', tenantId],
+    queryFn: () => tenantId ? base44.entities.FuelBatch.filter({ tenant_id: tenantId }, '-created_date', 10) : Promise.resolve([]),
+    enabled: !!tenantId,
   });
 
   const { data: statements = [] } = useQuery({
-    queryKey: ['statements-dash'],
-    queryFn: () => base44.entities.DriverStatement.list('-created_date', 10),
+    queryKey: ['statements-dash', tenantId],
+    queryFn: () => tenantId ? base44.entities.DriverStatement.filter({ tenant_id: tenantId }, '-created_date', 10) : Promise.resolve([]),
+    enabled: !!tenantId,
   });
 
   const { data: auditLogs = [] } = useQuery({
-    queryKey: ['audit-dash'],
-    queryFn: () => base44.entities.AuditLog.list('-created_date', 10),
+    queryKey: ['audit-dash', tenantId],
+    queryFn: () => tenantId ? base44.entities.AuditLog.filter({ tenant_id: tenantId }, '-created_date', 10) : Promise.resolve([]),
+    enabled: !!tenantId,
   });
 
   const unpaidInvoices = unpaidInvoicesData;

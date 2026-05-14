@@ -2,6 +2,10 @@
   "name": "Driver",
   "type": "object",
   "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant/account identifier for multi-tenancy"
+    },
     "full_name": {
       "type": "string"
     },
@@ -83,6 +87,7 @@
     }
   },
   "required": [
-    "full_name"
+    "full_name",
+    "tenant_id"
   ]
 }

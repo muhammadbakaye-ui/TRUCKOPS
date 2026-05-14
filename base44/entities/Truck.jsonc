@@ -1,0 +1,48 @@
+{
+  "name": "Truck",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant/account identifier for multi-tenancy"
+    },
+    "unit_number": {
+      "type": "string"
+    },
+    "plate_number": {
+      "type": "string"
+    },
+    "vin": {
+      "type": "string"
+    },
+    "make": {
+      "type": "string"
+    },
+    "model": {
+      "type": "string"
+    },
+    "year": {
+      "type": "number"
+    },
+    "assigned_driver_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "in_shop",
+        "out_of_service",
+        "sold"
+      ],
+      "default": "active"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "unit_number",
+    "tenant_id"
+  ]
+}
