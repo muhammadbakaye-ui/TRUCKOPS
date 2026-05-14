@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,13 +7,17 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Save, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useSession } from '@/components/shared/AppSession';
 
 export default function AccountCustomization() {
+  const { session } = useSession();
+  const adminEmail = session?.admin_email || '';
+
   const [accountForm, setAccountForm] = useState({
     first_name: '',
     last_name: '',
     phone: '',
-    email: '',
+    email: adminEmail,
   });
   const [passwordForm, setPasswordForm] = useState({
     current_password: '',
@@ -25,81 +29,46 @@ export default function AccountCustomization() {
 
   const queryClient = useQueryClient();
 
-  const { data: currentUser } = useQuery({
-    queryKey: ['current-admin-user'],
-    queryFn: async () => {
-      const user = await base44.auth.me();
-      return user;
-    },
-  });
-
   useEffect(() => {
-    if (currentUser) {
-      // Split full_name from auth into first and last name
-      const [firstName = '', lastName = ''] = (currentUser.full_name || '').split(' ');
-      
-      // Fetch the admin record to get phone and email
-       const fetchAdminData = async () => {
-         try {
-           const admins = await base44.entities.Admin.filter({ email: currentUser.email });
-           if (admins.length > 0) {
-             const admin = admins[0];
-             setAccountForm({
-               first_name: admin.first_name || firstName || '',
-               last_name: admin.last_name || lastName || '',
-               phone: admin.phone || '',
-               email: admin.email || currentUser.email || '',
-             });
-           } else {
-             // If no admin record exists, use auth data
-             setAccountForm({
-               first_name: firstName,
-               last_name: lastName,
-               phone: '',
-               email: currentUser.email || '',
-             });
-           }
-         } catch (error) {
-           console.error('Error fetching admin data:', error);
-           // Fallback to auth data
-           setAccountForm({
-             first_name: firstName,
-             last_name: lastName,
-             phone: '',
-             email: currentUser.email || '',
-           });
-         }
-       };
-       fetchAdminData();
-    }
-  }, [currentUser]);
+    if (!adminEmail) return;
+    const fetchAdminData = async () => {
+      try {
+        const admins = await base44.entities.Admin.filter({ email: adminEmail });
+        if (admins.length > 0) {
+          const admin = admins[0];
+          setAccountForm({
+            first_name: admin.first_name || '',
+            last_name: admin.last_name || '',
+            phone: admin.phone || '',
+            email: admin.email || adminEmail,
+          });
+        } else {
+          setAccountForm(prev => ({ ...prev, email: adminEmail }));
+        }
+      } catch (err) {
+        console.error('Error fetching admin data:', err);
+        setAccountForm(prev => ({ ...prev, email: adminEmail }));
+      }
+    };
+    fetchAdminData();
+  }, [adminEmail]);
 
   const updateAccountMutation = useMutation({
     mutationFn: async (data) => {
-      const fullName = `${data.first_name} ${data.last_name}`.trim();
-      const updateData = {
-        full_name: fullName,
-      };
-      if (data.phone) updateData.phone = data.phone;
-      await base44.auth.updateMe(updateData);
-      
-      // Update the Admin entity
-       const admins = await base44.entities.Admin.filter({ email: currentUser?.email });
-       if (admins.length > 0) {
-         return base44.entities.Admin.update(admins[0].id, {
-           first_name: data.first_name,
-           last_name: data.last_name,
-           email: data.email,
-           phone: data.phone || '',
-         });
-       }
+      const admins = await base44.entities.Admin.filter({ email: adminEmail });
+      if (admins.length > 0) {
+        return base44.entities.Admin.update(admins[0].id, {
+          first_name: data.first_name,
+          last_name: data.last_name,
+          phone: data.phone || '',
+        });
+      }
+      throw new Error('Admin account not found');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['current-admin-user'] });
-      queryClient.invalidateQueries({ queryKey: ['admins'] });
       toast.success('Account updated successfully');
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Failed to update account');
     },
   });
@@ -107,9 +76,13 @@ export default function AccountCustomization() {
   const updatePasswordMutation = useMutation({
     mutationFn: async (data) => {
       const response = await base44.functions.invoke('updateAdminPassword', {
+        admin_email: accountForm.email,
         current_password: data.current_password,
         new_password: data.new_password,
       });
+      if (!response.data?.success) {
+        throw new Error(response.data?.error || 'Failed to change password');
+      }
       return response.data;
     },
     onSuccess: () => {
@@ -119,8 +92,8 @@ export default function AccountCustomization() {
       toast.success('Password changed successfully');
     },
     onError: (error) => {
-      setPasswordError(error.response?.data?.error || 'Failed to change password');
-      toast.error('Failed to change password');
+      setPasswordError(error.message || 'Failed to change password');
+      toast.error(error.message || 'Failed to change password');
     },
   });
 
@@ -201,10 +174,12 @@ export default function AccountCustomization() {
               <Input
                 type="email"
                 value={accountForm.email}
-                onChange={(e) => handleAccountChange('email', e.target.value)}
-                className="h-8 text-xs mt-1"
-                placeholder="your.email@company.com"
+                readOnly
+                disabled
+                className="h-8 text-xs mt-1 opacity-60 cursor-not-allowed"
+                title="Email cannot be changed. Contact support if you need to update your login email."
               />
+              <p className="text-xs text-muted-foreground mt-1">Email cannot be changed here. Contact support to update.</p>
             </div>
           </div>
         </CardContent>

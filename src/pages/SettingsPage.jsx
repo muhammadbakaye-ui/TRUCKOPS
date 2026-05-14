@@ -4,10 +4,10 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Loader2, Save, Trash2, LogOut } from 'lucide-react';
+import { useSession } from '../components/shared/AppSession';
 import BillingTab from '../components/settings/BillingTab';
 import BroadcastPanel from '../components/settings/BroadcastPanel';
 import PageHeader from '../components/shared/PageHeader';
@@ -17,16 +17,12 @@ import GeneralSettings from '../components/settings/GeneralSettings';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
+  const { logout, session } = useSession();
   const [form, setForm] = useState({
     company_name: '', address_1: '', address_2: '', city: '', state: '', zip: '',
     phone: '', email: '', mc_number: '', dot_number: '', next_load_number: '1001',
   });
   const [activeTab, setActiveTab] = useState('general');
-
-  const { data: currentUser } = useQuery({
-    queryKey: ['current-user'],
-    queryFn: () => base44.auth.me(),
-  });
 
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ['settings-company'],
@@ -225,7 +221,7 @@ export default function SettingsPage() {
           </>
         )}
 
-        {activeTab === 'security' && currentUser && <LoginHistoryTab userEmail={currentUser.email} />}
+        {activeTab === 'security' && <LoginHistoryTab userEmail={session?.admin_email || ''} />}
         {activeTab === 'broadcast' && <BroadcastPanel />}
         {activeTab === 'billing' && <BillingTab />}
 
@@ -257,12 +253,13 @@ export default function SettingsPage() {
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction
-                        className="bg-destructive hover:bg-destructive/90"
-                        onClick={() => {
-                          base44.auth.logout();
-                        }}
+                      className="bg-destructive hover:bg-destructive/90"
+                      onClick={() => {
+                        logout();
+                        window.location.href = '/';
+                      }}
                       >
-                        Sign Out All Devices
+                      Sign Out All Devices
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -289,13 +286,10 @@ export default function SettingsPage() {
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction
                       className="bg-destructive hover:bg-destructive/90"
-                      onClick={async () => {
-                        try {
-                          await base44.auth.logout();
-                          toast.success('Account deleted');
-                        } catch {
-                          toast.error('Failed to delete account');
-                        }
+                      onClick={() => {
+                        // Clears local session — user must contact support for full data deletion
+                        logout();
+                        window.location.href = '/';
                       }}
                     >
                       Delete Account

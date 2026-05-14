@@ -68,11 +68,18 @@ Deno.serve(async (req) => {
           }
         }
       }
+      // Get company_name from subscription record (webhook-created accounts store it there)
+      let companyName = admin.company_name || '';
+      if (!companyName && admin.tenant_id) {
+        const subs = await base44.asServiceRole.entities.Subscription.filter({ tenant_id: admin.tenant_id });
+        if (subs.length) companyName = subs[0].company_name || '';
+      }
+
       return Response.json({
         success: true,
         admin_id: admin.id,
         admin_name: `${admin.first_name} ${admin.last_name}`,
-        company_name: admin.company_name || '',
+        company_name: companyName,
         tenant_id: admin.tenant_id || null,
         subscription_status: subscriptionStatus,
         plan,
@@ -214,10 +221,23 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'Password updated' });
     }
 
-    // ── LIST ADMINS ──
+    // ── LIST ADMINS (internal use only — no sensitive data exposed) ──
     if (action === 'list_admins') {
+      // Only return non-sensitive fields
       const admins = await base44.asServiceRole.entities.Admin.list('-created_date', 50);
-      return Response.json({ success: true, admins });
+      const safeAdmins = admins.map(a => ({
+        id: a.id,
+        first_name: a.first_name,
+        last_name: a.last_name,
+        email: a.email,
+        phone: a.phone,
+        active: a.active,
+        company_name: a.company_name,
+        tenant_id: a.tenant_id,
+        email_verified: a.email_verified,
+        created_date: a.created_date,
+      }));
+      return Response.json({ success: true, admins: safeAdmins });
     }
 
     return Response.json({ success: false, error: 'Invalid action' }, { status: 400 });

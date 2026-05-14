@@ -3,6 +3,12 @@ import { CheckCircle, Mail, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function SubscriptionSuccess() {
+  // Detect if this was a one-time (lifetime) purchase vs subscription
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get('session_id') || '';
+  // We can't know for sure without fetching, but lifetime sessions don't have trial language
+  // We'll use a neutral message that works for both
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white flex items-center justify-center p-4">
       <div className="max-w-md w-full text-center">
@@ -38,7 +44,7 @@ export default function SubscriptionSuccess() {
         </Button>
 
         <p className="text-xs text-slate-600 mt-4">
-          Your 3-day free trial starts now. No charge until your trial ends.
+          Check your inbox for your login credentials — they were sent to the email you provided at checkout.
         </p>
       </div>
     </div>

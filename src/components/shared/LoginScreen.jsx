@@ -26,7 +26,6 @@ export default function LoginScreen() {
         onBack={null}
         onSuccess={(adminId, adminName, extra = {}) => {
           login({ role: 'admin', admin_id: adminId, admin_name: adminName, ...extra });
-          // Layout (AppShell) will handle the redirect to /pricing if no active subscription
         }}
         onShowTour={() => setShowSlideshow(true)}
       />

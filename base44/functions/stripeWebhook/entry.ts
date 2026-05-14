@@ -52,6 +52,13 @@ Deno.serve(async (req) => {
         stripeSub = await stripe.subscriptions.retrieve(session.subscription);
       }
 
+      // Idempotency guard: check if account already exists for this email
+      const existingAdmins = await base44.asServiceRole.entities.Admin.filter({ email: admin_email.toLowerCase().trim() });
+      if (existingAdmins.length > 0) {
+        console.log(`Account already exists for ${admin_email}, skipping creation (idempotent)`);
+        return Response.json({ received: true });
+      }
+
       // Create tenant record
       const tenantId = generateTenantId();
       await base44.asServiceRole.entities.Subscription.create({
