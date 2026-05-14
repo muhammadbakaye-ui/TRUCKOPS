@@ -55,7 +55,7 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      <Route path="/" element={isElectron ? (session ? <Navigate to="/Dashboard" /> : null) : <Landing />} />
+      <Route path="/" element={isElectron ? (session ? <Navigate to="/Dashboard" /> : <></>) : <Landing />} />
       <Route path="/features" element={<LandingFeatures />} />
       <Route path="/pricing" element={<LandingPricing />} />
       <Route path="/about" element={<LandingAbout />} />
