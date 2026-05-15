@@ -294,7 +294,8 @@ export default function Loads() {
       const val = bulkEdits[id];
       if (bulkEditMode === 'amount') {
         const num = parseFloat(val);
-        return isNaN(num) ? null : base44.entities.Load.update(id, { invoice_amount: num });
+        if (isNaN(num) || num < 0) return Promise.resolve();
+        return base44.entities.Load.update(id, { invoice_amount: num });
       }
       if (bulkEditMode === 'driver') {
         const driver = drivers.find(d => d.id === val);

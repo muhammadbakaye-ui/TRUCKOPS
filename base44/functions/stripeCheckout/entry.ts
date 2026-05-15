@@ -19,14 +19,15 @@ Deno.serve(async (req) => {
        if (!plan || !PLANS[plan]) {
          return Response.json({ error: 'Invalid plan' }, { status: 400 });
        }
-       if (!admin_email || !company_name) {
+       const normalizedEmail = admin_email?.toLowerCase().trim();
+       if (!normalizedEmail || !company_name) {
          return Response.json({ error: 'Email and company name are required' }, { status: 400 });
        }
 
        const customerData = {
          metadata: { plan },
        };
-       if (admin_email) customerData.email = admin_email;
+       if (normalizedEmail) customerData.email = normalizedEmail;
        if (company_name) {
          customerData.name = company_name;
          customerData.metadata.company_name = company_name;
@@ -50,7 +51,7 @@ Deno.serve(async (req) => {
           base44_app_id: Deno.env.get('BASE44_APP_ID'),
           plan,
           company_name,
-          admin_email,
+          admin_email: normalizedEmail,
         },
       };
 
