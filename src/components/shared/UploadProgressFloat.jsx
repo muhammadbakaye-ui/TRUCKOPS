@@ -39,6 +39,12 @@ export default function UploadProgressFloat() {
       }
       prevStatusRef.current[job.id] = job.status;
     });
+    // Cleanup refs for dismissed jobs
+    Object.keys(prevStatusRef.current).forEach(jobId => {
+      if (!jobs.find(j => j.id === parseInt(jobId))) {
+        delete prevStatusRef.current[jobId];
+      }
+    });
   }, [jobs]);
   const location = useLocation();
   const navigate = useNavigate();

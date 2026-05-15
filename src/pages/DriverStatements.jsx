@@ -46,8 +46,9 @@ export default function DriverStatements() {
   useEffect(() => { localStorage.setItem('statements_status', statusFilter); }, [statusFilter]);
 
   const { data: statements = [] } = useQuery({
-    queryKey: ['statements'],
-    queryFn: () => base44.entities.DriverStatement.list('-statement_date', 300),
+    queryKey: ['statements', session?.tenant_id],
+    queryFn: () => session?.tenant_id ? base44.entities.DriverStatement.filter({ tenant_id: session.tenant_id }, '-statement_date', 300) : Promise.resolve([]),
+    enabled: !!session?.tenant_id,
   });
 
   const deleteMutation = useMutation({
