@@ -40,21 +40,30 @@ function checkRateLimit(ip) {
   const now = Date.now();
   const key = ip || 'unknown';
   const entry = loginAttempts.get(key) || { count: 0, first: now };
-  // Reset window after 15 minutes
   if (now - entry.first > 15 * 60 * 1000) {
     loginAttempts.set(key, { count: 1, first: now });
     return true;
   }
-  if (entry.count >= 20) return false; // 20 attempts per 15 min
+  if (entry.count >= 20) return false;
   loginAttempts.set(key, { ...entry, count: entry.count + 1 });
   return true;
+}
+
+// Verify a session token server-side. Returns the admin record or null.
+async function verifySessionToken(base44, email, session_token) {
+  if (!email || !session_token) return null;
+  const admins = await base44.asServiceRole.entities.Admin.filter({ email: email.toLowerCase().trim() });
+  const admin = admins.find(a => a.active && a.session_token === session_token);
+  if (!admin) return null;
+  if (admin.session_token_expires && new Date() > new Date(admin.session_token_expires)) return null;
+  return admin;
 }
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
-    const { action, email, password, password_hash, first_name, last_name, company_name, token, new_password, new_password_hash, session_token } = body;
+    const { action, email, password, password_hash, first_name, last_name, company_name, token, new_password, new_password_hash, session_token, current_password, current_password_hash } = body;
     const clientIp = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown';
 
     // ── LOGIN ──
@@ -83,13 +92,11 @@ Deno.serve(async (req) => {
         return Response.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
       }
 
-      // SECURITY: Every account MUST have a tenant_id
       if (!admin.tenant_id) {
         console.error(`Login blocked: admin ${admin.email} has no tenant_id`);
         return Response.json({ success: false, message: 'Account setup incomplete. Please contact support.' }, { status: 403 });
       }
 
-      // Lookup subscription
       const subs = await base44.asServiceRole.entities.Subscription.filter({ tenant_id: admin.tenant_id });
       if (!subs.length) {
         console.error(`Login blocked: no subscription for tenant ${admin.tenant_id}`);
@@ -104,12 +111,12 @@ Deno.serve(async (req) => {
         return Response.json({ success: false, message: 'Your subscription is inactive. Please visit our pricing page to reactivate your plan.', code: 'subscription_inactive' }, { status: 403 });
       }
 
-      // Issue a secure session token stored server-side
+      // Issue a secure session token stored server-side on a dedicated field
       const newSessionToken = generateToken();
-      const sessionExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(); // 30 days
+      const sessionExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
       await base44.asServiceRole.entities.Admin.update(admin.id, {
-        reset_token: newSessionToken, // reuse reset_token field as session token (rename conceptually)
-        reset_token_expires: sessionExpires,
+        session_token: newSessionToken,
+        session_token_expires: sessionExpires,
       });
 
       return Response.json({
@@ -125,17 +132,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── VALIDATE SESSION (called on app load to verify session is still valid) ──
+    // ── VALIDATE SESSION ──
     if (action === 'validate_session') {
       if (!session_token || !email) {
         return Response.json({ success: false, message: 'Invalid session' }, { status: 401 });
       }
       const admins = await base44.asServiceRole.entities.Admin.filter({ email: email.toLowerCase().trim() });
-      const admin = admins.find(a => a.active && a.reset_token === session_token);
+      const admin = admins.find(a => a.active && a.session_token === session_token);
       if (!admin) {
         return Response.json({ success: false, message: 'Session expired or invalid' }, { status: 401 });
       }
-      if (admin.reset_token_expires && new Date() > new Date(admin.reset_token_expires)) {
+      if (admin.session_token_expires && new Date() > new Date(admin.session_token_expires)) {
         return Response.json({ success: false, message: 'Session expired' }, { status: 401 });
       }
       if (!admin.tenant_id) {
@@ -164,9 +171,9 @@ Deno.serve(async (req) => {
     if (action === 'logout') {
       if (session_token && email) {
         const admins = await base44.asServiceRole.entities.Admin.filter({ email: email.toLowerCase().trim() });
-        const admin = admins.find(a => a.reset_token === session_token);
+        const admin = admins.find(a => a.session_token === session_token);
         if (admin) {
-          await base44.asServiceRole.entities.Admin.update(admin.id, { reset_token: '', reset_token_expires: null });
+          await base44.asServiceRole.entities.Admin.update(admin.id, { session_token: '', session_token_expires: null });
         }
       }
       return Response.json({ success: true });
@@ -180,12 +187,10 @@ Deno.serve(async (req) => {
 
       const trimmedEmail = email.toLowerCase().trim();
 
-      // Basic email format validation
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
         return Response.json({ success: false, message: 'Invalid email address' }, { status: 400 });
       }
 
-      // Password strength
       const pw = password || '';
       if (!password_hash && pw.length < 8) {
         return Response.json({ success: false, message: 'Password must be at least 8 characters' }, { status: 400 });
@@ -206,7 +211,6 @@ Deno.serve(async (req) => {
         if (existing[0].email_verified) {
           return Response.json({ success: false, message: 'An account with this email already exists' }, { status: 400 });
         }
-        // Delete unverified duplicate so user can re-register
         try {
           await base44.asServiceRole.entities.Admin.delete(existing[0].id);
         } catch (delErr) {
@@ -214,7 +218,6 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Create the admin
       const newAdmin = await base44.asServiceRole.entities.Admin.create({
         first_name: first_name.trim(),
         last_name: last_name.trim(),
@@ -222,11 +225,10 @@ Deno.serve(async (req) => {
         password_hash: passwordHash,
         company_name: company_name.trim(),
         active: true,
-        email_verified: true, // auto-verify for now
+        email_verified: true,
         verification_token: '',
       });
 
-      // Create tenant_id and Subscription with 14-day trial
       const tenantIdValue = `tenant_${newAdmin.id.substring(0, 8)}`;
       const trialEnds = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -239,15 +241,13 @@ Deno.serve(async (req) => {
         trial_ends_at: trialEnds,
       });
 
-      // Stamp tenant_id on the admin record
-      await base44.asServiceRole.entities.Admin.update(newAdmin.id, { tenant_id: tenantIdValue });
-
-      // Issue session token immediately
+      // Issue session token immediately + stamp tenant_id
       const newSessionToken = generateToken();
       const sessionExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
       await base44.asServiceRole.entities.Admin.update(newAdmin.id, {
-        reset_token: newSessionToken,
-        reset_token_expires: sessionExpires,
+        tenant_id: tenantIdValue,
+        session_token: newSessionToken,
+        session_token_expires: sessionExpires,
       });
 
       console.log(`New account created: ${trimmedEmail} → tenant ${tenantIdValue}`);
@@ -313,9 +313,15 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'If an account with that email exists, you will receive a password reset link shortly.' });
     }
 
-    // ── RESET PASSWORD WITH TOKEN ──
+    // ── RESET PASSWORD WITH TOKEN (from email link) ──
     if (action === 'reset_password_token') {
-      if (!token || (!new_password && !new_password_hash)) return Response.json({ success: false, message: 'Token and new password are required' }, { status: 400 });
+      if (!token || (!new_password && !new_password_hash)) {
+        return Response.json({ success: false, message: 'Token and new password are required' }, { status: 400 });
+      }
+      const pw = new_password || '';
+      if (!new_password_hash && pw.length < 8) {
+        return Response.json({ success: false, message: 'Password must be at least 8 characters' }, { status: 400 });
+      }
       const matches = await base44.asServiceRole.entities.Admin.filter({ reset_token: token });
       const admin = matches[0] || null;
       if (!admin) return Response.json({ success: false, message: 'Invalid or expired reset link.' }, { status: 400 });
@@ -323,30 +329,56 @@ Deno.serve(async (req) => {
         return Response.json({ success: false, message: 'This reset link has expired. Please request a new one.' }, { status: 400 });
       }
       const newHash = new_password_hash ? new_password_hash : await hashPassword(new_password);
-      await base44.asServiceRole.entities.Admin.update(admin.id, { password_hash: newHash, reset_token: '', reset_token_expires: null });
+      // Clear the reset token AND invalidate all active sessions (security best practice)
+      await base44.asServiceRole.entities.Admin.update(admin.id, {
+        password_hash: newHash,
+        reset_token: '',
+        reset_token_expires: null,
+        session_token: '',
+        session_token_expires: null,
+      });
       return Response.json({ success: true, message: 'Password updated successfully. You can now log in.' });
     }
 
-    // ── RESET PASSWORD (admin tool — requires valid session) ──
-    if (action === 'reset_password') {
-      if (!email || (!password && !password_hash)) {
-        return Response.json({ success: false, message: 'Email and new password required' }, { status: 400 });
+    // ── CHANGE PASSWORD (requires valid session — authenticated user changing their own password) ──
+    if (action === 'change_password') {
+      if (!email || !session_token) {
+        return Response.json({ success: false, message: 'Authentication required' }, { status: 401 });
       }
-      const [admins, newHash] = await Promise.all([
-        base44.asServiceRole.entities.Admin.filter({ email: email.toLowerCase().trim() }),
-        password_hash ? Promise.resolve(password_hash) : hashPassword(password),
-      ]);
-      if (!admins.length) return Response.json({ success: false, message: 'Admin not found' }, { status: 404 });
-      await base44.asServiceRole.entities.Admin.update(admins[0].id, { password_hash: newHash });
-      return Response.json({ success: true, message: 'Password updated' });
+      if (!current_password && !current_password_hash) {
+        return Response.json({ success: false, message: 'Current password is required' }, { status: 400 });
+      }
+      if (!new_password && !new_password_hash) {
+        return Response.json({ success: false, message: 'New password is required' }, { status: 400 });
+      }
+      const pw = new_password || '';
+      if (!new_password_hash && pw.length < 8) {
+        return Response.json({ success: false, message: 'New password must be at least 8 characters' }, { status: 400 });
+      }
+
+      // Verify session first
+      const admin = await verifySessionToken(base44, email, session_token);
+      if (!admin) {
+        return Response.json({ success: false, message: 'Session expired. Please log in again.' }, { status: 401 });
+      }
+
+      // Verify current password
+      const currentHash = current_password_hash ? current_password_hash : await hashPassword(current_password);
+      if (currentHash !== admin.password_hash) {
+        return Response.json({ success: false, message: 'Current password is incorrect' }, { status: 401 });
+      }
+
+      const newHash = new_password_hash ? new_password_hash : await hashPassword(new_password);
+      await base44.asServiceRole.entities.Admin.update(admin.id, { password_hash: newHash });
+      return Response.json({ success: true, message: 'Password updated successfully' });
     }
 
-    // ── LIST ADMINS (PROTECTED — master admin only, verified by a hardcoded master secret) ──
+    // ── LIST ADMINS (PROTECTED — master secret required) ──
     if (action === 'list_admins') {
       const masterSecret = body.master_secret;
       const expectedSecret = Deno.env.get('MASTER_ADMIN_SECRET');
       if (!expectedSecret || masterSecret !== expectedSecret) {
-        console.warn('Unauthorized list_admins attempt');
+        console.warn('Unauthorized list_admins attempt from IP:', clientIp);
         return Response.json({ success: false, message: 'Unauthorized' }, { status: 403 });
       }
       const admins = await base44.asServiceRole.entities.Admin.list('-created_date', 100);

@@ -7,16 +7,22 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
+import { useSession } from '../shared/AppSession';
 
 export default function NotificationBell() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [showDeleted, setShowDeleted] = useState(false);
+  const { session } = useSession();
+  const tenantId = session?.tenant_id;
 
   const { data: notifications = [] } = useQuery({
-    queryKey: ['notifications'],
-    queryFn: () => base44.entities.Notification.list('-created_date', 100),
+    queryKey: ['notifications', tenantId],
+    queryFn: () => tenantId
+      ? base44.entities.Notification.filter({ tenant_id: tenantId }, '-created_date', 100)
+      : Promise.resolve([]),
+    enabled: !!tenantId,
     refetchInterval: 30000,
   });
 
@@ -61,11 +67,14 @@ export default function NotificationBell() {
   };
 
   useEffect(() => {
+    if (!tenantId) return;
     const unsubscribe = base44.entities.Notification.subscribe((event) => {
-      if (event.type === 'create') queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      if (event.type === 'create' && event.data?.tenant_id === tenantId) {
+        queryClient.invalidateQueries({ queryKey: ['notifications', tenantId] });
+      }
     });
     return unsubscribe;
-  }, [queryClient]);
+  }, [queryClient, tenantId]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

@@ -47,6 +47,15 @@
       "type": "string",
       "format": "date-time"
     },
+    "session_token": {
+      "type": "string",
+      "description": "Active session token issued on login"
+    },
+    "session_token_expires": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Expiry of the active session token"
+    },
     "statement_week_start": {
       "type": "number",
       "description": "Day of week the statement period starts. 0=Sunday, 1=Monday, ... 6=Saturday",

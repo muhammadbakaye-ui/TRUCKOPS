@@ -79,6 +79,7 @@ export default function AccountCustomization() {
         admin_email: accountForm.email,
         current_password: data.current_password,
         new_password: data.new_password,
+        session_token: session?.session_token,
       });
       if (!response.data?.success) {
         throw new Error(response.data?.error || 'Failed to change password');
@@ -123,8 +124,8 @@ export default function AccountCustomization() {
       setPasswordError('New password is required');
       return;
     }
-    if (passwordForm.new_password.length < 6) {
-      setPasswordError('New password must be at least 6 characters');
+    if (passwordForm.new_password.length < 8) {
+      setPasswordError('New password must be at least 8 characters');
       return;
     }
     if (passwordForm.new_password !== passwordForm.confirm_password) {

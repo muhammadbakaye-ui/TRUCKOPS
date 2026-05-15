@@ -4,25 +4,26 @@ async function hashPassword(password) {
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
   const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
-    const { current_password, new_password, admin_email } = body;
+    const { current_password, new_password, admin_email, session_token } = body;
 
     if (!admin_email) {
       return Response.json({ error: 'admin_email is required' }, { status: 400 });
     }
+    if (!session_token) {
+      return Response.json({ error: 'Authentication required' }, { status: 401 });
+    }
     if (!current_password || !new_password) {
       return Response.json({ error: 'Current and new password are required' }, { status: 400 });
     }
-    if (new_password.length < 6) {
-      return Response.json({ error: 'New password must be at least 6 characters' }, { status: 400 });
+    if (new_password.length < 8) {
+      return Response.json({ error: 'New password must be at least 8 characters' }, { status: 400 });
     }
 
     // Get admin by email
@@ -32,6 +33,15 @@ Deno.serve(async (req) => {
     }
 
     const admin = admins[0];
+
+    // SECURITY: Verify the session token matches this exact admin account
+    if (admin.session_token !== session_token) {
+      console.warn(`Password change blocked: session token mismatch for ${admin_email}`);
+      return Response.json({ error: 'Session invalid. Please log in again.' }, { status: 401 });
+    }
+    if (admin.session_token_expires && new Date() > new Date(admin.session_token_expires)) {
+      return Response.json({ error: 'Session expired. Please log in again.' }, { status: 401 });
+    }
 
     // Verify current password
     const currentHash = await hashPassword(current_password);

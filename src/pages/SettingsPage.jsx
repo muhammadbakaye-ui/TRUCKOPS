@@ -22,9 +22,14 @@ export default function SettingsPage() {
   });
   const [activeTab, setActiveTab] = useState('general');
 
+  const tenantId = session?.tenant_id;
+
   const { data: companies = [], isLoading } = useQuery({
-    queryKey: ['settings-company'],
-    queryFn: () => base44.entities.Company.filter({ company_type: 'carrier' }, '-created_date', 1),
+    queryKey: ['settings-company', tenantId],
+    queryFn: () => tenantId
+      ? base44.entities.Company.filter({ company_type: 'carrier', tenant_id: tenantId }, '-created_date', 1)
+      : Promise.resolve([]),
+    enabled: !!tenantId,
   });
 
   useEffect(() => {
@@ -51,6 +56,7 @@ export default function SettingsPage() {
       const payload = {
         company_name: form.company_name,
         company_type: 'carrier',
+        tenant_id: tenantId,
         address_1: form.address_1,
         address_2: form.address_2,
         city: form.city,
