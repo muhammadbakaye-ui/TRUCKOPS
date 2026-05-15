@@ -31,10 +31,11 @@ export function SessionProvider({ children }) {
           return;
         }
 
-        // Restore session immediately to prevent blank screen
+        // Restore session immediately and stop loading — do not wait for validation
         setSession(s);
+        setValidating(false);
         
-        // Validate server-side; only clear session if validation fails
+        // Validate server-side in background; only clear session if validation fails
         base44.functions.invoke('authAdmin', {
           action: 'validate_session',
           session_token: s.session_token,
@@ -64,9 +65,6 @@ export function SessionProvider({ children }) {
             console.warn('Session validation failed:', err.message);
             localStorage.removeItem(SESSION_KEY);
             setSession(null);
-          })
-          .finally(() => {
-            setValidating(false);
           });
       } catch {
         localStorage.removeItem(SESSION_KEY);
