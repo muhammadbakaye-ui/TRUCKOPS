@@ -15,6 +15,8 @@ export function UploadProvider({ children }) {
   const [jobs, setJobs] = useState([]);
   // cancelRef: map of jobId -> boolean (true = cancel requested)
   const cancelRefs = useRef({});
+  // Serial FIFO queue — each job chains onto this promise
+  const processingQueue = useRef(Promise.resolve());
 
   const updateJob = useCallback((jobId, updates) => {
     setJobs(prev => prev.map(j => j.id === jobId ? { ...j, ...updates } : j));
@@ -42,8 +44,8 @@ export function UploadProvider({ children }) {
     }
   };
 
-  // Main processing function — runs in background, survives navigation
-  const submitUpload = useCallback(async ({
+  // Main processing function — enqueues job for serial FIFO execution
+  const submitUpload = useCallback(({
     files, docType, selectedDriverId, selectedTruckId, tripNumber, manualAmount, driverAmount, drivers, trucks,
   }) => {
     const id = ++jobIdCounter;
@@ -69,6 +71,7 @@ export function UploadProvider({ children }) {
     };
     setJobs(prev => [...prev, job]);
 
+    const processJob = async () => {
     const processedResults = [];
     const failedFiles = [];
 
@@ -274,8 +277,10 @@ Return a structured JSON with the following fields (use null if not found):
     if (failedFiles.length > 0 && !wasCancelled) {
       toast.error(`${failedFiles.length} file(s) failed. Check the upload panel for details.`);
     }
+    }; // end processJob
 
-    return processedResults;
+    // Chain onto the global queue — guarantees serial FIFO execution
+    processingQueue.current = processingQueue.current.then(() => processJob());
   }, []);
 
   return (
