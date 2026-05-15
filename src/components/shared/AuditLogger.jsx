@@ -14,6 +14,7 @@ export function getCurrentAdminName() {
 
 export async function logAudit({ action_type, entity_type, entity_id, entity_label, before_data, after_data, details }) {
   let user_name = 'System';
+  let tenant_id = null;
 
   const adminName = getCurrentAdminName();
   if (adminName) {
@@ -25,6 +26,11 @@ export async function logAudit({ action_type, entity_type, entity_id, entity_lab
     } catch {}
   }
 
+  try {
+    const session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+    tenant_id = session?.tenant_id || null;
+  } catch {}
+
   await base44.entities.AuditLog.create({
     action_type,
     entity_type,
@@ -33,6 +39,7 @@ export async function logAudit({ action_type, entity_type, entity_id, entity_lab
     before_json: before_data ? JSON.stringify(before_data) : '',
     after_json: after_data ? JSON.stringify(after_data) : '',
     user_name,
-    details: details || ''
+    details: details || '',
+    ...(tenant_id ? { tenant_id } : {}),
   });
 }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useSession } from '../components/shared/AppSession';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search } from 'lucide-react';
@@ -12,10 +13,13 @@ import { format } from 'date-fns';
 export default function AuditLogPage() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+  const { session } = useSession();
+  const tenantId = session?.tenant_id;
 
   const { data: logs = [], isLoading } = useQuery({
-    queryKey: ['audit-logs'],
-    queryFn: () => base44.entities.AuditLog.list('-created_date', 500),
+    queryKey: ['audit-logs', tenantId],
+    queryFn: () => base44.entities.AuditLog.filter({ tenant_id: tenantId }, '-created_date', 500),
+    enabled: !!tenantId,
   });
 
   const filtered = logs.filter(l => {

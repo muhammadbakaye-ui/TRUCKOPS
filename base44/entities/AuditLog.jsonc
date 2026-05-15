@@ -1,0 +1,47 @@
+{
+  "name": "AuditLog",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant/account identifier for multi-tenancy"
+    },
+    "action_type": {
+      "type": "string",
+      "enum": [
+        "create",
+        "update",
+        "delete",
+        "import",
+        "generate",
+        "finalize",
+        "archive"
+      ]
+    },
+    "entity_type": {
+      "type": "string"
+    },
+    "entity_id": {
+      "type": "string"
+    },
+    "entity_label": {
+      "type": "string"
+    },
+    "before_json": {
+      "type": "string"
+    },
+    "after_json": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "details": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "action_type",
+    "entity_type"
+  ]
+}
