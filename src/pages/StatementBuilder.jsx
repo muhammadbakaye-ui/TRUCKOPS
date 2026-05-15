@@ -59,7 +59,7 @@ export default function StatementBuilder() {
   const { session } = useSession();
   const { showDialog, checkFeatureAccess, handleSubscribe, handleDismiss } = usePreviewGate();
   const statementSettings = useStatementSettings();
-  const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
+  const isInPreview = false; // Subscription wall disabled — all users have full access
   const [form, setForm] = useState({ status: 'draft', gross_total: 0, deductions_total: 0, fuel_total: 0, final_check_amount: 0 });
   const [tripLines, setTripLines] = useState([]);
   const [deductionLines, setDeductionLines] = useState([]);

@@ -48,7 +48,7 @@ export default function LoadDetail() {
   const queryClient = useQueryClient();
   const { session } = useSession();
   const { showDialog, checkFeatureAccess, handleSubscribe, handleDismiss } = usePreviewGate();
-  const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
+  const isInPreview = false; // Subscription wall disabled — all users have full access
   const [form, setForm] = useState(null);
   const [stops, setStops] = useState([]);
   const [saving, setSaving] = useState(false);
