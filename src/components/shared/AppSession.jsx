@@ -42,6 +42,8 @@ export function SessionProvider({ children }) {
           email: s.admin_email,
         })
           .then(res => {
+            console.log('validate_session response:', res.data);
+            console.log('tenant_id from validation:', res.data?.tenant_id);
             if (res.data?.success) {
               // Update the session with refreshed data if validation succeeds
               const refreshed = {
@@ -52,6 +54,7 @@ export function SessionProvider({ children }) {
                 subscription_status: res.data.subscription_status,
                 plan: res.data.plan,
               };
+              console.log('refreshed session object:', refreshed);
               localStorage.setItem(SESSION_KEY, JSON.stringify(refreshed));
               setSession(refreshed);
             } else {

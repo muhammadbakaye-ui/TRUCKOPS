@@ -74,7 +74,7 @@ export default function Companies() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      queryClient.invalidateQueries({ queryKey: ['companies', session?.tenant_id] });
       setDialogOpen(false);
       setEditing(null);
     }
