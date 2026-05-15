@@ -105,10 +105,22 @@ export default function UploadDocument() {
 
           <div className="flex flex-col gap-1.5">
             <Label className="text-xs text-muted-foreground">Driver <span className="opacity-50">(optional)</span></Label>
-            <Select value={selectedDriverId} onValueChange={setSelectedDriverId}>
+            <Select
+              value={selectedDriverId || 'none'}
+              onValueChange={(val) => {
+                if (val === 'none') {
+                  setSelectedDriverId('');
+                  setSelectedTruckId('');
+                } else {
+                  setSelectedDriverId(val);
+                  const driver = drivers.find(d => d.id === val);
+                  if (driver?.assigned_truck_id) setSelectedTruckId(driver.assigned_truck_id);
+                }
+              }}
+            >
               <SelectTrigger className="h-9 text-sm w-48"><SelectValue placeholder="Not assigned" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value={null}>Not assigned</SelectItem>
+                <SelectItem value="none">Not assigned</SelectItem>
                 {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -116,10 +128,22 @@ export default function UploadDocument() {
 
           <div className="flex flex-col gap-1.5">
             <Label className="text-xs text-muted-foreground">Truck <span className="opacity-50">(optional)</span></Label>
-            <Select value={selectedTruckId} onValueChange={setSelectedTruckId}>
+            <Select
+              value={selectedTruckId || 'none'}
+              onValueChange={(val) => {
+                if (val === 'none') {
+                  setSelectedTruckId('');
+                  setSelectedDriverId('');
+                } else {
+                  setSelectedTruckId(val);
+                  const truck = trucks.find(t => t.id === val);
+                  if (truck?.assigned_driver_id) setSelectedDriverId(truck.assigned_driver_id);
+                }
+              }}
+            >
               <SelectTrigger className="h-9 text-sm w-40"><SelectValue placeholder="Not assigned" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value={null}>Not assigned</SelectItem>
+                <SelectItem value="none">Not assigned</SelectItem>
                 {trucks.map(t => <SelectItem key={t.id} value={t.id}>#{t.unit_number}</SelectItem>)}
               </SelectContent>
             </Select>
