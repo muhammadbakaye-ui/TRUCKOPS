@@ -3,27 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 export function usePreviewGate() {
-   const navigate = useNavigate();
-   const [showDialog, setShowDialog] = useState(false);
-
-   const checkFeatureAccess = (isInPreview) => {
-     if (isInPreview) {
-       setShowDialog(true);
-       return false;
-     }
-     return true;
-   };
-
-   const handleDismiss = () => {
-     setShowDialog(false);
-   };
-
-   const handleSubscribe = () => {
-     setShowDialog(false);
-     navigate('/pricing');
-   };
-
-   return { showDialog, setShowDialog, checkFeatureAccess, handleDismiss, handleSubscribe, navigate };
+  // Subscription wall temporarily disabled for live user testing
+  const navigate = useNavigate();
+  const [showDialog] = useState(false);
+  const checkFeatureAccess = () => true;
+  const handleDismiss = () => {};
+  const handleSubscribe = () => {};
+  const setShowDialog = () => {};
+  return { showDialog, setShowDialog, checkFeatureAccess, handleDismiss, handleSubscribe, navigate };
 }
 
 export function PreviewFeatureDialog({ open, onSubscribe, onDismiss }) {

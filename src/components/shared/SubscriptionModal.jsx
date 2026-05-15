@@ -9,6 +9,9 @@ import PricingDashboard from '@/components/pricing/PricingDashboard';
  * Shows PricingDashboard component inside a modal, or Preview Mode option.
  */
 export default function SubscriptionModal({ isOpen, onDismiss }) {
+  // Subscription wall temporarily disabled for live user testing
+  return null;
+  /* eslint-disable no-unreachable */
   const [showPricing, setShowPricing] = useState(false);
 
   const handleShowPricing = () => {

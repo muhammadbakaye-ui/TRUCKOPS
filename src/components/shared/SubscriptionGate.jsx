@@ -9,12 +9,8 @@ import { Button } from '@/components/ui/button';
  * No subscription (null tenant_id or no subscription_status) = preview mode.
  */
 export function useHasSubscription() {
-  const { session } = useSession();
-  if (!session) return false;
-  const status = session.subscription_status;
-  // Active statuses
-  if (status === 'active' || status === 'trialing') return true;
-  return false;
+  // Subscription wall temporarily disabled for live user testing
+  return true;
 }
 
 /**
@@ -56,26 +52,6 @@ export function SubscriptionRequired({ children, message }) {
  * Banner shown at the top of the app when in preview mode.
  */
 export function PreviewModeBanner() {
-  const hasSubscription = useHasSubscription();
-  const navigate = useNavigate();
-  const { session } = useSession();
-
-  if (!session || hasSubscription) return null;
-
-  return (
-    <div className="bg-amber-500 text-white text-xs font-semibold flex items-center justify-between px-4 py-2 z-50">
-      <span className="flex items-center gap-2">
-        <Crown className="w-3.5 h-3.5 shrink-0" />
-        You're in <strong>Preview Mode</strong> — creating and editing data is disabled.
-      </span>
-      <Button
-        size="sm"
-        variant="secondary"
-        className="h-6 text-xs px-3 bg-white text-amber-600 hover:bg-white/90 shrink-0 ml-4"
-        onClick={() => navigate('/pricing')}
-      >
-        Subscribe Now
-      </Button>
-    </div>
-  );
+  // Subscription wall temporarily disabled for live user testing
+  return null;
 }
