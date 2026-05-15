@@ -12,6 +12,7 @@ import { groupByCustomer } from '../utils/normalizeCustomerName';
 import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
 import { printDriverPerformanceReport } from '../components/print/printDriverPerformance';
+import { useSession } from '../components/shared/AppSession';
 
 const INVOICE_STATUS_COLORS = {
   'Not invoiced': '#9CA3AF',
@@ -23,6 +24,8 @@ const getInvoiceStatusColor = (name) => INVOICE_STATUS_COLORS[name] || '#9CA3AF'
 
 export default function Reports() {
   const [period, setPeriod] = useState('30');
+  const { session } = useSession();
+  const tenantId = session?.tenant_id;
 
   const periodLabels = { '7': 'Last 7 Days', '30': 'Last 30 Days', '90': 'Last 90 Days', '365': 'Last 12 Months' };
 
@@ -35,10 +38,10 @@ export default function Reports() {
     });
   };
 
-  const { data: loads = [] } = useQuery({ queryKey: ['loads-report'], queryFn: () => base44.entities.Load.list('-created_date', 5000) });
-  const { data: invoices = [] } = useQuery({ queryKey: ['invoices-report'], queryFn: () => base44.entities.Invoice.list('-created_date', 1000) });
-  const { data: drivers = [] } = useQuery({ queryKey: ['drivers-report'], queryFn: () => base44.entities.Driver.list() });
-  const { data: fuel = [] } = useQuery({ queryKey: ['fuel-report'], queryFn: () => base44.entities.FuelTransaction.list('-created_date', 1000) });
+  const { data: loads = [] } = useQuery({ queryKey: ['loads-report', tenantId], queryFn: () => tenantId ? base44.entities.Load.filter({ tenant_id: tenantId }, '-created_date', 5000) : [], enabled: !!tenantId });
+  const { data: invoices = [] } = useQuery({ queryKey: ['invoices-report', tenantId], queryFn: () => tenantId ? base44.entities.Invoice.filter({ tenant_id: tenantId }, '-created_date', 1000) : [], enabled: !!tenantId });
+  const { data: drivers = [] } = useQuery({ queryKey: ['drivers-report', tenantId], queryFn: () => tenantId ? base44.entities.Driver.filter({ tenant_id: tenantId }) : [], enabled: !!tenantId });
+  const { data: fuel = [] } = useQuery({ queryKey: ['fuel-report', tenantId], queryFn: () => tenantId ? base44.entities.FuelTransaction.list('-created_date', 1000) : [], enabled: !!tenantId });
 
   const cutoff = subDays(new Date(), parseInt(period));
   const cutoffStr = format(cutoff, 'yyyy-MM-dd');
