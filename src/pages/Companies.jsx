@@ -51,7 +51,7 @@ export default function Companies() {
 
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ['companies', session?.tenant_id],
-    queryFn: () => base44.entities.Company.filter({ tenant_id: session.tenant_id }, '-created_date', 200),
+    queryFn: () => session?.tenant_id ? base44.entities.Company.filter({ tenant_id: session.tenant_id }, '-created_date', 200) : Promise.resolve([]),
     enabled: !!session?.tenant_id,
   });
 
@@ -74,7 +74,7 @@ export default function Companies() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['companies', session?.tenant_id] });
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
       setDialogOpen(false);
       setEditing(null);
     }
