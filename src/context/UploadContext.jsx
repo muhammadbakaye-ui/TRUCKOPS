@@ -46,7 +46,7 @@ export function UploadProvider({ children }) {
 
   // Main processing function — enqueues job for serial FIFO execution
   const submitUpload = useCallback(({
-    files, docType, selectedDriverId, selectedTruckId, tripNumber, manualAmount, driverAmount, drivers, trucks,
+    files, docType, selectedDriverId, selectedTruckId, tripNumber, manualAmount, driverAmount, drivers, trucks, tenantId,
   }) => {
     const id = ++jobIdCounter;
     cancelRefs.current[id] = false;
@@ -95,8 +95,8 @@ export function UploadProvider({ children }) {
 
       // Pre-fetch company list + seed load number in parallel — one round-trip for the whole batch
       const [allCompanies, seedLoads] = await Promise.all([
-        base44.entities.Company.list(),
-        base44.entities.Load.list('-created_date', 1),
+        base44.entities.Company.filter({ tenant_id: tenantId }, '-created_date', 500),
+        tenantId ? base44.entities.Load.filter({ tenant_id: tenantId }, '-created_date', 1) : Promise.resolve([]),
       ]);
       let loadNumCounter = seedLoads.length > 0
         ? parseInt(seedLoads[0].internal_load_number?.replace(/\D/g, '') || '1000')

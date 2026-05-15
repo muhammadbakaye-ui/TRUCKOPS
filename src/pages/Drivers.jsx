@@ -241,6 +241,7 @@ export default function Drivers() {
     queryKey: ['trucks', session?.tenant_id],
     queryFn: () => session?.tenant_id ? base44.entities.Truck.filter({ tenant_id: session.tenant_id, status: 'active' }, 'unit_number', 200) : Promise.resolve([]),
     enabled: !!session?.tenant_id,
+    staleTime: 5 * 60 * 1000,
   });
 
   const saveMutation = useMutation({

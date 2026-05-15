@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
@@ -54,6 +54,12 @@ export default function Companies() {
     queryFn: () => session?.tenant_id ? base44.entities.Company.filter({ tenant_id: session.tenant_id }, '-created_date', 200) : Promise.resolve([]),
     enabled: !!session?.tenant_id,
   });
+
+  useEffect(() => {
+    if (saveMutation.isSuccess) {
+      setEditing(null);
+    }
+  }, [saveMutation.isSuccess]);
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
