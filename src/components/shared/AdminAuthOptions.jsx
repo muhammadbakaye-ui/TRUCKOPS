@@ -60,6 +60,8 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour, initia
           plan: response.data.plan,
           company_name: response.data.company_name,
           admin_email: formData.email.toLowerCase().trim(),
+          session_token: response.data.session_token,
+          session_expires: response.data.session_expires,
         });
       } else if (response.data.code === 'subscription_inactive') {
         setError('Your subscription is inactive. Visit pricing to reactivate your plan.');
@@ -79,7 +81,7 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour, initia
       setError('All fields are required'); return;
     }
     if (formData.password !== formData.confirmPassword) { setError('Passwords do not match'); return; }
-    if (formData.password.length < 6) { setError('Password must be at least 6 characters'); return; }
+    if (formData.password.length < 8) { setError('Password must be at least 8 characters'); return; }
     setLoading(true);
     try {
       const pHash = await hashPassword(formData.password);
@@ -98,6 +100,8 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour, initia
           plan: response.data.plan,
           company_name: formData.companyName,
           admin_email: formData.email.toLowerCase().trim(),
+          session_token: response.data.session_token,
+          session_expires: response.data.session_expires,
         });
       } else {
         setError(response.data.message || 'Sign up failed');

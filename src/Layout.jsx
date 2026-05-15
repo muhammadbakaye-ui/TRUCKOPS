@@ -65,7 +65,7 @@ function useMainScrollRestoration(currentPageName) {
 }
 
 function AppShell({ children, currentPageName }) {
-  const { session } = useSession();
+  const { session, validating } = useSession();
   const [collapsed, setCollapsed] = useState(false);
   const mainRef = useMainScrollRestoration(currentPageName);
   const location = useLocation();
@@ -73,6 +73,14 @@ function AppShell({ children, currentPageName }) {
   useAndroidBackButton();
 
   // No subscription redirect - preview mode is open
+
+  if (validating) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-sidebar">
+        <div className="w-8 h-8 border-4 border-sidebar-border border-t-sidebar-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!session) {
     return <LoginScreen />;
