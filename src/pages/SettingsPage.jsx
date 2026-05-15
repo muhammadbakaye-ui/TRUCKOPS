@@ -9,9 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Loader2, Save, Trash2, LogOut } from 'lucide-react';
 import { useSession } from '../components/shared/AppSession';
 import BillingTab from '../components/settings/BillingTab';
-import BroadcastPanel from '../components/settings/BroadcastPanel';
 import PageHeader from '../components/shared/PageHeader';
-import LoginHistoryTab from '../components/settings/LoginHistoryTab';
 import AccountCustomization from '../components/settings/AccountCustomization';
 import GeneralSettings from '../components/settings/GeneralSettings';
 import { toast } from 'sonner';
@@ -112,26 +110,6 @@ export default function SettingsPage() {
            Company
          </button>
          <button
-           onClick={() => setActiveTab('security')}
-           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-             activeTab === 'security'
-               ? 'border-primary text-primary'
-               : 'border-transparent text-muted-foreground hover:text-foreground'
-           }`}
-         >
-           Login History
-         </button>
-         <button
-           onClick={() => setActiveTab('broadcast')}
-           className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-             activeTab === 'broadcast'
-               ? 'border-primary text-primary'
-               : 'border-transparent text-muted-foreground hover:text-foreground'
-           }`}
-         >
-           Broadcast
-         </button>
-         <button
            onClick={() => setActiveTab('billing')}
            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
              activeTab === 'billing'
@@ -221,8 +199,6 @@ export default function SettingsPage() {
           </>
         )}
 
-        {activeTab === 'security' && <LoginHistoryTab userEmail={session?.admin_email || ''} />}
-        {activeTab === 'broadcast' && <BroadcastPanel />}
         {activeTab === 'billing' && <BillingTab />}
 
         {activeTab === 'account' && (
