@@ -381,8 +381,9 @@ Deno.serve(async (req) => {
         console.warn('Unauthorized list_admins attempt from IP:', clientIp);
         return Response.json({ success: false, message: 'Unauthorized' }, { status: 403 });
       }
-      const admins = await base44.asServiceRole.entities.Admin.list('-created_date', 100);
-      const subs = await base44.asServiceRole.entities.Subscription.list('-created_date', 100);
+      try {
+        const admins = await base44.asServiceRole.entities.Admin.list('-created_date', 100);
+        const subs = await base44.asServiceRole.entities.Subscription.list('-created_date', 100);
       const subByTenant = {};
       for (const s of subs) subByTenant[s.tenant_id] = s;
       const safeAdmins = admins.map(a => ({
@@ -398,7 +399,11 @@ Deno.serve(async (req) => {
         subscription: a.tenant_id ? subByTenant[a.tenant_id] : null,
       }));
       return Response.json({ success: true, admins: safeAdmins });
-    }
+      } catch (err) {
+        console.error('list_admins service-role error:', err.message);
+        return Response.json({ success: false, message: 'Failed to list admins' }, { status: 500 });
+      }
+      }
 
     return Response.json({ success: false, error: 'Invalid action' }, { status: 400 });
   } catch (error) {
