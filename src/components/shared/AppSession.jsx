@@ -17,6 +17,13 @@ export function SessionProvider({ children }) {
         const s = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
         if (!s) { setValidating(false); return; }
 
+        // Validate required fields exist
+        if (!s.session_token || !s.admin_email || !s.tenant_id) {
+          localStorage.removeItem(SESSION_KEY);
+          setValidating(false);
+          return;
+        }
+
         // Check local TTL first
         if (s.loginTime && Date.now() - s.loginTime > SESSION_TTL_MS) {
           localStorage.removeItem(SESSION_KEY);
@@ -24,37 +31,35 @@ export function SessionProvider({ children }) {
           return;
         }
 
-        // If we have a session_token, validate it server-side
-        if (s.session_token && s.admin_email) {
-          try {
-            const res = await base44.functions.invoke('authAdmin', {
+        // Try server-side validation with strict timeout
+        try {
+          const res = await Promise.race([
+            base44.functions.invoke('authAdmin', {
               action: 'validate_session',
               session_token: s.session_token,
               email: s.admin_email,
-            });
-            if (res.data?.success) {
-              // Refresh session data from server (subscription may have changed)
-              const refreshed = {
-                ...s,
-                admin_name: res.data.admin_name,
-                company_name: res.data.company_name,
-                tenant_id: res.data.tenant_id,
-                subscription_status: res.data.subscription_status,
-                plan: res.data.plan,
-              };
-              localStorage.setItem(SESSION_KEY, JSON.stringify(refreshed));
-              setSession(refreshed);
-            } else {
-              // Server rejected session
-              localStorage.removeItem(SESSION_KEY);
-            }
-          } catch (err) {
-            // Network error — allow local session to stand (offline tolerance)
-            console.warn('Session validation network error, using local session:', err.message);
-            setSession(s);
+            }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('validation timeout')), 2000))
+          ]);
+          if (res.data?.success) {
+            // Refresh session data from server (subscription may have changed)
+            const refreshed = {
+              ...s,
+              admin_name: res.data.admin_name,
+              company_name: res.data.company_name,
+              tenant_id: res.data.tenant_id,
+              subscription_status: res.data.subscription_status,
+              plan: res.data.plan,
+            };
+            localStorage.setItem(SESSION_KEY, JSON.stringify(refreshed));
+            setSession(refreshed);
+          } else {
+            // Server rejected session
+            localStorage.removeItem(SESSION_KEY);
           }
-        } else {
-          // Legacy session without session_token — force re-login for security
+        } catch (err) {
+          // Validation failed or timed out — clear stale session and start fresh
+          console.warn('Session validation failed, clearing:', err.message);
           localStorage.removeItem(SESSION_KEY);
         }
       } catch {
