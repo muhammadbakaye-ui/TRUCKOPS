@@ -31,37 +31,42 @@ export function SessionProvider({ children }) {
           return;
         }
 
-        // Try server-side validation with strict timeout
-        try {
-          const res = await Promise.race([
-            base44.functions.invoke('authAdmin', {
-              action: 'validate_session',
-              session_token: s.session_token,
-              email: s.admin_email,
-            }),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('validation timeout')), 2000))
-          ]);
-          if (res.data?.success) {
-            // Refresh session data from server (subscription may have changed)
-            const refreshed = {
-              ...s,
-              admin_name: res.data.admin_name,
-              company_name: res.data.company_name,
-              tenant_id: res.data.tenant_id,
-              subscription_status: res.data.subscription_status,
-              plan: res.data.plan,
-            };
-            localStorage.setItem(SESSION_KEY, JSON.stringify(refreshed));
-            setSession(refreshed);
-          } else {
-            // Server rejected session
+        // Immediately restore the session without waiting for server validation
+        // The app will render with the cached session, and validation happens in the background
+        setSession(s);
+        setValidating(false);
+        
+        // Non-blocking background validation — does not block rendering
+        base44.functions.invoke('authAdmin', {
+          action: 'validate_session',
+          session_token: s.session_token,
+          email: s.admin_email,
+        })
+          .then(res => {
+            if (res.data?.success) {
+              // Update the session with refreshed data if validation succeeds
+              const refreshed = {
+                ...s,
+                admin_name: res.data.admin_name,
+                company_name: res.data.company_name,
+                tenant_id: res.data.tenant_id,
+                subscription_status: res.data.subscription_status,
+                plan: res.data.plan,
+              };
+              localStorage.setItem(SESSION_KEY, JSON.stringify(refreshed));
+              setSession(refreshed);
+            } else {
+              // Server rejected session — log out
+              localStorage.removeItem(SESSION_KEY);
+              setSession(null);
+            }
+          })
+          .catch(err => {
+            // Validation failed — clear stale session
+            console.warn('Session validation failed:', err.message);
             localStorage.removeItem(SESSION_KEY);
-          }
-        } catch (err) {
-          // Validation failed or timed out — clear stale session and start fresh
-          console.warn('Session validation failed, clearing:', err.message);
-          localStorage.removeItem(SESSION_KEY);
-        }
+            setSession(null);
+          });
       } catch {
         localStorage.removeItem(SESSION_KEY);
       } finally {

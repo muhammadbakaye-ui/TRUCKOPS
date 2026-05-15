@@ -46,10 +46,7 @@ function useMainScrollRestoration(currentPageName) {
     const el = mainRef.current;
     if (!el) return;
     const saved = sessionStorage.getItem(key);
-    const timer = setTimeout(() => {
-      if (mainRef.current) mainRef.current.scrollTop = saved ? parseInt(saved, 10) : 0;
-    }, 60);
-    return () => clearTimeout(timer);
+    if (mainRef.current) mainRef.current.scrollTop = saved ? parseInt(saved, 10) : 0;
   }, [location.pathname, location.search, key]);
 
   // Save on scroll
