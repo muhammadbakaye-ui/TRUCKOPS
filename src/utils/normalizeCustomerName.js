@@ -11,14 +11,17 @@ const STRIP_SUFFIXES = [
 ];
 
 export function normalizeCustomerName(name) {
-  if (!name) return '';
-  let n = name.toLowerCase();
+  if (!name || typeof name !== 'string') return '';
+  let n = name.toLowerCase().trim();
+  if (!n) return '';
   // Remove punctuation and extra spaces
   n = n.replace(/[.,\-_'&]/g, ' ').replace(/\s+/g, ' ').trim();
   // Remove common business suffixes
   const words = n.split(' ').filter(w => w.length > 0 && !STRIP_SUFFIXES.includes(w));
+  // Return empty string if no words remain after filtering
+  if (words.length === 0) return '';
   // Collapse to a single string with no spaces for comparison
-  return words.join('').replace(/\s/g, '');
+  return words.join('');
 }
 
 /**

@@ -83,7 +83,13 @@ export function UploadProvider({ children }) {
         const shortMatch = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
         if (shortMatch) return `${currentYear}-${shortMatch[1].padStart(2,'0')}-${shortMatch[2].padStart(2,'0')}`;
         const slashMatch = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
-        if (slashMatch) return `${currentYear}-${slashMatch[1].padStart(2,'0')}-${slashMatch[2].padStart(2,'0')}`;
+        if (slashMatch) {
+          const month = slashMatch[1].padStart(2,'0');
+          const day = slashMatch[2].padStart(2,'0');
+          const yearStr = slashMatch[3];
+          const year = yearStr.length === 2 ? (parseInt(yearStr) > 50 ? '19' + yearStr : '20' + yearStr) : yearStr;
+          return `${year}-${month}-${day}`;
+        }
         return dateStr;
       };
 
@@ -183,28 +189,30 @@ Return a structured JSON with the following fields (use null if not found):
       };
 
       // Concurrency-limited LLM runner
-      const extractionResults = [];
-      for (let i = 0; i < uploadResults.length; i += CONCURRENCY) {
-        if (cancelRefs.current[id]) break;
-        const batch = uploadResults.slice(i, i + CONCURRENCY);
-        setJobs(prev => prev.map(j => j.id === id ? { ...j, current: i, currentFileName: `Extracting ${Math.min(i + CONCURRENCY, uploadResults.length)} of ${uploadResults.length}…` } : j));
-        const batchResults = await Promise.all(
-          batch.map(async (upload) => {
-            if (upload.error || !upload.file_url) return { ...upload, extracted: null };
-            try {
-              const extracted = await withRetry(() => base44.integrations.Core.InvokeLLM({
-                prompt: llmPrompt,
-                file_urls: [upload.file_url],
-                response_json_schema: llmSchema,
-              }), 3, 800);
-              return { ...upload, extracted };
-            } catch (err) {
-              return { ...upload, extracted: null, error: err.message };
-            }
-          })
-        );
-        extractionResults.push(...batchResults);
-      }
+       const extractionResults = [];
+       for (let i = 0; i < uploadResults.length; i += CONCURRENCY) {
+         if (cancelRefs.current[id]) break;
+         const batch = uploadResults.slice(i, i + CONCURRENCY).filter(u => !u.cancelled && !u.error);
+         if (batch.length === 0) continue;
+         const endIdx = Math.min(i + CONCURRENCY, uploadResults.length);
+         setJobs(prev => prev.map(j => j.id === id ? { ...j, current: i, currentFileName: `Extracting ${endIdx} of ${uploadResults.length}…` } : j));
+         const batchResults = await Promise.all(
+           batch.map(async (upload) => {
+             if (upload.error || !upload.file_url) return { ...upload, extracted: null };
+             try {
+               const extracted = await withRetry(() => base44.integrations.Core.InvokeLLM({
+                 prompt: llmPrompt,
+                 file_urls: [upload.file_url],
+                 response_json_schema: llmSchema,
+               }), 3, 800);
+               return { ...upload, extracted };
+             } catch (err) {
+               return { ...upload, extracted: null, error: err.message };
+             }
+           })
+         );
+         extractionResults.push(...batchResults);
+       }
 
       if (cancelRefs.current[id]) {
         await Promise.all(extractionResults.filter(r => r.doc).map(r => base44.entities.Document.delete(r.doc.id).catch(() => {})));
