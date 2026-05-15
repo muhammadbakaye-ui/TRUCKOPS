@@ -9,7 +9,7 @@ import { createPageUrl } from '@/utils';
 function playChime() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+    const notes = [523.25, 659.25]; // C5, E5
     notes.forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -17,12 +17,12 @@ function playChime() {
       gain.connect(ctx.destination);
       osc.type = 'sine';
       osc.frequency.value = freq;
-      const start = ctx.currentTime + i * 0.15;
+      const start = ctx.currentTime + i * 0.12;
       gain.gain.setValueAtTime(0, start);
-      gain.gain.linearRampToValueAtTime(0.18, start + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.5);
+      gain.gain.linearRampToValueAtTime(0.08, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.4);
       osc.start(start);
-      osc.stop(start + 0.5);
+      osc.stop(start + 0.4);
     });
   } catch (_) {}
 }
