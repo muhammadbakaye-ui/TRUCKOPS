@@ -31,12 +31,10 @@ export function SessionProvider({ children }) {
           return;
         }
 
-        // Immediately restore the session without waiting for server validation
-        // The app will render with the cached session, and validation happens in the background
+        // Restore session immediately to prevent blank screen
         setSession(s);
-        setValidating(false);
         
-        // Non-blocking background validation — does not block rendering
+        // Validate server-side; only clear session if validation fails
         base44.functions.invoke('authAdmin', {
           action: 'validate_session',
           session_token: s.session_token,
@@ -66,10 +64,12 @@ export function SessionProvider({ children }) {
             console.warn('Session validation failed:', err.message);
             localStorage.removeItem(SESSION_KEY);
             setSession(null);
+          })
+          .finally(() => {
+            setValidating(false);
           });
       } catch {
         localStorage.removeItem(SESSION_KEY);
-      } finally {
         setValidating(false);
       }
     };
