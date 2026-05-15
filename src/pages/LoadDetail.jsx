@@ -83,11 +83,12 @@ export default function LoadDetail() {
     enabled: !!loadId && !isNew,
   });
 
-  const { data: drivers = [] } = useQuery({ queryKey: ['drivers'], queryFn: () => base44.entities.Driver.filter({ status: 'active' }, 'full_name', 200) });
-  const { data: trucks = [] } = useQuery({ queryKey: ['trucks'], queryFn: () => base44.entities.Truck.filter({ status: 'active' }, 'unit_number', 200) });
-  const { data: trailers = [] } = useQuery({ queryKey: ['trailers'], queryFn: () => base44.entities.Trailer.filter({ status: 'active' }, 'unit_number', 200) });
-  const { data: companies = [] } = useQuery({ queryKey: ['companies'], queryFn: () => base44.entities.Company.list('company_name', 500) });
-  const { data: carrierCompany = [] } = useQuery({ queryKey: ['settings-company'], queryFn: () => base44.entities.Company.filter({ company_type: 'carrier' }, '-created_date', 1) });
+  const tenantId = session?.tenant_id;
+  const { data: drivers = [] } = useQuery({ queryKey: ['drivers', tenantId], queryFn: () => base44.entities.Driver.filter({ status: 'active', tenant_id: tenantId }, 'full_name', 200), enabled: !!tenantId });
+  const { data: trucks = [] } = useQuery({ queryKey: ['trucks', tenantId], queryFn: () => base44.entities.Truck.filter({ status: 'active', tenant_id: tenantId }, 'unit_number', 200), enabled: !!tenantId });
+  const { data: trailers = [] } = useQuery({ queryKey: ['trailers', tenantId], queryFn: () => base44.entities.Trailer.filter({ status: 'active', tenant_id: tenantId }, 'unit_number', 200), enabled: !!tenantId });
+  const { data: companies = [] } = useQuery({ queryKey: ['companies', tenantId], queryFn: () => base44.entities.Company.filter({ tenant_id: tenantId }, 'company_name', 500), enabled: !!tenantId });
+  const { data: carrierCompany = [] } = useQuery({ queryKey: ['settings-company', tenantId], queryFn: () => base44.entities.Company.filter({ company_type: 'carrier', tenant_id: tenantId }, '-created_date', 1), enabled: !!tenantId });
 
   const handlePrint = () => {
     printLoad({ company: carrierCompany[0] || {}, load: form, stops, drivers, trucks, trailers: trailers });
