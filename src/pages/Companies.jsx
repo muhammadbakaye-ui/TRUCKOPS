@@ -49,18 +49,6 @@ export default function Companies() {
   const { showDialog, checkFeatureAccess, handleSubscribe, handleDismiss } = usePreviewGate();
   const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
 
-  const { data: companies = [], isLoading } = useQuery({
-    queryKey: ['companies', session?.tenant_id],
-    queryFn: () => session?.tenant_id ? base44.entities.Company.filter({ tenant_id: session.tenant_id }, '-created_date', 200) : Promise.resolve([]),
-    enabled: !!session?.tenant_id,
-  });
-
-  useEffect(() => {
-    if (saveMutation.isSuccess) {
-      setEditing(null);
-    }
-  }, [saveMutation.isSuccess]);
-
   const saveMutation = useMutation({
     mutationFn: async (data) => {
       if (editing) {
@@ -78,6 +66,18 @@ export default function Companies() {
       setDialogOpen(false);
       setEditing(null);
     }
+  });
+
+  useEffect(() => {
+    if (saveMutation.isSuccess) {
+      setEditing(null);
+    }
+  }, [saveMutation.isSuccess]);
+
+  const { data: companies = [], isLoading } = useQuery({
+    queryKey: ['companies', session?.tenant_id],
+    queryFn: () => session?.tenant_id ? base44.entities.Company.filter({ tenant_id: session.tenant_id }, '-created_date', 200) : Promise.resolve([]),
+    enabled: !!session?.tenant_id,
   });
 
   const filtered = companies.filter(c => {
