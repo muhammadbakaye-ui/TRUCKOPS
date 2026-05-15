@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useUploadContext } from '../../context/UploadContext';
 import { Loader2, CheckCircle, X, FileText, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,8 +6,40 @@ import { Progress } from '@/components/ui/progress';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
+function playChime() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const start = ctx.currentTime + i * 0.15;
+      gain.gain.setValueAtTime(0, start);
+      gain.gain.linearRampToValueAtTime(0.18, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.5);
+      osc.start(start);
+      osc.stop(start + 0.5);
+    });
+  } catch (_) {}
+}
+
 export default function UploadProgressFloat() {
   const { jobs, cancelJob, dismissJob } = useUploadContext();
+  const prevStatusRef = useRef({});
+
+  useEffect(() => {
+    jobs.forEach(job => {
+      const prev = prevStatusRef.current[job.id];
+      if (prev !== 'done' && job.status === 'done') {
+        playChime();
+      }
+      prevStatusRef.current[job.id] = job.status;
+    });
+  }, [jobs]);
   const location = useLocation();
   const navigate = useNavigate();
 
