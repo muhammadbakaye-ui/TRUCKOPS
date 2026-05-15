@@ -28,7 +28,6 @@ const navItems = [
   { type: 'divider', label: 'SYSTEM' },
    { label: 'Reports', icon: BarChart3, page: 'Reports' },
    { label: 'Audit Log', icon: History, page: 'AuditLogPage' },
-   { label: 'System Admins', icon: Users, page: 'SystemAdmins' },
    { label: 'Deleted Items', icon: Trash2, page: 'DeletedItems' },
    { label: 'Settings', icon: Settings, page: 'SettingsPage' },
 ];

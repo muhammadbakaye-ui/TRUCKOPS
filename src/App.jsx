@@ -4,7 +4,6 @@ import LandingFeatures from './pages/LandingFeatures';
 import LandingPricing from './pages/LandingPricing';
 import LandingAbout from './pages/LandingAbout';
 import DeletedItems from './pages/DeletedItems';
-import SystemAdmins from './pages/SystemAdmins';
 import DriverPublicPortal from './pages/DriverPublicPortal';
 import Pricing from './pages/Pricing';
 import Privacy from './pages/Privacy';
@@ -83,7 +82,7 @@ const AuthenticatedApp = () => {
         />
       ))}
       <Route path="/DeletedItems" element={<PageTransition><LayoutWrapper currentPageName="DeletedItems"><DeletedItems /></LayoutWrapper></PageTransition>} />
-      <Route path="/SystemAdmins" element={<PageTransition><LayoutWrapper currentPageName="SystemAdmins"><SystemAdmins /></LayoutWrapper></PageTransition>} />
+
       <Route path="/DriverPublicPortal" element={<PageTransition><DriverPublicPortal /></PageTransition>} />
       <Route path="/pricing" element={<PageTransition><Pricing /></PageTransition>} />
       <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
