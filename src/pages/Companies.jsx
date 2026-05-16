@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Plus } from 'lucide-react';
 import SearchInput from '../components/shared/SearchInput';
 import DataTable from '../components/shared/DataTable';
@@ -11,8 +10,6 @@ import PageHeader from '../components/shared/PageHeader';
 import EntityFormDialog from '../components/shared/EntityFormDialog';
 import { logAudit } from '../components/shared/AuditLogger';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
-import { useHasSubscription } from '../components/shared/SubscriptionGate';
 import { usePreviewGate, PreviewFeatureDialog } from '../components/shared/PreviewFeatureGate';
 import { useSession } from '../components/shared/AppSession';
 import { toast } from 'sonner';
@@ -67,12 +64,6 @@ export default function Companies() {
       setEditing(null);
     }
   });
-
-  useEffect(() => {
-    if (saveMutation.isSuccess) {
-      setEditing(null);
-    }
-  }, [saveMutation.isSuccess]);
 
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ['companies', session?.tenant_id],

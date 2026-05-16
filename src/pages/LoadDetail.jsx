@@ -108,8 +108,23 @@ export default function LoadDetail() {
     }
   }, [isNew]);
 
+  // Derive pickup/delivery fields from stops
+  const deriveStopFields = useCallback((currentForm, currentStops) => {
+    const firstPickup = currentStops.find(s => s.stop_type === 'pickup');
+    const lastDelivery = [...currentStops].reverse().find(s => s.stop_type === 'delivery');
+    return {
+      ...currentForm,
+      pickup_date: firstPickup?.appointment_date || currentForm.pickup_date || '',
+      pickup_city: firstPickup?.city || currentForm.pickup_city || '',
+      pickup_state: firstPickup?.state || currentForm.pickup_state || '',
+      delivery_date: lastDelivery?.appointment_date || currentForm.delivery_date || '',
+      delivery_city: lastDelivery?.city || currentForm.delivery_city || '',
+      delivery_state: lastDelivery?.state || currentForm.delivery_state || '',
+    };
+  }, []);
+
   // Auto-save as draft whenever form/stops change
-   const performAutoSave = useCallback(async (currentForm, currentStops, previewMode) => {
+  const performAutoSave = useCallback(async (currentForm, currentStops, previewMode) => {
      if (!currentForm || previewMode) return;
      setAutoSaving(true);
     try {
@@ -149,7 +164,7 @@ export default function LoadDetail() {
     } finally {
       setAutoSaving(false);
     }
-  }, []);
+  }, [deriveStopFields]);
 
   // Debounce: trigger auto-save 2.5s after last change
   useEffect(() => {
@@ -211,21 +226,6 @@ export default function LoadDetail() {
     } finally {
       setSaving(false);
     }
-  };
-
-  // Derive pickup/delivery fields from stops
-  const deriveStopFields = (currentForm, currentStops) => {
-    const firstPickup = currentStops.find(s => s.stop_type === 'pickup');
-    const lastDelivery = [...currentStops].reverse().find(s => s.stop_type === 'delivery');
-    return {
-      ...currentForm,
-      pickup_date: firstPickup?.appointment_date || currentForm.pickup_date || '',
-      pickup_city: firstPickup?.city || currentForm.pickup_city || '',
-      pickup_state: firstPickup?.state || currentForm.pickup_state || '',
-      delivery_date: lastDelivery?.appointment_date || currentForm.delivery_date || '',
-      delivery_city: lastDelivery?.city || currentForm.delivery_city || '',
-      delivery_state: lastDelivery?.state || currentForm.delivery_state || '',
-    };
   };
 
   const addStop = () => setStops(prev => [...prev, { stop_type: 'stop', stop_order: prev.length + 1, company_name: '', city: '', state: '' }]);

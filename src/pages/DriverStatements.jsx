@@ -74,8 +74,9 @@ export default function DriverStatements() {
   });
 
   const { data: carrierCompany = [] } = useQuery({
-    queryKey: ['settings-company'],
-    queryFn: () => base44.entities.Company.filter({ company_type: 'carrier' }, '-created_date', 1),
+    queryKey: ['settings-company', session?.tenant_id],
+    queryFn: () => session?.tenant_id ? base44.entities.Company.filter({ company_type: 'carrier', tenant_id: session.tenant_id }, '-created_date', 1) : Promise.resolve([]),
+    enabled: !!session?.tenant_id,
   });
 
   const togglePublished = async (stmt, e) => {

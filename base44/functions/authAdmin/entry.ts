@@ -403,7 +403,7 @@ Deno.serve(async (req) => {
         console.error('list_admins service-role error:', err.message);
         return Response.json({ success: false, message: 'Failed to list admins' }, { status: 500 });
       }
-      }
+    }
 
     return Response.json({ success: false, error: 'Invalid action' }, { status: 400 });
   } catch (error) {
