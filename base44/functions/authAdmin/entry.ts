@@ -92,17 +92,32 @@ Deno.serve(async (req) => {
         return Response.json({ success: false, message: 'Invalid email or password' }, { status: 401 });
       }
 
-      if (!admin.tenant_id) {
-        console.error(`Login blocked: admin ${admin.email} has no tenant_id`);
-        return Response.json({ success: false, message: 'Account setup incomplete. Please contact support.' }, { status: 403 });
+      // Auto-heal: if admin has no tenant_id, generate one now
+      let loginTenantId = admin.tenant_id;
+      if (!loginTenantId) {
+        loginTenantId = `tenant_${admin.id.substring(0, 8)}`;
+        console.warn(`Auto-healing tenant_id on login for admin ${admin.email} → ${loginTenantId}`);
+        await base44.asServiceRole.entities.Admin.update(admin.id, { tenant_id: loginTenantId });
       }
 
-      const subs = await base44.asServiceRole.entities.Subscription.filter({ tenant_id: admin.tenant_id });
-      if (!subs.length) {
-        console.error(`Login blocked: no subscription for tenant ${admin.tenant_id}`);
-        return Response.json({ success: false, message: 'No subscription found for this account. Please contact support.' }, { status: 403 });
+      let loginSubs = await base44.asServiceRole.entities.Subscription.filter({ tenant_id: loginTenantId });
+
+      // Auto-heal: if no subscription exists, create one
+      if (!loginSubs.length) {
+        console.warn(`Auto-healing missing subscription on login for tenant ${loginTenantId} (${admin.email})`);
+        const trialEnds = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+        const healed = await base44.asServiceRole.entities.Subscription.create({
+          tenant_id: loginTenantId,
+          company_name: admin.company_name || '',
+          admin_email: admin.email,
+          plan: 'starter',
+          status: 'trialing',
+          trial_ends_at: trialEnds,
+        });
+        loginSubs = [healed];
       }
 
+      const subs = loginSubs;
       const sub = subs[0];
       const subscriptionStatus = sub.status;
       const plan = sub.plan;
@@ -124,7 +139,7 @@ Deno.serve(async (req) => {
         admin_id: admin.id,
         admin_name: `${admin.first_name} ${admin.last_name}`,
         company_name: admin.company_name || sub.company_name || '',
-        tenant_id: admin.tenant_id,
+        tenant_id: loginTenantId,
         subscription_status: subscriptionStatus,
         plan,
         session_token: newSessionToken,
@@ -145,13 +160,32 @@ Deno.serve(async (req) => {
       if (admin.session_token_expires && new Date() > new Date(admin.session_token_expires)) {
         return Response.json({ success: false, message: 'Session expired' }, { status: 401 });
       }
-      if (!admin.tenant_id) {
-        return Response.json({ success: false, message: 'Account setup incomplete' }, { status: 403 });
+
+      // Auto-heal: if admin has no tenant_id, generate one now
+      let tenantId = admin.tenant_id;
+      if (!tenantId) {
+        tenantId = `tenant_${admin.id.substring(0, 8)}`;
+        console.warn(`Auto-healing tenant_id for admin ${admin.email} → ${tenantId}`);
+        await base44.asServiceRole.entities.Admin.update(admin.id, { tenant_id: tenantId });
       }
-      const subs = await base44.asServiceRole.entities.Subscription.filter({ tenant_id: admin.tenant_id });
+
+      let subs = await base44.asServiceRole.entities.Subscription.filter({ tenant_id: tenantId });
+
+      // Auto-heal: if no subscription exists, create one (trialing)
       if (!subs.length) {
-        return Response.json({ success: false, message: 'No subscription found' }, { status: 403 });
+        console.warn(`Auto-healing missing subscription for tenant ${tenantId} (${admin.email})`);
+        const trialEnds = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+        const healed = await base44.asServiceRole.entities.Subscription.create({
+          tenant_id: tenantId,
+          company_name: admin.company_name || '',
+          admin_email: admin.email,
+          plan: 'starter',
+          status: 'trialing',
+          trial_ends_at: trialEnds,
+        });
+        subs = [healed];
       }
+
       const sub = subs[0];
       if (sub.status === 'canceled' || sub.status === 'unpaid') {
         return Response.json({ success: false, message: 'Subscription inactive', code: 'subscription_inactive' }, { status: 403 });
@@ -161,7 +195,7 @@ Deno.serve(async (req) => {
         admin_id: admin.id,
         admin_name: `${admin.first_name} ${admin.last_name}`,
         company_name: admin.company_name || sub.company_name || '',
-        tenant_id: admin.tenant_id,
+        tenant_id: tenantId,
         subscription_status: sub.status,
         plan: sub.plan,
       });
@@ -232,23 +266,40 @@ Deno.serve(async (req) => {
       const tenantIdValue = `tenant_${newAdmin.id.substring(0, 8)}`;
       const trialEnds = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
 
-      const newSubscription = await base44.asServiceRole.entities.Subscription.create({
-        tenant_id: tenantIdValue,
-        company_name: company_name.trim(),
-        admin_email: trimmedEmail,
-        plan: 'starter',
-        status: 'trialing',
-        trial_ends_at: trialEnds,
-      });
+      // Create subscription AND stamp tenant_id on admin atomically (both must succeed)
+      let newSubscription;
+      try {
+        newSubscription = await base44.asServiceRole.entities.Subscription.create({
+          tenant_id: tenantIdValue,
+          company_name: company_name.trim(),
+          admin_email: trimmedEmail,
+          plan: 'starter',
+          status: 'trialing',
+          trial_ends_at: trialEnds,
+        });
+      } catch (subErr) {
+        console.error(`Failed to create subscription for ${trimmedEmail}:`, subErr.message);
+        // Clean up the admin record so they can retry cleanly
+        await base44.asServiceRole.entities.Admin.delete(newAdmin.id).catch(() => {});
+        return Response.json({ success: false, message: 'Account setup failed. Please try again.' }, { status: 500 });
+      }
 
       // Issue session token immediately + stamp tenant_id
       const newSessionToken = generateToken();
       const sessionExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-      await base44.asServiceRole.entities.Admin.update(newAdmin.id, {
-        tenant_id: tenantIdValue,
-        session_token: newSessionToken,
-        session_token_expires: sessionExpires,
-      });
+      try {
+        await base44.asServiceRole.entities.Admin.update(newAdmin.id, {
+          tenant_id: tenantIdValue,
+          session_token: newSessionToken,
+          session_token_expires: sessionExpires,
+        });
+      } catch (updateErr) {
+        console.error(`Failed to stamp tenant_id on admin ${newAdmin.id}:`, updateErr.message);
+        // Attempt cleanup, then fail
+        await base44.asServiceRole.entities.Admin.delete(newAdmin.id).catch(() => {});
+        await base44.asServiceRole.entities.Subscription.delete(newSubscription.id).catch(() => {});
+        return Response.json({ success: false, message: 'Account setup failed. Please try again.' }, { status: 500 });
+      }
 
       console.log(`New account created: ${trimmedEmail} → tenant ${tenantIdValue}`);
 
@@ -403,6 +454,56 @@ Deno.serve(async (req) => {
         console.error('list_admins service-role error:', err.message);
         return Response.json({ success: false, message: 'Failed to list admins' }, { status: 500 });
       }
+    }
+
+    // ── REPAIR ACCOUNTS (PROTECTED — master secret required) ──
+    // Scans all admins and auto-heals any missing tenant_id or missing Subscription
+    if (action === 'repair_accounts') {
+      const masterSecret = body.master_secret;
+      const expectedSecret = Deno.env.get('MASTER_ADMIN_SECRET');
+      if (!expectedSecret || masterSecret !== expectedSecret) {
+        return Response.json({ success: false, message: 'Unauthorized' }, { status: 403 });
+      }
+      const allAdmins = await base44.asServiceRole.entities.Admin.list('-created_date', 200);
+      const allSubs = await base44.asServiceRole.entities.Subscription.list('-created_date', 200);
+      const subByTenant = {};
+      for (const s of allSubs) subByTenant[s.tenant_id] = s;
+
+      const results = [];
+      for (const admin of allAdmins) {
+        const fixes = [];
+        let tenantId = admin.tenant_id;
+
+        // Fix 1: missing tenant_id
+        if (!tenantId) {
+          tenantId = `tenant_${admin.id.substring(0, 8)}`;
+          await base44.asServiceRole.entities.Admin.update(admin.id, { tenant_id: tenantId });
+          fixes.push(`stamped tenant_id=${tenantId}`);
+        }
+
+        // Fix 2: missing Subscription
+        if (!subByTenant[tenantId]) {
+          const trialEnds = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+          const newSub = await base44.asServiceRole.entities.Subscription.create({
+            tenant_id: tenantId,
+            company_name: admin.company_name || '',
+            admin_email: admin.email,
+            plan: 'starter',
+            status: 'trialing',
+            trial_ends_at: trialEnds,
+          });
+          subByTenant[tenantId] = newSub;
+          fixes.push(`created subscription (trialing)`);
+        }
+
+        if (fixes.length > 0) {
+          console.log(`Repaired admin ${admin.email}: ${fixes.join(', ')}`);
+          results.push({ email: admin.email, fixes });
+        }
+      }
+
+      console.log(`repair_accounts complete: ${results.length} admins repaired`);
+      return Response.json({ success: true, repaired: results.length, details: results });
     }
 
     return Response.json({ success: false, error: 'Invalid action' }, { status: 400 });
