@@ -11,15 +11,18 @@ import { Trash2, RotateCcw, Loader2 } from 'lucide-react';
 import { format, differenceInDays, addDays } from 'date-fns';
 import PageHeader from '../components/shared/PageHeader';
 import { toast } from 'sonner';
+import { useSession } from '../components/shared/AppSession';
 
 export default function DeletedItems() {
   const queryClient = useQueryClient();
+  const { session } = useSession();
   const [typeFilter, setTypeFilter] = useState('all');
   const [selectedIds, setSelectedIds] = useState(new Set());
 
   const { data: deletedItems = [], isLoading } = useQuery({
-    queryKey: ['deleted-items'],
-    queryFn: () => base44.entities.DeletedItem.list('-created_date', 1000),
+    queryKey: ['deleted-items', session?.tenant_id],
+    queryFn: () => session?.tenant_id ? base44.entities.DeletedItem.filter({ tenant_id: session.tenant_id }, '-created_date', 1000) : Promise.resolve([]),
+    enabled: !!session?.tenant_id,
   });
 
   // Filter out items older than 30 days

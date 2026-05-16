@@ -106,6 +106,7 @@ export default function Invoices() {
   const deleteMutation = useMutation({
     mutationFn: async (inv) => {
       await base44.entities.DeletedItem.create({
+        tenant_id: session?.tenant_id,
         entity_type: 'Invoice',
         entity_id: inv.id,
         entity_label: `Invoice #${inv.invoice_number} — ${inv.customer_name || ''}`,

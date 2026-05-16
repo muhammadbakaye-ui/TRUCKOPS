@@ -24,19 +24,32 @@ export default function AdminDriverDocuments() {
   const [truckFilter, setTruckFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
 
-  const { data: docs = [], isLoading } = useQuery({
-    queryKey: ['all-driver-docs'],
-    queryFn: () => base44.entities.DriverDocument.list('-created_date', 1000),
-  });
+  const tenantId = session?.tenant_id;
 
   const { data: drivers = [] } = useQuery({
-    queryKey: ['drivers-list'],
-    queryFn: () => base44.entities.Driver.list('full_name', 500),
+    queryKey: ['drivers', tenantId],
+    queryFn: () => tenantId ? base44.entities.Driver.filter({ tenant_id: tenantId }, 'full_name', 500) : Promise.resolve([]),
+    enabled: !!tenantId,
   });
 
   const { data: trucks = [] } = useQuery({
-    queryKey: ['trucks-list'],
-    queryFn: () => base44.entities.Truck.list('unit_number', 500),
+    queryKey: ['trucks', tenantId],
+    queryFn: () => tenantId ? base44.entities.Truck.filter({ tenant_id: tenantId }, 'unit_number', 500) : Promise.resolve([]),
+    enabled: !!tenantId,
+  });
+
+  // DriverDocument is linked by driver_id; fetch docs only for this tenant's drivers
+  const driverIds = drivers.map(d => d.id);
+  const { data: docs = [], isLoading } = useQuery({
+    queryKey: ['all-driver-docs', tenantId],
+    queryFn: async () => {
+      if (!driverIds.length) return [];
+      // Fetch all docs and filter client-side to this tenant's drivers
+      const all = await base44.entities.DriverDocument.list('-created_date', 1000);
+      const driverIdSet = new Set(driverIds);
+      return all.filter(d => driverIdSet.has(d.driver_id));
+    },
+    enabled: !!tenantId && driverIds.length >= 0,
   });
 
   // Build driver -> truck map
@@ -56,6 +69,7 @@ export default function AdminDriverDocuments() {
   const deleteMutation = useMutation({
     mutationFn: async (doc) => {
       await base44.entities.DeletedItem.create({
+        tenant_id: tenantId,
         entity_type: 'DriverDocument',
         entity_id: doc.id,
         entity_label: `${doc.driver_name || 'Unknown'} — ${doc.file_name}`,
@@ -65,7 +79,7 @@ export default function AdminDriverDocuments() {
       await base44.entities.DriverDocument.delete(doc.id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['all-driver-docs'] });
+      queryClient.invalidateQueries({ queryKey: ['all-driver-docs', tenantId] });
       toast.success('Document moved to deleted items');
     },
   });

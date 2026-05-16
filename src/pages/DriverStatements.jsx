@@ -56,6 +56,7 @@ export default function DriverStatements() {
       const stmtsArray = Array.isArray(stmts) ? stmts : [stmts];
       for (const stmt of stmtsArray) {
         await base44.entities.DeletedItem.create({
+          tenant_id: session?.tenant_id,
           entity_type: 'DriverStatement',
           entity_id: stmt.id,
           entity_label: `${stmt.driver_name} — ${stmt.period_start} to ${stmt.period_end}`,

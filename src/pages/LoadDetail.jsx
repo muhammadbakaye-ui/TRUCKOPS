@@ -130,13 +130,16 @@ export default function LoadDetail() {
     try {
       const currentId = savedLoadIdRef.current;
         if (!currentId) {
-          // First auto-save: create the record
-           const existingLoads = await base44.entities.Load.list('-created_date', 1);
-           const lastNum = existingLoads.length > 0
-             ? parseInt(existingLoads[0].internal_load_number?.replace(/\D/g, '') || '0')
-             : 0;
-           const derived = deriveStopFields(currentForm, currentStops);
-           const payload = { ...derived, status: 'draft', internal_load_number: currentForm.internal_load_number || `${lastNum + 1}` };
+           // First auto-save: create the record
+            const tenantId = currentForm.tenant_id;
+            const existingLoads = tenantId
+              ? await base44.entities.Load.filter({ tenant_id: tenantId }, '-created_date', 1)
+              : await base44.entities.Load.list('-created_date', 1);
+            const lastNum = existingLoads.length > 0
+              ? parseInt(existingLoads[0].internal_load_number?.replace(/\D/g, '') || '0')
+              : 0;
+            const derived = deriveStopFields(currentForm, currentStops);
+            const payload = { ...derived, status: 'draft', internal_load_number: currentForm.internal_load_number || `${lastNum + 1}` };
         const savedLoad = await base44.entities.Load.create(payload);
         savedLoadIdRef.current = savedLoad.id;
         for (let i = 0; i < currentStops.length; i++) {
@@ -193,7 +196,9 @@ export default function LoadDetail() {
 
       if (!currentId) {
         // Never auto-saved yet
-        const existingLoads = await base44.entities.Load.list('-created_date', 1);
+        const existingLoads = tenantId
+          ? await base44.entities.Load.filter({ tenant_id: tenantId }, '-created_date', 1)
+          : await base44.entities.Load.list('-created_date', 1);
         const lastNum = existingLoads.length > 0
           ? parseInt(existingLoads[0].internal_load_number?.replace(/\D/g, '') || '0')
           : 0;

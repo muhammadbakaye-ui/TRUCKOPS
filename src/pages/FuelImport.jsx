@@ -47,8 +47,9 @@ export default function FuelImport() {
   }, [selectedBatch]);
 
   const { data: batches = [], isLoading: batchesLoading } = useQuery({
-    queryKey: ['fuel-batches'],
-    queryFn: () => base44.entities.FuelBatch.list('-created_date', 50),
+    queryKey: ['fuel-batches', session?.tenant_id],
+    queryFn: () => session?.tenant_id ? base44.entities.FuelBatch.filter({ tenant_id: session.tenant_id }, '-created_date', 50) : Promise.resolve([]),
+    enabled: !!session?.tenant_id,
   });
 
   const { data: transactions = [], isLoading: txLoading } = useQuery({
@@ -87,6 +88,7 @@ export default function FuelImport() {
         file_url,
         import_date: new Date().toISOString().split('T')[0],
         status: 'processing',
+        tenant_id: session?.tenant_id,
       });
       // Use LLM to extract fuel transaction data
       const extracted = await base44.integrations.Core.InvokeLLM({
@@ -156,9 +158,10 @@ Return only the JSON with the transactions array.`,
        let successful = 0;
        let exceptions = 0;
 
-       // Fetch drivers and trucks once
-       const drivers = await base44.entities.Driver.list('full_name', 300);
-       const trucks = await base44.entities.Truck.list('unit_number', 300);
+       // Fetch drivers and trucks once (tenant-scoped)
+       const tenantId = session?.tenant_id;
+       const drivers = await base44.entities.Driver.filter({ tenant_id: tenantId }, 'full_name', 300);
+       const trucks = await base44.entities.Truck.filter({ tenant_id: tenantId }, 'unit_number', 300);
 
        // Normalize a unit number: lowercase, strip leading zeros and spaces
        const normalizeUnit = (s) => s ? s.toLowerCase().trim().replace(/^0+/, '') : '';
@@ -236,6 +239,7 @@ Return only the JSON with the transactions array.`,
 
          await base44.entities.FuelTransaction.create({
            ...tx,
+           tenant_id: session?.tenant_id,
            batch_id: batch.id,
            matched_driver_id: matchedDriver?.id || null,
            matched_driver_name: matchedDriver?.full_name || null,
@@ -397,8 +401,9 @@ Return only the JSON with the transactions array.`,
     if (!selectedBatch) return;
     setProcessing(true);
     try {
-      const drivers = await base44.entities.Driver.list('full_name', 300);
-      const trucks = await base44.entities.Truck.list('unit_number', 300);
+      const tenantId = session?.tenant_id;
+      const drivers = await base44.entities.Driver.filter({ tenant_id: tenantId }, 'full_name', 300);
+      const trucks = await base44.entities.Truck.filter({ tenant_id: tenantId }, 'unit_number', 300);
       const txList = await base44.entities.FuelTransaction.filter({ batch_id: selectedBatch }, '-transaction_date', 500);
 
       const normalizeUnit = (s) => s ? s.toLowerCase().trim().replace(/^0+/, '') : '';

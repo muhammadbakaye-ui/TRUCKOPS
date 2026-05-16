@@ -41,7 +41,7 @@ export default function Reports() {
   const { data: loads = [] } = useQuery({ queryKey: ['loads-report', tenantId], queryFn: () => tenantId ? base44.entities.Load.filter({ tenant_id: tenantId }, '-created_date', 5000) : [], enabled: !!tenantId });
   const { data: invoices = [] } = useQuery({ queryKey: ['invoices-report', tenantId], queryFn: () => tenantId ? base44.entities.Invoice.filter({ tenant_id: tenantId }, '-created_date', 1000) : [], enabled: !!tenantId });
   const { data: drivers = [] } = useQuery({ queryKey: ['drivers-report', tenantId], queryFn: () => tenantId ? base44.entities.Driver.filter({ tenant_id: tenantId }) : [], enabled: !!tenantId });
-  const { data: fuel = [] } = useQuery({ queryKey: ['fuel-report', tenantId], queryFn: () => tenantId ? base44.entities.FuelTransaction.list('-created_date', 1000) : [], enabled: !!tenantId });
+  const { data: fuel = [] } = useQuery({ queryKey: ['fuel-report', tenantId], queryFn: () => tenantId ? base44.entities.FuelTransaction.filter({ tenant_id: tenantId }, '-created_date', 1000) : [], enabled: !!tenantId });
 
   const cutoff = subDays(new Date(), parseInt(period));
   const cutoffStr = format(cutoff, 'yyyy-MM-dd');

@@ -61,12 +61,15 @@ function InvoiceStatusSelect({ load, queryClient }) {
       } else {
         const existing = await base44.entities.Invoice.filter({ load_id: load.id }, '-created_date', 1);
         if (existing.length === 0) {
-          const allInvoices = await base44.entities.Invoice.list('-created_date', 1);
+          const allInvoices = load.tenant_id
+            ? await base44.entities.Invoice.filter({ tenant_id: load.tenant_id }, '-created_date', 1)
+            : await base44.entities.Invoice.list('-created_date', 1);
           const lastNum = allInvoices.length > 0
             ? parseInt(allInvoices[0].invoice_number?.replace(/\D/g, '') || '999')
             : 999;
           const today = new Date().toISOString().split('T')[0];
           await base44.entities.Invoice.create({
+            tenant_id: load.tenant_id,
             invoice_number: `INV-${lastNum + 1}`,
             load_id: load.id,
             load_number: load.internal_load_number,
@@ -215,6 +218,7 @@ export default function Loads() {
       const loadsArray = Array.isArray(loads) ? loads : [loads];
       for (const load of loadsArray) {
         await base44.entities.DeletedItem.create({
+          tenant_id: session?.tenant_id,
           entity_type: 'Load',
           entity_id: load.id,
           entity_label: `Load #${load.internal_load_number} — ${load.customer_name || ''}`,

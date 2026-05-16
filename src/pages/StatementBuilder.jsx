@@ -341,7 +341,7 @@ export default function StatementBuilder() {
     try {
       const driver = drivers.find(d => d.id === form.driver_id);
       const [allLoads, takenMap] = await Promise.all([
-        base44.entities.Load.filter({ driver_1_id: form.driver_id }, 'pickup_date', 500),
+        base44.entities.Load.filter({ driver_1_id: form.driver_id, tenant_id: tenantId }, 'pickup_date', 500),
         fetchTakenLoadIds(),
       ]);
       const weekLoads = allLoads.filter(l =>

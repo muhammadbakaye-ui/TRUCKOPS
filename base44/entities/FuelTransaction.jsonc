@@ -1,0 +1,95 @@
+{
+  "name": "FuelTransaction",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant/account identifier for multi-tenancy"
+    },
+    "batch_id": {
+      "type": "string"
+    },
+    "card_number": {
+      "type": "string"
+    },
+    "driver_name_raw": {
+      "type": "string"
+    },
+    "truck_number_raw": {
+      "type": "string"
+    },
+    "matched_driver_id": {
+      "type": "string"
+    },
+    "matched_driver_name": {
+      "type": "string"
+    },
+    "matched_truck_id": {
+      "type": "string"
+    },
+    "matched_truck_number": {
+      "type": "string"
+    },
+    "location_name": {
+      "type": "string",
+      "description": "Full location name from fuel card file (e.g., 'LOVES #481 TRAVEL STOP')"
+    },
+    "city": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "transaction_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "gallons": {
+      "type": "number"
+    },
+    "fuel_amount": {
+      "type": "number"
+    },
+    "transaction_fee": {
+      "type": "number"
+    },
+    "advance_amount": {
+      "type": "number"
+    },
+    "advance_fee": {
+      "type": "number"
+    },
+    "misc_amount": {
+      "type": "number"
+    },
+    "misc_fee": {
+      "type": "number"
+    },
+    "invoice_amount": {
+      "type": "number"
+    },
+    "total_amount": {
+      "type": "number"
+    },
+    "import_status": {
+      "type": "string",
+      "enum": [
+        "matched",
+        "exception",
+        "duplicate",
+        "manual"
+      ],
+      "default": "matched"
+    },
+    "duplicate_flag": {
+      "type": "boolean",
+      "default": false
+    },
+    "exception_reason": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "batch_id"
+  ]
+}

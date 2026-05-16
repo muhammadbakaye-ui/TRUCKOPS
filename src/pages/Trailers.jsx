@@ -10,6 +10,7 @@ import StatusBadge from '../components/shared/StatusBadge';
 import PageHeader from '../components/shared/PageHeader';
 import EntityFormDialog from '../components/shared/EntityFormDialog';
 import { logAudit } from '../components/shared/AuditLogger';
+import { useSession } from '../components/shared/AppSession';
 
 const TRAILER_FIELDS = [
   { name: 'unit_number', label: 'Unit Number', required: true },
@@ -33,10 +34,12 @@ export default function Trailers() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const queryClient = useQueryClient();
+  const { session } = useSession();
 
   const { data: trailers = [], isLoading } = useQuery({
-    queryKey: ['trailers'],
-    queryFn: () => base44.entities.Trailer.list('-created_date', 200),
+    queryKey: ['trailers', session?.tenant_id],
+    queryFn: () => session?.tenant_id ? base44.entities.Trailer.filter({ tenant_id: session.tenant_id }, '-created_date', 200) : Promise.resolve([]),
+    enabled: !!session?.tenant_id,
   });
 
   const saveMutation = useMutation({
@@ -45,7 +48,7 @@ export default function Trailers() {
         await base44.entities.Trailer.update(editing.id, data);
         await logAudit({ action_type: 'update', entity_type: 'Trailer', entity_id: editing.id, entity_label: data.unit_number });
       } else {
-        await base44.entities.Trailer.create(data);
+        await base44.entities.Trailer.create({ ...data, tenant_id: session?.tenant_id });
         await logAudit({ action_type: 'create', entity_type: 'Trailer', entity_label: data.unit_number });
       }
     },
