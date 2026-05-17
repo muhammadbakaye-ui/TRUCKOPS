@@ -86,6 +86,7 @@ Deno.serve(async (req) => {
         last_name: lastName,
         email: admin_email.toLowerCase().trim(),
         password_hash: passwordHash,
+        company_name: company_name || '',
         active: true,
         email_verified: true,
         tenant_id: tenantId,

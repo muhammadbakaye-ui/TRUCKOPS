@@ -79,7 +79,7 @@ export default function BillingTab() {
           {status === 'trialing' && (
             <div className="mt-3 flex items-center gap-2 text-xs text-blue-600 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
               <CheckCircle className="w-3.5 h-3.5 shrink-0" />
-              You're on a 3-day free trial. Add a payment method to continue after the trial ends.
+              You're on a free trial. Add a payment method to continue after the trial ends.
             </div>
           )}
           {status === 'past_due' && (

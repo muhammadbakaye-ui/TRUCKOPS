@@ -424,6 +424,23 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'Password updated successfully' });
     }
 
+    // ── UPDATE PROFILE (requires valid session) ──
+    if (action === 'update_profile') {
+      if (!email || !session_token) {
+        return Response.json({ success: false, message: 'Authentication required' }, { status: 401 });
+      }
+      const admin = await verifySessionToken(base44, email, session_token);
+      if (!admin) {
+        return Response.json({ success: false, message: 'Session expired. Please log in again.' }, { status: 401 });
+      }
+      const updateFields = {};
+      if (body.first_name !== undefined) updateFields.first_name = body.first_name.trim();
+      if (body.last_name !== undefined) updateFields.last_name = body.last_name.trim();
+      if (body.phone !== undefined) updateFields.phone = body.phone || '';
+      await base44.asServiceRole.entities.Admin.update(admin.id, updateFields);
+      return Response.json({ success: true, message: 'Profile updated' });
+    }
+
     // ── LIST ADMINS (PROTECTED — master secret required) ──
     if (action === 'list_admins') {
       const masterSecret = body.master_secret;

@@ -33,17 +33,30 @@ export default function AccountCustomization() {
     if (!adminEmail) return;
     const fetchAdminData = async () => {
       try {
-        const admins = await base44.entities.Admin.filter({ email: adminEmail });
-        if (admins.length > 0) {
-          const admin = admins[0];
-          setAccountForm({
-            first_name: admin.first_name || '',
-            last_name: admin.last_name || '',
-            phone: admin.phone || '',
-            email: admin.email || adminEmail,
-          });
-        } else {
-          setAccountForm(prev => ({ ...prev, email: adminEmail }));
+        // Use session token to validate + fetch admin data securely
+        const sessionRaw = localStorage.getItem('truckops_session');
+        const sessionData = sessionRaw ? JSON.parse(sessionRaw) : null;
+        const sessionToken = sessionData?.session_token;
+        if (!sessionToken) return;
+        const res = await base44.functions.invoke('authAdmin', {
+          action: 'validate_session',
+          email: adminEmail,
+          session_token: sessionToken,
+        });
+        if (res.data?.success) {
+          // Also fetch name fields from admin entity (read-only for display)
+          const admins = await base44.entities.Admin.filter({ email: adminEmail });
+          if (admins.length > 0) {
+            const admin = admins[0];
+            setAccountForm({
+              first_name: admin.first_name || '',
+              last_name: admin.last_name || '',
+              phone: admin.phone || '',
+              email: admin.email || adminEmail,
+            });
+          } else {
+            setAccountForm(prev => ({ ...prev, email: adminEmail }));
+          }
         }
       } catch (err) {
         console.error('Error fetching admin data:', err);
@@ -55,15 +68,19 @@ export default function AccountCustomization() {
 
   const updateAccountMutation = useMutation({
     mutationFn: async (data) => {
-      const admins = await base44.entities.Admin.filter({ email: adminEmail });
-      if (admins.length > 0) {
-        return base44.entities.Admin.update(admins[0].id, {
-          first_name: data.first_name,
-          last_name: data.last_name,
-          phone: data.phone || '',
-        });
-      }
-      throw new Error('Admin account not found');
+      const sessionRaw = localStorage.getItem('truckops_session');
+      const sessionData = sessionRaw ? JSON.parse(sessionRaw) : null;
+      const sessionToken = sessionData?.session_token;
+      const res = await base44.functions.invoke('authAdmin', {
+        action: 'update_profile',
+        email: adminEmail,
+        session_token: sessionToken,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        phone: data.phone || '',
+      });
+      if (!res.data?.success) throw new Error(res.data?.message || 'Update failed');
+      return res.data;
     },
     onSuccess: () => {
       toast.success('Account updated successfully');

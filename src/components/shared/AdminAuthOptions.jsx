@@ -239,7 +239,7 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour, initia
                     <div>
                       <Label className="text-sm font-medium text-sidebar-foreground/70">Password</Label>
                       <div className="relative mt-1.5">
-                        <Input type={showPassword ? 'text' : 'password'} name="password" placeholder="At least 6 characters" value={formData.password} onChange={handleChange} disabled={loading} className="pr-10 bg-sidebar border-sidebar-border text-sidebar-foreground placeholder:text-sidebar-foreground/30 focus-visible:ring-sidebar-primary" />
+                        <Input type={showPassword ? 'text' : 'password'} name="password" placeholder="At least 8 characters" value={formData.password} onChange={handleChange} disabled={loading} className="pr-10 bg-sidebar border-sidebar-border text-sidebar-foreground placeholder:text-sidebar-foreground/30 focus-visible:ring-sidebar-primary" />
                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-sidebar-foreground/40 hover:text-sidebar-foreground/70">
                           {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>

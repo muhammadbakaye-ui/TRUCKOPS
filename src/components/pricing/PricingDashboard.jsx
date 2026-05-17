@@ -18,14 +18,11 @@ export default function PricingDashboard() {
   const [loadingPlan, setLoadingPlan] = useState(null);
   const [error, setError] = useState('');
 
-  const getAccountInfo = async () => {
+  const getAccountInfo = () => {
     try {
-      const user = await base44.auth.me();
-      if (!user) return { email: '', company: '' };
-      
       const session = JSON.parse(localStorage.getItem('truckops_session') || '{}');
       return {
-        email: user.email || session?.admin_email || '',
+        email: session?.admin_email || '',
         company: session?.company_name || '',
       };
     } catch {
@@ -60,7 +57,7 @@ export default function PricingDashboard() {
     setError('');
     
     try {
-      const accountInfo = await getAccountInfo();
+      const accountInfo = getAccountInfo();
       if (!accountInfo.email || !accountInfo.company) {
         setError('Unable to retrieve account information.');
         setLoadingPlan(null);

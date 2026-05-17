@@ -39,7 +39,7 @@ export default function ResetPassword() {
     e.preventDefault();
     if (!password || !confirm) { setError('Both fields are required'); return; }
     if (password !== confirm) { setError('Passwords do not match'); return; }
-    if (password.length < 6) { setError('Password must be at least 6 characters'); return; }
+    if (password.length < 8) { setError('Password must be at least 8 characters'); return; }
     setLoading(true);
     setError('');
     try {
@@ -69,7 +69,7 @@ export default function ResetPassword() {
               <div>
                 <Label className="text-sm font-medium">New Password</Label>
                 <div className="relative mt-1.5">
-                  <Input type={showPass ? 'text' : 'password'} placeholder="At least 6 characters" value={password} onChange={e => { setPassword(e.target.value); setError(''); }} disabled={loading} className="pr-10" autoFocus />
+                  <Input type={showPass ? 'text' : 'password'} placeholder="At least 8 characters" value={password} onChange={e => { setPassword(e.target.value); setError(''); }} disabled={loading} className="pr-10" autoFocus />
                   <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                     {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
