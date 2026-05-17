@@ -44,10 +44,14 @@ export default function AdminDriverDocuments() {
     queryKey: ['all-driver-docs', tenantId],
     queryFn: async () => {
       if (!driverIds.length) return [];
-      // Fetch all docs and filter client-side to this tenant's drivers
-      const all = await base44.entities.DriverDocument.list('-created_date', 1000);
+      // Fetch docs only for this tenant's driver IDs, in batches
       const driverIdSet = new Set(driverIds);
-      return all.filter(d => driverIdSet.has(d.driver_id));
+      const allDocs = [];
+      for (const driverId of driverIds) {
+        const docs = await base44.entities.DriverDocument.filter({ driver_id: driverId }, '-created_date', 200);
+        docs.forEach(d => allDocs.push(d));
+      }
+      return allDocs.filter(d => driverIdSet.has(d.driver_id));
     },
     enabled: !!tenantId && driverIds.length >= 0,
   });

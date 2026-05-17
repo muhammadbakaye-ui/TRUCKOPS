@@ -131,10 +131,10 @@ export default function LoadDetail() {
       const currentId = savedLoadIdRef.current;
         if (!currentId) {
            // First auto-save: create the record
-            const tenantId = currentForm.tenant_id;
+            const tenantId = currentForm.tenant_id || session?.tenant_id;
             const existingLoads = tenantId
               ? await base44.entities.Load.filter({ tenant_id: tenantId }, '-created_date', 1)
-              : await base44.entities.Load.list('-created_date', 1);
+              : [];
             const lastNum = existingLoads.length > 0
               ? parseInt(existingLoads[0].internal_load_number?.replace(/\D/g, '') || '0')
               : 0;
@@ -202,7 +202,7 @@ export default function LoadDetail() {
         const lastNum = existingLoads.length > 0
           ? parseInt(existingLoads[0].internal_load_number?.replace(/\D/g, '') || '0')
           : 0;
-        const finalPayload = { ...payload, internal_load_number: form.internal_load_number || `${lastNum + 1}` };
+        const finalPayload = { ...payload, tenant_id: tenantId, internal_load_number: form.internal_load_number || `${lastNum + 1}` };
         const savedLoad = await base44.entities.Load.create(finalPayload);
         for (let i = 0; i < stops.length; i++) {
           await base44.entities.LoadStop.create({ ...stops[i], load_id: savedLoad.id, stop_order: i + 1 });

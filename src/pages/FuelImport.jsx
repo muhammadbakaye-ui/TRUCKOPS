@@ -343,13 +343,14 @@ Return only the JSON with the transactions array.`,
     try {
       const entityLabel = `${tx.matched_driver_name || tx.driver_name_raw} - ${tx.transaction_date}`;
       await base44.entities.DeletedItem.create({
-        entity_type: 'FuelTransaction',
-        entity_id: tx.id,
-        entity_label: entityLabel,
-        deleted_by: 'system',
-        deleted_date: new Date().toISOString(),
-        original_data: JSON.stringify(tx),
-      });
+          tenant_id: session?.tenant_id,
+          entity_type: 'FuelTransaction',
+          entity_id: tx.id,
+          entity_label: entityLabel,
+          deleted_by: 'system',
+          deleted_date: new Date().toISOString(),
+          original_data: JSON.stringify(tx),
+        });
       await base44.entities.FuelTransaction.delete(tx.id);
       queryClient.invalidateQueries({ queryKey: ['fuel-transactions'] });
       toast.success('Fuel transaction deleted');
@@ -365,6 +366,7 @@ Return only the JSON with the transactions array.`,
       for (const tx of batchTransactions) {
         const entityLabel = `${tx.matched_driver_name || tx.driver_name_raw} - ${tx.transaction_date}`;
         await base44.entities.DeletedItem.create({
+          tenant_id: session?.tenant_id,
           entity_type: 'FuelTransaction',
           entity_id: tx.id,
           entity_label: entityLabel,
@@ -378,6 +380,7 @@ Return only the JSON with the transactions array.`,
       // Delete the batch itself
       const batchLabel = batch.file_name;
       await base44.entities.DeletedItem.create({
+        tenant_id: session?.tenant_id,
         entity_type: 'FuelBatch',
         entity_id: batch.id,
         entity_label: batchLabel,
@@ -485,6 +488,7 @@ Return only the JSON with the transactions array.`,
       for (const tx of txList) {
         const entityLabel = `${tx.matched_driver_name || tx.driver_name_raw} - ${tx.transaction_date}`;
         await base44.entities.DeletedItem.create({
+          tenant_id: session?.tenant_id,
           entity_type: 'FuelTransaction',
           entity_id: tx.id,
           entity_label: entityLabel,
