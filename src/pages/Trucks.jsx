@@ -150,7 +150,7 @@ export default function Trucks() {
         truckId = editing.id;
         await logAudit({ action_type: 'update', entity_type: 'Truck', entity_id: editing.id, entity_label: data.unit_number });
       } else {
-        const created = await base44.entities.Truck.create(data);
+        const created = await base44.entities.Truck.create({ ...data, tenant_id: session.tenant_id });
         truckId = created.id;
         await logAudit({ action_type: 'create', entity_type: 'Truck', entity_label: data.unit_number });
       }

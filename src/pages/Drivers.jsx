@@ -252,7 +252,7 @@ export default function Drivers() {
         driverId = editing.id;
         await logAudit({ action_type: 'update', entity_type: 'Driver', entity_id: editing.id, entity_label: data.full_name });
       } else {
-        const created = await base44.entities.Driver.create(data);
+        const created = await base44.entities.Driver.create({ ...data, tenant_id: session.tenant_id });
         driverId = created.id;
         await logAudit({ action_type: 'create', entity_type: 'Driver', entity_label: data.full_name });
       }

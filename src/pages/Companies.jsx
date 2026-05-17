@@ -53,7 +53,7 @@ export default function Companies() {
         await logAudit({ action_type: 'update', entity_type: 'Company', entity_id: editing.id, entity_label: data.company_name, before_data: editing, after_data: data });
         return result;
       } else {
-        const result = await base44.entities.Company.create(data);
+        const result = await base44.entities.Company.create({ ...data, tenant_id: session.tenant_id });
         await logAudit({ action_type: 'create', entity_type: 'Company', entity_label: data.company_name, after_data: data });
         return result;
       }
