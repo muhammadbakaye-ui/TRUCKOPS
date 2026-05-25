@@ -3,7 +3,10 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Truck, Calendar, Fuel, ChevronDown, ChevronUp, AlertCircle, Printer, Upload, FileText, CheckCircle2, X } from 'lucide-react';
+import { Loader2, Truck, Calendar, Fuel, ChevronDown, ChevronUp, AlertCircle, Printer, Upload, FileText, CheckCircle2, X, User } from 'lucide-react';
+import DriverMyProfile from '@/components/driver/DriverMyProfile';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useRef } from 'react';
 import { printStatement } from '@/components/print/printStatement';
 import { format, parse } from 'date-fns';
 
@@ -150,12 +153,28 @@ function StatementCard({ statement, lines }) {
   );
 }
 
+const DOC_TYPES = [
+  { value: 'bol', label: 'BOL' },
+  { value: 'rate_confirmation', label: 'Rate Confirmation' },
+  { value: 'drug_test', label: 'Drug & Alcohol Test Result' },
+  { value: 'cdl', label: 'CDL / License' },
+  { value: 'medical_card', label: 'Medical Card' },
+  { value: 'inspection_report', label: 'Vehicle Inspection Report' },
+  { value: 'accident_report', label: 'Accident Report' },
+  { value: 'violation_notice', label: 'Violation Notice' },
+  { value: 'insurance_document', label: 'Insurance Document' },
+  { value: 'registration', label: 'Registration' },
+  { value: 'other', label: 'Other' },
+];
+const DOC_TYPE_LABELS = Object.fromEntries(DOC_TYPES.map(d => [d.value, d.label]));
+
 function DocUploadTab({ driver }) {
   const [docType, setDocType] = useState('bol');
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploaded, setUploaded] = useState([]);
   const [error, setError] = useState(null);
+  const fileRef = useRef(null);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0] || null);
@@ -195,25 +214,16 @@ function DocUploadTab({ driver }) {
         </CardHeader>
         <CardContent className="p-4 space-y-4">
           <div>
-            <p className="text-xs text-muted-foreground mb-3">Submit your BOLs or Rate Confirmations directly to dispatch.</p>
+            <p className="text-xs text-muted-foreground mb-3">Submit documents directly to dispatch.</p>
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-medium text-foreground mb-1.5 block">Document Type</label>
-                <div className="flex gap-2">
-                  {[{ value: 'bol', label: 'BOL' }, { value: 'rate_confirmation', label: 'Rate Confirmation' }].map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => setDocType(opt.value)}
-                      className={`flex-1 py-2 px-3 rounded-lg border text-xs font-medium transition-colors ${
-                        docType === opt.value
-                          ? 'bg-primary text-primary-foreground border-primary'
-                          : 'bg-background text-foreground border-border hover:bg-muted'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
+                <Select value={docType} onValueChange={setDocType}>
+                  <SelectTrigger className="h-10 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {DOC_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
@@ -238,9 +248,10 @@ function DocUploadTab({ driver }) {
                   )}
                 </label>
                 <input
+                  ref={fileRef}
                   id="portal-file-input"
                   type="file"
-                  accept="image/*,application/pdf"
+                  accept="image/*,application/pdf,.doc,.docx"
                   className="hidden"
                   onChange={handleFileChange}
                 />
@@ -272,7 +283,7 @@ function DocUploadTab({ driver }) {
                   <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
                   <div className="min-w-0">
                     <p className="font-medium truncate">{u.name}</p>
-                    <p className="text-muted-foreground text-[11px]">{u.type === 'bol' ? 'BOL' : 'Rate Confirmation'}</p>
+                    <p className="text-muted-foreground text-[11px]">{DOC_TYPE_LABELS[u.type] || u.type}</p>
                   </div>
                 </div>
               ))}
@@ -289,6 +300,7 @@ export default function DriverPublicPortal() {
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
   const [activeTab, setActiveTab] = useState('statements');
+  const [profileSession, setProfileSession] = useState(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -324,6 +336,14 @@ export default function DriverPublicPortal() {
   }
 
   const { driver, truck, statements, statementLines, fuelTransactions } = data;
+
+  const driverSession = {
+    driver_id: driver.id,
+    driver_name: driver.full_name,
+    tenant_id: driver.tenant_id,
+    truck_id: truck?.id,
+    truck_number: truck?.unit_number,
+  };
 
   const totalNetPay = statements.reduce((s, st) => s + (st.final_check_amount || 0), 0);
   const latestStatement = statements[0] || null;
@@ -374,6 +394,7 @@ export default function DriverPublicPortal() {
             { key: 'statements', label: 'My Statements', TabIcon: Calendar },
             { key: 'fuel', label: 'Fuel Transactions', TabIcon: Fuel },
             { key: 'upload', label: 'Upload Docs', TabIcon: Upload },
+            { key: 'profile', label: 'My Profile', TabIcon: User },
           ].map(({ key, label, TabIcon }) => (
             <button
               key={key}
@@ -414,6 +435,8 @@ export default function DriverPublicPortal() {
           )}
 
           {activeTab === 'upload' && <DocUploadTab driver={driver} />}
+
+          {activeTab === 'profile' && <DriverMyProfile session={driverSession} />}
 
           {activeTab === 'fuel' && (
             <>
