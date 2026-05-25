@@ -57,34 +57,39 @@ function useMainScrollRestoration() {
   const location = useLocation();
   const key = `scroll_${location.pathname}`;
 
-  // Save scroll position before navigating away
-  const savedKey = useRef(key);
-  useEffect(() => {
-    // When key changes (navigation), save the old page's scroll before restoring new
-    savedKey.current = key;
-  });
-
-  // Save on scroll
+  // Save scroll position on every scroll event
   useEffect(() => {
     const el = mainRef.current;
     if (!el) return;
-    const onScroll = () => sessionStorage.setItem(key, el.scrollTop);
+    
+    const onScroll = () => {
+      sessionStorage.setItem(key, el.scrollTop);
+    };
+    
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
   }, [key]);
 
-  // Restore after navigation — wait for animation + paint
+  // Restore scroll position when route changes
   useEffect(() => {
     const el = mainRef.current;
     if (!el) return;
+    
+    // Reset to top first (ensures clean state)
+    el.scrollTop = 0;
+    
+    // Then restore saved position after a brief delay for content to render
     const saved = sessionStorage.getItem(key);
-    const target = saved ? parseInt(saved, 10) : 0;
-    // Use a small delay so framer-motion animation doesn't fight the scroll
-    const timer = setTimeout(() => {
-      if (mainRef.current) mainRef.current.scrollTop = target;
-    }, 50);
-    return () => clearTimeout(timer);
-  }, [location.pathname, location.search]);
+    if (saved) {
+      const target = parseInt(saved, 10);
+      const timer = setTimeout(() => {
+        if (mainRef.current) {
+          mainRef.current.scrollTop = target;
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [location.pathname]);
 
   return mainRef;
 }

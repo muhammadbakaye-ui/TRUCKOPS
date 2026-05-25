@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSession } from '../shared/AppSession';
+import { usePendingReviewCounts } from '@/hooks/usePendingReviewCounts';
 
 const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
@@ -57,6 +58,7 @@ const navItems = [
 export default function Sidebar({ currentPage, collapsed, onToggle }) {
   const { session } = useSession();
   const companyName = session?.company_name || '';
+  const pendingCounts = usePendingReviewCounts();
 
   return (
     <div data-tour="sidebar" className={cn(
@@ -104,7 +106,18 @@ export default function Sidebar({ currentPage, collapsed, onToggle }) {
               )}
               title={collapsed ? item.label : undefined}
             >
-              <Icon className="w-4 h-4 flex-shrink-0" />
+              <div className="relative flex-shrink-0">
+                <Icon className="w-4 h-4" />
+                {!collapsed && item.page === 'DriverQualifications' && pendingCounts.qualifications > 0 && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+                )}
+                {!collapsed && item.page === 'DrugAlcoholTests' && pendingCounts.drugTests > 0 && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+                )}
+                {!collapsed && item.page === 'TruckInspections' && pendingCounts.inspections > 0 && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+                )}
+              </div>
               {!collapsed && <span>{item.label}</span>}
             </Link>
           );
