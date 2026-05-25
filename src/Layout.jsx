@@ -94,6 +94,45 @@ function useMainScrollRestoration() {
   return mainRef;
 }
 
+function useSidebarScrollRestoration() {
+  const sidebarRef = useRef(null);
+  const location = useLocation();
+  const sidebarKey = 'scroll_sidebar';
+
+  // Save scroll position on every scroll event
+  useEffect(() => {
+    const el = sidebarRef.current;
+    if (!el) return;
+    
+    const onScroll = () => {
+      sessionStorage.setItem(sidebarKey, el.scrollTop);
+    };
+    
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Restore scroll position when route changes
+  useEffect(() => {
+    const el = sidebarRef.current;
+    if (!el) return;
+    
+    // Restore saved position after a brief delay
+    const saved = sessionStorage.getItem(sidebarKey);
+    if (saved) {
+      const target = parseInt(saved, 10);
+      const timer = setTimeout(() => {
+        if (sidebarRef.current) {
+          sidebarRef.current.scrollTop = target;
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [location.pathname]);
+
+  return sidebarRef;
+}
+
 function AppShell({ children, currentPageName }) {
   const { session, login, validating } = useSession();
   const [collapsed, setCollapsed] = useState(false);
@@ -128,6 +167,7 @@ function AppShell({ children, currentPageName }) {
     setShowOnboarding(false);
   };
   const mainRef = useMainScrollRestoration();
+  const sidebarRef = useSidebarScrollRestoration();
   const location = useLocation();
   const navigate = useNavigate();
   useAndroidBackButton();
@@ -164,7 +204,7 @@ function AppShell({ children, currentPageName }) {
       <GlobalBroadcastListener />
       <div className="flex h-screen overflow-hidden bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         {/* Sidebar: hidden on mobile, visible on md+ */}
-        <div className="hidden md:flex">
+        <div className="hidden md:flex" ref={sidebarRef}>
           <Sidebar
             currentPage={currentPageName}
             collapsed={collapsed}
