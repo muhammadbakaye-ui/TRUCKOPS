@@ -26,6 +26,13 @@ function writeCache(data) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
 }
 
+function getAdminSession() {
+  try {
+    const raw = localStorage.getItem('truckops_session');
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
 export function useStatementSettings() {
   const [settings, setSettings] = useState(() => readCache() || DEFAULTS);
   const [saving, setSaving] = useState(false);
@@ -34,11 +41,13 @@ export function useStatementSettings() {
   useEffect(() => {
     const load = async () => {
       try {
-        const session = localStorage.getItem('admin_session');
-        if (!session) return;
-        const { id } = JSON.parse(session);
-        if (!id) return;
-        const admin = await base44.entities.Admin.get(id);
+        const session = getAdminSession();
+        if (!session?.admin_email) return;
+        const admins = await base44.entities.Admin.filter(
+          { email: session.admin_email, tenant_id: session.tenant_id }, '-created_date', 1
+        );
+        if (!admins.length) return;
+        const admin = admins[0];
         const loaded = {
           weekStart: admin.statement_week_start ?? DEFAULTS.weekStart,
           dueDay: admin.statement_due_day ?? DEFAULTS.dueDay,
@@ -53,10 +62,13 @@ export function useStatementSettings() {
   const save = async (weekStart, dueDay) => {
     setSaving(true);
     try {
-      const session = localStorage.getItem('admin_session');
-      if (!session) throw new Error('Not logged in');
-      const { id } = JSON.parse(session);
-      await base44.entities.Admin.update(id, {
+      const session = getAdminSession();
+      if (!session?.admin_email) throw new Error('Not logged in');
+      const admins = await base44.entities.Admin.filter(
+        { email: session.admin_email, tenant_id: session.tenant_id }, '-created_date', 1
+      );
+      if (!admins.length) throw new Error('Admin not found');
+      await base44.entities.Admin.update(admins[0].id, {
         statement_week_start: weekStart,
         statement_due_day: dueDay,
       });

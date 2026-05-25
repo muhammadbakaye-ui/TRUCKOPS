@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
+import OnboardingFlow from './components/onboarding/OnboardingFlow';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { SessionProvider, useSession } from './components/shared/AppSession';
 import Sidebar from './components/layout/Sidebar';
@@ -76,8 +78,34 @@ function useMainScrollRestoration(currentPageName) {
 }
 
 function AppShell({ children, currentPageName }) {
-  const { session, validating } = useSession();
+  const { session, login, validating } = useSession();
   const [collapsed, setCollapsed] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+
+  // Check if onboarding is needed for this session
+  useEffect(() => {
+    if (validating) { setOnboardingChecked(false); return; }
+    if (!session || session.role === 'driver') { setOnboardingChecked(true); return; }
+    if (session.onboarding_completed) { setOnboardingChecked(true); return; }
+    setOnboardingChecked(false);
+    // Check DB in case they cleared localStorage
+    base44.entities.Admin.filter({ email: session.admin_email, tenant_id: session.tenant_id }, '-created_date', 1)
+      .then(admins => {
+        if (admins.length && admins[0].onboarding_completed) {
+          login({ ...session, onboarding_completed: true });
+        } else {
+          setShowOnboarding(true);
+        }
+      })
+      .catch(() => { /* keep onboarding hidden on error */ })
+      .finally(() => setOnboardingChecked(true));
+  }, [session?.admin_email, validating]);
+
+  const handleOnboardingComplete = () => {
+    login({ ...session, onboarding_completed: true });
+    setShowOnboarding(false);
+  };
   const mainRef = useMainScrollRestoration(currentPageName);
   const location = useLocation();
   const navigate = useNavigate();
@@ -85,12 +113,16 @@ function AppShell({ children, currentPageName }) {
 
   // No subscription redirect - preview mode is open
 
-  if (validating) {
+  if (validating || !onboardingChecked) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-sidebar">
         <div className="w-8 h-8 border-4 border-sidebar-border border-t-sidebar-primary rounded-full animate-spin" />
       </div>
     );
+  }
+
+  if (showOnboarding && session) {
+    return <OnboardingFlow session={session} onComplete={handleOnboardingComplete} />;
   }
 
   if (!session) {

@@ -44,6 +44,18 @@
     "zip": {
       "type": "string"
     },
+    "po_box": {
+      "type": "string",
+      "description": "P.O. Box for mailing"
+    },
+    "dot_number": {
+      "type": "string",
+      "description": "USDOT Number (for carrier companies)"
+    },
+    "mc_number": {
+      "type": "string",
+      "description": "MC Number (for carrier companies)"
+    },
     "payment_terms": {
       "type": "string",
       "enum": [

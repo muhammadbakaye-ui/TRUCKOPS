@@ -65,6 +65,11 @@
       "type": "number",
       "description": "Day of the FOLLOWING week that statements are due. 0=Sunday, 1=Monday, ... 6=Saturday",
       "default": 2
+    },
+    "onboarding_completed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Set to true once the user completes or skips the first-time onboarding flow"
     }
   },
   "required": [
