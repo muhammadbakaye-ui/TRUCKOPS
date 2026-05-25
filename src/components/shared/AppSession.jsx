@@ -61,10 +61,8 @@ export function SessionProvider({ children }) {
             }
           })
           .catch(err => {
-            // Validation failed — clear stale session
-            console.warn('Session validation failed:', err.message);
-            localStorage.removeItem(SESSION_KEY);
-            setSession(null);
+            // Network/transient error — keep session alive, do NOT log out
+            console.warn('Session validation failed (keeping session):', err.message);
           });
       } catch {
         localStorage.removeItem(SESSION_KEY);
