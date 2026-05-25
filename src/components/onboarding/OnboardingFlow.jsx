@@ -143,18 +143,18 @@ export default function OnboardingFlow({ session, onComplete }) {
           {step === 1 ? (
             <div className="space-y-4">
               <Field label="Company Name" required>
-                <Input value={co.company_name} onChange={e => setCoField('company_name', e.target.value)} placeholder="Unity Transportation LLC" className="h-9 text-sm" />
+                <Input value={co.company_name} onChange={e => setCoField('company_name', e.target.value)} placeholder="Your company name" className="h-9 text-sm" />
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="DOT Number">
-                  <Input value={co.dot_number} onChange={e => setCoField('dot_number', e.target.value)} placeholder="1234567" className="h-9 text-sm" />
+                  <Input value={co.dot_number} onChange={e => setCoField('dot_number', e.target.value)} placeholder="USDOT Number" className="h-9 text-sm" />
                 </Field>
                 <Field label="MC Number">
-                  <Input value={co.mc_number} onChange={e => setCoField('mc_number', e.target.value)} placeholder="MC-123456" className="h-9 text-sm" />
+                  <Input value={co.mc_number} onChange={e => setCoField('mc_number', e.target.value)} placeholder="MC Number" className="h-9 text-sm" />
                 </Field>
               </div>
               <Field label="Company Address">
-                <Input value={co.address_1} onChange={e => setCoField('address_1', e.target.value)} placeholder="123 Main St" className="h-9 text-sm" />
+                <Input value={co.address_1} onChange={e => setCoField('address_1', e.target.value)} placeholder="Street address" className="h-9 text-sm" />
               </Field>
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-1">
