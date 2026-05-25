@@ -32,6 +32,7 @@ import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import { SessionProvider } from './components/shared/AppSession';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import PageTransition from '@/components/shared/PageTransition';
 
@@ -129,7 +130,9 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
         <Router>
-          <AuthenticatedApp />
+          <SessionProvider>
+            <AuthenticatedApp />
+          </SessionProvider>
         </Router>
         <Toaster />
       </QueryClientProvider>

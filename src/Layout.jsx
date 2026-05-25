@@ -135,11 +135,9 @@ function AppShell({ children, currentPageName }) {
 
 export default function Layout({ children, currentPageName }) {
   return (
-    <SessionProvider>
-      <UploadProvider>
-        <AppShell currentPageName={currentPageName}>{children}</AppShell>
-        <UploadProgressFloat />
-      </UploadProvider>
-    </SessionProvider>
+    <UploadProvider>
+      <AppShell currentPageName={currentPageName}>{children}</AppShell>
+      <UploadProgressFloat />
+    </UploadProvider>
   );
 }
