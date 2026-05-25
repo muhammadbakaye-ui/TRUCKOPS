@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Trash2, Check, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -9,6 +9,24 @@ import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { useSession } from '../shared/AppSession';
 
+function playChime() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.12);
+    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.25);
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.6);
+  } catch {}
+}
+
 export default function NotificationBell() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -16,6 +34,7 @@ export default function NotificationBell() {
   const [showDeleted, setShowDeleted] = useState(false);
   const { session } = useSession();
   const tenantId = session?.tenant_id;
+  const prevUnreadRef = useRef(null);
 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', tenantId],
@@ -75,6 +94,18 @@ export default function NotificationBell() {
     });
     return unsubscribe;
   }, [queryClient, tenantId]);
+
+  // Play chime when new unread notifications arrive
+  useEffect(() => {
+    if (prevUnreadRef.current === null) {
+      prevUnreadRef.current = unreadCount;
+      return;
+    }
+    if (unreadCount > prevUnreadRef.current) {
+      playChime();
+    }
+    prevUnreadRef.current = unreadCount;
+  }, [unreadCount]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

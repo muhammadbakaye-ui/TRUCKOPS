@@ -92,6 +92,7 @@ export default function DriverPortalView() {
         file_url,
       });
       await base44.entities.Notification.create({
+        tenant_id: session.tenant_id,
         notification_type: 'driver_document_upload',
         title: `New ${DOC_TYPE_LABELS[docType] || docType} uploaded`,
         message: `${session.driver_name} uploaded a ${DOC_TYPE_LABELS[docType] || docType}: ${file.name}`,

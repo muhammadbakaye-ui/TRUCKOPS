@@ -170,7 +170,15 @@ export default function DriverMyProfile({ session }) {
         await base44.entities.DriverQualification.create({ ...data, pending_review: true });
       }
       queryClient.invalidateQueries({ queryKey: ['driver-qual', driverId] });
-      toast.success('CDL information saved');
+      await base44.entities.Notification.create({
+        tenant_id: tenantId,
+        notification_type: 'driver_profile_update',
+        title: `CDL info updated — ${driverName}`,
+        message: `${driverName} updated their CDL/license information in the driver portal.`,
+        link_url: '/DriverQualifications',
+        read: false,
+      });
+      toast.success('CDL information saved — your dispatcher has been notified');
     } catch (err) {
       toast.error('Save failed: ' + err.message);
     } finally {
@@ -196,7 +204,15 @@ export default function DriverMyProfile({ session }) {
         await base44.entities.DriverQualification.create({ ...data, pending_review: true });
       }
       queryClient.invalidateQueries({ queryKey: ['driver-qual', driverId] });
-      toast.success('Medical card information saved');
+      await base44.entities.Notification.create({
+        tenant_id: tenantId,
+        notification_type: 'driver_profile_update',
+        title: `Medical card updated — ${driverName}`,
+        message: `${driverName} updated their medical card information in the driver portal.`,
+        link_url: '/DriverQualifications',
+        read: false,
+      });
+      toast.success('Medical card saved — your dispatcher has been notified');
     } catch (err) {
       toast.error('Save failed: ' + err.message);
     } finally {
@@ -224,9 +240,17 @@ export default function DriverMyProfile({ session }) {
         pending_review: true,
       });
       queryClient.invalidateQueries({ queryKey: ['driver-tests', driverId] });
+      await base44.entities.Notification.create({
+        tenant_id: tenantId,
+        notification_type: 'driver_test_submitted',
+        title: `Drug test submitted — ${driverName}`,
+        message: `${driverName} submitted a ${testForm.test_type.replace(/_/g, ' ')} test result: ${testForm.result.toUpperCase()}. Pending your review.`,
+        link_url: '/DrugAlcoholTests',
+        read: false,
+      });
       setTestForm({ test_date: new Date().toISOString().split('T')[0], test_type: 'pre_employment', result: 'pass', notes: '' });
       setTestFileUrl('');
-      toast.success('Drug test submitted for review');
+      toast.success('Drug test submitted — your dispatcher has been notified');
     } catch (err) {
       toast.error('Save failed: ' + err.message);
     } finally {
@@ -258,10 +282,18 @@ export default function DriverMyProfile({ session }) {
         pending_review: true,
       });
       queryClient.invalidateQueries({ queryKey: ['inspections'] });
+      await base44.entities.Notification.create({
+        tenant_id: tenantId,
+        notification_type: 'driver_inspection_submitted',
+        title: `Inspection submitted — ${driverName}`,
+        message: `${driverName} submitted a ${inspForm.inspection_type.replace(/_/g, ' ')} inspection for truck #${session?.truck_number || ''}. Result: ${anyFail ? 'FAIL' : 'PASS'}. Pending your review.`,
+        link_url: '/TruckInspections',
+        read: false,
+      });
       setChecklist({ ...defaultChecklist });
       setInspForm({ inspection_type: 'pre_trip', date: new Date().toISOString().split('T')[0], defects_noted: '' });
       setInspFileUrl('');
-      toast.success('Inspection submitted for review');
+      toast.success('Inspection submitted — your dispatcher has been notified');
     } catch (err) {
       toast.error('Save failed: ' + err.message);
     } finally {

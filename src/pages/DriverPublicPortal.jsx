@@ -196,6 +196,17 @@ function DocUploadTab({ driver }) {
       });
       setUploaded(prev => [...prev, { name: file.name, type: docType }]);
       setFile(null);
+      // Notify admin
+      try {
+        await base44.entities.Notification.create({
+          tenant_id: driver.tenant_id,
+          notification_type: 'driver_document_upload',
+          title: `${DOC_TYPE_LABELS[docType] || docType} uploaded — ${driver.full_name}`,
+          message: `${driver.full_name} uploaded a ${DOC_TYPE_LABELS[docType] || docType}: ${file.name}`,
+          link_url: '/AdminDriverDocuments',
+          read: false,
+        });
+      } catch {}
       // Reset file input
       const input = document.getElementById('portal-file-input');
       if (input) input.value = '';
