@@ -110,19 +110,6 @@ function AppShell({ children, currentPageName }) {
     login({ ...session, onboarding_completed: true });
     setShowOnboarding(false);
   };
-
-  // Sync company name from Company entity on app load
-  useEffect(() => {
-    if (!session || session.role === 'driver' || !session.tenant_id) return;
-    base44.entities.Company.filter({ company_type: 'carrier', tenant_id: session.tenant_id }, '-created_date', 1)
-      .then(companies => {
-        const name = companies.length > 0 ? (companies[0].company_name || '') : '';
-        if (name !== (session.company_name || '')) {
-          login({ ...session, company_name: name });
-        }
-      })
-      .catch(() => {});
-  }, [session?.tenant_id]);
   const mainRef = useMainScrollRestoration(currentPageName);
   const location = useLocation();
   const navigate = useNavigate();
