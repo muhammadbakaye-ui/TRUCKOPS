@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -54,24 +53,17 @@ function UploadBtn({ label, fileUrl, onUpload, uploading }) {
   );
 }
 
-export default function DriverMyProfile({ session }) {
-  const queryClient = useQueryClient();
+// When token is provided, all reads/writes go through the backend function (for public portal).
+// When no token, direct entity calls are used (for authenticated session portal).
+export default function DriverMyProfile({ session, token }) {
   const driverId = session?.driver_id;
   const driverName = session?.driver_name;
   const tenantId = session?.tenant_id;
 
-  const { data: qualRecords = [], isLoading: qualLoading } = useQuery({
-    queryKey: ['driver-qual', driverId],
-    queryFn: () => base44.entities.DriverQualification.filter({ driver_id: driverId }, '-created_date', 5),
-    enabled: !!driverId,
-  });
-  const qual = qualRecords[0] || null;
-
-  const { data: pastTests = [], isLoading: testsLoading } = useQuery({
-    queryKey: ['driver-tests', driverId],
-    queryFn: () => base44.entities.DrugAlcoholTest.filter({ driver_id: driverId }, '-test_date', 50),
-    enabled: !!driverId,
-  });
+  // State for token-based (public portal) reads
+  const [localQual, setLocalQual] = useState(null);
+  const [localTests, setLocalTests] = useState([]);
+  const [profileLoading, setProfileLoading] = useState(!!token);
 
   // Section 1: CDL
   const [cdlForm, setCdlForm] = useState({ cdl_number: '', cdl_class: '', cdl_expiration_date: '', endorsements: [] });
@@ -80,7 +72,7 @@ export default function DriverMyProfile({ session }) {
   const [cdlSaving, setCdlSaving] = useState(false);
 
   // Section 2: Medical
-  const [medForm, setMedForm] = useState({ medical_card_expiration_date: '', issuing_doctor: '' });
+  const [medForm, setMedForm] = useState({ medical_card_expiration_date: '' });
   const [medFileUrl, setMedFileUrl] = useState('');
   const [medUploading, setMedUploading] = useState(false);
   const [medSaving, setMedSaving] = useState(false);
@@ -108,24 +100,59 @@ export default function DriverMyProfile({ session }) {
   const [inspUploading, setInspUploading] = useState(false);
   const [inspSaving, setInspSaving] = useState(false);
 
+  // When using token (public portal), fetch profile data from backend
   useEffect(() => {
-    if (qual) {
-      const existingCodes = qual.endorsements ? qual.endorsements.split(',').map(s => s.trim()) : [];
-      const selectedEndorsements = ENDORSEMENTS.filter(e => existingCodes.includes(e.code)).map(e => e.code);
-      setCdlForm({
-        cdl_number: qual.cdl_number || '',
-        cdl_class: qual.cdl_class || '',
-        cdl_expiration_date: qual.cdl_expiration_date || '',
-        endorsements: selectedEndorsements,
-      });
-      setCdlFileUrl(qual.cdl_file_url || '');
-      setMedForm({
-        medical_card_expiration_date: qual.medical_card_expiration_date || '',
-        issuing_doctor: qual.issuing_doctor || '',
-      });
-      setMedFileUrl(qual.medical_card_file_url || '');
-    }
-  }, [qual?.id]);
+    if (!token) return;
+    setProfileLoading(true);
+    base44.functions.invoke('driverPortalSave', { token, action: 'read' })
+      .then(res => {
+        const { qualification, tests } = res.data || {};
+        if (qualification) {
+          setLocalQual(qualification);
+          populateFromQual(qualification);
+        }
+        setLocalTests(tests || []);
+      })
+      .catch(err => console.error('Failed to load profile:', err))
+      .finally(() => setProfileLoading(false));
+  }, [token]);
+
+  const populateFromQual = (qual) => {
+    const existingCodes = qual.endorsements ? qual.endorsements.split(',').map(s => s.trim()) : [];
+    const selectedEndorsements = ENDORSEMENTS.filter(e => existingCodes.includes(e.code)).map(e => e.code);
+    setCdlForm({
+      cdl_number: qual.cdl_number || '',
+      cdl_class: qual.cdl_class || '',
+      cdl_expiration_date: qual.cdl_expiration_date || '',
+      endorsements: selectedEndorsements,
+    });
+    setCdlFileUrl(qual.cdl_file_url || '');
+    setMedForm({ medical_card_expiration_date: qual.medical_card_expiration_date || '' });
+    setMedFileUrl(qual.medical_card_file_url || '');
+  };
+
+  // For non-token (session-based) portal, populate from driver entity data
+  const [entityQual, setEntityQual] = useState(null);
+  const [entityTests, setEntityTests] = useState([]);
+  const [entityLoading, setEntityLoading] = useState(false);
+
+  useEffect(() => {
+    if (token || !driverId) return;
+    setEntityLoading(true);
+    Promise.all([
+      base44.entities.DriverQualification.filter({ driver_id: driverId }, '-created_date', 1),
+      base44.entities.DrugAlcoholTest.filter({ driver_id: driverId }, '-test_date', 30),
+    ]).then(([quals, tests]) => {
+      const qual = quals[0] || null;
+      setEntityQual(qual);
+      setEntityTests(tests || []);
+      if (qual) populateFromQual(qual);
+    }).catch(console.error).finally(() => setEntityLoading(false));
+  }, [driverId, token]);
+
+  const qual = token ? localQual : entityQual;
+  const pastTests = token ? localTests : entityTests;
+  const qualLoading = token ? profileLoading : entityLoading;
 
   const toggleEndorsement = (code) => {
     setCdlForm(p => ({
@@ -149,34 +176,67 @@ export default function DriverMyProfile({ session }) {
     }
   };
 
+  // Helper: invoke backend save or use direct entities
+  const portalSave = async (action, data) => {
+    if (token) {
+      const res = await base44.functions.invoke('driverPortalSave', { token, action, data });
+      if (!res.data?.success) throw new Error(res.data?.error || 'Save failed');
+    } else {
+      // Direct entity saves for session-based portal
+      if (action === 'save_cdl' || action === 'save_medical') {
+        const payload = { driver_id: driverId, driver_name: driverName, tenant_id: tenantId, submitted_by_driver: true, ...data };
+        if (qual) {
+          await base44.entities.DriverQualification.update(qual.id, payload);
+        } else {
+          await base44.entities.DriverQualification.create({ ...payload, pending_review: true });
+        }
+        await base44.entities.Notification.create({
+          tenant_id: tenantId,
+          notification_type: 'driver_profile_update',
+          title: action === 'save_cdl' ? `CDL info updated — ${driverName}` : `Medical card updated — ${driverName}`,
+          message: action === 'save_cdl' ? `${driverName} updated their CDL/license information.` : `${driverName} updated their medical card information.`,
+          link_url: '/DriverQualifications',
+          read: false,
+        });
+      } else if (action === 'save_drug_test') {
+        await base44.entities.DrugAlcoholTest.create({
+          driver_id: driverId, driver_name: driverName, tenant_id: tenantId,
+          submitted_by_driver: true, pending_review: true, ...data,
+        });
+        await base44.entities.Notification.create({
+          tenant_id: tenantId,
+          notification_type: 'driver_test_submitted',
+          title: `Drug test submitted — ${driverName}`,
+          message: `${driverName} submitted a ${(data.test_type || '').replace(/_/g, ' ')} test result: ${(data.result || '').toUpperCase()}. Pending your review.`,
+          link_url: '/DrugAlcoholTests',
+          read: false,
+        });
+      } else if (action === 'save_inspection') {
+        await base44.entities.TruckInspection.create({
+          driver_id: driverId, driver_name: driverName, tenant_id: tenantId,
+          submitted_by_driver: true, pending_review: true, ...data,
+        });
+        await base44.entities.Notification.create({
+          tenant_id: tenantId,
+          notification_type: 'driver_inspection_submitted',
+          title: `Inspection submitted — ${driverName}`,
+          message: `${driverName} submitted a ${(data.inspection_type || '').replace(/_/g, ' ')} inspection. Result: ${data.result}.`,
+          link_url: '/TruckInspections',
+          read: false,
+        });
+      }
+    }
+  };
+
   const saveCDL = async () => {
     setCdlSaving(true);
     try {
-      const endorseStr = cdlForm.endorsements.join(', ');
-      const data = {
-        driver_id: driverId,
-        driver_name: driverName,
-        tenant_id: tenantId,
+      await portalSave('save_cdl', {
         cdl_number: cdlForm.cdl_number,
         cdl_class: cdlForm.cdl_class,
         cdl_expiration_date: cdlForm.cdl_expiration_date,
-        endorsements: endorseStr,
+        endorsements: cdlForm.endorsements.join(', '),
         cdl_file_url: cdlFileUrl,
-        submitted_by_driver: true,
-      };
-      if (qual) {
-        await base44.entities.DriverQualification.update(qual.id, data);
-      } else {
-        await base44.entities.DriverQualification.create({ ...data, pending_review: true });
-      }
-      queryClient.invalidateQueries({ queryKey: ['driver-qual', driverId] });
-      await base44.entities.Notification.create({
-        tenant_id: tenantId,
-        notification_type: 'driver_profile_update',
-        title: `CDL info updated — ${driverName}`,
-        message: `${driverName} updated their CDL/license information in the driver portal.`,
-        link_url: '/DriverQualifications',
-        read: false,
       });
       toast.success('CDL information saved — your dispatcher has been notified');
     } catch (err) {
@@ -189,28 +249,9 @@ export default function DriverMyProfile({ session }) {
   const saveMedical = async () => {
     setMedSaving(true);
     try {
-      const data = {
-        driver_id: driverId,
-        driver_name: driverName,
-        tenant_id: tenantId,
+      await portalSave('save_medical', {
         medical_card_expiration_date: medForm.medical_card_expiration_date,
-        issuing_doctor: medForm.issuing_doctor,
         medical_card_file_url: medFileUrl,
-        submitted_by_driver: true,
-      };
-      if (qual) {
-        await base44.entities.DriverQualification.update(qual.id, data);
-      } else {
-        await base44.entities.DriverQualification.create({ ...data, pending_review: true });
-      }
-      queryClient.invalidateQueries({ queryKey: ['driver-qual', driverId] });
-      await base44.entities.Notification.create({
-        tenant_id: tenantId,
-        notification_type: 'driver_profile_update',
-        title: `Medical card updated — ${driverName}`,
-        message: `${driverName} updated their medical card information in the driver portal.`,
-        link_url: '/DriverQualifications',
-        read: false,
       });
       toast.success('Medical card saved — your dispatcher has been notified');
     } catch (err) {
@@ -227,27 +268,17 @@ export default function DriverMyProfile({ session }) {
     }
     setTestSaving(true);
     try {
-      await base44.entities.DrugAlcoholTest.create({
-        driver_id: driverId,
-        driver_name: driverName,
-        tenant_id: tenantId,
+      await portalSave('save_drug_test', {
         test_date: testForm.test_date,
         test_type: testForm.test_type,
         result: testForm.result,
         notes: testForm.notes,
         file_url: testFileUrl,
-        submitted_by_driver: true,
-        pending_review: true,
       });
-      queryClient.invalidateQueries({ queryKey: ['driver-tests', driverId] });
-      await base44.entities.Notification.create({
-        tenant_id: tenantId,
-        notification_type: 'driver_test_submitted',
-        title: `Drug test submitted — ${driverName}`,
-        message: `${driverName} submitted a ${testForm.test_type.replace(/_/g, ' ')} test result: ${testForm.result.toUpperCase()}. Pending your review.`,
-        link_url: '/DrugAlcoholTests',
-        read: false,
-      });
+      // Optimistically add to local list
+      const newTest = { id: Date.now(), ...testForm, file_url: testFileUrl, pending_review: true };
+      if (token) setLocalTests(p => [newTest, ...p]);
+      else setEntityTests(p => [newTest, ...p]);
       setTestForm({ test_date: new Date().toISOString().split('T')[0], test_type: 'pre_employment', result: 'pass', notes: '' });
       setTestFileUrl('');
       toast.success('Drug test submitted — your dispatcher has been notified');
@@ -266,29 +297,15 @@ export default function DriverMyProfile({ session }) {
     setInspSaving(true);
     try {
       const anyFail = Object.values(checklist).some(v => v === false);
-      await base44.entities.TruckInspection.create({
+      await portalSave('save_inspection', {
         truck_id: session.truck_id,
         truck_number: session.truck_number,
-        driver_id: driverId,
-        driver_name: driverName,
-        tenant_id: tenantId,
         date: inspForm.date,
         inspection_type: inspForm.inspection_type,
         result: anyFail ? 'fail' : 'pass',
         checklist,
         defects_noted: inspForm.defects_noted,
         file_url: inspFileUrl,
-        submitted_by_driver: true,
-        pending_review: true,
-      });
-      queryClient.invalidateQueries({ queryKey: ['inspections'] });
-      await base44.entities.Notification.create({
-        tenant_id: tenantId,
-        notification_type: 'driver_inspection_submitted',
-        title: `Inspection submitted — ${driverName}`,
-        message: `${driverName} submitted a ${inspForm.inspection_type.replace(/_/g, ' ')} inspection for truck #${session?.truck_number || ''}. Result: ${anyFail ? 'FAIL' : 'PASS'}. Pending your review.`,
-        link_url: '/TruckInspections',
-        read: false,
       });
       setChecklist({ ...defaultChecklist });
       setInspForm({ inspection_type: 'pre_trip', date: new Date().toISOString().split('T')[0], defects_noted: '' });
@@ -387,12 +404,6 @@ export default function DriverMyProfile({ session }) {
                 onChange={e => setMedForm(p => ({ ...p, medical_card_expiration_date: e.target.value }))}
                 className="h-9 text-sm mt-1" />
             </div>
-            <div>
-              <Label className="text-xs">Issuing Doctor / Clinic <span className="text-muted-foreground">(optional)</span></Label>
-              <Input value={medForm.issuing_doctor}
-                onChange={e => setMedForm(p => ({ ...p, issuing_doctor: e.target.value }))}
-                className="h-9 text-sm mt-1" placeholder="e.g. Dr. Smith, DOT Clinic" />
-            </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 pt-1">
             <div className="flex-1">
@@ -462,11 +473,7 @@ export default function DriverMyProfile({ session }) {
 
           <div className="pt-2 border-t">
             <p className="text-xs font-semibold text-muted-foreground mb-2">Past Submitted Tests</p>
-            {testsLoading ? (
-              <div className="flex items-center justify-center py-4">
-                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-              </div>
-            ) : pastTests.length === 0 ? (
+            {pastTests.length === 0 ? (
               <p className="text-xs text-muted-foreground py-3 text-center">No test records yet.</p>
             ) : (
               <div className="space-y-1.5">

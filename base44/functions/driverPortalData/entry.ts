@@ -56,6 +56,7 @@ Deno.serve(async (req) => {
         pay_type: driver.pay_type,
         pay_rate: driver.pay_rate,
         status: driver.status,
+        tenant_id: driver.tenant_id,
       },
       truck,
       statements,

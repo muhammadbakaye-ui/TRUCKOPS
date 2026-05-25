@@ -311,7 +311,12 @@ export default function DriverPublicPortal() {
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
   const [activeTab, setActiveTab] = useState('statements');
-  const [profileSession, setProfileSession] = useState(null);
+  const [token, setToken] = useState(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setToken(params.get('token') || null);
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -351,9 +356,9 @@ export default function DriverPublicPortal() {
   const driverSession = {
     driver_id: driver.id,
     driver_name: driver.full_name,
-    tenant_id: driver.tenant_id,
-    truck_id: truck?.id,
-    truck_number: truck?.unit_number,
+    tenant_id: driver.tenant_id || '',
+    truck_id: truck?.id || '',
+    truck_number: truck?.unit_number || '',
   };
 
   const totalNetPay = statements.reduce((s, st) => s + (st.final_check_amount || 0), 0);
@@ -447,7 +452,7 @@ export default function DriverPublicPortal() {
 
           {activeTab === 'upload' && <DocUploadTab driver={driver} />}
 
-          {activeTab === 'profile' && <DriverMyProfile session={driverSession} />}
+          {activeTab === 'profile' && <DriverMyProfile session={driverSession} token={token} />}
 
           {activeTab === 'fuel' && (
             <>
