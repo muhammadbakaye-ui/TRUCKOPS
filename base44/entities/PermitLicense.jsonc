@@ -1,0 +1,57 @@
+{
+  "name": "PermitLicense",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "permit_type": {
+      "type": "string",
+      "enum": [
+        "usdot",
+        "mc_number",
+        "state_permit",
+        "oversize",
+        "hazmat",
+        "ifta",
+        "irp",
+        "other"
+      ]
+    },
+    "permit_name": {
+      "type": "string"
+    },
+    "permit_number": {
+      "type": "string"
+    },
+    "issuing_authority": {
+      "type": "string"
+    },
+    "truck_id": {
+      "type": "string",
+      "description": "Optional \u2014 leave blank for company-wide permits"
+    },
+    "truck_number": {
+      "type": "string"
+    },
+    "effective_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "expiration_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "permit_name",
+    "permit_type",
+    "tenant_id"
+  ]
+}

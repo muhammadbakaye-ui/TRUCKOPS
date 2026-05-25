@@ -1,0 +1,49 @@
+{
+  "name": "IFTARecord",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "truck_id": {
+      "type": "string"
+    },
+    "truck_number": {
+      "type": "string"
+    },
+    "year": {
+      "type": "number"
+    },
+    "quarter": {
+      "type": "string",
+      "enum": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q4"
+      ]
+    },
+    "state": {
+      "type": "string",
+      "description": "2-letter US/CA state/province code"
+    },
+    "miles_driven": {
+      "type": "number",
+      "default": 0
+    },
+    "gallons_purchased": {
+      "type": "number",
+      "default": 0
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "truck_id",
+    "year",
+    "quarter",
+    "state",
+    "tenant_id"
+  ]
+}

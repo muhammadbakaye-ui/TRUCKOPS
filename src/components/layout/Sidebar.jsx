@@ -7,7 +7,8 @@ import {
   Settings, History, Upload, ChevronLeft, ChevronRight, FolderOpen, Trash2,
   LayoutGrid, FileSpreadsheet, Banknote,
   ShieldCheck, AlertTriangle, FlaskConical, ShieldAlert, Bell,
-  Wrench, ClipboardCheck, CircleAlert
+  Wrench, ClipboardCheck, CircleAlert,
+  Map, ShieldPlus, ScrollText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSession } from '../shared/AppSession';
@@ -39,6 +40,10 @@ const navItems = [
   { label: 'Vehicle Maintenance', icon: Wrench, page: 'VehicleMaintenance' },
   { label: 'Truck Inspections', icon: ClipboardCheck, page: 'TruckInspections' },
   { label: 'Equipment Warnings', icon: CircleAlert, page: 'EquipmentWarnings' },
+  { type: 'divider', label: 'COMPLIANCE' },
+  { label: 'IFTA Reports', icon: Map, page: 'IFTAReports' },
+  { label: 'Insurance Policies', icon: ShieldPlus, page: 'InsurancePolicies' },
+  { label: 'Permits & Licenses', icon: ScrollText, page: 'PermitsLicenses' },
   { type: 'divider', label: 'ADMIN' },
   { label: 'Driver Docs', icon: FolderOpen, page: 'AdminDriverDocuments' },
   { type: 'divider', label: 'SYSTEM' },

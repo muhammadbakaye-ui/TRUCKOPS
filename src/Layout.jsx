@@ -43,6 +43,9 @@ const pageTitles = {
   VehicleMaintenance: 'Vehicle Maintenance',
   TruckInspections: 'Truck Inspections',
   EquipmentWarnings: 'Equipment Warnings',
+  IFTAReports: 'IFTA Reports',
+  InsurancePolicies: 'Insurance Policies',
+  PermitsLicenses: 'Permits & Licenses',
   AdminDriverDocuments: 'Driver Documents',
   DeletedItems: 'Deleted Items',
 };

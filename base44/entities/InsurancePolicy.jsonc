@@ -1,0 +1,58 @@
+{
+  "name": "InsurancePolicy",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "policy_name": {
+      "type": "string"
+    },
+    "policy_number": {
+      "type": "string"
+    },
+    "insurer": {
+      "type": "string"
+    },
+    "agent_name": {
+      "type": "string"
+    },
+    "agent_phone": {
+      "type": "string"
+    },
+    "coverage_type": {
+      "type": "string",
+      "enum": [
+        "auto_liability",
+        "cargo",
+        "physical_damage",
+        "general_liability",
+        "workers_comp",
+        "other"
+      ]
+    },
+    "effective_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "expiration_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "premium": {
+      "type": "number",
+      "description": "Annual premium in dollars"
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "policy_name",
+    "coverage_type",
+    "tenant_id"
+  ]
+}
