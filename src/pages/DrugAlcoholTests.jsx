@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Loader2, FlaskConical } from 'lucide-react';
+import { Plus, Trash2, Loader2, FlaskConical, CheckCircle2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
 const TEST_TYPES = [
@@ -116,6 +116,11 @@ export default function DrugAlcoholTests() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['drug-tests'] }); toast.success('Deleted'); },
   });
 
+  const confirmMutation = useMutation({
+    mutationFn: (id) => base44.entities.DrugAlcoholTest.update(id, { pending_review: false }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['drug-tests'] }); toast.success('Record confirmed'); },
+  });
+
   const filtered = tests.filter(t => {
     if (driverFilter !== 'all' && t.driver_id !== driverFilter) return false;
     if (resultFilter !== 'all' && t.result !== resultFilter) return false;
@@ -172,6 +177,7 @@ export default function DrugAlcoholTests() {
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Test Type</th>
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Result</th>
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Notes</th>
+                <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Submission</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
@@ -189,6 +195,17 @@ export default function DrugAlcoholTests() {
                     </Badge>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground max-w-xs truncate">{t.notes || '—'}</td>
+                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                    {t.submitted_by_driver && (
+                      <div className="flex flex-col gap-1">
+                        {t.pending_review && <Badge variant="outline" className="text-[10px] text-yellow-600 border-yellow-300 bg-yellow-50">Pending Review</Badge>}
+                        {t.file_url
+                          ? <a href={t.file_url} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 px-2 text-blue-600"><ExternalLink className="w-3 h-3" /> View Doc</Button></a>
+                          : <Badge variant="outline" className="text-[10px] text-yellow-600 border-yellow-300 bg-yellow-50">Doc Missing</Badge>}
+                        {t.pending_review && <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 px-2 text-green-600 hover:text-green-700" onClick={() => confirmMutation.mutate(t.id)}><CheckCircle2 className="w-3 h-3" /> Confirm</Button>}
+                      </div>
+                    )}
+                  </td>
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>

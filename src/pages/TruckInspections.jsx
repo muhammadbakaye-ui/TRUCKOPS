@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, Loader2, ClipboardCheck } from 'lucide-react';
+import { Plus, Trash2, Loader2, ClipboardCheck, CheckCircle2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
 const INSPECTION_TYPES = [
@@ -133,6 +133,11 @@ export default function TruckInspections() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['inspections'] }); toast.success('Deleted'); },
   });
 
+  const confirmMutation = useMutation({
+    mutationFn: (id) => base44.entities.TruckInspection.update(id, { pending_review: false }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['inspections'] }); toast.success('Record confirmed'); },
+  });
+
   const filtered = inspections.filter(i => {
     if (truckFilter !== 'all' && i.truck_id !== truckFilter) return false;
     if (typeFilter !== 'all' && i.inspection_type !== typeFilter) return false;
@@ -199,6 +204,7 @@ export default function TruckInspections() {
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Result</th>
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Defects</th>
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Corrected</th>
+                <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Submission</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
@@ -223,6 +229,17 @@ export default function TruckInspections() {
                           {ins.defects_corrected ? 'Yes' : 'No'}
                         </Badge>
                       : <span className="text-muted-foreground">—</span>}
+                  </td>
+                  <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                    {ins.submitted_by_driver && (
+                      <div className="flex flex-col gap-1">
+                        {ins.pending_review && <Badge variant="outline" className="text-[10px] text-yellow-600 border-yellow-300 bg-yellow-50">Pending Review</Badge>}
+                        {ins.file_url
+                          ? <a href={ins.file_url} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 px-2 text-blue-600"><ExternalLink className="w-3 h-3" /> View Doc</Button></a>
+                          : <Badge variant="outline" className="text-[10px] text-yellow-600 border-yellow-300 bg-yellow-50">Doc Missing</Badge>}
+                        {ins.pending_review && <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 px-2 text-green-600 hover:text-green-700" onClick={() => confirmMutation.mutate(ins.id)}><CheckCircle2 className="w-3 h-3" /> Confirm</Button>}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                     <AlertDialog>

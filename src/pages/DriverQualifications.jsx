@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, ShieldCheck, Pencil } from 'lucide-react';
+import { Loader2, ShieldCheck, Pencil, CheckCircle2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import SearchInput from '@/components/shared/SearchInput';
 import { differenceInDays, parseISO } from 'date-fns';
@@ -128,6 +128,11 @@ export default function DriverQualifications() {
     },
   });
 
+  const confirmMutation = useMutation({
+    mutationFn: (id) => base44.entities.DriverQualification.update(id, { pending_review: false }),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['driver-quals'] }); toast.success('Record confirmed'); },
+  });
+
   const filtered = drivers.filter(d =>
     !search || d.full_name?.toLowerCase().includes(search.toLowerCase())
   );
@@ -158,6 +163,7 @@ export default function DriverQualifications() {
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Medical Card Exp.</th>
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Endorsements</th>
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Hire Date</th>
+                <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Submission</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
@@ -190,6 +196,26 @@ export default function DriverQualifications() {
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">{q?.endorsements || '—'}</td>
                     <td className="px-4 py-3 text-muted-foreground">{q?.hire_date || '—'}</td>
+                    <td className="px-4 py-3">
+                      {q?.submitted_by_driver ? (
+                        <div className="flex flex-col gap-1">
+                          {q.pending_review && (
+                            <Badge variant="outline" className="text-[10px] text-yellow-600 border-yellow-300 bg-yellow-50">Pending Review</Badge>
+                          )}
+                          {q.cdl_file_url
+                            ? <a href={q.cdl_file_url} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 px-2 text-blue-600"><ExternalLink className="w-3 h-3" /> CDL Doc</Button></a>
+                            : <Badge variant="outline" className="text-[10px] text-yellow-600 border-yellow-300 bg-yellow-50">CDL Doc Missing</Badge>}
+                          {q.medical_card_file_url
+                            ? <a href={q.medical_card_file_url} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 px-2 text-blue-600"><ExternalLink className="w-3 h-3" /> Med Card</Button></a>
+                            : <Badge variant="outline" className="text-[10px] text-yellow-600 border-yellow-300 bg-yellow-50">Med Card Missing</Badge>}
+                          {q.pending_review && (
+                            <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 px-2 text-green-600 hover:text-green-700" onClick={() => confirmMutation.mutate(q.id)}>
+                              <CheckCircle2 className="w-3 h-3" /> Confirm
+                            </Button>
+                          )}
+                        </div>
+                      ) : <span className="text-muted-foreground text-[10px]">—</span>}
+                    </td>
                     <td className="px-4 py-3">
                       <Button variant="ghost" size="sm" className="h-7 text-xs gap-1"
                         onClick={() => { setSelectedDriver(d); setDialogOpen(true); }}>
