@@ -13,6 +13,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
     return match ? match[1] : null;
   };
   const tripNum = extractTripNum(load.external_load_number) || extractTripNum(load.customer_reference_number) || extractTripNum(load.internal_load_number);
+  const pdfFilename = `Load-${(load.internal_load_number || 'load').replace(/[^a-zA-Z0-9\-]/g, '-')}-${(load.customer_reference_number || load.external_load_number || '').replace(/[^a-zA-Z0-9\-]/g, '-')}.pdf`.replace(/-+/g, '-').replace(/-\.pdf$/, '.pdf');
 
   let truckNum = load.truck_number || '';
   let trailerNum = load.trailer_number || '';
@@ -198,14 +199,14 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 
   <!-- DOWNLOAD BUTTON -->
   <div class="download-bar">
-    <button class="btn-print" onclick="doPrint()">🖨 Print</button>
+    <button class="btn-print" onclick="doPrint('${pdfFilename}')">🖨 Print</button>
   </div>
 
 <script>
-function doPrint() {
+function doPrint(filename) {
   setTimeout(function() {
     if (window.electronAPI && window.electronAPI.printToPDF) {
-      window.electronAPI.printToPDF();
+      window.electronAPI.printToPDF(filename);
     } else {
       window.print();
     }

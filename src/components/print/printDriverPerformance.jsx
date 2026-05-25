@@ -33,6 +33,8 @@ export function printDriverPerformanceReport({ drivers, loads, period, periodLab
   });
 
   const rows = Object.values(driverMap).sort((a, b) => b.totalRevenue - a.totalRevenue);
+  const safePeriod = (periodLabel || 'report').replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\-]/g, '');
+  const pdfFilename = `Driver-Performance-${safePeriod}.pdf`;
 
   // Grand totals
   const grandRevenue = rows.reduce((s, r) => s + r.totalRevenue, 0);
@@ -125,7 +127,7 @@ export function printDriverPerformanceReport({ drivers, loads, period, periodLab
   </style>
 </head>
 <body>
-  <button class="print-btn" onclick="doPrint()">🖨 Print</button>
+  <button class="print-btn" onclick="doPrint('${pdfFilename}')">🖨 Print</button>
 
   <div class="report-header">
     <div>
@@ -201,10 +203,10 @@ export function printDriverPerformanceReport({ drivers, loads, period, periodLab
     <span>Driver Performance Report · ${periodLabel}</span>
   </div>
 <script>
-function doPrint() {
+function doPrint(filename) {
   setTimeout(function() {
     if (window.electronAPI && window.electronAPI.printToPDF) {
-      window.electronAPI.printToPDF();
+      window.electronAPI.printToPDF(filename);
     } else {
       window.print();
     }

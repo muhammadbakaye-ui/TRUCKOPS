@@ -22,6 +22,8 @@ export function printStatement({ company, statement, allLines }) {
     ? (() => { const [y,m,d] = statement.statement_date.split('-'); return `${parseInt(m)}-${parseInt(d)}-${y}`; })()
     : '';
   const docTitle = `Statement ${statement.truck_number || ''} ${stmtDate}`.trim();
+  const safeName = (statement.driver_name || 'Driver').replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\-]/g, '');
+  const pdfFilename = `${safeName}-${stmtDate.replace(/\//g, '-')}.pdf`;
 
   const tripsRows = tripLines.map(l => {
     const tripNum = l.description?.includes(' / ') ? l.description.split(' / ')[0].trim() : '';
@@ -244,14 +246,14 @@ export function printStatement({ company, statement, allLines }) {
 
 <!-- DOWNLOAD BUTTON -->
 <div class="download-bar">
-  <button class="btn-print" onclick="doPrint()">🖨 Print</button>
+  <button class="btn-print" onclick="doPrint('${pdfFilename}')">🖨 Print</button>
 </div>
 
 <script>
-function doPrint() {
+function doPrint(filename) {
   setTimeout(function() {
     if (window.electronAPI && window.electronAPI.printToPDF) {
-      window.electronAPI.printToPDF();
+      window.electronAPI.printToPDF(filename);
     } else {
       window.print();
     }
