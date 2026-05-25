@@ -31,8 +31,8 @@ export function SessionProvider({ children }) {
           return;
         }
 
-        // Restore session immediately and stop loading — do not wait for validation
-        setSession(s);
+        // Restore session immediately but clear company_name until server confirms it
+        setSession({ ...s, company_name: null });
         setValidating(false);
         
         // Validate server-side in background; only clear session if validation fails
