@@ -56,6 +56,36 @@ const AuthenticatedApp = () => {
     return (
       <Routes>
         <Route path="/" element={<LoginScreen />} />
+        {Object.entries(Pages).map(([path, Page]) => (
+          <Route
+            key={path}
+            path={`/${path}`}
+            element={
+              <PageTransition>
+                <LayoutWrapper currentPageName={path}>
+                  <Page />
+                </LayoutWrapper>
+              </PageTransition>
+            }
+          />
+        ))}
+        <Route path="/DeletedItems" element={<PageTransition><LayoutWrapper currentPageName="DeletedItems"><DeletedItems /></LayoutWrapper></PageTransition>} />
+        <Route path="/DispatchBoard" element={<PageTransition><LayoutWrapper currentPageName="DispatchBoard"><DispatchBoard /></LayoutWrapper></PageTransition>} />
+        <Route path="/Taxes1099" element={<PageTransition><LayoutWrapper currentPageName="Taxes1099"><Taxes1099 /></LayoutWrapper></PageTransition>} />
+        <Route path="/Factoring" element={<PageTransition><LayoutWrapper currentPageName="Factoring"><Factoring /></LayoutWrapper></PageTransition>} />
+        <Route path="/DriverQualifications" element={<PageTransition><LayoutWrapper currentPageName="DriverQualifications"><DriverQualifications /></LayoutWrapper></PageTransition>} />
+        <Route path="/DriverViolations" element={<PageTransition><LayoutWrapper currentPageName="DriverViolations"><DriverViolations /></LayoutWrapper></PageTransition>} />
+        <Route path="/DrugAlcoholTests" element={<PageTransition><LayoutWrapper currentPageName="DrugAlcoholTests"><DrugAlcoholTests /></LayoutWrapper></PageTransition>} />
+        <Route path="/AccidentsClaims" element={<PageTransition><LayoutWrapper currentPageName="AccidentsClaims"><AccidentsClaims /></LayoutWrapper></PageTransition>} />
+        <Route path="/LicenseExpirationWarnings" element={<PageTransition><LayoutWrapper currentPageName="LicenseExpirationWarnings"><LicenseExpirationWarnings /></LayoutWrapper></PageTransition>} />
+        <Route path="/VehicleMaintenance" element={<PageTransition><LayoutWrapper currentPageName="VehicleMaintenance"><VehicleMaintenance /></LayoutWrapper></PageTransition>} />
+        <Route path="/TruckInspections" element={<PageTransition><LayoutWrapper currentPageName="TruckInspections"><TruckInspections /></LayoutWrapper></PageTransition>} />
+        <Route path="/EquipmentWarnings" element={<PageTransition><LayoutWrapper currentPageName="EquipmentWarnings"><EquipmentWarnings /></LayoutWrapper></PageTransition>} />
+        <Route path="/IFTAReports" element={<PageTransition><LayoutWrapper currentPageName="IFTAReports"><IFTAReports /></LayoutWrapper></PageTransition>} />
+        <Route path="/InsurancePolicies" element={<PageTransition><LayoutWrapper currentPageName="InsurancePolicies"><InsurancePolicies /></LayoutWrapper></PageTransition>} />
+        <Route path="/PermitsLicenses" element={<PageTransition><LayoutWrapper currentPageName="PermitsLicenses"><PermitsLicenses /></LayoutWrapper></PageTransition>} />
+        <Route path="/DriverPublicPortal" element={<PageTransition><DriverPublicPortal /></PageTransition>} />
+        <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     );
