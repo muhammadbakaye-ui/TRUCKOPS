@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Upload, Loader2, Paperclip, CheckCircle2, ClipboardCheck, FlaskConical, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 const ENDORSEMENTS = [
   { label: 'H - Hazmat', code: 'H' },
@@ -328,9 +329,14 @@ export default function DriverMyProfile({ session, token }) {
       {/* Section 1: CDL */}
       <Card>
         <CardHeader className="py-3 px-4 md:py-4 md:px-5 border-b">
-          <div className="flex items-center gap-2">
-            <CreditCard className="w-4 h-4 text-primary" />
-            <CardTitle className="text-xs md:text-sm font-semibold">License &amp; CDL Information</CardTitle>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <CreditCard className="w-4 h-4 text-primary" />
+              <CardTitle className="text-xs md:text-sm font-semibold">License &amp; CDL Information</CardTitle>
+            </div>
+            {qual?.updated_date && (
+              <p className="text-[10px] text-muted-foreground">Updated: {format(new Date(qual.updated_date), 'MMM d, yyyy')}</p>
+            )}
           </div>
           <p className="text-[11px] text-muted-foreground mt-0.5">Keep your CDL details up to date. Your dispatcher will be notified of any changes.</p>
         </CardHeader>
@@ -390,9 +396,14 @@ export default function DriverMyProfile({ session, token }) {
       {/* Section 2: Medical Card */}
       <Card>
         <CardHeader className="py-3 px-4 md:py-4 md:px-5 border-b">
-          <div className="flex items-center gap-2">
-            <ClipboardCheck className="w-4 h-4 text-primary" />
-            <CardTitle className="text-xs md:text-sm font-semibold">Medical Card</CardTitle>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <ClipboardCheck className="w-4 h-4 text-primary" />
+              <CardTitle className="text-xs md:text-sm font-semibold">Medical Card</CardTitle>
+            </div>
+            {qual?.updated_date && (
+              <p className="text-[10px] text-muted-foreground">Updated: {format(new Date(qual.updated_date), 'MMM d, yyyy')}</p>
+            )}
           </div>
           <p className="text-[11px] text-muted-foreground mt-0.5">Update your medical card expiration to avoid compliance issues.</p>
         </CardHeader>
@@ -480,9 +491,9 @@ export default function DriverMyProfile({ session, token }) {
                 {pastTests.map(t => (
                   <div key={t.id} className="flex items-center justify-between bg-muted/30 rounded-lg px-3 py-2">
                     <div>
-                      <p className="text-xs font-medium">{TEST_TYPES.find(x => x.value === t.test_type)?.label || t.test_type}</p>
-                      <p className="text-[10px] text-muted-foreground">{t.test_date}</p>
-                    </div>
+                        <p className="text-xs font-medium">{TEST_TYPES.find(x => x.value === t.test_type)?.label || t.test_type}</p>
+                        <p className="text-[10px] text-muted-foreground">{t.test_date} {t.updated_date ? `• ${format(new Date(t.updated_date), 'h:mm a')}` : ''}</p>
+                      </div>
                     <div className="flex items-center gap-1.5">
                       {t.pending_review && (
                         <Badge variant="outline" className="text-[9px] text-yellow-600 border-yellow-300 bg-yellow-50">

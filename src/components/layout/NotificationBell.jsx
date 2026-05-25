@@ -78,9 +78,9 @@ export default function NotificationBell() {
 
   const handleClick = (notification) => {
     markAsRead.mutate(notification.id);
+    setOpen(false);
     if (notification.link_url) {
       navigate(notification.link_url);
-      setOpen(false);
     }
   };
 
@@ -149,13 +149,13 @@ export default function NotificationBell() {
                 >
                   <div className="flex items-start gap-2">
                     <div className={`mt-1.5 h-2 w-2 rounded-full flex-shrink-0 ${!n.read ? 'bg-primary' : 'bg-transparent'}`} />
-                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => handleClick(n)}>
-                      <p className="text-sm font-medium">{n.title}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatDistanceToNow(new Date(n.created_date), { addSuffix: true })}
-                      </p>
-                    </div>
+                    <button className="flex-1 min-w-0 cursor-pointer text-left hover:opacity-80 transition-opacity" onClick={() => handleClick(n)}>
+                        <p className="text-sm font-medium">{n.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formatDistanceToNow(new Date(n.created_date), { addSuffix: true })}
+                        </p>
+                      </button>
                     <div className="flex gap-1 flex-shrink-0">
                       {!n.read && (
                         <Button

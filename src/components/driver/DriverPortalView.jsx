@@ -257,13 +257,15 @@ export default function DriverPortalView() {
                     <div className="divide-y">
                       {documents.map((doc) => (
                         <div key={doc.id} className="flex items-center justify-between px-3 md:px-5 py-2.5 md:py-3 hover:bg-muted/30 transition-colors">
-                          <div className="flex items-center gap-2 min-w-0">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
                             <Badge variant="outline" className="text-[10px] shrink-0 text-primary border-primary/30 bg-primary/10">
                               {DOC_TYPE_LABELS[doc.document_type] || doc.document_type}
                             </Badge>
-                            <div className="min-w-0">
+                            <div className="min-w-0 flex-1">
                               <p className="text-[11px] md:text-xs font-medium truncate">{doc.file_name}</p>
-                              <p className="text-[10px] text-muted-foreground">{doc.created_date ? format(new Date(doc.created_date), 'MMM d, yyyy') : '—'}</p>
+                              <p className="text-[10px] text-muted-foreground">
+                                {doc.updated_date ? format(new Date(doc.updated_date), 'MMM d, yyyy h:mm a') : doc.created_date ? format(new Date(doc.created_date), 'MMM d, yyyy') : '—'}
+                              </p>
                             </div>
                           </div>
                           <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="shrink-0 ml-2">
