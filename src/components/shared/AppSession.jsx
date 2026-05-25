@@ -33,6 +33,19 @@ export function SessionProvider({ children }) {
 
         // Restore session immediately with cached company_name
         setSession(s);
+        
+        // Fetch company name if missing
+        if (!s.company_name && s.tenant_id) {
+          base44.entities.Company.filter({ tenant_id: s.tenant_id }, '-updated_date', 1)
+            .then(companies => {
+              if (companies.length > 0) {
+                const updated = { ...s, company_name: companies[0].company_name };
+                localStorage.setItem(SESSION_KEY, JSON.stringify(updated));
+                setSession(updated);
+              }
+            })
+            .catch(() => {});
+        }
         setValidating(false);
         
         // Validate server-side in background; only clear session if validation fails
@@ -43,7 +56,6 @@ export function SessionProvider({ children }) {
         })
           .then(res => {
             if (res.data?.success) {
-              // Update session with refreshed data; ensure company_name is never lost
               const refreshed = {
                 ...s,
                 admin_name: res.data.admin_name || s.admin_name,
@@ -54,6 +66,19 @@ export function SessionProvider({ children }) {
               };
               localStorage.setItem(SESSION_KEY, JSON.stringify(refreshed));
               setSession(refreshed);
+              
+              // If company_name still missing, fetch from entity
+              if (!refreshed.company_name && refreshed.tenant_id) {
+                base44.entities.Company.filter({ tenant_id: refreshed.tenant_id }, '-updated_date', 1)
+                  .then(companies => {
+                    if (companies.length > 0) {
+                      const final = { ...refreshed, company_name: companies[0].company_name };
+                      localStorage.setItem(SESSION_KEY, JSON.stringify(final));
+                      setSession(final);
+                    }
+                  })
+                  .catch(() => {});
+              }
             } else {
               // Server rejected session — log out
               localStorage.removeItem(SESSION_KEY);
