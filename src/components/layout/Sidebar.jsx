@@ -4,7 +4,8 @@ import { createPageUrl } from '@/utils';
 import {
   LayoutDashboard, Truck, Users, Building2, Container,
   FileText, Receipt, Fuel, ClipboardList, BarChart3,
-  Settings, History, Upload, ChevronLeft, ChevronRight, FolderOpen, Trash2
+  Settings, History, Upload, ChevronLeft, ChevronRight, FolderOpen, Trash2,
+  LayoutGrid, FileSpreadsheet, Banknote
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSession } from '../shared/AppSession';
@@ -13,6 +14,7 @@ const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
   { type: 'divider', label: 'OPERATIONS' },
   { label: 'Loads', icon: Container, page: 'Loads', tourAttr: 'loads-nav' },
+  { label: 'Dispatch Board', icon: LayoutGrid, page: 'DispatchBoard' },
   { label: 'Upload Doc', icon: Upload, page: 'UploadDocument', tourAttr: 'upload-doc-nav' },
   { type: 'divider', label: 'DIRECTORY' },
   { label: 'Companies', icon: Building2, page: 'Companies' },
@@ -23,6 +25,8 @@ const navItems = [
   { label: 'Invoices', icon: Receipt, page: 'Invoices' },
   { label: 'Fuel Import', icon: Fuel, page: 'FuelImport', tourAttr: 'fuel-nav' },
   { label: 'Statements', icon: ClipboardList, page: 'DriverStatements', tourAttr: 'statements-nav' },
+  { label: '1099s', icon: FileSpreadsheet, page: 'Taxes1099' },
+  { label: 'Factoring', icon: Banknote, page: 'Factoring' },
   { type: 'divider', label: 'ADMIN' },
   { label: 'Driver Docs', icon: FolderOpen, page: 'AdminDriverDocuments' },
   { type: 'divider', label: 'SYSTEM' },

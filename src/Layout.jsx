@@ -32,6 +32,9 @@ const pageTitles = {
   Reports: 'Reports',
   AuditLogPage: 'Audit Log',
   SettingsPage: 'Settings',
+  DispatchBoard: 'Dispatch Board',
+  Taxes1099: '1099s',
+  Factoring: 'Factoring',
   AdminDriverDocuments: 'Driver Documents',
   DeletedItems: 'Deleted Items',
 };

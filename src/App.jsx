@@ -1,5 +1,8 @@
 import { Toaster } from "@/components/ui/toaster"
 import Landing from './pages/Landing';
+import DispatchBoard from './pages/DispatchBoard';
+import Taxes1099 from './pages/Taxes1099';
+import Factoring from './pages/Factoring';
 import LandingFeatures from './pages/LandingFeatures';
 import LandingPricing from './pages/LandingPricing';
 import LandingAbout from './pages/LandingAbout';
@@ -82,6 +85,9 @@ const AuthenticatedApp = () => {
         />
       ))}
       <Route path="/DeletedItems" element={<PageTransition><LayoutWrapper currentPageName="DeletedItems"><DeletedItems /></LayoutWrapper></PageTransition>} />
+      <Route path="/DispatchBoard" element={<PageTransition><LayoutWrapper currentPageName="DispatchBoard"><DispatchBoard /></LayoutWrapper></PageTransition>} />
+      <Route path="/Taxes1099" element={<PageTransition><LayoutWrapper currentPageName="Taxes1099"><Taxes1099 /></LayoutWrapper></PageTransition>} />
+      <Route path="/Factoring" element={<PageTransition><LayoutWrapper currentPageName="Factoring"><Factoring /></LayoutWrapper></PageTransition>} />
 
       <Route path="/DriverPublicPortal" element={<PageTransition><DriverPublicPortal /></PageTransition>} />
       <Route path="/pricing" element={<PageTransition><Pricing /></PageTransition>} />
