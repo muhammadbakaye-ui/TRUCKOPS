@@ -45,16 +45,17 @@ export default function OnboardingFlow({ session, onComplete }) {
   const preview = getRecentPeriods(0, 3, { weekStart, dueDay });
   const periodEndDay = DAY_NAMES[(weekStart + 6) % 7];
 
-  const findAdmin = async () => {
-    const admins = await base44.entities.Admin.filter(
-      { email: session.admin_email, tenant_id: session.tenant_id }, '-created_date', 1
-    );
-    return admins[0] || null;
+  const callAuthAdmin = async (payload) => {
+    const res = await base44.functions.invoke('authAdmin', {
+      email: session.admin_email,
+      session_token: session.session_token,
+      ...payload,
+    });
+    return res.data;
   };
 
   const markComplete = async () => {
-    const admin = await findAdmin();
-    if (admin) await base44.entities.Admin.update(admin.id, { onboarding_completed: true });
+    await callAuthAdmin({ action: 'update_settings', onboarding_completed: true });
     onComplete();
   };
 
@@ -88,14 +89,12 @@ export default function OnboardingFlow({ session, onComplete }) {
           await base44.entities.Company.create(payload);
         }
       }
-      const admin = await findAdmin();
-      if (admin) {
-        await base44.entities.Admin.update(admin.id, {
-          statement_week_start: weekStart,
-          statement_due_day: dueDay,
-          onboarding_completed: true,
-        });
-      }
+      await callAuthAdmin({
+        action: 'update_settings',
+        statement_week_start: weekStart,
+        statement_due_day: dueDay,
+        onboarding_completed: true,
+      });
       // Persist statement settings cache
       try {
         localStorage.setItem('truckops_statement_settings', JSON.stringify({ weekStart, dueDay }));

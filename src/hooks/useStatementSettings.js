@@ -1,59 +1,46 @@
 /**
  * useStatementSettings — reads the current admin's statement period preferences.
- *
- * Returns:
- *   weekStart  {number}  0=Sun … 6=Sat  (day the period starts)
- *   dueDay     {number}  0=Sun … 6=Sat  (day of the FOLLOWING week statements are due)
- *   saving     {boolean}
- *   save(weekStart, dueDay) → Promise<void>
+ * Uses the authAdmin backend function (service-role) since Admin entity is protected.
  */
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 
 const STORAGE_KEY = 'truckops_statement_settings';
-
-// Defaults: Sun–Sat week, Tuesday due
 const DEFAULTS = { weekStart: 0, dueDay: 2 };
 
 function readCache() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch { return null; }
 }
-
 function writeCache(data) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
 }
-
-function getAdminSession() {
-  try {
-    const raw = localStorage.getItem('truckops_session');
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
+function getSession() {
+  try { return JSON.parse(localStorage.getItem('truckops_session') || 'null'); } catch { return null; }
 }
 
 export function useStatementSettings() {
   const [settings, setSettings] = useState(() => readCache() || DEFAULTS);
   const [saving, setSaving] = useState(false);
 
-  // Load from DB on mount (syncs any changes made on another device)
   useEffect(() => {
     const load = async () => {
       try {
-        const session = getAdminSession();
-        if (!session?.admin_email) return;
-        const admins = await base44.entities.Admin.filter(
-          { email: session.admin_email, tenant_id: session.tenant_id }, '-created_date', 1
-        );
-        if (!admins.length) return;
-        const admin = admins[0];
-        const loaded = {
-          weekStart: admin.statement_week_start ?? DEFAULTS.weekStart,
-          dueDay: admin.statement_due_day ?? DEFAULTS.dueDay,
-        };
-        setSettings(loaded);
-        writeCache(loaded);
+        const session = getSession();
+        if (!session?.admin_email || !session?.session_token) return;
+        const res = await base44.functions.invoke('authAdmin', {
+          action: 'get_settings',
+          email: session.admin_email,
+          session_token: session.session_token,
+        });
+        const data = res.data;
+        if (data?.success) {
+          const loaded = {
+            weekStart: data.statement_week_start ?? DEFAULTS.weekStart,
+            dueDay: data.statement_due_day ?? DEFAULTS.dueDay,
+          };
+          setSettings(loaded);
+          writeCache(loaded);
+        }
       } catch { /* use cached/defaults */ }
     };
     load();
@@ -62,16 +49,16 @@ export function useStatementSettings() {
   const save = async (weekStart, dueDay) => {
     setSaving(true);
     try {
-      const session = getAdminSession();
-      if (!session?.admin_email) throw new Error('Not logged in');
-      const admins = await base44.entities.Admin.filter(
-        { email: session.admin_email, tenant_id: session.tenant_id }, '-created_date', 1
-      );
-      if (!admins.length) throw new Error('Admin not found');
-      await base44.entities.Admin.update(admins[0].id, {
+      const session = getSession();
+      if (!session?.admin_email || !session?.session_token) throw new Error('Not logged in');
+      const res = await base44.functions.invoke('authAdmin', {
+        action: 'update_settings',
+        email: session.admin_email,
+        session_token: session.session_token,
         statement_week_start: weekStart,
         statement_due_day: dueDay,
       });
+      if (!res.data?.success) throw new Error('Save failed');
       const updated = { weekStart, dueDay };
       setSettings(updated);
       writeCache(updated);

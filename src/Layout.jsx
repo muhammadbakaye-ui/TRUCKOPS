@@ -89,10 +89,14 @@ function AppShell({ children, currentPageName }) {
     if (!session || session.role === 'driver') { setOnboardingChecked(true); return; }
     if (session.onboarding_completed) { setOnboardingChecked(true); return; }
     setOnboardingChecked(false);
-    // Check DB in case they cleared localStorage
-    base44.entities.Admin.filter({ email: session.admin_email, tenant_id: session.tenant_id }, '-created_date', 1)
-      .then(admins => {
-        if (admins.length && admins[0].onboarding_completed) {
+    // Check DB via authAdmin (Admin entity requires service-role)
+    base44.functions.invoke('authAdmin', {
+      action: 'get_settings',
+      email: session.admin_email,
+      session_token: session.session_token,
+    })
+      .then(res => {
+        if (res.data?.onboarding_completed) {
           login({ ...session, onboarding_completed: true });
         } else {
           setShowOnboarding(true);

@@ -523,6 +523,38 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, repaired: results.length, details: results });
     }
 
+    // ── GET SETTINGS (requires valid session) ──
+    if (action === 'get_settings') {
+      if (!email || !session_token) {
+        return Response.json({ success: false, message: 'Authentication required' }, { status: 401 });
+      }
+      const admin = await verifySessionToken(base44, email, session_token);
+      if (!admin) return Response.json({ success: false, message: 'Session expired.' }, { status: 401 });
+      return Response.json({
+        success: true,
+        statement_week_start: admin.statement_week_start ?? 0,
+        statement_due_day: admin.statement_due_day ?? 2,
+        onboarding_completed: admin.onboarding_completed ?? false,
+      });
+    }
+
+    // ── UPDATE SETTINGS (requires valid session) ──
+    if (action === 'update_settings') {
+      if (!email || !session_token) {
+        return Response.json({ success: false, message: 'Authentication required' }, { status: 401 });
+      }
+      const admin = await verifySessionToken(base44, email, session_token);
+      if (!admin) return Response.json({ success: false, message: 'Session expired.' }, { status: 401 });
+      const updates = {};
+      if (body.statement_week_start !== undefined) updates.statement_week_start = body.statement_week_start;
+      if (body.statement_due_day !== undefined) updates.statement_due_day = body.statement_due_day;
+      if (body.onboarding_completed !== undefined) updates.onboarding_completed = body.onboarding_completed;
+      if (Object.keys(updates).length > 0) {
+        await base44.asServiceRole.entities.Admin.update(admin.id, updates);
+      }
+      return Response.json({ success: true });
+    }
+
     return Response.json({ success: false, error: 'Invalid action' }, { status: 400 });
   } catch (error) {
     console.error('authAdmin error:', error);
