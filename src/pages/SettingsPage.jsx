@@ -24,13 +24,17 @@ export default function SettingsPage() {
 
   const tenantId = session?.tenant_id;
 
-  const { data: companies = [], isLoading } = useQuery({
+  const { data: companies = [], isLoading, refetch } = useQuery({
     queryKey: ['settings-company', tenantId],
     queryFn: () => tenantId
       ? base44.entities.Company.filter({ company_type: 'carrier', tenant_id: tenantId }, '-created_date', 1)
       : Promise.resolve([]),
     enabled: !!tenantId,
   });
+
+  useEffect(() => {
+    if (tenantId) refetch();
+  }, [tenantId, refetch]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -77,7 +81,8 @@ export default function SettingsPage() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['settings-company'] });
+      queryClient.invalidateQueries({ queryKey: ['settings-company', tenantId] });
+      refetch();
       if (session) login({ ...session, company_name: form.company_name || '' });
       toast.success('Settings saved');
     },
