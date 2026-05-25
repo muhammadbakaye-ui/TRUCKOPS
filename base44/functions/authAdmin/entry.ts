@@ -134,11 +134,17 @@ Deno.serve(async (req) => {
         session_token_expires: sessionExpires,
       });
 
+      // Use carrier Company entity as authoritative company name source
+      const loginCarrierCompanies = await base44.asServiceRole.entities.Company.filter({ tenant_id: loginTenantId, company_type: 'carrier' });
+      const loginCompanyName = loginCarrierCompanies.length > 0
+        ? loginCarrierCompanies[0].company_name
+        : (admin.company_name || sub.company_name || '');
+
       return Response.json({
         success: true,
         admin_id: admin.id,
         admin_name: `${admin.first_name} ${admin.last_name}`,
-        company_name: admin.company_name || sub.company_name || '',
+        company_name: loginCompanyName,
         tenant_id: loginTenantId,
         subscription_status: subscriptionStatus,
         plan,
@@ -190,11 +196,17 @@ Deno.serve(async (req) => {
       if (sub.status === 'canceled' || sub.status === 'unpaid') {
         return Response.json({ success: false, message: 'Subscription inactive', code: 'subscription_inactive' }, { status: 403 });
       }
+      // Use carrier Company entity as authoritative company name source
+      const carrierCompanies = await base44.asServiceRole.entities.Company.filter({ tenant_id: tenantId, company_type: 'carrier' });
+      const displayCompanyName = carrierCompanies.length > 0
+        ? carrierCompanies[0].company_name
+        : (admin.company_name || sub.company_name || '');
+
       return Response.json({
         success: true,
         admin_id: admin.id,
         admin_name: `${admin.first_name} ${admin.last_name}`,
-        company_name: admin.company_name || sub.company_name || '',
+        company_name: displayCompanyName,
         tenant_id: tenantId,
         subscription_status: sub.status,
         plan: sub.plan,

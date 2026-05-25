@@ -49,9 +49,6 @@ export default function SettingsPage() {
         mc_number: c.mc_number || '',
         dot_number: c.dot_number || '',
       }));
-      if (session) login({ ...session, company_name: c.company_name || '' });
-    } else if (session && session.company_name) {
-      login({ ...session, company_name: '' });
     }
   }, [companies, isLoading]);
 
