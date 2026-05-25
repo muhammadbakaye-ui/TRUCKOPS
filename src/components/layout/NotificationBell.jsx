@@ -17,14 +17,13 @@ function playChime() {
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, ctx.currentTime);
-    osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.12);
-    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.25);
-    gain.gain.setValueAtTime(0.25, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+    osc.frequency.setValueAtTime(740, ctx.currentTime);
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
     osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.6);
-  } catch {}
+    osc.stop(ctx.currentTime + 1.2);
+  } catch (e) {}
 }
 
 export default function NotificationBell() {
