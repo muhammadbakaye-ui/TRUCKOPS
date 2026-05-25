@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
@@ -59,6 +59,26 @@ export default function Sidebar({ currentPage, collapsed, onToggle }) {
   const { session } = useSession();
   const companyName = session?.company_name || '';
   const pendingCounts = usePendingReviewCounts();
+  const navRef = React.useRef(null);
+
+  // Save scroll position before navigation
+  React.useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (navRef.current) {
+        sessionStorage.setItem('sidebar_scroll', navRef.current.scrollTop.toString());
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
+  // Restore scroll position on mount/route change
+  React.useEffect(() => {
+    const saved = sessionStorage.getItem('sidebar_scroll');
+    if (saved && navRef.current) {
+      navRef.current.scrollTop = parseInt(saved, 10);
+    }
+  }, [currentPage]);
 
   return (
     <div data-tour="sidebar" className={cn(
@@ -82,7 +102,7 @@ export default function Sidebar({ currentPage, collapsed, onToggle }) {
       )}
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-2 px-2">
+      <nav ref={navRef} className="flex-1 overflow-y-auto py-2 px-2">
         {navItems.map((item, i) => {
           if (item.type === 'divider') {
             return !collapsed ? (
