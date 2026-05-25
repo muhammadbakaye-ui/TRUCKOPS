@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Save, ArrowLeft, Plus, Trash2, Printer, Cloud, CloudOff } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, Plus, Trash2, Download, Cloud, CloudOff } from 'lucide-react';
 import StatusBadge from '../components/shared/StatusBadge';
 import { logAudit } from '../components/shared/AuditLogger';
 import { toast } from 'sonner';
@@ -268,8 +268,8 @@ export default function LoadDetail() {
             {form.status === 'draft' ? 'Save' : 'Save'}
           </Button>
           {(loadId || savedLoadIdRef.current) && (
-            <Button variant="outline" size="sm" className="h-8 gap-1" onClick={handlePrint}>
-              <Printer className="w-3.5 h-3.5" /> Print / PDF
+            <Button size="sm" className="h-8 gap-1 bg-green-700 hover:bg-green-800 text-white" onClick={handlePrint}>
+              <Download className="w-3.5 h-3.5" /> Download PDF
             </Button>
           )}
         </div>

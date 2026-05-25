@@ -123,8 +123,8 @@ export default function Reports() {
               <SelectItem value="365">Last 12 months</SelectItem>
             </SelectContent>
           </Select>
-          <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={handlePrintDriverReport}>
-            <FileDown className="w-3.5 h-3.5" /> Driver Report
+          <Button size="sm" className="h-8 text-xs gap-1.5 bg-green-700 hover:bg-green-800 text-white" onClick={handlePrintDriverReport}>
+            <FileDown className="w-3.5 h-3.5" /> Download PDF
           </Button>
         </div>
       </div>

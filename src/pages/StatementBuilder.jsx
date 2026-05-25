@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, Cloud, CloudOff } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Save, ArrowLeft, Plus, Trash2, CheckCircle, Fuel, Truck, Printer, Eye, EyeOff, Zap } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, Plus, Trash2, CheckCircle, Fuel, Truck, Download, Eye, EyeOff, Zap } from 'lucide-react';
 import { logAudit } from '../components/shared/AuditLogger';
 import LoadPickerModal from '../components/print/LoadPickerModal';
 import { toast } from 'sonner';
@@ -436,8 +436,8 @@ export default function StatementBuilder() {
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             Save
           </Button>
-          <Button variant="outline" size="sm" className="h-8 gap-1" onClick={handlePrint}>
-            <Printer className="w-3.5 h-3.5" /> Print / PDF
+          <Button size="sm" className="h-8 gap-1 bg-green-700 hover:bg-green-800 text-white" onClick={handlePrint}>
+            <Download className="w-3.5 h-3.5" /> Download PDF
           </Button>
         </div>
       </div>
