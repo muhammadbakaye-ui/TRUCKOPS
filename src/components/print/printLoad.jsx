@@ -203,11 +203,13 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 
 <script>
 function doPrint() {
-  if (window.electronAPI && window.electronAPI.printToPDF) {
-    window.electronAPI.printToPDF();
-  } else {
-    window.print();
-  }
+  setTimeout(function() {
+    if (window.electronAPI && window.electronAPI.printToPDF) {
+      window.electronAPI.printToPDF();
+    } else {
+      window.print();
+    }
+  }, 500);
 }
 </script>
 </body>
