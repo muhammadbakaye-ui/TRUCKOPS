@@ -61,6 +61,13 @@ export default function DriverPortalView() {
     }
   }, [session?.driver_id]);
 
+  const { data: carrierCompanies = [] } = useQuery({
+    queryKey: ['carrier-company-portal', session?.tenant_id],
+    queryFn: () => base44.entities.Company.filter({ company_type: 'carrier', tenant_id: session.tenant_id }, '-created_date', 1),
+    enabled: !!session?.tenant_id,
+  });
+  const companyName = carrierCompanies[0]?.company_name || '';
+
   const { data: documents = [], isLoading: docsLoading } = useQuery({
     queryKey: ['driver-docs', session?.driver_id],
     queryFn: () => base44.entities.DriverDocument.filter({ driver_id: session.driver_id }, '-created_date', 200),
@@ -141,7 +148,12 @@ export default function DriverPortalView() {
       <div className="h-12 md:h-14 bg-sidebar border-b border-sidebar-border flex items-center justify-between px-3 md:px-6 flex-shrink-0">
         <div className="flex items-center gap-2">
           <Truck className="w-4 h-4 md:w-5 md:h-5 text-sidebar-primary" />
-          <span className="font-bold text-sidebar-primary-foreground text-xs md:text-sm tracking-widest">TRUCKOPS</span>
+          <div>
+            <span className="font-bold text-sidebar-primary-foreground text-xs md:text-sm tracking-widest">TRUCKOPS</span>
+            {companyName && (
+              <p className="text-[10px] md:text-[11px] font-bold leading-tight" style={{ color: '#a855f7' }}>{companyName}</p>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2 md:gap-5">
           <div className="text-right">
