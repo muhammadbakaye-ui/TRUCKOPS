@@ -52,18 +52,17 @@ const pageTitles = {
   DeletedItems: 'Deleted Items',
 };
 
-function useMainScrollRestoration(currentPageName) {
+function useMainScrollRestoration() {
   const mainRef = useRef(null);
   const location = useLocation();
-  const key = `scroll_${currentPageName}`;
+  const key = `scroll_${location.pathname}`;
 
-  // Restore on page change
+  // Save scroll position before navigating away
+  const savedKey = useRef(key);
   useEffect(() => {
-    const el = mainRef.current;
-    if (!el) return;
-    const saved = sessionStorage.getItem(key);
-    if (mainRef.current) mainRef.current.scrollTop = saved ? parseInt(saved, 10) : 0;
-  }, [location.pathname, location.search, key]);
+    // When key changes (navigation), save the old page's scroll before restoring new
+    savedKey.current = key;
+  });
 
   // Save on scroll
   useEffect(() => {
@@ -73,6 +72,19 @@ function useMainScrollRestoration(currentPageName) {
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
   }, [key]);
+
+  // Restore after navigation — wait for animation + paint
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+    const saved = sessionStorage.getItem(key);
+    const target = saved ? parseInt(saved, 10) : 0;
+    // Use a small delay so framer-motion animation doesn't fight the scroll
+    const timer = setTimeout(() => {
+      if (mainRef.current) mainRef.current.scrollTop = target;
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [location.pathname, location.search]);
 
   return mainRef;
 }
@@ -110,7 +122,7 @@ function AppShell({ children, currentPageName }) {
     login({ ...session, onboarding_completed: true });
     setShowOnboarding(false);
   };
-  const mainRef = useMainScrollRestoration(currentPageName);
+  const mainRef = useMainScrollRestoration();
   const location = useLocation();
   const navigate = useNavigate();
   useAndroidBackButton();
