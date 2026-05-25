@@ -12,6 +12,7 @@ import VehicleMaintenance from './pages/VehicleMaintenance';
 import TruckInspections from './pages/TruckInspections';
 import EquipmentWarnings from './pages/EquipmentWarnings';
 import IFTAReports from './pages/IFTAReports';
+import HighwayUseTax from './pages/HighwayUseTax';
 import InsurancePolicies from './pages/InsurancePolicies';
 import PermitsLicenses from './pages/PermitsLicenses';
 import LandingFeatures from './pages/LandingFeatures';
@@ -82,6 +83,7 @@ const AuthenticatedApp = () => {
         <Route path="/TruckInspections" element={<PageTransition><LayoutWrapper currentPageName="TruckInspections"><TruckInspections /></LayoutWrapper></PageTransition>} />
         <Route path="/EquipmentWarnings" element={<PageTransition><LayoutWrapper currentPageName="EquipmentWarnings"><EquipmentWarnings /></LayoutWrapper></PageTransition>} />
         <Route path="/IFTAReports" element={<PageTransition><LayoutWrapper currentPageName="IFTAReports"><IFTAReports /></LayoutWrapper></PageTransition>} />
+        <Route path="/HighwayUseTax" element={<PageTransition><LayoutWrapper currentPageName="HighwayUseTax"><HighwayUseTax /></LayoutWrapper></PageTransition>} />
         <Route path="/InsurancePolicies" element={<PageTransition><LayoutWrapper currentPageName="InsurancePolicies"><InsurancePolicies /></LayoutWrapper></PageTransition>} />
         <Route path="/PermitsLicenses" element={<PageTransition><LayoutWrapper currentPageName="PermitsLicenses"><PermitsLicenses /></LayoutWrapper></PageTransition>} />
         <Route path="/DriverPublicPortal" element={<PageTransition><DriverPublicPortal /></PageTransition>} />
@@ -139,6 +141,7 @@ const AuthenticatedApp = () => {
       <Route path="/TruckInspections" element={<PageTransition><LayoutWrapper currentPageName="TruckInspections"><TruckInspections /></LayoutWrapper></PageTransition>} />
       <Route path="/EquipmentWarnings" element={<PageTransition><LayoutWrapper currentPageName="EquipmentWarnings"><EquipmentWarnings /></LayoutWrapper></PageTransition>} />
       <Route path="/IFTAReports" element={<PageTransition><LayoutWrapper currentPageName="IFTAReports"><IFTAReports /></LayoutWrapper></PageTransition>} />
+      <Route path="/HighwayUseTax" element={<PageTransition><LayoutWrapper currentPageName="HighwayUseTax"><HighwayUseTax /></LayoutWrapper></PageTransition>} />
       <Route path="/InsurancePolicies" element={<PageTransition><LayoutWrapper currentPageName="InsurancePolicies"><InsurancePolicies /></LayoutWrapper></PageTransition>} />
       <Route path="/PermitsLicenses" element={<PageTransition><LayoutWrapper currentPageName="PermitsLicenses"><PermitsLicenses /></LayoutWrapper></PageTransition>} />
 

@@ -132,6 +132,9 @@ export default function AccidentsClaims() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [driverFilter, setDriverFilter] = useState('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const { data: drivers = [] } = useQuery({
     queryKey: ['drivers', tenantId],
@@ -163,7 +166,13 @@ export default function AccidentsClaims() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['accidents'] }); toast.success('Deleted'); },
   });
 
-  const filtered = statusFilter === 'all' ? accidents : accidents.filter(a => a.claim_status === statusFilter);
+  const filtered = accidents.filter(a => {
+    if (driverFilter !== 'all' && a.driver_id !== driverFilter) return false;
+    if (statusFilter !== 'all' && a.claim_status !== statusFilter) return false;
+    if (dateFrom && a.date < dateFrom) return false;
+    if (dateTo && a.date > dateTo) return false;
+    return true;
+  });
 
   return (
     <div className="p-4 space-y-4">
@@ -177,7 +186,14 @@ export default function AccidentsClaims() {
         }
       />
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
+        <Select value={driverFilter} onValueChange={setDriverFilter}>
+          <SelectTrigger className="h-8 text-xs w-44"><SelectValue placeholder="All Drivers" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Drivers</SelectItem>
+            {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}
+          </SelectContent>
+        </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="h-8 text-xs w-40"><SelectValue placeholder="All Statuses" /></SelectTrigger>
           <SelectContent>
@@ -188,6 +204,8 @@ export default function AccidentsClaims() {
             <SelectItem value="closed">Closed</SelectItem>
           </SelectContent>
         </Select>
+        <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-8 text-xs w-36" placeholder="From" />
+        <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-8 text-xs w-36" placeholder="To" />
       </div>
 
       {isLoading ? (

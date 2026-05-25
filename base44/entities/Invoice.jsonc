@@ -77,6 +77,15 @@
       ],
       "default": "draft"
     },
+    "factored": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this invoice is assigned to a factoring company"
+    },
+    "factoring_company_id": {
+      "type": "string",
+      "description": "ID of the factoring company this invoice is assigned to"
+    },
     "pdf_url": {
       "type": "string"
     },

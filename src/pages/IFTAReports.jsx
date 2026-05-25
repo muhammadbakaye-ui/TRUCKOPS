@@ -17,6 +17,17 @@ const QUARTERS = ['Q1', 'Q2', 'Q3', 'Q4'];
 const currentYear = new Date().getFullYear();
 const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
+// Approximate state fuel tax rates (cents per gallon) - 2024 averages
+const STATE_TAX_RATES = {
+  AL: 0.18, AR: 0.215, AZ: 0.19, CA: 0.5695, CO: 0.22, CT: 0.345, DC: 0.235, DE: 0.235,
+  FL: 0.2565, GA: 0.215, IA: 0.309, ID: 0.25, IL: 0.384, IN: 0.315, KS: 0.245, KY: 0.265,
+  LA: 0.2, MA: 0.273, MD: 0.235, ME: 0.255, MI: 0.309, MN: 0.285, MO: 0.236, MS: 0.184,
+  MT: 0.2725, NC: 0.2995, ND: 0.23, NE: 0.275, NH: 0.247, NJ: 0.225, NM: 0.27, NV: 0.26,
+  NY: 0.339, OH: 0.385, OK: 0.195, OR: 0.38, PA: 0.259, RI: 0.31, SC: 0.185, SD: 0.3,
+  TN: 0.214, TX: 0.2, UT: 0.245, VA: 0.235, VT: 0.259, WA: 0.375, WI: 0.329, WV: 0.259,
+  WY: 0.24, AB: 0.14, BC: 0.145, MB: 0.15, ON: 0.145, QC: 0.155, SK: 0.15
+};
+
 function IFTADialog({ open, onClose, editing, trucks, onSave, saving }) {
   const [form, setForm] = useState({});
   useEffect(() => {
@@ -121,13 +132,17 @@ export default function IFTAReports() {
     return true;
   });
 
-  // Summary by state
+  // Summary by state with tax calculation
   const stateSummary = useMemo(() => {
     const m = {};
     filtered.forEach(r => {
-      if (!m[r.state]) m[r.state] = { state: r.state, miles: 0, gallons: 0 };
+      if (!m[r.state]) m[r.state] = { state: r.state, miles: 0, gallons: 0, taxRate: STATE_TAX_RATES[r.state] || 0 };
       m[r.state].miles += r.miles_driven || 0;
       m[r.state].gallons += r.gallons_purchased || 0;
+    });
+    // Calculate tax: gallons * tax rate
+    Object.values(m).forEach(s => {
+      s.taxOwed = s.gallons * s.taxRate;
     });
     return Object.values(m).sort((a, b) => b.miles - a.miles);
   }, [filtered]);
@@ -135,6 +150,7 @@ export default function IFTAReports() {
   const totalMiles = filtered.reduce((s, r) => s + (r.miles_driven || 0), 0);
   const totalGallons = filtered.reduce((s, r) => s + (r.gallons_purchased || 0), 0);
   const avgMPG = totalGallons > 0 ? (totalMiles / totalGallons).toFixed(2) : '—';
+  const totalTax = stateSummary.reduce((s, st) => s + st.taxOwed, 0);
 
   return (
     <div className="p-4 space-y-4">
@@ -149,7 +165,7 @@ export default function IFTAReports() {
       />
 
       {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-4 gap-3">
         <div className="bg-card border border-border rounded-lg px-4 py-3">
           <p className="text-xs text-muted-foreground">Total Miles</p>
           <p className="text-lg font-semibold mt-0.5">{totalMiles.toLocaleString()}</p>
@@ -161,6 +177,10 @@ export default function IFTAReports() {
         <div className="bg-card border border-border rounded-lg px-4 py-3">
           <p className="text-xs text-muted-foreground">Avg MPG</p>
           <p className="text-lg font-semibold mt-0.5">{avgMPG}</p>
+        </div>
+        <div className="bg-card border border-border rounded-lg px-4 py-3">
+          <p className="text-xs text-muted-foreground">Est. Total Tax</p>
+          <p className="text-lg font-semibold mt-0.5 text-primary">${totalTax.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
         </div>
       </div>
 
@@ -204,7 +224,8 @@ export default function IFTAReports() {
                     <th className="text-left px-4 py-2 font-semibold text-muted-foreground">State</th>
                     <th className="text-right px-4 py-2 font-semibold text-muted-foreground">Miles</th>
                     <th className="text-right px-4 py-2 font-semibold text-muted-foreground">Gallons</th>
-                    <th className="text-right px-4 py-2 font-semibold text-muted-foreground">MPG</th>
+                    <th className="text-right px-4 py-2 font-semibold text-muted-foreground">Tax Rate</th>
+                    <th className="text-right px-4 py-2 font-semibold text-muted-foreground">Tax Owed</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -213,7 +234,8 @@ export default function IFTAReports() {
                       <td className="px-4 py-2 font-mono font-semibold">{s.state}</td>
                       <td className="px-4 py-2 text-right">{s.miles.toLocaleString()}</td>
                       <td className="px-4 py-2 text-right">{s.gallons.toLocaleString(undefined, { minimumFractionDigits: 3 })}</td>
-                      <td className="px-4 py-2 text-right">{s.gallons > 0 ? (s.miles / s.gallons).toFixed(2) : '—'}</td>
+                      <td className="px-4 py-2 text-right text-muted-foreground">${s.taxRate.toFixed(2)}/gal</td>
+                      <td className="px-4 py-2 text-right font-medium text-primary">${s.taxOwed.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                     </tr>
                   ))}
                 </tbody>

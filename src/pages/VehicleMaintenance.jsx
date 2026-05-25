@@ -27,7 +27,7 @@ function serviceStatus(lastDate) {
   if (!lastDate) return { label: 'No Record', className: 'text-muted-foreground border-border bg-muted' };
   const days = differenceInDays(new Date(), parseISO(lastDate));
   if (days > 90) return { label: 'Overdue', className: 'text-red-600 border-red-300 bg-red-50 dark:bg-red-900/20' };
-  if (days > 60) return { label: 'Due Soon', className: 'text-yellow-600 border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20' };
+  if (days > 30) return { label: 'Due Soon', className: 'text-yellow-600 border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20' };
   return { label: 'Up to Date', className: 'text-green-600 border-green-300 bg-green-50 dark:bg-green-900/20' };
 }
 
