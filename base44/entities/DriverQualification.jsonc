@@ -1,0 +1,49 @@
+{
+  "name": "DriverQualification",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "driver_id": {
+      "type": "string"
+    },
+    "driver_name": {
+      "type": "string"
+    },
+    "cdl_class": {
+      "type": "string",
+      "enum": [
+        "A",
+        "B",
+        "C"
+      ]
+    },
+    "cdl_number": {
+      "type": "string"
+    },
+    "cdl_expiration_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "medical_card_expiration_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "endorsements": {
+      "type": "string",
+      "description": "e.g. H, N, T, X"
+    },
+    "hire_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "driver_id",
+    "tenant_id"
+  ]
+}

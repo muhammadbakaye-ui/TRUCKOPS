@@ -1,0 +1,58 @@
+{
+  "name": "AccidentClaim",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "driver_id": {
+      "type": "string"
+    },
+    "driver_name": {
+      "type": "string"
+    },
+    "truck_id": {
+      "type": "string"
+    },
+    "truck_number": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "description": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "injury_involved": {
+      "type": "boolean",
+      "default": false
+    },
+    "insurance_claim_number": {
+      "type": "string"
+    },
+    "claim_status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "under_review",
+        "settled",
+        "closed"
+      ],
+      "default": "open"
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "date",
+    "tenant_id"
+  ]
+}

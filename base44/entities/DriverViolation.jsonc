@@ -1,0 +1,48 @@
+{
+  "name": "DriverViolation",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "driver_id": {
+      "type": "string"
+    },
+    "driver_name": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "violation_type": {
+      "type": "string",
+      "enum": [
+        "speeding",
+        "logbook",
+        "inspection_failure",
+        "accident",
+        "other"
+      ]
+    },
+    "description": {
+      "type": "string"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "minor",
+        "major"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "driver_id",
+    "date",
+    "violation_type",
+    "tenant_id"
+  ]
+}

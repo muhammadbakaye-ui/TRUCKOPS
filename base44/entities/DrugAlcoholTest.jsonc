@@ -1,0 +1,46 @@
+{
+  "name": "DrugAlcoholTest",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "driver_id": {
+      "type": "string"
+    },
+    "driver_name": {
+      "type": "string"
+    },
+    "test_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "test_type": {
+      "type": "string",
+      "enum": [
+        "pre_employment",
+        "random",
+        "post_accident",
+        "reasonable_suspicion",
+        "return_to_duty"
+      ]
+    },
+    "result": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "fail"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "driver_id",
+    "test_date",
+    "test_type",
+    "result",
+    "tenant_id"
+  ]
+}

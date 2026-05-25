@@ -35,6 +35,11 @@ const pageTitles = {
   DispatchBoard: 'Dispatch Board',
   Taxes1099: '1099s',
   Factoring: 'Factoring',
+  DriverQualifications: 'Driver Qualifications',
+  DriverViolations: 'Driver Violations',
+  DrugAlcoholTests: 'Drug & Alcohol Tests',
+  AccidentsClaims: 'Accidents & Claims',
+  LicenseExpirationWarnings: 'License Expiration Warnings',
   AdminDriverDocuments: 'Driver Documents',
   DeletedItems: 'Deleted Items',
 };
