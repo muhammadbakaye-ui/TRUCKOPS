@@ -244,9 +244,18 @@ export function printStatement({ company, statement, allLines }) {
 
 <!-- DOWNLOAD BUTTON -->
 <div class="download-bar">
-  <button class="btn-print" onclick="window.print()">🖨 Print</button>
+  <button class="btn-print" onclick="doPrint()">🖨 Print</button>
 </div>
 
+<script>
+function doPrint() {
+  if (window.electronAPI && window.electronAPI.printToPDF) {
+    window.electronAPI.printToPDF();
+  } else {
+    window.print();
+  }
+}
+</script>
 </body>
 </html>`;
 

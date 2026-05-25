@@ -276,9 +276,18 @@ export function printInvoice({ company, invoice, lineItems, stops }) {
 
 <!-- DOWNLOAD BAR -->
 <div class="download-bar" style="position:fixed;bottom:24px;right:32px;display:flex;gap:10px;z-index:9999;">
-  <button onclick="window.print()" style="background:#1a3a6b;color:#fff;border:none;padding:10px 22px;font-size:13px;font-weight:bold;border-radius:6px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.25);">🖨 Print</button>
+  <button onclick="doPrint()" style="background:#1a3a6b;color:#fff;border:none;padding:10px 22px;font-size:13px;font-weight:bold;border-radius:6px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.25);">🖨 Print</button>
 </div>
 
+<script>
+function doPrint() {
+  if (window.electronAPI && window.electronAPI.printToPDF) {
+    window.electronAPI.printToPDF();
+  } else {
+    window.print();
+  }
+}
+</script>
 </body>
 </html>`;
 

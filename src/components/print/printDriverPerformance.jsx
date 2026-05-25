@@ -125,7 +125,7 @@ export function printDriverPerformanceReport({ drivers, loads, period, periodLab
   </style>
 </head>
 <body>
-  <button class="print-btn" onclick="window.print()">🖨 Print</button>
+  <button class="print-btn" onclick="doPrint()">🖨 Print</button>
 
   <div class="report-header">
     <div>
@@ -200,6 +200,15 @@ export function printDriverPerformanceReport({ drivers, loads, period, periodLab
     <span>Confidential — For internal use only</span>
     <span>Driver Performance Report · ${periodLabel}</span>
   </div>
+<script>
+function doPrint() {
+  if (window.electronAPI && window.electronAPI.printToPDF) {
+    window.electronAPI.printToPDF();
+  } else {
+    window.print();
+  }
+}
+</script>
 </body>
 </html>`;
 
