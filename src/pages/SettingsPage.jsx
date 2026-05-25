@@ -33,6 +33,7 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
+    if (isLoading) return;
     if (companies.length > 0) {
       const c = companies[0];
       setForm(prev => ({
@@ -45,13 +46,14 @@ export default function SettingsPage() {
         zip: c.zip || '',
         phone: c.phone || '',
         email: c.email || '',
+        mc_number: c.mc_number || '',
+        dot_number: c.dot_number || '',
       }));
-      // Sync session company name so Sidebar/TopBar reflect the Company entity
-      if (c.company_name && session && c.company_name !== session.company_name) {
-        login({ ...session, company_name: c.company_name });
-      }
+      if (session) login({ ...session, company_name: c.company_name || '' });
+    } else if (session && session.company_name) {
+      login({ ...session, company_name: '' });
     }
-  }, [companies]);
+  }, [companies, isLoading]);
 
   const queryClient = useQueryClient();
 
@@ -68,7 +70,8 @@ export default function SettingsPage() {
         zip: form.zip,
         phone: form.phone,
         email: form.email,
-        notes: `MC: ${form.mc_number} | DOT: ${form.dot_number}`,
+        mc_number: form.mc_number,
+        dot_number: form.dot_number,
       };
       if (companies.length > 0) {
         return base44.entities.Company.update(companies[0].id, payload);
@@ -78,6 +81,7 @@ export default function SettingsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings-company'] });
+      if (session) login({ ...session, company_name: form.company_name || '' });
       toast.success('Settings saved');
     },
   });
