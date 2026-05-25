@@ -312,6 +312,7 @@ export default function DriverPublicPortal() {
   const [data, setData] = useState(null);
   const [activeTab, setActiveTab] = useState('statements');
   const [token, setToken] = useState(null);
+  const [companyName, setCompanyName] = useState('');
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -324,7 +325,18 @@ export default function DriverPublicPortal() {
     if (!token) { setError('No access token provided.'); setLoading(false); return; }
 
     base44.functions.invoke('driverPortalData', { token })
-      .then(res => { setData(res.data); setLoading(false); })
+      .then(async res => {
+        setData(res.data);
+        setLoading(false);
+        // Fetch company name from carrier Company entity
+        const tenantId = res.data?.driver?.tenant_id;
+        if (tenantId) {
+          try {
+            const companies = await base44.entities.Company.filter({ company_type: 'carrier', tenant_id: tenantId }, '-created_date', 1);
+            if (companies.length > 0) setCompanyName(companies[0].company_name || '');
+          } catch {}
+        }
+      })
       .catch(err => { setError(err?.response?.data?.error || 'Invalid or expired link.'); setLoading(false); });
   }, []);
 
@@ -379,7 +391,10 @@ export default function DriverPublicPortal() {
         <div className="flex items-center gap-2">
           <Truck className="w-4 h-4 text-sidebar-primary" />
           <span className="font-bold text-sidebar-primary-foreground text-xs tracking-widest">TRUCKOPS</span>
-          <span className="text-sidebar-foreground/40 text-xs ml-1">· Driver Portal</span>
+          {companyName
+            ? <span className="text-xs font-bold ml-1" style={{ color: '#a855f7' }}>{companyName}</span>
+            : <span className="text-sidebar-foreground/40 text-xs ml-1">· Driver Portal</span>
+          }
         </div>
         <div className="text-right">
           <p className="text-xs font-semibold text-sidebar-primary-foreground">{driver.full_name}</p>

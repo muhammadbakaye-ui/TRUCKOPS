@@ -70,7 +70,7 @@ export default function TopBar({ pageTitle, currentPageName }) {
             </Button>
           </div>
           <div>
-            {companyName && <p className="text-[10px] text-muted-foreground font-medium tracking-wide leading-none mb-0.5">{companyName}</p>}
+            {companyName && <p className="text-[10px] font-bold tracking-wide leading-none mb-0.5" style={{ color: '#9333ea' }}>{companyName}</p>}
             <h1 className="text-sm font-semibold text-foreground leading-none">{pageTitle}</h1>
           </div>
         </div>

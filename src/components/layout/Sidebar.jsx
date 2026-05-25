@@ -74,7 +74,7 @@ export default function Sidebar({ currentPage, collapsed, onToggle }) {
       </div>
       {!collapsed && (
         <div className="px-4 pb-2 border-b border-sidebar-border">
-          <span className="text-[9px] text-sidebar-foreground/40 font-medium tracking-widest uppercase">{companyName}</span>
+          <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: '#a855f7' }}>{companyName}</span>
         </div>
       )}
 
