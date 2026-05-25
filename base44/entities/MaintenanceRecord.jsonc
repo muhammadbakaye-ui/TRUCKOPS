@@ -1,0 +1,58 @@
+{
+  "name": "MaintenanceRecord",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "vehicle_id": {
+      "type": "string",
+      "description": "Truck or Trailer ID"
+    },
+    "vehicle_type": {
+      "type": "string",
+      "enum": [
+        "truck",
+        "trailer"
+      ]
+    },
+    "vehicle_number": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "mileage": {
+      "type": "number"
+    },
+    "maintenance_type": {
+      "type": "string",
+      "enum": [
+        "oil_change",
+        "tire_rotation",
+        "brake_service",
+        "dot_inspection",
+        "other"
+      ]
+    },
+    "description": {
+      "type": "string"
+    },
+    "cost": {
+      "type": "number"
+    },
+    "vendor": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "vehicle_id",
+    "date",
+    "maintenance_type",
+    "tenant_id"
+  ]
+}

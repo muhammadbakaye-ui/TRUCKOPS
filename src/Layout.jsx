@@ -40,6 +40,9 @@ const pageTitles = {
   DrugAlcoholTests: 'Drug & Alcohol Tests',
   AccidentsClaims: 'Accidents & Claims',
   LicenseExpirationWarnings: 'License Expiration Warnings',
+  VehicleMaintenance: 'Vehicle Maintenance',
+  TruckInspections: 'Truck Inspections',
+  EquipmentWarnings: 'Equipment Warnings',
   AdminDriverDocuments: 'Driver Documents',
   DeletedItems: 'Deleted Items',
 };

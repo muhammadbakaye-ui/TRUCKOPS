@@ -8,6 +8,9 @@ import DriverViolations from './pages/DriverViolations';
 import DrugAlcoholTests from './pages/DrugAlcoholTests';
 import AccidentsClaims from './pages/AccidentsClaims';
 import LicenseExpirationWarnings from './pages/LicenseExpirationWarnings';
+import VehicleMaintenance from './pages/VehicleMaintenance';
+import TruckInspections from './pages/TruckInspections';
+import EquipmentWarnings from './pages/EquipmentWarnings';
 import LandingFeatures from './pages/LandingFeatures';
 import LandingPricing from './pages/LandingPricing';
 import LandingAbout from './pages/LandingAbout';
@@ -98,6 +101,9 @@ const AuthenticatedApp = () => {
       <Route path="/DrugAlcoholTests" element={<PageTransition><LayoutWrapper currentPageName="DrugAlcoholTests"><DrugAlcoholTests /></LayoutWrapper></PageTransition>} />
       <Route path="/AccidentsClaims" element={<PageTransition><LayoutWrapper currentPageName="AccidentsClaims"><AccidentsClaims /></LayoutWrapper></PageTransition>} />
       <Route path="/LicenseExpirationWarnings" element={<PageTransition><LayoutWrapper currentPageName="LicenseExpirationWarnings"><LicenseExpirationWarnings /></LayoutWrapper></PageTransition>} />
+      <Route path="/VehicleMaintenance" element={<PageTransition><LayoutWrapper currentPageName="VehicleMaintenance"><VehicleMaintenance /></LayoutWrapper></PageTransition>} />
+      <Route path="/TruckInspections" element={<PageTransition><LayoutWrapper currentPageName="TruckInspections"><TruckInspections /></LayoutWrapper></PageTransition>} />
+      <Route path="/EquipmentWarnings" element={<PageTransition><LayoutWrapper currentPageName="EquipmentWarnings"><EquipmentWarnings /></LayoutWrapper></PageTransition>} />
 
       <Route path="/DriverPublicPortal" element={<PageTransition><DriverPublicPortal /></PageTransition>} />
       <Route path="/pricing" element={<PageTransition><Pricing /></PageTransition>} />

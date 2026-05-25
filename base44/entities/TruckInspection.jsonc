@@ -1,0 +1,58 @@
+{
+  "name": "TruckInspection",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "truck_id": {
+      "type": "string"
+    },
+    "truck_number": {
+      "type": "string"
+    },
+    "driver_id": {
+      "type": "string"
+    },
+    "driver_name": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "inspection_type": {
+      "type": "string",
+      "enum": [
+        "pre_trip",
+        "post_trip",
+        "dot_roadside",
+        "annual"
+      ]
+    },
+    "result": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "fail"
+      ]
+    },
+    "defects_noted": {
+      "type": "string"
+    },
+    "defects_corrected": {
+      "type": "boolean",
+      "default": false
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "truck_id",
+    "date",
+    "inspection_type",
+    "result",
+    "tenant_id"
+  ]
+}
