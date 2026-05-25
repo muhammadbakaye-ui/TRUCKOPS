@@ -31,8 +31,8 @@ export function SessionProvider({ children }) {
           return;
         }
 
-        // Restore session immediately but clear company_name until server confirms it
-        setSession({ ...s, company_name: null });
+        // Restore session immediately with cached company_name
+        setSession(s);
         setValidating(false);
         
         // Validate server-side in background; only clear session if validation fails
@@ -43,14 +43,14 @@ export function SessionProvider({ children }) {
         })
           .then(res => {
             if (res.data?.success) {
-              // Update the session with refreshed data if validation succeeds
+              // Update session with refreshed data; ensure company_name is never lost
               const refreshed = {
                 ...s,
-                admin_name: res.data.admin_name,
-                company_name: res.data.company_name,
-                tenant_id: res.data.tenant_id,
-                subscription_status: res.data.subscription_status,
-                plan: res.data.plan,
+                admin_name: res.data.admin_name || s.admin_name,
+                company_name: res.data.company_name || s.company_name,
+                tenant_id: res.data.tenant_id || s.tenant_id,
+                subscription_status: res.data.subscription_status || s.subscription_status,
+                plan: res.data.plan || s.plan,
               };
               localStorage.setItem(SESSION_KEY, JSON.stringify(refreshed));
               setSession(refreshed);
@@ -59,10 +59,6 @@ export function SessionProvider({ children }) {
               localStorage.removeItem(SESSION_KEY);
               setSession(null);
             }
-          })
-          .catch(err => {
-            // Network/transient error — keep session alive, do NOT log out
-            console.warn('Session validation failed (keeping session):', err.message);
           });
       } catch {
         localStorage.removeItem(SESSION_KEY);

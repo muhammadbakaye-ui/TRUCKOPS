@@ -44,6 +44,7 @@ const navItems = [
   { label: 'IFTA Reports', icon: Map, page: 'IFTAReports' },
   { label: 'Insurance Policies', icon: ShieldPlus, page: 'InsurancePolicies' },
   { label: 'Permits & Licenses', icon: ScrollText, page: 'PermitsLicenses' },
+  { label: 'Highway Use Tax', icon: Banknote, page: 'HighwayUseTax' },
   { type: 'divider', label: 'ADMIN' },
   { label: 'Driver Docs', icon: FolderOpen, page: 'AdminDriverDocuments' },
   { type: 'divider', label: 'SYSTEM' },
