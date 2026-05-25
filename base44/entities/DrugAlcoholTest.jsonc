@@ -34,6 +34,18 @@
     },
     "notes": {
       "type": "string"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "Test result document"
+    },
+    "submitted_by_driver": {
+      "type": "boolean",
+      "default": false
+    },
+    "pending_review": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [

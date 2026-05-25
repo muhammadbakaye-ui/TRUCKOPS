@@ -37,6 +37,11 @@
         "fail"
       ]
     },
+    "checklist": {
+      "type": "object",
+      "description": "Key-value of checklist item to pass/fail boolean",
+      "additionalProperties": true
+    },
     "defects_noted": {
       "type": "string"
     },
@@ -46,6 +51,18 @@
     },
     "notes": {
       "type": "string"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "Inspection report document"
+    },
+    "submitted_by_driver": {
+      "type": "boolean",
+      "default": false
+    },
+    "pending_review": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [

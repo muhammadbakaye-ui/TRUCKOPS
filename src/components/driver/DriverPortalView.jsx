@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Truck, Upload, FileText, LogOut, Download, Loader2, Calendar, Printer } from 'lucide-react';
+import { Truck, Upload, FileText, LogOut, Download, Loader2, Calendar, Printer, User } from 'lucide-react';
+import DriverMyProfile from './DriverMyProfile';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -112,6 +113,7 @@ export default function DriverPortalView() {
   const tabs = [
     { key: 'documents', label: 'My Documents', icon: FileText, tourAttr: 'driver-documents-tab' },
     { key: 'statements', label: 'My Statements', icon: Calendar, tourAttr: 'driver-statements-tab' },
+    { key: 'profile', label: 'My Profile', icon: User, tourAttr: 'driver-profile-tab' },
   ];
 
   return (
@@ -263,6 +265,11 @@ export default function DriverPortalView() {
                 </CardContent>
               </Card>
             </>
+          )}
+
+          {/* PROFILE TAB */}
+          {activeTab === 'profile' && (
+            <DriverMyProfile session={session} />
           )}
 
           {/* STATEMENTS TAB */}

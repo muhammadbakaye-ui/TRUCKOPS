@@ -32,7 +32,7 @@
     },
     "endorsements": {
       "type": "string",
-      "description": "e.g. H, N, T, X"
+      "description": "Comma-separated: H, N, T, X, P, S"
     },
     "hire_date": {
       "type": "string",
@@ -40,6 +40,22 @@
     },
     "notes": {
       "type": "string"
+    },
+    "cdl_file_url": {
+      "type": "string",
+      "description": "CDL document uploaded by driver"
+    },
+    "medical_card_file_url": {
+      "type": "string",
+      "description": "Medical card document uploaded by driver"
+    },
+    "submitted_by_driver": {
+      "type": "boolean",
+      "default": false
+    },
+    "pending_review": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [
