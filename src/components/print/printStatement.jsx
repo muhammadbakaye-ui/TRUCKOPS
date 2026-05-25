@@ -124,9 +124,9 @@ export function printStatement({ company, statement, allLines }) {
 
     /* DOWNLOAD BAR */
     .download-bar { position: fixed; bottom: 24px; right: 32px; display: flex; gap: 10px; z-index: 9999; }
-    .btn-print { background: #1a3a6b; color: #fff; border: none; padding: 10px 22px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.25); letter-spacing: 0.5px; }
+    .btn-print { background: #166534; color: #fff; border: none; padding: 10px 22px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.25); letter-spacing: 0.5px; }
     .btn-pdf { background: #166534; color: #fff; border: none; padding: 10px 22px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.25); letter-spacing: 0.5px; }
-    .btn-print:hover { background: #14306a; }
+    .btn-print:hover { background: #14532d; }
     .btn-pdf:hover { background: #14532d; }
 
     @page { size: letter; margin: 0.4in 0.5in; }
@@ -246,7 +246,7 @@ export function printStatement({ company, statement, allLines }) {
 
 <!-- DOWNLOAD BUTTON -->
 <div class="download-bar">
-  <button class="btn-print" onclick="doPrint('${pdfFilename}')">🖨 Print</button>
+  <button class="btn-print" onclick="doPrint('${pdfFilename}')">⬇ Download PDF</button>
 </div>
 
 <script>

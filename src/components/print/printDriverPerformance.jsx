@@ -121,13 +121,13 @@ export function printDriverPerformanceReport({ drivers, loads, period, periodLab
     .report-footer { margin-top: 24px; padding-top: 10px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; color: #94a3b8; font-size: 9px; }
 
     /* Print button */
-    .print-btn { position: fixed; top: 18px; right: 18px; background: #1e40af; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(30,64,175,0.3); }
-    .print-btn:hover { background: #1d4ed8; }
+    .print-btn { position: fixed; top: 18px; right: 18px; background: #166534; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(22,101,52,0.3); }
+    .print-btn:hover { background: #14532d; }
     @media print { .print-btn { display: none !important; } body { padding: 12px 16px; } }
   </style>
 </head>
 <body>
-  <button class="print-btn" onclick="doPrint('${pdfFilename}')">🖨 Print</button>
+  <button class="print-btn" onclick="doPrint('${pdfFilename}')">⬇ Download PDF</button>
 
   <div class="report-header">
     <div>
