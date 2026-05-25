@@ -15,7 +15,7 @@ import GeneralSettings from '../components/settings/GeneralSettings';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
-  const { logout, session } = useSession();
+  const { logout, session, login } = useSession();
   const [form, setForm] = useState({
     company_name: '', address_1: '', address_2: '', city: '', state: '', zip: '',
     phone: '', email: '', mc_number: '', dot_number: '', next_load_number: '1001',
@@ -46,6 +46,10 @@ export default function SettingsPage() {
         phone: c.phone || '',
         email: c.email || '',
       }));
+      // Sync session company name so Sidebar/TopBar reflect the Company entity
+      if (c.company_name && session && c.company_name !== session.company_name) {
+        login({ ...session, company_name: c.company_name });
+      }
     }
   }, [companies]);
 
