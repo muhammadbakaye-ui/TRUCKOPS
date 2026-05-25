@@ -1,0 +1,43 @@
+{
+  "name": "DriverDocument",
+  "type": "object",
+  "properties": {
+    "driver_id": {
+      "type": "string"
+    },
+    "driver_name": {
+      "type": "string"
+    },
+    "document_type": {
+      "type": "string",
+      "enum": [
+        "bol",
+        "rate_confirmation",
+        "drug_test",
+        "cdl",
+        "medical_card",
+        "inspection_report",
+        "accident_report",
+        "violation_notice",
+        "insurance_document",
+        "registration",
+        "other"
+      ],
+      "default": "bol"
+    },
+    "file_name": {
+      "type": "string"
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "driver_id",
+    "document_type",
+    "file_url"
+  ]
+}

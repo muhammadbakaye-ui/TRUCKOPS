@@ -13,6 +13,20 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import PageHeader from '../components/shared/PageHeader';
 
+const DOC_TYPE_LABELS = {
+  bol: 'BOL',
+  rate_confirmation: 'Rate Confirmation',
+  drug_test: 'Drug & Alcohol Test Result',
+  cdl: 'CDL / License',
+  medical_card: 'Medical Card',
+  inspection_report: 'Vehicle Inspection Report',
+  accident_report: 'Accident Report',
+  violation_notice: 'Violation Notice',
+  insurance_document: 'Insurance Document',
+  registration: 'Registration',
+  other: 'Other',
+};
+
 export default function AdminDriverDocuments() {
   const queryClient = useQueryClient();
   const { session } = useSession();
@@ -174,6 +188,15 @@ export default function AdminDriverDocuments() {
             <SelectItem value="all">All Types</SelectItem>
             <SelectItem value="bol">BOL</SelectItem>
             <SelectItem value="rate_confirmation">Rate Confirmation</SelectItem>
+            <SelectItem value="drug_test">Drug & Alcohol Test Result</SelectItem>
+            <SelectItem value="cdl">CDL / License</SelectItem>
+            <SelectItem value="medical_card">Medical Card</SelectItem>
+            <SelectItem value="inspection_report">Vehicle Inspection Report</SelectItem>
+            <SelectItem value="accident_report">Accident Report</SelectItem>
+            <SelectItem value="violation_notice">Violation Notice</SelectItem>
+            <SelectItem value="insurance_document">Insurance Document</SelectItem>
+            <SelectItem value="registration">Registration</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -222,11 +245,9 @@ export default function AdminDriverDocuments() {
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   <Badge
                                     variant="outline"
-                                    className={`text-[10px] px-1.5 py-0 ${doc.document_type === 'bol'
-                                      ? 'text-blue-600 border-blue-200 bg-blue-50'
-                                      : 'text-purple-600 border-purple-200 bg-purple-50'}`}
-                                  >
-                                    {doc.document_type === 'bol' ? 'BOL' : 'RC'}
+                                    className="text-[10px] px-1.5 py-0 text-primary border-primary/20 bg-primary/10"
+                                    >
+                                      {DOC_TYPE_LABELS[doc.document_type] || doc.document_type}
                                   </Badge>
                                   <span className="text-xs text-foreground truncate max-w-[160px]">{doc.file_name}</span>
                                 </div>

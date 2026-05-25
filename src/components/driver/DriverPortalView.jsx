@@ -7,14 +7,30 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Truck, Upload, FileText, LogOut, Download, Loader2, FileCheck, Calendar, X, Printer } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Truck, Upload, FileText, LogOut, Download, Loader2, Calendar, Printer } from 'lucide-react';
 import { toast } from 'sonner';
-import { format, addDays, subDays } from 'date-fns';
+import { format } from 'date-fns';
 
 import { printStatement } from '../print/printStatement';
 import StatementLoadDetails from './StatementLoadDetails';
 import AppTour, { DRIVER_TOUR_STEPS } from '../tutorial/AppTour';
 import TourButton from '../tutorial/TourButton';
+
+const DOC_TYPES = [
+  { value: 'bol', label: 'BOL' },
+  { value: 'rate_confirmation', label: 'Rate Confirmation' },
+  { value: 'drug_test', label: 'Drug & Alcohol Test Result' },
+  { value: 'cdl', label: 'CDL / License' },
+  { value: 'medical_card', label: 'Medical Card' },
+  { value: 'inspection_report', label: 'Vehicle Inspection Report' },
+  { value: 'accident_report', label: 'Accident Report' },
+  { value: 'violation_notice', label: 'Violation Notice' },
+  { value: 'insurance_document', label: 'Insurance Document' },
+  { value: 'registration', label: 'Registration' },
+  { value: 'other', label: 'Other' },
+];
+const DOC_TYPE_LABELS = Object.fromEntries(DOC_TYPES.map(d => [d.value, d.label]));
 
 const statusConfig = {
   draft:     { label: 'Ready',     cls: 'bg-green-100 text-green-700 border-green-300' },
@@ -27,12 +43,12 @@ export default function DriverPortalView() {
   const { session, logout } = useSession();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('documents');
-  const [uploading, setUploading] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const [viewingStatement, setViewingStatement] = useState(null);
   const [showTour, setShowTour] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const bolRef = useRef(null);
-  const rcRef = useRef(null);
+  const fileRef = useRef(null);
+  const [selectedDocType, setSelectedDocType] = useState('bol');
 
   // Auto-show driver tour on first login
   useEffect(() => {
@@ -64,7 +80,7 @@ export default function DriverPortalView() {
 
   const handleUpload = async (file, docType) => {
     if (!file) return;
-    setUploading(docType);
+    setUploading(true);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       const doc = await base44.entities.DriverDocument.create({
@@ -74,28 +90,24 @@ export default function DriverPortalView() {
         file_name: file.name,
         file_url,
       });
-      // Create notification for admins
       await base44.entities.Notification.create({
         notification_type: 'driver_document_upload',
-        title: `New ${docType === 'bol' ? 'BOL' : 'Rate Confirmation'} uploaded`,
-        message: `${session.driver_name} uploaded a ${docType === 'bol' ? 'Bill of Lading' : 'Rate Confirmation'}: ${file.name}`,
+        title: `New ${DOC_TYPE_LABELS[docType] || docType} uploaded`,
+        message: `${session.driver_name} uploaded a ${DOC_TYPE_LABELS[docType] || docType}: ${file.name}`,
         related_entity_type: 'driver_document',
         related_entity_id: doc.id,
         link_url: '/AdminDriverDocuments',
         read: false,
       });
-      toast.success(`${docType === 'bol' ? 'BOL' : 'Rate Confirmation'} uploaded successfully`);
+      toast.success('Document uploaded successfully');
       queryClient.invalidateQueries({ queryKey: ['driver-docs', session.driver_id] });
     } catch (err) {
       toast.error('Upload failed: ' + err.message);
     } finally {
-      setUploading(null);
-      if (bolRef.current) bolRef.current.value = '';
-      if (rcRef.current) rcRef.current.value = '';
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
     }
   };
-
-
 
   const tabs = [
     { key: 'documents', label: 'My Documents', icon: FileText, tourAttr: 'driver-documents-tab' },
@@ -121,6 +133,7 @@ export default function DriverPortalView() {
           </div>
         </AlertDialogContent>
       </AlertDialog>
+
       {/* Header */}
       <div className="h-12 md:h-14 bg-sidebar border-b border-sidebar-border flex items-center justify-between px-3 md:px-6 flex-shrink-0">
         <div className="flex items-center gap-2">
@@ -173,39 +186,36 @@ export default function DriverPortalView() {
           {/* DOCUMENTS TAB */}
           {activeTab === 'documents' && (
             <>
-              {/* Upload buttons */}
               <Card>
                 <CardHeader className="py-2.5 px-3 md:py-4 md:px-5 border-b">
                   <CardTitle className="text-xs md:text-sm font-semibold">Upload Documents</CardTitle>
                   <p className="text-[11px] md:text-xs text-muted-foreground mt-0.5">PDF, JPG, PNG, DOC supported.</p>
                 </CardHeader>
                 <CardContent className="px-3 md:px-5 py-3 md:py-5">
-                  <div className="grid grid-cols-2 gap-2 md:gap-4">
-                    <input ref={bolRef} type="file" className="hidden"
-                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                      onChange={(e) => handleUpload(e.target.files[0], 'bol')} />
-                    <input ref={rcRef} type="file" className="hidden"
-                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                      onChange={(e) => handleUpload(e.target.files[0], 'rate_confirmation')} />
-
+                  <input ref={fileRef} type="file" className="hidden"
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    onChange={(e) => { if (e.target.files[0]) handleUpload(e.target.files[0], selectedDocType); }} />
+                  <div className="space-y-3">
+                    <Select value={selectedDocType} onValueChange={setSelectedDocType}>
+                      <SelectTrigger className="h-10 text-sm">
+                        <SelectValue placeholder="Select document type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DOC_TYPES.map(t => (
+                          <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <button
-                      onClick={() => bolRef.current?.click()}
-                      disabled={!!uploading}
+                      onClick={() => fileRef.current?.click()}
+                      disabled={uploading}
                       data-tour="driver-upload-bol"
-                      className="h-14 md:h-20 rounded-lg md:rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 active:bg-primary/15 hover:bg-primary/10 hover:border-primary/60 transition-all flex flex-col items-center justify-center gap-1 md:gap-2 disabled:opacity-50"
-                      >
-                      {uploading === 'bol' ? <Loader2 className="w-4 md:w-6 h-4 md:h-6 animate-spin text-primary" /> : <Upload className="w-4 md:w-6 h-4 md:h-6 text-primary" />}
-                      <span className="text-[11px] md:text-sm font-semibold text-primary text-center">Upload BOL</span>
-                    </button>
-
-                    <button
-                      onClick={() => rcRef.current?.click()}
-                      disabled={!!uploading}
-                      data-tour="driver-upload-rc"
-                      className="h-14 md:h-20 rounded-lg md:rounded-xl border-2 border-dashed border-border active:bg-muted/60 hover:border-muted-foreground/40 bg-muted/30 hover:bg-muted/50 transition-all flex flex-col items-center justify-center gap-1 md:gap-2 disabled:opacity-50"
-                      >
-                      {uploading === 'rate_confirmation' ? <Loader2 className="w-4 md:w-6 h-4 md:h-6 animate-spin text-muted-foreground" /> : <FileCheck className="w-4 md:w-6 h-4 md:h-6 text-muted-foreground" />}
-                      <span className="text-[11px] md:text-sm font-semibold text-foreground text-center leading-tight">Upload RC</span>
+                      className="w-full h-16 md:h-20 rounded-lg md:rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 active:bg-primary/15 hover:bg-primary/10 hover:border-primary/60 transition-all flex flex-col items-center justify-center gap-1 md:gap-2 disabled:opacity-50"
+                    >
+                      {uploading ? <Loader2 className="w-5 md:w-6 h-5 md:h-6 animate-spin text-primary" /> : <Upload className="w-5 md:w-6 h-5 md:h-6 text-primary" />}
+                      <span className="text-[11px] md:text-sm font-semibold text-primary text-center">
+                        {uploading ? 'Uploading...' : `Upload ${DOC_TYPE_LABELS[selectedDocType] || 'Document'}`}
+                      </span>
                     </button>
                   </div>
                 </CardContent>
@@ -233,11 +243,8 @@ export default function DriverPortalView() {
                       {documents.map((doc) => (
                         <div key={doc.id} className="flex items-center justify-between px-3 md:px-5 py-2.5 md:py-3 hover:bg-muted/30 transition-colors">
                           <div className="flex items-center gap-2 min-w-0">
-                            <Badge variant="outline" className={`text-[10px] shrink-0 ${doc.document_type === 'bol'
-                              ? 'text-blue-600 border-blue-500/30 bg-blue-500/10'
-                               : 'text-purple-600 border-purple-500/30 bg-purple-500/10'
-                            }`}>
-                              {doc.document_type === 'bol' ? 'BOL' : 'RC'}
+                            <Badge variant="outline" className="text-[10px] shrink-0 text-primary border-primary/30 bg-primary/10">
+                              {DOC_TYPE_LABELS[doc.document_type] || doc.document_type}
                             </Badge>
                             <div className="min-w-0">
                               <p className="text-[11px] md:text-xs font-medium truncate">{doc.file_name}</p>
@@ -267,45 +274,45 @@ export default function DriverPortalView() {
               </CardHeader>
               <CardContent className="px-0 py-0">
                 {stmtsLoading ? (
-                   <div className="flex items-center justify-center py-8">
-                     <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                   </div>
-                 ) : statements.length === 0 ? (
-                   <div className="text-center py-8 text-muted-foreground">
-                     <Calendar className="w-7 h-7 mx-auto mb-2 opacity-30" />
-                     <p className="text-xs">No statements available yet.</p>
-                     <p className="text-[11px] mt-1 opacity-70">Statements appear here once created by dispatcher.</p>
-                   </div>
-                 ) : (
-                   <div className="divide-y">
-                     {statements.map((stmt) => {
-                       const cfg = statusConfig[stmt.status] || statusConfig.draft;
-                       return (
-                         <button
-                           key={stmt.id}
-                           onClick={() => setViewingStatement(stmt)}
-                           className="w-full flex items-center justify-between px-3 md:px-5 py-3 md:py-4 transition-colors text-left active:bg-muted/40"
-                         >
-                           <div className="space-y-0.5 flex-1 min-w-0">
-                             <p className="text-xs md:text-sm font-semibold">
-                               {stmt.period_start && stmt.period_end
-                                 ? `${format(new Date(stmt.period_start + 'T12:00:00'), 'MMM d')} – ${format(new Date(stmt.period_end + 'T12:00:00'), 'MMM d')}`
-                                 : stmt.statement_date || '—'}
-                             </p>
-                           </div>
-                           <div className="flex items-center gap-2 shrink-0 ml-2">
-                             <div className="text-right">
-                               <p className="text-sm md:text-base font-bold text-primary">
-                                 ${(stmt.final_check_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                               </p>
-                               <Badge variant="outline" className={`text-[10px] md:text-xs ${cfg.cls}`}>{cfg.label}</Badge>
-                             </div>
-                           </div>
-                         </button>
-                       );
-                     })}
-                   </div>
-                 )}
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : statements.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Calendar className="w-7 h-7 mx-auto mb-2 opacity-30" />
+                    <p className="text-xs">No statements available yet.</p>
+                    <p className="text-[11px] mt-1 opacity-70">Statements appear here once created by dispatcher.</p>
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {statements.map((stmt) => {
+                      const cfg = statusConfig[stmt.status] || statusConfig.draft;
+                      return (
+                        <button
+                          key={stmt.id}
+                          onClick={() => setViewingStatement(stmt)}
+                          className="w-full flex items-center justify-between px-3 md:px-5 py-3 md:py-4 transition-colors text-left active:bg-muted/40"
+                        >
+                          <div className="space-y-0.5 flex-1 min-w-0">
+                            <p className="text-xs md:text-sm font-semibold">
+                              {stmt.period_start && stmt.period_end
+                                ? `${format(new Date(stmt.period_start + 'T12:00:00'), 'MMM d')} – ${format(new Date(stmt.period_end + 'T12:00:00'), 'MMM d')}`
+                                : stmt.statement_date || '—'}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0 ml-2">
+                            <div className="text-right">
+                              <p className="text-sm md:text-base font-bold text-primary">
+                                ${(stmt.final_check_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                              </p>
+                              <Badge variant="outline" className={`text-[10px] md:text-xs ${cfg.cls}`}>{cfg.label}</Badge>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
 
               {/* Statement View Modal */}
@@ -313,8 +320,8 @@ export default function DriverPortalView() {
                 <Dialog open={!!viewingStatement} onOpenChange={(open) => !open && setViewingStatement(null)}>
                   <DialogContent className="w-full max-w-2xl max-h-[92vh] overflow-y-auto p-3 md:p-6 rounded-xl">
                     <DialogHeader className="pb-2.5 md:pb-4 border-b">
-                       <DialogTitle className="text-sm md:text-base">Statement Details</DialogTitle>
-                     </DialogHeader>
+                      <DialogTitle className="text-sm md:text-base">Statement Details</DialogTitle>
+                    </DialogHeader>
 
                     <div className="space-y-3 py-2.5 md:py-4">
                       {/* Summary row */}
@@ -335,25 +342,25 @@ export default function DriverPortalView() {
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-2">
-                         <div className="bg-green-500/10 rounded-lg p-2 text-center">
-                           <p className="text-[10px] text-muted-foreground leading-tight">Gross</p>
-                           <p className="text-xs font-bold text-green-600 mt-0.5">
-                             ${(viewingStatement.gross_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                           </p>
-                         </div>
-                         <div className="bg-red-500/10 rounded-lg p-2 text-center">
-                           <p className="text-[10px] text-muted-foreground leading-tight">Deductions</p>
-                           <p className="text-xs font-bold text-red-600 mt-0.5">
-                             -${(viewingStatement.deductions_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                           </p>
-                         </div>
-                         <div className="bg-orange-500/10 rounded-lg p-2 text-center">
-                           <p className="text-[10px] text-muted-foreground leading-tight">Fuel</p>
-                           <p className="text-xs font-bold text-orange-600 mt-0.5">
-                             -${(viewingStatement.fuel_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                           </p>
-                         </div>
-                       </div>
+                        <div className="bg-green-500/10 rounded-lg p-2 text-center">
+                          <p className="text-[10px] text-muted-foreground leading-tight">Gross</p>
+                          <p className="text-xs font-bold text-green-600 mt-0.5">
+                            ${(viewingStatement.gross_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                        <div className="bg-red-500/10 rounded-lg p-2 text-center">
+                          <p className="text-[10px] text-muted-foreground leading-tight">Deductions</p>
+                          <p className="text-xs font-bold text-red-600 mt-0.5">
+                            -${(viewingStatement.deductions_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                        <div className="bg-orange-500/10 rounded-lg p-2 text-center">
+                          <p className="text-[10px] text-muted-foreground leading-tight">Fuel</p>
+                          <p className="text-xs font-bold text-orange-600 mt-0.5">
+                            -${(viewingStatement.fuel_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                      </div>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className={statusConfig[viewingStatement.status]?.cls}>
                           {statusConfig[viewingStatement.status]?.label}
@@ -362,19 +369,18 @@ export default function DriverPortalView() {
 
                       {/* Load Details */}
                       <div className="pt-3 md:pt-4 border-t space-y-2">
-                       <p className="text-xs font-semibold text-muted-foreground">Trip Details</p>
-                       <StatementLoadDetails statementId={viewingStatement.id} driverId={session.driver_id} />
+                        <p className="text-xs font-semibold text-muted-foreground">Trip Details</p>
+                        <StatementLoadDetails statementId={viewingStatement.id} driverId={session.driver_id} />
                       </div>
 
                       {/* Statement Summary */}
                       <div className="pt-3 md:pt-4 border-t space-y-2 md:space-y-3">
-                       {linesLoading ? (
-                         <div className="flex items-center justify-center py-6 md:py-8">
-                           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                         </div>
-                       ) : (
-                         <>
-                           {/* Trips */}
+                        {linesLoading ? (
+                          <div className="flex items-center justify-center py-6 md:py-8">
+                            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                          </div>
+                        ) : (
+                          <>
                             {(() => {
                               const tripLines = statementLines.filter(l => l.line_type === 'trip' || l.line_type === 'adjustment');
                               const tripTotal = tripLines.reduce((sum, l) => sum + (l.amount || 0), 0);
@@ -397,7 +403,6 @@ export default function DriverPortalView() {
                               );
                             })()}
 
-                            {/* Credits */}
                             {(() => {
                               const creditLines = statementLines.filter(l => l.line_type === 'credit');
                               const creditTotal = creditLines.reduce((sum, l) => sum + (l.amount || 0), 0);
@@ -420,7 +425,6 @@ export default function DriverPortalView() {
                               );
                             })()}
 
-                            {/* Deductions */}
                             {(() => {
                               const deductionLines = statementLines.filter(l => l.line_type === 'deduction' || l.line_type === 'advance');
                               const deductionTotal = deductionLines.reduce((sum, l) => sum + Math.abs(l.amount || 0), 0);
@@ -443,7 +447,6 @@ export default function DriverPortalView() {
                               );
                             })()}
 
-                            {/* Fuel */}
                             {(() => {
                               const fuelLines = statementLines.filter(l => l.line_type === 'fuel');
                               const fuelTotal = fuelLines.reduce((sum, l) => sum + Math.abs(l.amount || 0), 0);
@@ -475,19 +478,19 @@ export default function DriverPortalView() {
                         Close
                       </Button>
                       <Button size="sm" className="gap-1.5 text-xs h-9 flex-1 md:flex-none" onClick={() => {
-                         printStatement({ company: {}, statement: viewingStatement, allLines: statementLines });
-                       }}>
+                        printStatement({ company: {}, statement: viewingStatement, allLines: statementLines });
+                      }}>
                         <Printer className="w-3.5 h-3.5" /> Download PDF
                       </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
               )}
-              </Card>
-              )}
+            </Card>
+          )}
 
-              </div>
-              </div>
-              </div>
-              );
-              }
+        </div>
+      </div>
+    </div>
+  );
+}
