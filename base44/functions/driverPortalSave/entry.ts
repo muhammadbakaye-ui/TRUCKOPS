@@ -119,6 +119,24 @@ Deno.serve(async (req) => {
       return Response.json({ success: true });
     }
 
+    // UPLOAD FILE (service-role upload since drivers aren't Base44-authed)
+    if (action === 'upload_file') {
+      const { file_base64, file_name, mime_type } = data;
+      if (!file_base64 || !file_name) {
+        return Response.json({ error: 'file_base64 and file_name required' }, { status: 400 });
+      }
+      // Decode base64 to binary
+      const binaryStr = atob(file_base64);
+      const bytes = new Uint8Array(binaryStr.length);
+      for (let i = 0; i < binaryStr.length; i++) {
+        bytes[i] = binaryStr.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: mime_type || 'application/octet-stream' });
+      const formFile = new File([blob], file_name, { type: mime_type || 'application/octet-stream' });
+      const result = await base44.asServiceRole.integrations.Core.UploadFile({ file: formFile });
+      return Response.json({ success: true, file_url: result.file_url });
+    }
+
     return Response.json({ error: 'Unknown action' }, { status: 400 });
   } catch (error) {
     console.error('driverPortalSave error:', error);

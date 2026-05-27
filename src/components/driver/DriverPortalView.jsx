@@ -90,7 +90,20 @@ export default function DriverPortalView() {
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      // Read file as base64 (drivers aren't Base44-authed so we go via backend)
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const uploadRes = await base44.functions.invoke('driverPortalSave', {
+        token: session.portal_token,
+        action: 'upload_file',
+        data: { file_base64: base64, file_name: file.name, mime_type: file.type },
+      });
+      const file_url = uploadRes.data?.file_url;
+      if (!file_url) throw new Error('Upload failed — no URL returned');
       const doc = await base44.entities.DriverDocument.create({
         driver_id: session.driver_id,
         driver_name: session.driver_name,
