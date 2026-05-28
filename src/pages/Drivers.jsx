@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useHasSubscription } from '../components/shared/SubscriptionGate';
 import { usePreviewGate, PreviewFeatureDialog } from '../components/shared/PreviewFeatureGate';
 import { useSession } from '../components/shared/AppSession';
 import { useNavigate } from 'react-router-dom';
@@ -11,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Loader2, Plus, Link, RefreshCw, QrCode, Copy, Check, X } from 'lucide-react';
+import { Loader2, Plus, RefreshCw, QrCode, Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import SearchInput from '../components/shared/SearchInput';
 import DataTable from '../components/shared/DataTable';
@@ -19,6 +18,8 @@ import StatusBadge from '../components/shared/StatusBadge';
 import PageHeader from '../components/shared/PageHeader';
 import { logAudit } from '../components/shared/AuditLogger';
 import { QRCodeSVG } from 'qrcode.react';
+import { usePagination } from '../hooks/usePagination';
+import Paginator from '../components/shared/Paginator';
 
 function DriverFormDialog({ open, onClose, editing, trucks, onSave, saving }) {
   const [form, setForm] = useState({});
@@ -187,7 +188,7 @@ export default function Drivers() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [generatingToken, setGeneratingToken] = useState(null);
-  const [qrDriver, setQrDriver] = useState(null); // { driver, url }
+  const [qrDriver, setQrDriver] = useState(null);
   const queryClient = useQueryClient();
   const { session } = useSession();
   const { showDialog, setShowDialog, checkFeatureAccess, handleDismiss, navigate } = usePreviewGate();
@@ -256,8 +257,6 @@ export default function Drivers() {
         driverId = created.id;
         await logAudit({ action_type: 'create', entity_type: 'Driver', entity_label: data.full_name });
       }
-
-      // Sync truck's assigned_driver_id
       const prevTruckId = editing?.assigned_truck_id;
       if (prevTruckId && prevTruckId !== data.assigned_truck_id) {
         await base44.entities.Truck.update(prevTruckId, { assigned_driver_id: null });
@@ -265,7 +264,6 @@ export default function Drivers() {
       if (data.assigned_truck_id) {
         await base44.entities.Truck.update(data.assigned_truck_id, { assigned_driver_id: driverId });
       }
-
       return { isNewDriver };
     },
     onSuccess: (result) => {
@@ -273,8 +271,6 @@ export default function Drivers() {
       queryClient.invalidateQueries({ queryKey: ['trucks'] });
       setDialogOpen(false);
       setEditing(null);
-
-      // Show subscription popup only after creating new driver in preview mode
       if (result.isNewDriver && isInPreview) {
         setShowDialog(true);
       }
@@ -287,6 +283,8 @@ export default function Drivers() {
     return [d.full_name, d.phone, d.email, d.cdl_number, d.city]
       .some(v => v && v.toLowerCase().includes(q));
   });
+
+  const pagination = usePagination(filtered, 56, 'drivers_page');
 
   const columns = [
     { header: 'Name', render: (r) => <span className="font-medium">{r.full_name}</span> },
@@ -341,7 +339,8 @@ export default function Drivers() {
       <div className="mb-3">
         <SearchInput value={search} onChange={setSearch} placeholder="Search drivers..." className="w-72" />
       </div>
-      <DataTable columns={columns} data={filtered} isLoading={isLoading} onRowClick={(row) => { setEditing(row); setDialogOpen(true); }} emptyMessage="No drivers found" />
+      <DataTable columns={columns} data={pagination.paginatedItems} isLoading={isLoading} onRowClick={(row) => { setEditing(row); setDialogOpen(true); }} emptyMessage="No drivers found" />
+      <Paginator {...pagination} itemLabel="drivers" />
       {qrDriver && (
         <DriverQRModal
           driver={qrDriver.driver}
