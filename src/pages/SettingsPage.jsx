@@ -195,23 +195,6 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="py-3 px-4">
-            <CardTitle className="text-sm">Load Numbering</CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 pb-4">
-            <div className="w-48">
-              <Label className="text-xs">Next Load Number</Label>
-              <Input
-                type="number"
-                value={form.next_load_number}
-                onChange={(e) => set('next_load_number', e.target.value)}
-                className="h-8 text-xs mt-1"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
         <Button size="sm" className="gap-1" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
           {saveMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
           Save Settings
