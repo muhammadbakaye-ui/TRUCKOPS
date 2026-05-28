@@ -11,6 +11,7 @@ import PageHeader from '../components/shared/PageHeader';
 import EntityFormDialog from '../components/shared/EntityFormDialog';
 import { logAudit } from '../components/shared/AuditLogger';
 import { useSession } from '../components/shared/AppSession';
+import { useEntitySubscription } from '../hooks/useEntitySubscription';
 
 const TRAILER_FIELDS = [
   { name: 'unit_number', label: 'Unit Number', required: true },
@@ -35,6 +36,8 @@ export default function Trailers() {
   const [editing, setEditing] = useState(null);
   const queryClient = useQueryClient();
   const { session } = useSession();
+
+  useEntitySubscription('Trailer', ['trailers', session?.tenant_id], !!session?.tenant_id);
 
   const { data: trailers = [], isLoading } = useQuery({
     queryKey: ['trailers', session?.tenant_id],

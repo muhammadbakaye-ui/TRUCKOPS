@@ -18,6 +18,7 @@ import { logAudit } from '../components/shared/AuditLogger';
 import { useHasSubscription } from '../components/shared/SubscriptionGate';
 import { usePreviewGate, PreviewFeatureDialog } from '../components/shared/PreviewFeatureGate';
 import { useSession } from '../components/shared/AppSession';
+import { useEntitySubscription } from '../hooks/useEntitySubscription';
 
 const STATUS_OPTIONS = [
   { value: 'active', label: 'Active' },
@@ -123,6 +124,8 @@ export default function Trucks() {
    const { session } = useSession();
    const { showDialog, setShowDialog, checkFeatureAccess, handleDismiss, navigate } = usePreviewGate();
    const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
+
+  useEntitySubscription('Truck', ['trucks', session?.tenant_id], !!session?.tenant_id);
 
   const { data: trucks = [], isLoading } = useQuery({
     queryKey: ['trucks', session?.tenant_id],

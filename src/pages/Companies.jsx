@@ -12,6 +12,7 @@ import { logAudit } from '../components/shared/AuditLogger';
 import { useNavigate } from 'react-router-dom';
 import { usePreviewGate, PreviewFeatureDialog } from '../components/shared/PreviewFeatureGate';
 import { useSession } from '../components/shared/AppSession';
+import { useEntitySubscription } from '../hooks/useEntitySubscription';
 import { toast } from 'sonner';
 
 const COMPANY_FIELDS = [
@@ -64,6 +65,8 @@ export default function Companies() {
       setEditing(null);
     }
   });
+
+  useEntitySubscription('Company', ['companies', session?.tenant_id], !!session?.tenant_id);
 
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ['companies', session?.tenant_id],

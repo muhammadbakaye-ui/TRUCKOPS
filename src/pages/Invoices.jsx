@@ -16,6 +16,7 @@ import DataTable from '../components/shared/DataTable';
 import StatusBadge from '../components/shared/StatusBadge';
 import PageHeader from '../components/shared/PageHeader';
 import { format } from 'date-fns';
+import { useEntitySubscription } from '../hooks/useEntitySubscription';
 
 const INV_STATUS_STYLES = {
   draft: 'bg-gray-100 text-gray-600 border-gray-200',
@@ -77,6 +78,8 @@ export default function Invoices() {
   const [bulkSaving, setBulkSaving] = useState(false);
 
   const [copiedId, setCopiedId] = useState(null);
+
+  useEntitySubscription('Invoice', ['invoices', session?.tenant_id], !!session?.tenant_id);
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ['invoices', session?.tenant_id],
