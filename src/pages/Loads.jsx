@@ -22,6 +22,8 @@ import PageHeader from '../components/shared/PageHeader';
 import BulkDeleteBar from '../components/shared/BulkDeleteBar';
 import MultiSelectFilter from '../components/shared/MultiSelectFilter';
 import { format, parseISO } from 'date-fns';
+import { useEntitySubscription } from '../hooks/useEntitySubscription';
+import { chunkAsync } from '../utils/chunkAsync';
 
 const INVOICE_STATUS_STYLES = {
   not_invoiced: 'bg-muted text-muted-foreground border-border',
@@ -192,6 +194,9 @@ export default function Loads() {
     enabled: !!session?.tenant_id,
   });
 
+  // Live updates: invalidate cache when loads change on the server
+  useEntitySubscription('Load', ['loads', session?.tenant_id], !!session?.tenant_id);
+
   const handlePrintLoad = async (e, load) => {
     e.stopPropagation();
     const stops = await base44.entities.LoadStop.filter({ load_id: load.id }, 'stop_order', 50);
@@ -294,45 +299,45 @@ export default function Loads() {
     setSavingBulk(true);
     const idsToUpdate = [...selected];
     try {
-    await Promise.all(idsToUpdate.map(id => {
-      const val = bulkEdits[id];
-      if (bulkEditMode === 'amount') {
-        const num = parseFloat(val);
-        if (isNaN(num) || num < 0) return Promise.resolve();
-        return base44.entities.Load.update(id, { invoice_amount: num });
-      }
-      if (bulkEditMode === 'driver') {
-        const driver = drivers.find(d => d.id === val);
-        return base44.entities.Load.update(id, { driver_1_id: val || null, driver_1_name: driver?.full_name || '' });
-      }
-      if (bulkEditMode === 'truck') {
-        const truck = trucks.find(t => t.id === val);
-        return base44.entities.Load.update(id, { truck_id: val || null, truck_number: truck?.unit_number || '' });
-      }
-      if (bulkEditMode === 'trip') {
-        return base44.entities.Load.update(id, { trip_number: val || null });
-      }
-    }).filter(Boolean));
-    queryClient.invalidateQueries({ queryKey: ['loads'] });
-    const prevValues = { ...bulkEdits };
-    const prevMode = bulkEditMode;
-    showUndoToast(
-      `Updated ${idsToUpdate.length} load${idsToUpdate.length === 1 ? '' : 's'} (${bulkEditMode})`,
-      async () => {
-        await Promise.all(idsToUpdate.map(id => {
-          const original = loads.find(l => l.id === id);
-          if (!original) return null;
-          if (prevMode === 'amount') return base44.entities.Load.update(id, { invoice_amount: original.invoice_amount });
-          if (prevMode === 'driver') return base44.entities.Load.update(id, { driver_1_id: original.driver_1_id || null, driver_1_name: original.driver_1_name || '' });
-          if (prevMode === 'truck') return base44.entities.Load.update(id, { truck_id: original.truck_id || null, truck_number: original.truck_number || '' });
-          if (prevMode === 'trip') return base44.entities.Load.update(id, { trip_number: original.trip_number || null });
-        }).filter(Boolean));
-        queryClient.invalidateQueries({ queryKey: ['loads'] });
-      }
-    );
-    setBulkEditMode(null);
-    setBulkEdits({});
-    setSelected(new Set());
+      await chunkAsync(idsToUpdate, (id) => {
+        const val = bulkEdits[id];
+        if (bulkEditMode === 'amount') {
+          const num = parseFloat(val);
+          if (isNaN(num) || num < 0) return Promise.resolve();
+          return base44.entities.Load.update(id, { invoice_amount: num });
+        }
+        if (bulkEditMode === 'driver') {
+          const driver = drivers.find(d => d.id === val);
+          return base44.entities.Load.update(id, { driver_1_id: val || null, driver_1_name: driver?.full_name || '' });
+        }
+        if (bulkEditMode === 'truck') {
+          const truck = trucks.find(t => t.id === val);
+          return base44.entities.Load.update(id, { truck_id: val || null, truck_number: truck?.unit_number || '' });
+        }
+        if (bulkEditMode === 'trip') {
+          return base44.entities.Load.update(id, { trip_number: val || null });
+        }
+      });
+      queryClient.invalidateQueries({ queryKey: ['loads'] });
+      const prevValues = { ...bulkEdits };
+      const prevMode = bulkEditMode;
+      showUndoToast(
+        `Updated ${idsToUpdate.length} load${idsToUpdate.length === 1 ? '' : 's'} (${bulkEditMode})`,
+        async () => {
+          await chunkAsync(idsToUpdate, (id) => {
+            const original = loads.find(l => l.id === id);
+            if (!original) return null;
+            if (prevMode === 'amount') return base44.entities.Load.update(id, { invoice_amount: original.invoice_amount });
+            if (prevMode === 'driver') return base44.entities.Load.update(id, { driver_1_id: original.driver_1_id || null, driver_1_name: original.driver_1_name || '' });
+            if (prevMode === 'truck') return base44.entities.Load.update(id, { truck_id: original.truck_id || null, truck_number: original.truck_number || '' });
+            if (prevMode === 'trip') return base44.entities.Load.update(id, { trip_number: original.trip_number || null });
+          });
+          queryClient.invalidateQueries({ queryKey: ['loads'] });
+        }
+      );
+      setBulkEditMode(null);
+      setBulkEdits({});
+      setSelected(new Set());
     } catch (err) {
       toast.error('Bulk save failed: ' + err.message);
       queryClient.invalidateQueries({ queryKey: ['loads'] });

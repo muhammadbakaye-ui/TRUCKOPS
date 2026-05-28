@@ -19,6 +19,7 @@ import PageHeader from '../components/shared/PageHeader';
 import { logAudit } from '../components/shared/AuditLogger';
 import { QRCodeSVG } from 'qrcode.react';
 import { usePagination } from '../hooks/usePagination';
+import { useEntitySubscription } from '../hooks/useEntitySubscription';
 import Paginator from '../components/shared/Paginator';
 
 function DriverFormDialog({ open, onClose, editing, trucks, onSave, saving }) {
@@ -283,6 +284,8 @@ export default function Drivers() {
     return [d.full_name, d.phone, d.email, d.cdl_number, d.city]
       .some(v => v && v.toLowerCase().includes(q));
   });
+
+  useEntitySubscription('Driver', ['drivers', session?.tenant_id], !!session?.tenant_id);
 
   const pagination = usePagination(filtered, 56, 'drivers_page');
 

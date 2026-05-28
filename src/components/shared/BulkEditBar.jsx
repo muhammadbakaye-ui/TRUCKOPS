@@ -3,11 +3,12 @@ import { Trash2, Edit2, ChevronDown, X, DollarSign, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { base44 } from '@/api/base44Client';
+import { chunkAsync } from '../../utils/chunkAsync';
 import { toast } from 'sonner';
 
 export default function BulkEditBar({ selectedIds, onClearSelection, onDeleted, onEdited, drivers = [], trucks = [] }) {
   const [showEditMenu, setShowEditMenu] = useState(false);
-  const [editMode, setEditMode] = useState(null); // 'amount' | 'driver_truck'
+  const [editMode, setEditMode] = useState(null);
   const [amountValue, setAmountValue] = useState('');
   const [selectedDriverId, setSelectedDriverId] = useState('');
   const [selectedTruckId, setSelectedTruckId] = useState('');
@@ -29,7 +30,7 @@ export default function BulkEditBar({ selectedIds, onClearSelection, onDeleted, 
   const handleDelete = async () => {
     if (!confirm(`Delete ${count} load${count > 1 ? 's' : ''}? This cannot be undone.`)) return;
     setLoading(true);
-    await Promise.all(selectedIds.map(id => base44.entities.Load.delete(id)));
+    await chunkAsync(selectedIds, id => base44.entities.Load.delete(id));
     toast.success(`${count} load${count > 1 ? 's' : ''} deleted`);
     onDeleted();
     setLoading(false);
@@ -39,7 +40,7 @@ export default function BulkEditBar({ selectedIds, onClearSelection, onDeleted, 
     const val = parseFloat(amountValue);
     if (isNaN(val)) return toast.error('Enter a valid amount');
     setLoading(true);
-    await Promise.all(selectedIds.map(id => base44.entities.Load.update(id, { invoice_amount: val })));
+    await chunkAsync(selectedIds, id => base44.entities.Load.update(id, { invoice_amount: val }));
     toast.success(`Updated amount on ${count} load${count > 1 ? 's' : ''}`);
     onEdited();
     setEditMode(null);
@@ -61,7 +62,7 @@ export default function BulkEditBar({ selectedIds, onClearSelection, onDeleted, 
       updates.truck_id = selectedTruckId;
       updates.truck_number = truck?.unit_number || '';
     }
-    await Promise.all(selectedIds.map(id => base44.entities.Load.update(id, updates)));
+    await chunkAsync(selectedIds, id => base44.entities.Load.update(id, updates));
     toast.success(`Updated ${count} load${count > 1 ? 's' : ''}`);
     onEdited();
     setEditMode(null);
@@ -72,7 +73,6 @@ export default function BulkEditBar({ selectedIds, onClearSelection, onDeleted, 
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2">
-      {/* Edit sub-panel */}
       {editMode === 'amount' && (
         <div className="bg-card border border-border rounded-xl shadow-2xl px-4 py-3 flex items-center gap-3">
           <DollarSign className="w-4 h-4 text-muted-foreground" />
@@ -111,12 +111,10 @@ export default function BulkEditBar({ selectedIds, onClearSelection, onDeleted, 
         </div>
       )}
 
-      {/* Main bar */}
       <div className="bg-card border border-border rounded-full shadow-2xl px-4 py-2 flex items-center gap-3">
         <span className="text-sm font-medium text-foreground">{count} selected</span>
         <div className="w-px h-5 bg-border" />
 
-        {/* Edit dropdown */}
         <div className="relative" ref={menuRef}>
           <Button
             size="sm"
