@@ -22,22 +22,51 @@
         "random",
         "post_accident",
         "reasonable_suspicion",
-        "return_to_duty"
+        "return_to_duty",
+        "follow_up"
       ]
+    },
+    "testing_facility": {
+      "type": "string",
+      "description": "Testing facility or lab name"
+    },
+    "collector_name": {
+      "type": "string"
     },
     "result": {
       "type": "string",
       "enum": [
         "pass",
-        "fail"
+        "fail",
+        "pending"
       ]
     },
-    "notes": {
-      "type": "string"
+    "substance_tested": {
+      "type": "string",
+      "enum": [
+        "alcohol",
+        "drugs",
+        "both"
+      ]
+    },
+    "substance_if_failed": {
+      "type": "string",
+      "description": "Which substance if result is fail"
+    },
+    "follow_up_required": {
+      "type": "boolean",
+      "default": false
+    },
+    "follow_up_date": {
+      "type": "string",
+      "format": "date"
     },
     "file_url": {
       "type": "string",
       "description": "Test result document"
+    },
+    "notes": {
+      "type": "string"
     },
     "submitted_by_driver": {
       "type": "boolean",

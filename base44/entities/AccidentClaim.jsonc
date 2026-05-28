@@ -5,6 +5,14 @@
     "tenant_id": {
       "type": "string"
     },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "accident_time": {
+      "type": "string",
+      "description": "Time of accident HH:MM"
+    },
     "driver_id": {
       "type": "string"
     },
@@ -17,19 +25,37 @@
     "truck_number": {
       "type": "string"
     },
-    "date": {
-      "type": "string",
-      "format": "date"
+    "trailer_id": {
+      "type": "string"
     },
-    "description": {
+    "trailer_number": {
       "type": "string"
     },
     "location": {
       "type": "string"
     },
+    "description": {
+      "type": "string"
+    },
     "injury_involved": {
       "type": "boolean",
       "default": false
+    },
+    "injury_description": {
+      "type": "string"
+    },
+    "police_report_number": {
+      "type": "string"
+    },
+    "police_department": {
+      "type": "string"
+    },
+    "other_parties": {
+      "type": "string",
+      "description": "Other parties involved"
+    },
+    "insurance_company": {
+      "type": "string"
     },
     "insurance_claim_number": {
       "type": "string"
@@ -37,18 +63,36 @@
     "claim_status": {
       "type": "string",
       "enum": [
+        "not_filed",
         "open",
-        "under_review",
+        "in_progress",
         "settled",
         "closed"
       ],
-      "default": "open"
+      "default": "not_filed"
+    },
+    "estimated_damage_cost": {
+      "type": "number"
     },
     "file_url": {
       "type": "string"
     },
+    "file_url_2": {
+      "type": "string"
+    },
+    "file_url_3": {
+      "type": "string"
+    },
     "notes": {
       "type": "string"
+    },
+    "submitted_by_driver": {
+      "type": "boolean",
+      "default": false
+    },
+    "pending_review": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [

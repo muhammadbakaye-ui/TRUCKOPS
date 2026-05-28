@@ -30,24 +30,52 @@
       "type": "string",
       "format": "date"
     },
+    "issuing_doctor": {
+      "type": "string",
+      "description": "Issuing doctor or clinic name"
+    },
     "endorsements": {
       "type": "string",
-      "description": "Comma-separated: H, N, T, X, P, S"
+      "description": "Comma-separated endorsement codes: H, N, T, X, P, S"
     },
     "hire_date": {
       "type": "string",
       "format": "date"
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date"
+    },
+    "emergency_contact_name": {
+      "type": "string"
+    },
+    "emergency_contact_phone": {
+      "type": "string"
     },
     "notes": {
       "type": "string"
     },
     "cdl_file_url": {
       "type": "string",
-      "description": "CDL document uploaded by driver"
+      "description": "CDL document"
     },
     "medical_card_file_url": {
       "type": "string",
-      "description": "Medical card document uploaded by driver"
+      "description": "Medical card document"
+    },
+    "other_document_url": {
+      "type": "string",
+      "description": "Any other document"
+    },
+    "cdl_renewed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Admin flagged CDL as renewed pending date update"
+    },
+    "medical_renewed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Admin flagged medical card as renewed pending date update"
     },
     "submitted_by_driver": {
       "type": "boolean",
