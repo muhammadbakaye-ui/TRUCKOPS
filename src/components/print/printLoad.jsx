@@ -1,7 +1,17 @@
 export function printLoad({ company, load, stops, drivers = [], trucks = [], trailers = [] }) {
   const fmt = (n) => `$${(Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const allStops = [...stops].sort((a, b) => (a.stop_order || 0) - (b.stop_order || 0));
-  const total = (load.freight_rate || 0) + (load.fuel_surcharge || 0) + (load.extra_charges || 0);
+  // Build line items: use charge_line_items if available, else fall back to legacy fields
+  const lineItems = load.charge_line_items?.length
+    ? load.charge_line_items
+    : [
+        ...(load.freight_rate ? [{ description: 'Line Haul', amount: load.freight_rate }] : []),
+        ...(load.fuel_surcharge ? [{ description: 'Fuel Surcharge', amount: load.fuel_surcharge }] : []),
+        ...(load.extra_charges ? [{ description: 'Extra Charges', amount: load.extra_charges }] : []),
+        ...(!load.freight_rate && !load.fuel_surcharge ? [{ description: 'Freight Income', amount: 0 }] : []),
+      ];
+  const subTotal = lineItems.reduce((sum, li) => sum + (Number(li.amount) || 0), 0);
+  const total = load.invoice_amount || subTotal;
   const pickups = allStops.filter(s => s.stop_type === 'pickup');
   const deliveries = allStops.filter(s => s.stop_type === 'delivery');
   const firstStop = allStops[0];
@@ -177,8 +187,8 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
       <table class="fin-tbl">
         <thead><tr><th>Description</th><th>Amount</th></tr></thead>
         <tbody>
-          <tr><td>Freight Income</td><td>${fmt(load.freight_rate)}</td></tr>
-          <tr class="sub-row"><td>Sub Total :</td><td>${fmt(load.freight_rate)}</td></tr>
+          ${lineItems.map(li => `<tr><td>${li.description || '—'}</td><td>${fmt(li.amount)}</td></tr>`).join('')}
+          <tr class="sub-row"><td>Sub Total :</td><td>${fmt(subTotal)}</td></tr>
         </tbody>
       </table>
       <div class="total-box">

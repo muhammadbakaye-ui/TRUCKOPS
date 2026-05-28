@@ -132,6 +132,21 @@
     "previous_trip_id": {
       "type": "string"
     },
+    "charge_line_items": {
+      "type": "array",
+      "description": "Individual charge line items extracted from documents or entered manually",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          }
+        }
+      }
+    },
     "freight_rate": {
       "type": "number",
       "description": "Amount shown on the printed load / invoice"

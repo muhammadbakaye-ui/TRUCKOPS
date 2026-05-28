@@ -60,11 +60,30 @@ export default function LoadDetail() {
 
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
 
+  // Dynamic line items helpers
+  const lineItems = form?.charge_line_items || [];
+  const lineItemsTotal = lineItems.reduce((sum, li) => sum + (Number(li.amount) || 0), 0);
+  const setLineItems = (items) => {
+    const total = items.reduce((sum, li) => sum + (Number(li.amount) || 0), 0);
+    setForm(prev => ({ ...prev, charge_line_items: items, invoice_amount: total, freight_rate: total }));
+  };
+  const addLineItem = () => setLineItems([...lineItems, { description: '', amount: '' }]);
+  const removeLineItem = (idx) => setLineItems(lineItems.filter((_, i) => i !== idx));
+  const updateLineItem = (idx, key, val) => setLineItems(lineItems.map((li, i) => i === idx ? { ...li, [key]: key === 'amount' ? val : val } : li));
+
   const { data: load, isLoading } = useQuery({
     queryKey: ['load', loadId],
     queryFn: async () => {
       if (isNew || !loadId) return null;
       const l = await base44.entities.Load.get(loadId);
+      // Migrate old freight_rate/fuel_surcharge/extra_charges to charge_line_items
+      if (!l.charge_line_items?.length) {
+        const items = [];
+        if (l.freight_rate) items.push({ description: 'Line Haul', amount: l.freight_rate });
+        if (l.fuel_surcharge) items.push({ description: 'Fuel Surcharge', amount: l.fuel_surcharge });
+        if (l.extra_charges) items.push({ description: 'Extra Charges', amount: l.extra_charges });
+        l.charge_line_items = items;
+      }
       setForm(l);
       return l;
     },
@@ -430,17 +449,49 @@ export default function LoadDetail() {
           <Card>
             <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Financials</CardTitle></CardHeader>
             <CardContent className="px-4 pb-4 space-y-3">
-              <Field label="Freight Rate — Print ($)">
-                <Input type="number" value={form.freight_rate || ''} onChange={(e) => { const rate = Number(e.target.value); set('freight_rate', rate); set('invoice_amount', rate + (form.fuel_surcharge || 0) + (form.extra_charges || 0)); }} className="h-8 text-xs" />
-                <p className="text-[10px] text-muted-foreground mt-0.5">Shows on the printed load PDF</p>
-              </Field>
+              {/* Dynamic Line Items */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <Label className="text-xs">Charge Line Items</Label>
+                  <Button variant="outline" size="sm" className="h-6 text-[11px] gap-1 px-2" onClick={addLineItem}>
+                    <Plus className="w-3 h-3" /> Add
+                  </Button>
+                </div>
+                <div className="space-y-1.5">
+                  {lineItems.length === 0 && (
+                    <p className="text-[11px] text-muted-foreground py-2 text-center border border-dashed rounded-md">No line items. Add one or upload a document.</p>
+                  )}
+                  {lineItems.map((li, i) => (
+                    <div key={i} className="flex gap-1.5 items-center">
+                      <Input
+                        value={li.description || ''}
+                        onChange={(e) => updateLineItem(i, 'description', e.target.value)}
+                        placeholder="Description"
+                        className="h-7 text-xs flex-1"
+                      />
+                      <Input
+                        type="number"
+                        value={li.amount === '' ? '' : li.amount}
+                        onChange={(e) => updateLineItem(i, 'amount', e.target.value === '' ? '' : Number(e.target.value))}
+                        placeholder="0.00"
+                        className="h-7 text-xs w-24"
+                      />
+                      <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => removeLineItem(i)}>
+                        <Trash2 className="w-3 h-3 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                  <span className="text-xs font-semibold">Invoice Total</span>
+                  <span className="text-sm font-bold text-primary">${lineItemsTotal.toFixed(2)}</span>
+                </div>
+              </div>
+
               <Field label="Driver Rate — Statement ($)">
-                <Input type="number" value={form.driver_rate || ''} onChange={(e) => set('driver_rate', Number(e.target.value))} className="h-8 text-xs" placeholder={form.freight_rate ? `Default: $${form.freight_rate}` : 'Leave blank to use Freight Rate'} />
+                <Input type="number" value={form.driver_rate || ''} onChange={(e) => set('driver_rate', Number(e.target.value))} className="h-8 text-xs" placeholder={lineItemsTotal ? `Default: $${lineItemsTotal.toFixed(2)}` : 'Leave blank to use Invoice Total'} />
                 <p className="text-[10px] text-muted-foreground mt-0.5">Used for driver pay calculation (driver % applied to this)</p>
               </Field>
-              <Field label="Fuel Surcharge ($)"><Input type="number" value={form.fuel_surcharge || ''} onChange={(e) => { const fsc = Number(e.target.value); set('fuel_surcharge', fsc); set('invoice_amount', (form.freight_rate || 0) + fsc + (form.extra_charges || 0)); }} className="h-8 text-xs" /></Field>
-              <Field label="Extra Charges ($)"><Input type="number" value={form.extra_charges || ''} onChange={(e) => { const extra = Number(e.target.value); set('extra_charges', extra); set('invoice_amount', (form.freight_rate || 0) + (form.fuel_surcharge || 0) + extra); }} className="h-8 text-xs" /></Field>
-              <Field label="Invoice Amount ($)"><Input type="number" value={form.invoice_amount || ''} onChange={(e) => set('invoice_amount', Number(e.target.value))} className="h-8 text-xs font-semibold" /></Field>
               <Field label="Invoice Status"><Sel value={form.invoice_status} onChange={(v) => set('invoice_status', v)} options={['not_invoiced','invoiced','sent','partial','paid','overdue','canceled'].map(v=>({value:v,label:v.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}))} /></Field>
               <Field label="Billable Miles"><Input type="number" value={form.billable_miles || ''} onChange={(e) => set('billable_miles', Number(e.target.value))} className="h-8 text-xs" /></Field>
             </CardContent>
