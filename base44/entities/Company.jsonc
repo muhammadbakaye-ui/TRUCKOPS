@@ -13,12 +13,18 @@
     "company_type": {
       "type": "string",
       "enum": [
+        "owner_operator",
         "broker",
         "customer",
         "carrier",
         "other"
       ],
       "default": "customer"
+    },
+    "is_owner_profile": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if this is the owner operator's own company profile"
     },
     "contact_name": {
       "type": "string"

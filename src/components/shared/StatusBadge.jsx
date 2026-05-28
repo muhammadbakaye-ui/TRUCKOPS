@@ -26,6 +26,13 @@ const statusStyles = {
   failed: 'bg-red-500/10 text-red-600 border-red-500/30',
   exception: 'bg-red-500/10 text-red-600 border-red-500/30',
   duplicate: 'bg-purple-500/10 text-purple-600 border-purple-500/30',
+
+  // Company types
+  owner_operator: 'bg-purple-900/30 text-purple-300 border-purple-700/50',
+  broker: 'bg-blue-500/10 text-blue-500 border-blue-500/30',
+  customer: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30',
+  carrier: 'bg-amber-500/10 text-amber-500 border-amber-500/30',
+  other: 'bg-muted text-muted-foreground border-border',
   
   inactive: 'bg-muted text-muted-foreground border-border',
   terminated: 'bg-muted text-muted-foreground border-border',

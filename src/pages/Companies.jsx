@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 const COMPANY_FIELDS = [
   { name: 'company_name', label: 'Company Name', required: true, fullWidth: true },
   { name: 'company_type', label: 'Type', type: 'select', options: [
+    { value: 'owner_operator', label: 'Owner Operator' },
     { value: 'broker', label: 'Broker' }, { value: 'customer', label: 'Customer' },
     { value: 'carrier', label: 'Carrier' }, { value: 'other', label: 'Other' }
   ]},
@@ -43,24 +44,42 @@ export default function Companies() {
   const [editing, setEditing] = useState(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { session } = useSession();
+  const { session, login } = useSession();
   const { showDialog, checkFeatureAccess, handleSubscribe, handleDismiss } = usePreviewGate();
   const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
+      const isOwnerType = data.company_type === 'owner_operator';
       if (editing) {
-        const result = await base44.entities.Company.update(editing.id, data);
+        const result = await base44.entities.Company.update(editing.id, {
+          ...data,
+          ...(isOwnerType ? { is_owner_profile: true } : {}),
+        });
         await logAudit({ action_type: 'update', entity_type: 'Company', entity_id: editing.id, entity_label: data.company_name, before_data: editing, after_data: data });
-        return result;
+        return { result, isOwnerType, name: data.company_name };
       } else {
-        const result = await base44.entities.Company.create({ ...data, tenant_id: session.tenant_id });
+        // If creating as owner_operator, find existing and update instead of creating new
+        if (isOwnerType) {
+          const existing = await base44.entities.Company.filter({ tenant_id: session.tenant_id }, '-created_date', 200)
+            .then(all => all.find(c => c.is_owner_profile || c.company_type === 'owner_operator'));
+          if (existing) {
+            const result = await base44.entities.Company.update(existing.id, { ...data, is_owner_profile: true });
+            await logAudit({ action_type: 'update', entity_type: 'Company', entity_id: existing.id, entity_label: data.company_name, before_data: existing, after_data: data });
+            return { result, isOwnerType, name: data.company_name };
+          }
+        }
+        const result = await base44.entities.Company.create({ ...data, tenant_id: session.tenant_id, ...(isOwnerType ? { is_owner_profile: true } : {}) });
         await logAudit({ action_type: 'create', entity_type: 'Company', entity_label: data.company_name, after_data: data });
-        return result;
+        return { result, isOwnerType, name: data.company_name };
       }
     },
-    onSuccess: () => {
+    onSuccess: ({ isOwnerType, name }) => {
       queryClient.invalidateQueries({ queryKey: ['companies'] });
+      if (isOwnerType) {
+        queryClient.invalidateQueries({ queryKey: ['settings-company', session?.tenant_id] });
+        if (session) login({ ...session, company_name: name || '' });
+      }
       setDialogOpen(false);
       setEditing(null);
     }
@@ -72,8 +91,7 @@ export default function Companies() {
     queryKey: ['companies', session?.tenant_id],
     queryFn: async () => {
       if (!session?.tenant_id) return [];
-      const all = await base44.entities.Company.filter({ tenant_id: session.tenant_id }, '-created_date', 200);
-      return all.filter(c => !c.is_owner_profile);
+      return base44.entities.Company.filter({ tenant_id: session.tenant_id }, '-created_date', 200);
     },
     enabled: !!session?.tenant_id,
   });

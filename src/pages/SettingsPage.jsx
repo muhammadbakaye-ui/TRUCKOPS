@@ -27,12 +27,12 @@ export default function SettingsPage() {
   const { data: companies = [], isLoading, refetch } = useQuery({
     queryKey: ['settings-company', tenantId],
     queryFn: () => tenantId
-      ? base44.entities.Company.filter({ company_type: 'carrier', tenant_id: tenantId }, '-created_date', 50).then(async all => {
-          const owned = all.find(c => c.is_owner_profile) || all[0];
+      ? base44.entities.Company.filter({ tenant_id: tenantId }, '-created_date', 200).then(async all => {
+          const owned = all.find(c => c.is_owner_profile || c.company_type === 'owner_operator' || c.company_type === 'carrier');
           if (owned && !owned.is_owner_profile) {
-            base44.entities.Company.update(owned.id, { is_owner_profile: true }).catch(() => {});
+            base44.entities.Company.update(owned.id, { is_owner_profile: true, company_type: 'owner_operator' }).catch(() => {});
           }
-          return owned ? [{ ...owned, is_owner_profile: true }] : [];
+          return owned ? [{ ...owned, is_owner_profile: true, company_type: 'owner_operator' }] : [];
         })
       : Promise.resolve([]),
     enabled: !!tenantId,
@@ -68,7 +68,7 @@ export default function SettingsPage() {
     mutationFn: async () => {
       const payload = {
         company_name: form.company_name,
-        company_type: 'carrier',
+        company_type: 'owner_operator',
         is_owner_profile: true,
         tenant_id: tenantId,
         address_1: form.address_1,
@@ -89,6 +89,7 @@ export default function SettingsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings-company', tenantId] });
+      queryClient.invalidateQueries({ queryKey: ['companies', tenantId] });
       refetch();
       if (session) login({ ...session, company_name: form.company_name || '' });
       toast.success('Settings saved');
