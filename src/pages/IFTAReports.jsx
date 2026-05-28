@@ -10,7 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Plus, Trash2, Loader2, Map } from 'lucide-react';
+import { Plus, Trash2, Pencil, Loader2, Map } from 'lucide-react';
+import SearchInput from '@/components/shared/SearchInput';
 import { toast } from 'sonner';
 
 const QUARTERS = ['Q1', 'Q2', 'Q3', 'Q4'];
@@ -100,6 +101,7 @@ export default function IFTAReports() {
   const [yearFilter, setYearFilter] = useState(String(currentYear));
   const [quarterFilter, setQuarterFilter] = useState('all');
   const [truckFilter, setTruckFilter] = useState('all');
+  const [search, setSearch] = useState('');
 
   const { data: trucks = [] } = useQuery({
     queryKey: ['trucks', tenantId],
@@ -129,6 +131,7 @@ export default function IFTAReports() {
     if (yearFilter !== 'all' && String(r.year) !== yearFilter) return false;
     if (quarterFilter !== 'all' && r.quarter !== quarterFilter) return false;
     if (truckFilter !== 'all' && r.truck_id !== truckFilter) return false;
+    if (search && !r.truck_number?.toLowerCase().includes(search.toLowerCase()) && !r.state?.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
@@ -185,6 +188,7 @@ export default function IFTAReports() {
       </div>
 
       <div className="flex flex-wrap gap-2">
+        <SearchInput value={search} onChange={setSearch} placeholder="Search truck, state..." className="w-48" />
         <Select value={yearFilter} onValueChange={setYearFilter}>
           <SelectTrigger className="h-8 text-xs w-24"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -267,7 +271,7 @@ export default function IFTAReports() {
                 </thead>
                 <tbody className="divide-y divide-border">
                   {filtered.map(r => (
-                    <tr key={r.id} className="hover:bg-muted/20 cursor-pointer" onClick={() => { setEditing(r); setDialogOpen(true); }}>
+                    <tr key={r.id} className="hover:bg-muted/20">
                       <td className="px-4 py-2 font-mono">{r.truck_number}</td>
                       <td className="px-4 py-2">{r.year} {r.quarter}</td>
                       <td className="px-4 py-2 font-mono font-semibold">{r.state}</td>
@@ -276,17 +280,18 @@ export default function IFTAReports() {
                       <td className="px-4 py-2" onClick={e => e.stopPropagation()}>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive"><Trash2 className="w-3 h-3" /></Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader><AlertDialogTitle>Delete Record?</AlertDialogTitle><AlertDialogDescription>This IFTA record will be permanently removed.</AlertDialogDescription></AlertDialogHeader>
-                            <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteMutation.mutate(r.id)}>Delete</AlertDialogAction></AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive"><Trash2 className="w-3 h-3" /></Button>
+                                          </AlertDialogTrigger>
+                                          <AlertDialogContent>
+                                            <AlertDialogHeader><AlertDialogTitle>Delete Record?</AlertDialogTitle><AlertDialogDescription>This IFTA record will be permanently removed.</AlertDialogDescription></AlertDialogHeader>
+                                            <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteMutation.mutate(r.id)}>Delete</AlertDialogAction></AlertDialogFooter>
+                                          </AlertDialogContent>
+                                        </AlertDialog>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground" onClick={() => { setEditing(r); setDialogOpen(true); }}><Pencil className="w-3 h-3" /></Button>
+                          </td>
+                          </tr>
+                          ))}
+                          </tbody>
               </table>
             )}
           </div>

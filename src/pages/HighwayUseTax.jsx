@@ -9,7 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Loader2, Truck, FileCheck } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Truck, FileCheck, Paperclip, ExternalLink } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Textarea } from '@/components/ui/textarea';
+import SearchInput from '@/components/shared/SearchInput';
 import { toast } from 'sonner';
 import { differenceInDays, parseISO } from 'date-fns';
 
@@ -18,10 +21,21 @@ const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
 function HVUTDialog({ open, onClose, editing, trucks, onSave, saving }) {
   const [form, setForm] = useState({});
+  const [uploading, setUploading] = useState(false);
   useEffect(() => {
     if (open) setForm(editing ? { ...editing } : { tax_year: currentYear, filing_status: 'not_filed' });
   }, [open, editing]);
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+  const handleUpload = async (file) => {
+    setUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      set('file_url', file_url);
+      toast.success('Document attached');
+    } catch { toast.error('Upload failed'); }
+    finally { setUploading(false); }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -72,8 +86,20 @@ function HVUTDialog({ open, onClose, editing, trucks, onSave, saving }) {
             <Input type="number" step="0.01" value={form.tax_amount || ''} onChange={e => set('tax_amount', Number(e.target.value))} className="h-8 text-xs mt-1" />
           </div>
           <div className="col-span-2">
+            <Label className="text-xs">Document (Form 2290)</Label>
+            <div className="flex items-center gap-2 mt-1">
+              {form.file_url && <a href={form.file_url} target="_blank" rel="noopener noreferrer"><Button type="button" variant="ghost" size="sm" className="h-7 text-xs gap-1 text-primary px-2"><ExternalLink className="w-3 h-3" /> View</Button></a>}
+              <label className="cursor-pointer">
+                <input type="file" className="hidden" accept=".pdf,.png,.jpg,.jpeg" onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0])} />
+                <Button type="button" variant="outline" size="sm" className="h-7 text-xs gap-1 pointer-events-none" disabled={uploading} asChild>
+                  <span>{uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Paperclip className="w-3 h-3" />} {form.file_url ? 'Replace' : 'Upload'}</span>
+                </Button>
+              </label>
+            </div>
+          </div>
+          <div className="col-span-2">
             <Label className="text-xs">Notes</Label>
-            <Input value={form.notes || ''} onChange={e => set('notes', e.target.value)} className="h-8 text-xs mt-1" />
+            <Textarea value={form.notes || ''} onChange={e => set('notes', e.target.value)} className="text-xs mt-1 h-12" />
           </div>
         </div>
         <DialogFooter>
@@ -95,6 +121,7 @@ export default function HighwayUseTax() {
   const [editing, setEditing] = useState(null);
   const [yearFilter, setYearFilter] = useState(String(currentYear));
   const [statusFilter, setStatusFilter] = useState('all');
+  const [search, setSearch] = useState('');
 
   const { data: trucks = [] } = useQuery({
     queryKey: ['trucks', tenantId],
@@ -120,6 +147,8 @@ export default function HighwayUseTax() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['hvut'] }); toast.success('Deleted'); },
   });
 
+  const openDialog = (rec = null) => { setEditing(rec); setDialogOpen(true); };
+
   const markFiledMutation = useMutation({
     mutationFn: (id) => base44.entities.HighwayUseTax.update(id, { filing_status: 'filed' }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['hvut'] }); toast.success('Marked as filed'); },
@@ -128,6 +157,7 @@ export default function HighwayUseTax() {
   const filtered = records.filter(r => {
     if (yearFilter !== 'all' && String(r.tax_year) !== yearFilter) return false;
     if (statusFilter !== 'all' && r.filing_status !== statusFilter) return false;
+    if (search && !r.truck_number?.toLowerCase().includes(search.toLowerCase()) && !r.vin?.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
@@ -149,7 +179,7 @@ export default function HighwayUseTax() {
         title="Highway Use Tax"
         description={`${records.length} trucks tracked · $${totalTax.toLocaleString(undefined, { minimumFractionDigits: 2 })} total tax`}
         actions={
-          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { setEditing(null); setDialogOpen(true); }}>
+          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => openDialog()}>
             <Plus className="w-3.5 h-3.5" /> Add Truck
           </Button>
         }
@@ -172,6 +202,7 @@ export default function HighwayUseTax() {
       </div>
 
       <div className="flex flex-wrap gap-2">
+        <SearchInput value={search} onChange={setSearch} placeholder="Search truck, VIN..." className="w-48" />
         <Select value={yearFilter} onValueChange={setYearFilter}>
           <SelectTrigger className="h-8 text-xs w-24"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -210,6 +241,7 @@ export default function HighwayUseTax() {
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Due Date</th>
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Status</th>
                 <th className="text-right px-4 py-3 font-semibold text-muted-foreground">Tax</th>
+                <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Doc</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
@@ -242,17 +274,29 @@ export default function HighwayUseTax() {
                     <td className="px-4 py-3 text-right font-medium">
                       {r.tax_amount ? `$${r.tax_amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : '—'}
                     </td>
+                    <td className="px-4 py-3">
+                      {r.file_url
+                        ? <a href={r.file_url} target="_blank" rel="noopener noreferrer"><Button variant="ghost" size="icon" className="h-6 w-6 text-primary"><Paperclip className="w-3 h-3" /></Button></a>
+                        : <span className="text-muted-foreground">—</span>}
+                    </td>
                     <td className="px-4 py-3 text-right">
-                      {r.filing_status !== 'filed' && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs gap-1"
-                          onClick={() => markFiledMutation.mutate(r.id)}
-                        >
-                          <FileCheck className="w-3 h-3" /> Mark Filed
-                        </Button>
-                      )}
+                      <div className="flex items-center justify-end gap-1">
+                        {r.filing_status !== 'filed' && (
+                          <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => markFiledMutation.mutate(r.id)}>
+                            <FileCheck className="w-3 h-3" /> Mark Filed
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => openDialog(r)}><Pencil className="w-3.5 h-3.5" /></Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader><AlertDialogTitle>Delete Record?</AlertDialogTitle><AlertDialogDescription>This HVUT record will be permanently removed.</AlertDialogDescription></AlertDialogHeader>
+                            <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteMutation.mutate(r.id)}>Delete</AlertDialogAction></AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -262,14 +306,7 @@ export default function HighwayUseTax() {
         </div>
       )}
 
-      <HVUTDialog
-        open={dialogOpen}
-        onClose={() => { setDialogOpen(false); setEditing(null); }}
-        editing={editing}
-        trucks={trucks}
-        onSave={d => saveMutation.mutate(d)}
-        saving={saveMutation.isPending}
-      />
+      <HVUTDialog open={dialogOpen} onClose={() => { setDialogOpen(false); setEditing(null); }} editing={editing} trucks={trucks} onSave={d => saveMutation.mutate(d)} saving={saveMutation.isPending} />
     </div>
   );
 }

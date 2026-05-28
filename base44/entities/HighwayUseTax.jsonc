@@ -38,6 +38,10 @@
     "tax_amount": {
       "type": "number"
     },
+    "file_url": {
+      "type": "string",
+      "description": "Form 2290 or supporting document"
+    },
     "notes": {
       "type": "string"
     }

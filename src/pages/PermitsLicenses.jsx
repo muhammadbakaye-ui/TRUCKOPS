@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Loader2, ScrollText, Paperclip } from 'lucide-react';
+import { Plus, Trash2, Pencil, Loader2, ScrollText, Paperclip } from 'lucide-react';
+import SearchInput from '@/components/shared/SearchInput';
 import { toast } from 'sonner';
 import { differenceInDays, parseISO } from 'date-fns';
 
@@ -136,6 +137,7 @@ export default function PermitsLicenses() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [typeFilter, setTypeFilter] = useState('all');
+  const [search, setSearch] = useState('');
 
   const { data: trucks = [] } = useQuery({
     queryKey: ['trucks', tenantId],
@@ -161,7 +163,11 @@ export default function PermitsLicenses() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['permits'] }); toast.success('Deleted'); },
   });
 
-  const filtered = typeFilter === 'all' ? permits : permits.filter(p => p.permit_type === typeFilter);
+  const filtered = permits.filter(p => {
+    if (typeFilter !== 'all' && p.permit_type !== typeFilter) return false;
+    if (search && !p.permit_name?.toLowerCase().includes(search.toLowerCase()) && !p.permit_number?.toLowerCase().includes(search.toLowerCase()) && !p.issuing_authority?.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
 
   const expiredCount = permits.filter(p => p.expiration_date && differenceInDays(parseISO(p.expiration_date), new Date()) < 0).length;
   const expiringCount = permits.filter(p => {
@@ -182,13 +188,16 @@ export default function PermitsLicenses() {
         }
       />
 
-      <Select value={typeFilter} onValueChange={setTypeFilter}>
-        <SelectTrigger className="h-8 text-xs w-48"><SelectValue placeholder="All Types" /></SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Types</SelectItem>
-          {PERMIT_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-        </SelectContent>
-      </Select>
+      <div className="flex flex-wrap gap-2">
+        <SearchInput value={search} onChange={setSearch} placeholder="Search permits..." className="w-52" />
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="h-8 text-xs w-48"><SelectValue placeholder="All Types" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            {PERMIT_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center h-40 text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading...</div>
@@ -217,7 +226,7 @@ export default function PermitsLicenses() {
               {filtered.map(p => {
                 const status = expiryStatus(p.expiration_date);
                 return (
-                  <tr key={p.id} className="hover:bg-muted/20 cursor-pointer" onClick={() => { setEditing(p); setDialogOpen(true); }}>
+                  <tr key={p.id} className="hover:bg-muted/20">
                     <td className="px-4 py-3 font-medium">{p.permit_name}</td>
                     <td className="px-4 py-3 capitalize">{PERMIT_TYPES.find(t => t.value === p.permit_type)?.label || p.permit_type}</td>
                     <td className="px-4 py-3 font-mono text-muted-foreground">{p.permit_number || '—'}</td>
@@ -227,13 +236,14 @@ export default function PermitsLicenses() {
                     <td className="px-4 py-3">
                       {status ? <Badge variant="outline" className={`text-[10px] ${status.className}`}>{status.label}</Badge> : <span className="text-muted-foreground">—</span>}
                     </td>
-                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                    <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
                         {p.file_url && (
                           <a href={p.file_url} target="_blank" rel="noopener noreferrer">
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-primary"><Paperclip className="w-3.5 h-3.5" /></Button>
                           </a>
                         )}
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => { setEditing(p); setDialogOpen(true); }}><Pencil className="w-3.5 h-3.5" /></Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></Button>

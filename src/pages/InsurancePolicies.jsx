@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Loader2, ShieldPlus, Paperclip } from 'lucide-react';
+import { Plus, Trash2, Pencil, Loader2, ShieldPlus, Paperclip } from 'lucide-react';
+import SearchInput from '@/components/shared/SearchInput';
 import { toast } from 'sonner';
 import { differenceInDays, parseISO } from 'date-fns';
 
@@ -134,6 +135,8 @@ export default function InsurancePolicies() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [search, setSearch] = useState('');
+  const [coverageFilter, setCoverageFilter] = useState('all');
 
   const { data: policies = [], isLoading } = useQuery({
     queryKey: ['insurance', tenantId],
@@ -151,6 +154,12 @@ export default function InsurancePolicies() {
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.InsurancePolicy.delete(id),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['insurance'] }); toast.success('Deleted'); },
+  });
+
+  const filtered = policies.filter(p => {
+    if (search && !p.policy_name?.toLowerCase().includes(search.toLowerCase()) && !p.insurer?.toLowerCase().includes(search.toLowerCase())) return false;
+    if (coverageFilter !== 'all' && p.coverage_type !== coverageFilter) return false;
+    return true;
   });
 
   const expiredCount = policies.filter(p => p.expiration_date && differenceInDays(parseISO(p.expiration_date), new Date()) < 0).length;
@@ -172,6 +181,17 @@ export default function InsurancePolicies() {
         }
       />
 
+      <div className="flex flex-wrap gap-2">
+        <SearchInput value={search} onChange={setSearch} placeholder="Search policy, insurer..." className="w-56" />
+        <Select value={coverageFilter} onValueChange={setCoverageFilter}>
+          <SelectTrigger className="h-8 text-xs w-44"><SelectValue placeholder="All Coverage" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Coverage Types</SelectItem>
+            {COVERAGE_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+
       {isLoading ? (
         <div className="flex items-center justify-center h-40 text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading...</div>
       ) : policies.length === 0 ? (
@@ -185,7 +205,7 @@ export default function InsurancePolicies() {
           <table className="w-full text-xs">
             <thead className="bg-muted/40 border-b border-border">
               <tr>
-                <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Policy Name</th>
+                <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Policy Name ({filtered.length})</th>
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Coverage Type</th>
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Insurer</th>
                 <th className="text-left px-4 py-3 font-semibold text-muted-foreground">Policy #</th>
@@ -196,10 +216,10 @@ export default function InsurancePolicies() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {policies.map(p => {
+              {filtered.map(p => {
                 const status = expiryStatus(p.expiration_date);
                 return (
-                  <tr key={p.id} className="hover:bg-muted/20 cursor-pointer" onClick={() => { setEditing(p); setDialogOpen(true); }}>
+                  <tr key={p.id} className="hover:bg-muted/20">
                     <td className="px-4 py-3 font-medium">{p.policy_name}</td>
                     <td className="px-4 py-3 capitalize">{p.coverage_type?.replace(/_/g, ' ')}</td>
                     <td className="px-4 py-3 text-muted-foreground">{p.insurer || '—'}</td>
@@ -209,13 +229,14 @@ export default function InsurancePolicies() {
                     <td className="px-4 py-3">
                       {status ? <Badge variant="outline" className={`text-[10px] ${status.className}`}>{status.label}</Badge> : <span className="text-muted-foreground">—</span>}
                     </td>
-                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                    <td className="px-4 py-3">
                       <div className="flex items-center gap-1">
                         {p.file_url && (
                           <a href={p.file_url} target="_blank" rel="noopener noreferrer">
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-primary"><Paperclip className="w-3.5 h-3.5" /></Button>
                           </a>
                         )}
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => { setEditing(p); setDialogOpen(true); }}><Pencil className="w-3.5 h-3.5" /></Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"><Trash2 className="w-3.5 h-3.5" /></Button>
