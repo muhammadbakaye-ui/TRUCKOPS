@@ -27,9 +27,12 @@ export default function SettingsPage() {
   const { data: companies = [], isLoading, refetch } = useQuery({
     queryKey: ['settings-company', tenantId],
     queryFn: () => tenantId
-      ? base44.entities.Company.filter({ company_type: 'carrier', tenant_id: tenantId }, '-created_date', 50).then(all => {
-          const owned = all.find(c => c.is_owner_profile);
-          return owned ? [owned] : all.slice(0, 1);
+      ? base44.entities.Company.filter({ company_type: 'carrier', tenant_id: tenantId }, '-created_date', 50).then(async all => {
+          const owned = all.find(c => c.is_owner_profile) || all[0];
+          if (owned && !owned.is_owner_profile) {
+            base44.entities.Company.update(owned.id, { is_owner_profile: true }).catch(() => {});
+          }
+          return owned ? [{ ...owned, is_owner_profile: true }] : [];
         })
       : Promise.resolve([]),
     enabled: !!tenantId,
