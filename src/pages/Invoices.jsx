@@ -249,7 +249,7 @@ export default function Invoices() {
             {qaEnabled && (
               <button
                 onClick={() => handleQuickAction(r)}
-                className="px-2 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors whitespace-nowrap"
+                className={`px-2 py-0.5 rounded text-[10px] font-medium border transition-colors whitespace-nowrap ${INV_STATUS_STYLES[qaAction] || 'bg-primary/10 text-primary border-primary/20'}`}
               >
                 {qaOptions.find(o => o.value === qaAction)?.label || qaAction}
               </button>
