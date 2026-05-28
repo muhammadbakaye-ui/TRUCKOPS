@@ -75,7 +75,7 @@ export default function UploadDocument() {
 
   const handleProcess = () => {
     if (files.length === 0) return;
-    submitUpload({ files, docType, selectedDriverId, selectedTruckId, tripNumber, manualAmount, driverAmount, drivers, trucks });
+    submitUpload({ files, docType, selectedDriverId, selectedTruckId, tripNumber, manualAmount, driverAmount, drivers, trucks, tenantId: session?.tenant_id });
     setFiles([]);
   };
 

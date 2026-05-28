@@ -256,6 +256,7 @@ Return a structured JSON with the following fields (use null if not found):
 
           // Create load, stops, and update doc — stops and doc update can be parallelized after load creation
           const load = await base44.entities.Load.create({
+            tenant_id: tenantId,
             internal_load_number: newLoadNum,
             external_load_number: extracted.load_number,
             customer_reference_number: extracted.customer_po,
