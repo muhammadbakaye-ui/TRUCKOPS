@@ -27,7 +27,10 @@ export default function SettingsPage() {
   const { data: companies = [], isLoading, refetch } = useQuery({
     queryKey: ['settings-company', tenantId],
     queryFn: () => tenantId
-      ? base44.entities.Company.filter({ company_type: 'carrier', tenant_id: tenantId }, '-created_date', 1)
+      ? base44.entities.Company.filter({ company_type: 'carrier', tenant_id: tenantId }, '-created_date', 50).then(all => {
+          const owned = all.find(c => c.is_owner_profile);
+          return owned ? [owned] : all.slice(0, 1);
+        })
       : Promise.resolve([]),
     enabled: !!tenantId,
   });
@@ -63,6 +66,7 @@ export default function SettingsPage() {
       const payload = {
         company_name: form.company_name,
         company_type: 'carrier',
+        is_owner_profile: true,
         tenant_id: tenantId,
         address_1: form.address_1,
         address_2: form.address_2,
