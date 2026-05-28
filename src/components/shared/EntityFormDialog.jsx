@@ -22,8 +22,18 @@ export default function EntityFormDialog({ open, onClose, title, fields, initial
     }
   }, [open, initialData, fields]);
 
-  const handleChange = (name, value) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const formatPhone = (value) => {
+    const digits = value.replace(/\D/g, '').slice(0, 10);
+    if (digits.length <= 3) return digits.length ? `(${digits}` : '';
+    if (digits.length <= 6) return `(${digits.slice(0, 3)})-${digits.slice(3)}`;
+    return `(${digits.slice(0, 3)})-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  };
+
+  const handleChange = (name, value, field) => {
+    const finalValue = field?.type === 'phone' || field?.name === 'phone'
+      ? formatPhone(value)
+      : field?.type === 'number' ? (value === '' ? '' : Number(value)) : value;
+    setFormData(prev => ({ ...prev, [name]: finalValue }));
   };
 
   const handleSubmit = (e) => {
@@ -66,8 +76,8 @@ export default function EntityFormDialog({ open, onClose, title, fields, initial
                     <Label className="text-xs">{field.label}</Label>
                     <Textarea
                       value={formData[field.name] || ''}
-                      onChange={(e) => handleChange(field.name, e.target.value)}
-                      className="text-xs mt-1 h-20"
+                      onChange={(e) => handleChange(field.name, e.target.value, field)}
+                        className="text-xs mt-1 h-20"
                       placeholder={field.placeholder}
                     />
                   </div>
@@ -79,7 +89,7 @@ export default function EntityFormDialog({ open, onClose, title, fields, initial
                   <Input
                     type={field.type || 'text'}
                     value={formData[field.name] || ''}
-                    onChange={(e) => handleChange(field.name, field.type === 'number' ? Number(e.target.value) : e.target.value)}
+                    onChange={(e) => handleChange(field.name, e.target.value, field)}
                     className="h-8 text-xs mt-1"
                     placeholder={field.placeholder}
                     required={field.required}
