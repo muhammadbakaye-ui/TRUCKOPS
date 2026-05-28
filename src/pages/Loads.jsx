@@ -666,20 +666,30 @@ export default function Loads() {
                             </td>
                             <td className="p-2 font-medium">{l.customer_name || '—'}</td>
                             <td className="p-2" onClick={e => e.stopPropagation()}>
-                              {l.external_load_number ? (
-                                <div className="flex items-center gap-1">
-                                  <span className="font-mono text-primary">{l.external_load_number}</span>
+                              <div className="flex items-center gap-1">
+                                {l.external_load_number ? (
+                                  <>
+                                    <span className="font-mono text-primary">{l.external_load_number}</span>
+                                    <button
+                                      onClick={(e) => handleCopyLoadNumber(e, l.external_load_number)}
+                                      className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                                      title="Copy broker load #"
+                                    >
+                                      {copiedId === l.external_load_number
+                                        ? <Check className="w-3 h-3 text-green-600" />
+                                        : <Copy className="w-3 h-3" />}
+                                    </button>
+                                  </>
+                                ) : <span className="text-muted-foreground">—</span>}
+                                {qaEnabled && (
                                   <button
-                                    onClick={(e) => handleCopyLoadNumber(e, l.external_load_number)}
-                                    className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                                    title="Copy broker load #"
+                                    onClick={(e) => { e.stopPropagation(); handleQuickAction(l); }}
+                                    className="px-2 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors whitespace-nowrap"
                                   >
-                                    {copiedId === l.external_load_number
-                                      ? <Check className="w-3 h-3 text-green-600" />
-                                      : <Copy className="w-3 h-3" />}
+                                    {loadsQaOptions.find(o => o.value === qaAction)?.label || qaAction}
                                   </button>
-                                </div>
-                              ) : <span className="text-muted-foreground">—</span>}
+                                )}
+                              </div>
                             </td>
                             <td className="p-2">
                               {l.pickup_city || l.delivery_city
@@ -740,37 +750,29 @@ export default function Loads() {
                              </td>
                             <td className="p-2" onClick={e => e.stopPropagation()}>
                               <div className="flex items-center gap-0.5">
-                              {qaEnabled && (
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); handleQuickAction(l); }}
-                                  className="px-2 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors whitespace-nowrap mr-0.5"
-                                >
-                                  {loadsQaOptions.find(o => o.value === qaAction)?.label || qaAction}
-                                </button>
-                              )}
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={(e) => handlePrintLoad(e, l)} title="Download PDF">
-                                <Download className="w-3.5 h-3.5" />
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Load?</AlertDialogTitle>
-                                    <AlertDialogDescription>Load #{l.internal_load_number} will be moved to Deleted Items.</AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteMutation.mutate(l)}>Delete</AlertDialogAction>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={(e) => handlePrintLoad(e, l)} title="Download PDF">
+                                  <Download className="w-3.5 h-3.5" />
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Delete Load?</AlertDialogTitle>
+                                      <AlertDialogDescription>Load #{l.internal_load_number} will be moved to Deleted Items.</AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteMutation.mutate(l)}>Delete</AlertDialogAction>
                                     </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                    </AlertDialog>
-                                    </div>
-                                    </td>
-                          </tr>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </td>
+                            </tr>
                         ))}
                       </tbody>
                     </table>

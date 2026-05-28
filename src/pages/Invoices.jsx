@@ -227,20 +227,33 @@ export default function Invoices() {
       render: (r) => {
         const load = loadsMap[r.load_id];
         const loadNum = load?.external_load_number;
-        if (!loadNum) return <span className="text-muted-foreground">—</span>;
         const copied = copiedId === loadNum;
         return (
           <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-            <span className="font-mono text-primary">{loadNum}</span>
-            <button
-              onClick={(e) => handleCopyLoadNumber(e, loadNum)}
-              className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-              title="Copy load number"
-            >
-              {copied
-                ? <Check className="w-3 h-3 text-green-600" />
-                : <Copy className="w-3 h-3" />}
-            </button>
+            {loadNum ? (
+              <>
+                <span className="font-mono text-primary">{loadNum}</span>
+                <button
+                  onClick={(e) => handleCopyLoadNumber(e, loadNum)}
+                  className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                  title="Copy load number"
+                >
+                  {copied
+                    ? <Check className="w-3 h-3 text-green-600" />
+                    : <Copy className="w-3 h-3" />}
+                </button>
+              </>
+            ) : (
+              <span className="text-muted-foreground">—</span>
+            )}
+            {qaEnabled && (
+              <button
+                onClick={() => handleQuickAction(r)}
+                className="px-2 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors whitespace-nowrap"
+              >
+                {qaOptions.find(o => o.value === qaAction)?.label || qaAction}
+              </button>
+            )}
           </div>
         );
       }
@@ -270,14 +283,6 @@ export default function Invoices() {
     {
       header: '', render: (r) => (
         <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
-          {qaEnabled && (
-            <button
-              onClick={() => handleQuickAction(r)}
-              className="px-2 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors whitespace-nowrap"
-            >
-              {qaOptions.find(o => o.value === qaAction)?.label || qaAction}
-            </button>
-          )}
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={e => e.stopPropagation()}>
