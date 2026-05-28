@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { Upload, Loader2, FileText, CheckCircle, X, XCircle, Truck, User, Hash, DollarSign, Tag, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
+import { Upload, Loader2, FileText, CheckCircle, X, XCircle, Truck, User, Hash, DollarSign, Tag, SlidersHorizontal, ChevronDown, ChevronUp, Plus } from 'lucide-react';
 import PageHeader from '../components/shared/PageHeader';
 import { useUploadContext } from '../context/UploadContext';
 
@@ -21,10 +21,11 @@ export default function UploadDocument() {
   const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
   const { jobs, submitUpload, cancelJob, dismissJob } = useUploadContext();
   const [dragging, setDragging] = useState(false);
-  const [files, setFiles] = useState([]);
+  const [primaryFile, setPrimaryFile] = useState(null);
+  const [extraSlots, setExtraSlots] = useState([]); // [{file: null, label: ''}]
   const [docType, setDocType] = useState('rate_confirmation');
   const fileInputRef = useRef(null);
-  
+
   const handleDropZoneClick = () => {
     if (!checkFeatureAccess(isInPreview)) return;
     fileInputRef.current?.click();
@@ -59,28 +60,33 @@ export default function UploadDocument() {
           }
         }
       }
-      if (imageFiles.length > 0) handleFiles(imageFiles);
+      if (imageFiles.length > 0 && !primaryFile) setPrimaryFile(imageFiles[0]);
     };
     window.addEventListener('paste', handlePaste);
     return () => window.removeEventListener('paste', handlePaste);
-  }, []);
+  }, [primaryFile]);
 
-  const handleFiles = (newFiles) => setFiles(prev => [...prev, ...newFiles]);
+  const handleProcess = () => {
+    if (!primaryFile) return;
+    const bundle = [
+      { file: primaryFile, label: '' },
+      ...extraSlots.filter(s => s.file).map(s => ({ file: s.file, label: s.label })),
+    ];
+    submitUpload({ bundle, docType, selectedDriverId, selectedTruckId, tripNumber, manualAmount, driverAmount, drivers, trucks, tenantId: session?.tenant_id });
+    setPrimaryFile(null);
+    setExtraSlots([]);
+  };
 
   const onDrop = (e) => {
     e.preventDefault();
     setDragging(false);
-    handleFiles(Array.from(e.dataTransfer.files));
-  };
-
-  const handleProcess = () => {
-    if (files.length === 0) return;
-    submitUpload({ files, docType, selectedDriverId, selectedTruckId, tripNumber, manualAmount, driverAmount, drivers, trucks, tenantId: session?.tenant_id });
-    setFiles([]);
+    const f = Array.from(e.dataTransfer.files)[0];
+    if (f) setPrimaryFile(f);
   };
 
   const hasOverrides = manualAmount || driverAmount || tripNumber;
   const activeJobs = jobs.filter(j => j.status === 'processing' || j.status === 'done' || j.status === 'cancelled');
+  const totalDocCount = 1 + extraSlots.filter(s => s.file).length;
 
   return (
     <div className="p-4 space-y-4 flex gap-5 items-start">
@@ -183,7 +189,7 @@ export default function UploadDocument() {
         {/* Drop zone */}
         <Card
           data-tour="upload-dropzone"
-          className={`border-2 border-dashed transition-colors cursor-pointer ${dragging ? 'border-primary bg-primary/5' : 'border-border'} ${files.length > 0 ? 'border-green-500 bg-green-500/5' : ''}`}
+          className={`border-2 border-dashed transition-colors cursor-pointer ${dragging ? 'border-primary bg-primary/5' : 'border-border'} ${primaryFile ? 'border-green-500 bg-green-500/5' : ''}`}
           onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
           onDragLeave={() => setDragging(false)}
           onDrop={(e) => {
@@ -193,42 +199,96 @@ export default function UploadDocument() {
             }
             onDrop(e);
           }}
-          onClick={() => handleDropZoneClick()}
+          onClick={() => !primaryFile && handleDropZoneClick()}
         >
-          <CardContent className="flex flex-col items-center justify-center py-10 gap-3">
-            {files.length > 0 ? (
-              <>
-                <FileText className="w-10 h-10 text-green-600" />
-                <p className="text-sm font-medium">{files.length} file{files.length !== 1 ? 's' : ''} selected</p>
-                <div className="flex flex-col gap-1 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-                  {files.map((f, i) => (
-                    <div key={i} className="flex items-center justify-between gap-2 bg-green-500/10 rounded px-2 py-1 text-xs">
-                      <span className="truncate text-foreground">{f.name} <span className="text-muted-foreground">({(f.size / 1024).toFixed(0)} KB)</span></span>
-                      <button className="flex-shrink-0 text-muted-foreground hover:text-destructive" onClick={() => setFiles(prev => prev.filter((_, idx) => idx !== i))} title="Remove">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
+          <CardContent className="flex flex-col items-center justify-center py-8 gap-3">
+            {primaryFile ? (
+              <div className="w-full space-y-2" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center gap-2 mb-1">
+                  <FileText className="w-5 h-5 text-green-600" />
+                  <span className="text-sm font-semibold text-green-700">Documents for this load</span>
                 </div>
-                <p className="text-xs text-primary">Click to add more · or Ctrl+V to paste</p>
-              </>
+
+                {/* Primary file */}
+                <div className="flex items-center gap-2 bg-green-500/10 border border-green-200 rounded-md px-2.5 py-1.5 text-xs">
+                  <span className="text-[10px] font-semibold text-green-700 uppercase tracking-wide w-16 flex-shrink-0">Doc 1</span>
+                  <FileText className="w-3 h-3 text-green-600 flex-shrink-0" />
+                  <span className="truncate flex-1 font-medium">{primaryFile.name}</span>
+                  <button onClick={() => setPrimaryFile(null)} className="flex-shrink-0 text-muted-foreground hover:text-destructive"><X className="w-3 h-3" /></button>
+                </div>
+
+                {/* Extra document slots */}
+                {extraSlots.map((slot, i) => (
+                  <div key={i} className="border border-dashed rounded-md p-2.5 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Doc {i + 2}</span>
+                      <button onClick={() => setExtraSlots(prev => prev.filter((_, idx) => idx !== i))} className="text-muted-foreground hover:text-destructive"><X className="w-3 h-3" /></button>
+                    </div>
+                    {slot.file ? (
+                      <div className="flex items-center gap-1.5 text-xs bg-muted/50 rounded px-2 py-1">
+                        <FileText className="w-3 h-3 flex-shrink-0" />
+                        <span className="truncate flex-1">{slot.file.name}</span>
+                        <button onClick={() => document.getElementById(`extra-file-${i}`).click()} className="text-primary text-[10px] hover:underline flex-shrink-0">Change</button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => document.getElementById(`extra-file-${i}`).click()}
+                        className="w-full text-[11px] text-muted-foreground hover:text-foreground border border-dashed rounded px-2 py-1.5 text-center hover:border-primary transition-colors"
+                      >
+                        Click to select file
+                      </button>
+                    )}
+                    <input
+                      id={`extra-file-${i}`}
+                      type="file"
+                      className="hidden"
+                      accept=".pdf,.png,.jpg,.jpeg,.tiff,.doc,.docx"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) setExtraSlots(prev => prev.map((s, idx) => idx === i ? { ...s, file: f } : s));
+                        e.target.value = '';
+                      }}
+                    />
+                    <input
+                      value={slot.label}
+                      onChange={(e) => setExtraSlots(prev => prev.map((s, idx) => idx === i ? { ...s, label: e.target.value } : s))}
+                      placeholder="Label (optional, e.g. Payment Details)"
+                      className="w-full text-[11px] h-6 px-2 border rounded bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                    />
+                  </div>
+                ))}
+
+                {/* Add another slot (max 5 total) */}
+                {(1 + extraSlots.length) < 5 && (
+                  <button
+                    onClick={() => setExtraSlots(prev => [...prev, { file: null, label: '' }])}
+                    className="flex items-center gap-1.5 text-xs text-primary hover:underline py-0.5"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Attach another document to this upload
+                  </button>
+                )}
+              </div>
             ) : (
               <>
                 <Upload className="w-10 h-10 text-muted-foreground" />
-                <p className="text-sm font-medium">Drop files here or click to browse</p>
-                <p className="text-xs text-muted-foreground">PDF, image, or document formats supported · Multiple files OK · Ctrl+V to paste image</p>
+                <p className="text-sm font-medium">Drop the primary document here or click to browse</p>
+                <p className="text-xs text-muted-foreground">PDF, image, or document formats supported · Ctrl+V to paste image</p>
               </>
             )}
-            <input ref={fileInputRef} type="file" className="hidden" multiple accept=".pdf,.png,.jpg,.jpeg,.tiff,.doc,.docx" onChange={(e) => {
-              if (checkFeatureAccess(isInPreview)) handleFiles(Array.from(e.target.files));
+            <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.png,.jpg,.jpeg,.tiff,.doc,.docx" onChange={(e) => {
+              if (checkFeatureAccess(isInPreview)) {
+                const f = e.target.files?.[0];
+                if (f) setPrimaryFile(f);
+                e.target.value = '';
+              }
             }} />
           </CardContent>
         </Card>
 
-        {files.length > 0 && (
+        {primaryFile && (
           <Button onClick={handleProcess} className="gap-2">
             <Upload className="w-4 h-4" />
-            Queue {files.length} file{files.length !== 1 ? 's' : ''} for Processing
+            Analyze {totalDocCount} document{totalDocCount !== 1 ? 's' : ''} → Create Load
           </Button>
         )}
       </div>
@@ -254,7 +314,7 @@ export default function UploadDocument() {
                       ? <XCircle className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                       : <Loader2 className="w-3.5 h-3.5 animate-spin text-primary flex-shrink-0" />}
                     <span className="text-xs font-semibold truncate">
-                      {isDone ? `${job.results.length}/${job.total} created` : isCancelled ? `Cancelled (${job.results.length} done)` : `Processing ${job.current}/${job.total}`}
+                      {isDone ? 'Load created' : isCancelled ? 'Cancelled' : 'Analyzing…'}
                     </span>
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
@@ -282,7 +342,7 @@ export default function UploadDocument() {
                       <Tag className="w-2.5 h-2.5 flex-shrink-0" />
                       <span className="capitalize">{job.docType?.replace(/_/g, ' ')}</span>
                       <span className="mx-1">·</span>
-                      <span>{job.total} file{job.total !== 1 ? 's' : ''}</span>
+                      <span>{job.bundleSize ?? job.total} doc{(job.bundleSize ?? job.total) !== 1 ? 's' : ''}</span>
                     </div>
                     {driverLabel && (
                       <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
