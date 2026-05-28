@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import SearchInput from '../components/shared/SearchInput';
 import DataTable from '../components/shared/DataTable';
 import StatusBadge from '../components/shared/StatusBadge';
@@ -42,6 +43,7 @@ export default function Companies() {
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { session, login } = useSession();
@@ -85,6 +87,18 @@ export default function Companies() {
     }
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (company) => {
+      await base44.entities.Company.delete(company.id);
+      await logAudit({ action_type: 'delete', entity_type: 'Company', entity_id: company.id, entity_label: company.company_name });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      setDeleteTarget(null);
+      toast.success('Company deleted');
+    }
+  });
+
   useEntitySubscription('Company', ['companies', session?.tenant_id], !!session?.tenant_id);
 
   const { data: companies = [], isLoading } = useQuery({
@@ -111,6 +125,14 @@ export default function Companies() {
     { header: 'Email', accessor: 'email' },
     { header: 'City', render: (r) => r.city ? `${r.city}, ${r.state || ''}` : '—' },
     { header: 'Terms', render: (r) => r.payment_terms ? r.payment_terms.replace(/_/g, ' ') : '—' },
+    { header: '', render: (r) => (
+      <button
+        onClick={(e) => { e.stopPropagation(); setDeleteTarget(r); }}
+        className="p-1 text-muted-foreground hover:text-destructive transition-colors rounded"
+      >
+        <Trash2 className="w-3.5 h-3.5" />
+      </button>
+    ), width: '40px' },
   ];
 
   return (
@@ -137,6 +159,26 @@ export default function Companies() {
         onRowClick={(row) => { if (!checkFeatureAccess(isInPreview)) return; setEditing(row); setDialogOpen(true); }}
         emptyMessage="No companies found"
       />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Company</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{deleteTarget?.company_name}</strong>? This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90"
+              onClick={() => deleteMutation.mutate(deleteTarget)}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <EntityFormDialog
         open={dialogOpen}
