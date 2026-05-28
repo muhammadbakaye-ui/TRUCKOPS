@@ -45,11 +45,7 @@ const LineRow = React.memo(({ line, onChange, onRemove }) => (
   </div>
 ));
 
-const DEFAULT_DEDUCTIONS = [
-  { description: 'Insurance', amount: 425 },
-  { description: 'IFTA', amount: 50 },
-  { description: 'ELD', amount: 15 },
-];
+// Default deductions are now loaded from the database (configured in Statement Settings)
 
 export default function StatementBuilder() {
   const navigate = useNavigate();
@@ -111,6 +107,7 @@ export default function StatementBuilder() {
   const { data: drivers = [] } = useQuery({ queryKey: ['drivers', tenantId], queryFn: () => tenantId ? base44.entities.Driver.filter({ status: 'active', tenant_id: tenantId }, 'full_name', 200) : Promise.resolve([]), enabled: !!tenantId });
   const { data: trucks = [] } = useQuery({ queryKey: ['trucks', tenantId], queryFn: () => tenantId ? base44.entities.Truck.filter({ status: 'active', tenant_id: tenantId }, 'unit_number', 200) : Promise.resolve([]), enabled: !!tenantId });
   const { data: carrierCompany = [] } = useQuery({ queryKey: ['settings-company', tenantId], queryFn: () => tenantId ? base44.entities.Company.filter({ company_type: 'carrier', tenant_id: tenantId }, '-created_date', 1) : Promise.resolve([]), enabled: !!tenantId });
+  const { data: defaultDeductions = [] } = useQuery({ queryKey: ['default-deductions', tenantId], queryFn: () => tenantId ? base44.entities.DefaultDeduction.filter({ tenant_id: tenantId }, 'deduction_name', 200) : Promise.resolve([]), enabled: !!tenantId });
 
   const handleDateSelect = (date) => {
     if (!date) return;
@@ -369,7 +366,30 @@ export default function StatementBuilder() {
     }
   };
 
-  const addDefaultDeduction = (def) => setDeductionLines(prev => [...prev, { _key: `ded_${Date.now()}`, line_type: 'deduction', date: form.statement_date || new Date().toISOString().split('T')[0], description: def.description, amount: def.amount }]);
+  // Auto-add recurring deductions when driver changes (new statements only)
+  const prevDriverIdRef = useRef(null);
+  useEffect(() => {
+    if (!form.driver_id || form.driver_id === prevDriverIdRef.current) return;
+    prevDriverIdRef.current = form.driver_id;
+    if (statementId) return; // don't auto-add on existing statements
+    const recurring = defaultDeductions.filter(d =>
+      d.recurring && (d.applies_to === 'all' || d.applies_to_driver_id === form.driver_id)
+    );
+    if (recurring.length === 0) return;
+    setDeductionLines(prev => {
+      const existingDescs = new Set(prev.map(l => l.description));
+      const toAdd = recurring.filter(d => !existingDescs.has(d.deduction_name));
+      return [...prev, ...toAdd.map(d => ({
+        _key: `ded_${Date.now()}_${d.id}`,
+        line_type: 'deduction',
+        date: form.statement_date || new Date().toISOString().split('T')[0],
+        description: d.deduction_name,
+        amount: d.default_amount || 0,
+      }))];
+    });
+  }, [form.driver_id, defaultDeductions, statementId]);
+
+  const addDefaultDeduction = (def) => setDeductionLines(prev => [...prev, { _key: `ded_${Date.now()}`, line_type: 'deduction', date: form.statement_date || new Date().toISOString().split('T')[0], description: def.deduction_name, amount: def.default_amount || 0 }]);
   const addCustomDeduction = () => setDeductionLines(prev => [...prev, { _key: `ded_${Date.now()}`, line_type: 'deduction', date: new Date().toISOString().split('T')[0], description: '', amount: 0 }]);
   const addCustomFuel = () => setFuelLines(prev => [...prev, { _key: `fuel_${Date.now()}`, line_type: 'fuel', date: form.statement_date || new Date().toISOString().split('T')[0], description: '', card_number: '', location_name: '', city_state: '', amount: 0 }]);
 
@@ -533,11 +553,17 @@ export default function StatementBuilder() {
             <CardHeader className="py-3.5 px-5 flex flex-row items-center justify-between border-b">
               <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Deductions ({deductionLines.length})</CardTitle>
               <div className="flex gap-1.5 flex-wrap justify-end">
-                {DEFAULT_DEDUCTIONS.map(def => (
-                  <Button key={def.description} variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => addDefaultDeduction(def)}>
-                    <Plus className="w-3 h-3" /> {def.description} ${def.amount}
-                  </Button>
-                ))}
+                {defaultDeductions
+                  .filter(d => d.applies_to === 'all' || d.applies_to_driver_id === form.driver_id)
+                  .map(def => (
+                    <Button key={def.id} variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => addDefaultDeduction(def)}>
+                      <Plus className="w-3 h-3" /> {def.deduction_name}{def.default_amount ? ` $${Number(def.default_amount).toLocaleString()}` : ''}
+                    </Button>
+                  ))
+                }
+                {defaultDeductions.length === 0 && (
+                  <span className="text-[10px] text-muted-foreground self-center">No defaults configured — go to Statement Settings on the Statements page</span>
+                )}
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addCustomDeduction}><Plus className="w-3 h-3" /> Custom</Button>
               </div>
             </CardHeader>

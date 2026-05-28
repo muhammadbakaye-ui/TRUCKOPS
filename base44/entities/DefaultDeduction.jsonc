@@ -1,0 +1,43 @@
+{
+  "name": "DefaultDeduction",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "deduction_name": {
+      "type": "string",
+      "description": "e.g. Health Insurance, Truck Lease, Advance, Uniform"
+    },
+    "default_amount": {
+      "type": "number",
+      "description": "Amount that pre-fills when this deduction is added to a statement"
+    },
+    "applies_to": {
+      "type": "string",
+      "enum": [
+        "all",
+        "specific_driver"
+      ],
+      "default": "all",
+      "description": "Whether this applies to all drivers or a specific driver"
+    },
+    "applies_to_driver_id": {
+      "type": "string",
+      "description": "Driver ID if applies_to = specific_driver"
+    },
+    "applies_to_driver_name": {
+      "type": "string",
+      "description": "Driver name for display"
+    },
+    "recurring": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, auto-added to every new statement for the applicable driver(s)"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "deduction_name"
+  ]
+}

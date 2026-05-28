@@ -8,7 +8,8 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search, Trash2, X, ChevronDown, ChevronRight, Eye, EyeOff, Printer, Loader2, FileText } from 'lucide-react';
+import { Plus, Search, Trash2, X, ChevronDown, ChevronRight, Eye, EyeOff, Printer, Loader2, FileText, Settings } from 'lucide-react';
+import DefaultDeductionsSettings from '../components/statements/DefaultDeductionsSettings';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
@@ -33,6 +34,7 @@ export default function DriverStatements() {
   const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
   const [updatingId, setUpdatingId] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
+  const [showDeductionSettings, setShowDeductionSettings] = useState(false);
 
   const [search, setSearch] = useState(() => localStorage.getItem('statements_search') || '');
   const [statusFilter, setStatusFilter] = useState(() => localStorage.getItem('statements_status') || 'all');
@@ -168,13 +170,19 @@ export default function DriverStatements() {
   return (
     <div className="p-4 space-y-3">
       <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
+      <DefaultDeductionsSettings open={showDeductionSettings} onClose={() => setShowDeductionSettings(false)} tenantId={session?.tenant_id} />
       <PageHeader
         title="Driver Statements"
         description={`${statements.length} total statements`}
         actions={
-          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => navigate(createPageUrl('StatementBuilder'))}>
-            <Plus className="w-3.5 h-3.5" /> New Statement
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={() => setShowDeductionSettings(true)}>
+              <Settings className="w-3.5 h-3.5" /> Statement Settings
+            </Button>
+            <Button size="sm" className="h-8 text-xs gap-1" onClick={() => navigate(createPageUrl('StatementBuilder'))}>
+              <Plus className="w-3.5 h-3.5" /> New Statement
+            </Button>
+          </div>
         }
       />
 
