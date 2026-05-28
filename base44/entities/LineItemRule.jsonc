@@ -1,0 +1,30 @@
+{
+  "name": "LineItemRule",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "line_item_name": {
+      "type": "string",
+      "description": "Exact text as it appears in uploaded documents, e.g. Drop Trailer, Fuel, Line Haul"
+    },
+    "apply_to_invoice": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this line item appears on the broker invoice"
+    },
+    "subtract_from_driver_pay": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this line item amount is subtracted from driver pay"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "tenant_id",
+    "line_item_name"
+  ]
+}

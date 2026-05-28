@@ -10,7 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { Upload, Loader2, FileText, CheckCircle, X, XCircle, Truck, User, Hash, DollarSign, Tag, SlidersHorizontal, ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { Upload, Loader2, FileText, CheckCircle, X, XCircle, Truck, User, Hash, DollarSign, Tag, SlidersHorizontal, ChevronDown, ChevronUp, Plus, Settings } from 'lucide-react';
+import LineItemRulesSettings from '../components/upload/LineItemRulesSettings';
 import PageHeader from '../components/shared/PageHeader';
 import { useUploadContext } from '../context/UploadContext';
 
@@ -39,6 +40,7 @@ export default function UploadDocument() {
   const [manualAmount, setManualAmount] = useState('');
   const [driverAmount, setDriverAmount] = useState('');
   const [showOverrides, setShowOverrides] = useState(false);
+  const [showRulesSettings, setShowRulesSettings] = useState(false);
 
   useEffect(() => {
     base44.entities.Driver.filter({ status: 'active' }).then(setDrivers);
@@ -112,7 +114,16 @@ export default function UploadDocument() {
       <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
       {/* LEFT: Upload form */}
       <div className="flex-1 min-w-0 space-y-5 max-w-2xl">
-        <PageHeader title="Upload Document" description="Upload a rate confirmation or BOL to auto-create a load" />
+        <PageHeader
+          title="Upload Document"
+          description="Upload a rate confirmation or BOL to auto-create a load"
+          actions={
+            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowRulesSettings(true)}>
+              <Settings className="w-3.5 h-3.5" /> Line Item Rules
+            </Button>
+          }
+        />
+        <LineItemRulesSettings open={showRulesSettings} onClose={() => setShowRulesSettings(false)} tenantId={session?.tenant_id} />
 
         {/* Primary options */}
         <div className="flex flex-wrap gap-4 items-end">
