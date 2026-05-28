@@ -208,24 +208,39 @@ export default function Loads() {
   const [copiedId, setCopiedId] = useState(null);
   const [undoToast, setUndoToast] = useState(null); // { message, onUndo }
   const [qaEnabled, setQaEnabled] = useState(() => localStorage.getItem('loads_qa_enabled') === 'true');
-  const [qaAction, setQaAction] = useState(() => localStorage.getItem('loads_qa_action') || 'completed');
+  const [qaAction, setQaAction] = useState(() => localStorage.getItem('loads_qa_action') || 'paid');
 
   const handleQaToggle = (v) => { setQaEnabled(v); localStorage.setItem('loads_qa_enabled', v); };
   const handleQaAction = (v) => { setQaAction(v); localStorage.setItem('loads_qa_action', v); };
 
   const loadsQaOptions = [
-    { value: 'draft', label: 'Draft' },
-    { value: 'saved', label: 'Saved' },
-    { value: 'completed', label: 'Completed' },
+    { value: 'not_invoiced', label: 'Not Invoiced' },
+    { value: 'invoiced', label: 'Invoiced' },
+    { value: 'priority', label: 'Priority' },
+    { value: 'sent', label: 'Sent' },
+    { value: 'partial', label: 'Partial' },
+    { value: 'paid', label: 'Paid' },
+    { value: 'overdue', label: 'Overdue' },
     { value: 'canceled', label: 'Canceled' },
   ];
 
   const handleQuickAction = async (load) => {
     try {
-      await base44.entities.Load.update(load.id, { status: qaAction });
+      await base44.entities.Load.update(load.id, { invoice_status: qaAction });
+      if (qaAction === 'not_invoiced') {
+        const existing = await base44.entities.Invoice.filter({ load_id: load.id }, '-created_date', 5);
+        for (const inv of existing) await base44.entities.Invoice.delete(inv.id);
+      } else {
+        const existing = await base44.entities.Invoice.filter({ load_id: load.id }, '-created_date', 1);
+        if (existing.length > 0) {
+          const invStatus = qaAction === 'paid' ? 'paid' : qaAction === 'sent' ? 'sent' : qaAction === 'priority' ? 'priority' : qaAction === 'partial' ? 'partial' : qaAction === 'overdue' ? 'overdue' : qaAction === 'canceled' ? 'canceled' : 'draft';
+          await base44.entities.Invoice.update(existing[0].id, { status: invStatus });
+        }
+      }
       queryClient.invalidateQueries({ queryKey: ['loads'] });
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
       const label = loadsQaOptions.find(o => o.value === qaAction)?.label || qaAction;
-      toast.success(`Load marked as ${label}`);
+      toast.success(`Invoice status set to ${label}`);
     } catch (err) {
       toast.error('Failed: ' + err.message);
     }
