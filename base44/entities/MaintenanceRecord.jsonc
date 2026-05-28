@@ -33,17 +33,39 @@
         "tire_rotation",
         "brake_service",
         "dot_inspection",
+        "transmission_service",
+        "engine_repair",
+        "electrical",
+        "hvac",
+        "body_work",
         "other"
       ]
     },
     "description": {
       "type": "string"
     },
-    "cost": {
-      "type": "number"
+    "parts_replaced": {
+      "type": "string"
     },
     "vendor": {
       "type": "string"
+    },
+    "technician": {
+      "type": "string"
+    },
+    "cost": {
+      "type": "number"
+    },
+    "next_service_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "next_service_mileage": {
+      "type": "number"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "Invoice, receipt, or inspection report"
     },
     "notes": {
       "type": "string"

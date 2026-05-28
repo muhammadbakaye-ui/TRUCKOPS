@@ -21,14 +21,25 @@
       "type": "string",
       "format": "date"
     },
+    "inspection_time": {
+      "type": "string",
+      "description": "Time HH:MM"
+    },
     "inspection_type": {
       "type": "string",
       "enum": [
         "pre_trip",
         "post_trip",
         "dot_roadside",
-        "annual"
+        "annual",
+        "random"
       ]
+    },
+    "inspector_name": {
+      "type": "string"
+    },
+    "inspection_location": {
+      "type": "string"
     },
     "result": {
       "type": "string",
@@ -39,7 +50,7 @@
     },
     "checklist": {
       "type": "object",
-      "description": "Key-value of checklist item to pass/fail boolean",
+      "description": "Key = checklist item, Value = pass | fail | na",
       "additionalProperties": true
     },
     "defects_noted": {
@@ -49,12 +60,16 @@
       "type": "boolean",
       "default": false
     },
-    "notes": {
-      "type": "string"
+    "out_of_service": {
+      "type": "boolean",
+      "default": false
     },
     "file_url": {
       "type": "string",
-      "description": "Inspection report document"
+      "description": "Inspection report or DOT form"
+    },
+    "notes": {
+      "type": "string"
     },
     "submitted_by_driver": {
       "type": "boolean",
