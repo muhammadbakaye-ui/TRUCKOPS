@@ -142,8 +142,7 @@ Return a structured JSON with the following fields (use null if not found):
 - customer_po (string) - IMPORTANT: the Customer PO number explicitly labeled as "Customer PO", "Customer PO #", "PO Number", or "PO #" — this is separate from the load number. On rate confirmations this often appears near the top next to or below the Load #. Extract it even if it looks like a number. Return null only if this label is truly absent from the document.
 - customer_name (string) - broker or shipper company name  
 - contact_name (string) - contact person
-- freight_rate (number) - total freight rate in dollars
-- fuel_surcharge (number) - fuel surcharge amount if listed separately
+- charge_line_items (array) - CRITICAL: Extract EVERY individual charge line item from the document's freight terms, charge details, or rate breakdown section. Each item must have a "description" (string) and "amount" (number). For example: [{"description": "Line Haul", "amount": 409.25}, {"description": "Fuel Surcharge", "amount": 80.21}, {"description": "Drop Trailer", "amount": 26.92}]. Do NOT just return the total — return each line separately. If the document only shows a single total with no breakdown, return a single item like [{"description": "Freight Income", "amount": 516.38}].
 - commodity (string) - type of freight
 - weight (number) - weight in lbs
 - equipment_type (string: dry_van, reefer, flatbed, step_deck, lowboy, tanker, other)
@@ -158,8 +157,16 @@ Return a structured JSON with the following fields (use null if not found):
           customer_po: { type: 'string' },
           customer_name: { type: 'string' },
           contact_name: { type: 'string' },
-          freight_rate: { type: 'number' },
-          fuel_surcharge: { type: 'number' },
+          charge_line_items: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                description: { type: 'string' },
+                amount: { type: 'number' },
+              }
+            }
+          },
           commodity: { type: 'string' },
           weight: { type: 'number' },
           equipment_type: { type: 'string' },
@@ -254,6 +261,15 @@ Return a structured JSON with the following fields (use null if not found):
           const firstStop = extracted.stops?.find(s => s.stop_type === 'pickup');
           const lastStop = [...(extracted.stops || [])].reverse().find(s => s.stop_type === 'delivery');
 
+          // Build charge_line_items: use override if provided, else use AI-extracted items
+          let chargeLineItems = [];
+          if (manualAmount) {
+            chargeLineItems = [{ description: 'Freight Income', amount: parseFloat(manualAmount) }];
+          } else if (extracted.charge_line_items?.length) {
+            chargeLineItems = extracted.charge_line_items;
+          }
+          const lineItemsTotal = chargeLineItems.reduce((sum, li) => sum + (Number(li.amount) || 0), 0);
+
           // Create load, stops, and update doc — stops and doc update can be parallelized after load creation
           const load = await base44.entities.Load.create({
             tenant_id: tenantId,
@@ -263,9 +279,9 @@ Return a structured JSON with the following fields (use null if not found):
             customer_name: extracted.customer_name,
             customer_id: customerId,
             contact_name: extracted.contact_name,
-            freight_rate: manualAmount ? parseFloat(manualAmount) : extracted.freight_rate,
-            fuel_surcharge: manualAmount ? 0 : extracted.fuel_surcharge,
-            invoice_amount: manualAmount ? parseFloat(manualAmount) : (extracted.freight_rate || 0) + (extracted.fuel_surcharge || 0),
+            charge_line_items: chargeLineItems,
+            freight_rate: lineItemsTotal, // kept for driver pay compatibility
+            invoice_amount: lineItemsTotal,
             ...(driverAmount ? { driver_rate: parseFloat(driverAmount) } : {}),
             commodity: extracted.commodity,
             weight: extracted.weight,
