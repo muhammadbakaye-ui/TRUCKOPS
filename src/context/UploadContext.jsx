@@ -326,7 +326,13 @@ Return a structured JSON with the following fields (use null if not found):
     }; // end processJob
 
     // Chain onto the global queue — guarantees serial FIFO execution
-    processingQueue.current = processingQueue.current.then(() => processJob());
+    // .catch() resets the queue so a failed job doesn't permanently deadlock future ones
+    processingQueue.current = processingQueue.current
+      .catch(() => {})
+      .then(() => processJob().catch(err => {
+        console.error('processJob uncaught error:', err);
+        setJobs(prev => prev.map(j => j.id === id ? { ...j, status: 'done', errors: [{ name: 'Unknown', error: err.message }] } : j));
+      }));
   }, []);
 
   return (

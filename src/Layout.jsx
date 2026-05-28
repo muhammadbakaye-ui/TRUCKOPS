@@ -145,12 +145,16 @@ function AppShell({ children, currentPageName }) {
     if (!session || session.role === 'driver') { setOnboardingChecked(true); return; }
     if (session.onboarding_completed) { setOnboardingChecked(true); return; }
     setOnboardingChecked(false);
-    // Check DB via authAdmin (Admin entity requires service-role)
-    base44.functions.invoke('authAdmin', {
-      action: 'get_settings',
-      email: session.admin_email,
-      session_token: session.session_token,
-    })
+    // Check DB via authAdmin — enforce 6s timeout so the overlay never hangs forever
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000));
+    Promise.race([
+      base44.functions.invoke('authAdmin', {
+        action: 'get_settings',
+        email: session.admin_email,
+        session_token: session.session_token,
+      }),
+      timeoutPromise,
+    ])
       .then(res => {
         if (res.data?.onboarding_completed) {
           login({ ...session, onboarding_completed: true });
@@ -158,7 +162,7 @@ function AppShell({ children, currentPageName }) {
           setShowOnboarding(true);
         }
       })
-      .catch(() => { /* keep onboarding hidden on error */ })
+      .catch(() => { /* keep onboarding hidden on error / timeout */ })
       .finally(() => setOnboardingChecked(true));
   }, [session?.admin_email, validating]);
 
