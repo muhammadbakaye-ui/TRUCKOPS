@@ -13,6 +13,7 @@ import PageHeader from '../components/shared/PageHeader';
 import AccountCustomization from '../components/settings/AccountCustomization';
 import GeneralSettings from '../components/settings/GeneralSettings';
 import { toast } from 'sonner';
+import { formatPhone } from '../utils/phoneFormatter';
 
 export default function SettingsPage() {
   const { logout, session, login } = useSession();
@@ -96,7 +97,10 @@ export default function SettingsPage() {
     },
   });
 
-  const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
+  const set = (key, val) => {
+    const finalVal = key === 'phone' ? formatPhone(val) : val;
+    setForm(prev => ({ ...prev, [key]: finalVal }));
+  };
 
   return (
     <div className="p-4 max-w-2xl">
@@ -171,7 +175,7 @@ export default function SettingsPage() {
               </div>
               <div>
                 <Label className="text-xs">Phone</Label>
-                <Input value={form.phone} onChange={(e) => set('phone', e.target.value)} className="h-8 text-xs mt-1" />
+                <Input value={form.phone} onChange={(e) => set('phone', e.target.value)} className="h-8 text-xs mt-1" placeholder="(123)-456-7890" />
               </div>
               <div>
                 <Label className="text-xs">Email</Label>

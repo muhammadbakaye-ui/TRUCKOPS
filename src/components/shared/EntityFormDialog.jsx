@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { formatPhone } from '@/utils/phoneFormatter';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
 } from '@/components/ui/dialog';
@@ -21,13 +22,6 @@ export default function EntityFormDialog({ open, onClose, title, fields, initial
       setFormData(defaults);
     }
   }, [open, initialData, fields]);
-
-  const formatPhone = (value) => {
-    const digits = value.replace(/\D/g, '').slice(0, 10);
-    if (digits.length <= 3) return digits.length ? `(${digits}` : '';
-    if (digits.length <= 6) return `(${digits.slice(0, 3)})-${digits.slice(3)}`;
-    return `(${digits.slice(0, 3)})-${digits.slice(3, 6)}-${digits.slice(6)}`;
-  };
 
   const handleChange = (name, value, field) => {
     const finalValue = field?.type === 'phone' || field?.name === 'phone'
