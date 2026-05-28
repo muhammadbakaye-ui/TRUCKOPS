@@ -1,0 +1,41 @@
+{
+  "name": "FuelImportSetting",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string"
+    },
+    "fuel_amount_column": {
+      "type": "string",
+      "description": "Column name in documents to prefer for fuel_amount, e.g. GROSS AMT, NET AMT, FUEL CHRGS"
+    },
+    "name_prefix_strip": {
+      "type": "string",
+      "description": "Prefix to strip from driver names, e.g. N- (leave blank to disable)"
+    },
+    "column_mappings": {
+      "type": "array",
+      "description": "Custom column name \u2192 system field mappings",
+      "items": {
+        "type": "object",
+        "properties": {
+          "document_column": {
+            "type": "string",
+            "description": "Column header as it appears in the document"
+          },
+          "system_field": {
+            "type": "string",
+            "description": "System field to map to"
+          }
+        }
+      }
+    },
+    "extra_notes": {
+      "type": "string",
+      "description": "Additional extraction instructions for the AI, e.g. ignore rows with ADVANCE in description"
+    }
+  },
+  "required": [
+    "tenant_id"
+  ]
+}

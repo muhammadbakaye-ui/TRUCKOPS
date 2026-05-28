@@ -3,7 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Upload, Loader2, Trash2, RefreshCw } from 'lucide-react';
+import { Upload, Loader2, Trash2, RefreshCw, Settings } from 'lucide-react';
+import FuelImportSettings from '../components/fuel/FuelImportSettings';
 import { usePreviewGate, PreviewFeatureDialog } from '../components/shared/PreviewFeatureGate';
 import { useSession } from '../components/shared/AppSession';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -21,6 +22,7 @@ export default function FuelImport() {
   const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
   
   const [dragging, setDragging] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState(() => localStorage.getItem('fuel_selected_batch') || null);
   const [selectedTx, setSelectedTx] = useState(new Set());
@@ -46,6 +48,13 @@ export default function FuelImport() {
     }
   }, [selectedBatch]);
 
+  const { data: fuelSettingsList = [] } = useQuery({
+    queryKey: ['fuel-import-settings', session?.tenant_id],
+    queryFn: () => session?.tenant_id ? base44.entities.FuelImportSetting.filter({ tenant_id: session.tenant_id }, '-created_date', 1) : Promise.resolve([]),
+    enabled: !!session?.tenant_id,
+  });
+  const fuelSettings = fuelSettingsList[0] || null;
+
   const { data: batches = [], isLoading: batchesLoading } = useQuery({
     queryKey: ['fuel-batches', session?.tenant_id],
     queryFn: () => session?.tenant_id ? base44.entities.FuelBatch.filter({ tenant_id: session.tenant_id }, '-created_date', 50) : Promise.resolve([]),
@@ -68,7 +77,7 @@ export default function FuelImport() {
 
     try {
       for (const file of fileArray) {
-        await processFile(file);
+        await processFile(file, fuelSettings);
       }
       queryClient.invalidateQueries({ queryKey: ['fuel-batches'] });
       toast.success(`Imported ${fileArray.length} file${fileArray.length > 1 ? 's' : ''}`);
@@ -79,7 +88,7 @@ export default function FuelImport() {
     }
   };
 
-  const processFile = async (file) => {
+  const processFile = async (file, settings) => {
     let batch = null;
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
@@ -91,27 +100,32 @@ export default function FuelImport() {
         tenant_id: session?.tenant_id,
       });
       // Use LLM to extract fuel transaction data
+      const prefixToStrip = settings?.name_prefix_strip ?? 'N-';
+      const fuelCol = settings?.fuel_amount_column || 'GROSS AMT';
+      const mappingLines = (settings?.column_mappings || [])
+        .filter(m => m.document_column && m.system_field)
+        .map(m => `- In this document, the column "${m.document_column}" maps to ${m.system_field}`)
+        .join('\n');
+      const extraNotes = settings?.extra_notes || '';
+
       const extracted = await base44.integrations.Core.InvokeLLM({
         prompt: `Extract all fuel transaction records from this fuel card report.
 
 CRITICAL INSTRUCTIONS FOR DRIVER NAMES:
-- Driver names are often split across lines or have weird spacing (e.g., "N-ABDIWE  LI HASSAN" should be "ABDIWELI HASSAN")
-- Remove any "N-" prefix before names
-- If you see a name split like "ABDIWE" on one line and "LI HASSAN" below it, or "ABDIWE  LI HASSAN" with extra spaces, combine them into the full name removing extra spaces
-- Common patterns: "N-ABDIWELI", "ABDIWE LI HASSAN", "N-ISMA EL", "ISMA EL ABDIAZIZ"
-- Join split parts and normalize to proper format: "ABDIWELI HASSAN", "ISMAEL ABDIAZIZ", etc.
-- Return the full clean name in driver_name_raw
+- Driver names are often split across lines or have weird spacing — clean and join them into a single full name
+- Remove any "${prefixToStrip}" prefix before names if present
+- Normalize spacing and return the full clean name in driver_name_raw
 
-Extract these fields for each transaction:
+${mappingLines ? `COLUMN NAME MAPPINGS:\n${mappingLines}\n` : ''}Extract these fields for each transaction:
 - card_number: fuel card number
-- driver_name_raw: FULL driver name (cleaned and joined if split, no "N-" prefix)
+- driver_name_raw: FULL driver name (cleaned, no prefix)
 - truck_number_raw: truck/unit number
 - location_name: full location name like "LOVES #481 TRAVEL STOP"
 - city: city name
 - state: state abbreviation
 - transaction_date: date in YYYY-MM-DD format
 - gallons: number of gallons (from QTY column)
-- fuel_amount: use GROSS AMT column if available, otherwise use fuel purchase amount
+- fuel_amount: use ${fuelCol} column if available, otherwise use fuel purchase amount
 - transaction_fee: transaction fees if any
 - advance_amount: cash advance amount
 - advance_fee: advance fees
@@ -119,6 +133,7 @@ Extract these fields for each transaction:
 - invoice_amount: invoice amount
 - total_amount: total dollar amount for the transaction
 - gross_amount: gross amount if available
+${extraNotes ? `\nADDITIONAL INSTRUCTIONS:\n${extraNotes}` : ''}
 
 Return only the JSON with the transactions array.`,
         file_urls: [file_url],
@@ -167,7 +182,9 @@ Return only the JSON with the transactions array.`,
        const normalizeUnit = (s) => s ? s.toLowerCase().trim().replace(/^0+/, '') : '';
 
        // Normalize a driver name: remove N- prefix, collapse spaces, lowercase
-       const normalizeName = (s) => s ? s.toLowerCase().trim().replace(/^n-/, '').replace(/\s+/g, ' ').trim() : '';
+       const prefixStrip = settings?.name_prefix_strip ?? 'N-';
+       const prefixRegex = prefixStrip ? new RegExp('^' + prefixStrip.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'), 'i') : null;
+       const normalizeName = (s) => { let n = s ? s.toLowerCase().trim() : ''; if (prefixRegex) n = n.replace(prefixRegex, ''); return n.replace(/\s+/g, ' ').trim(); };
 
        // Match a driver by name with fuzzy logic
        const matchDriverByName = (rawName) => {
@@ -574,7 +591,16 @@ Return only the JSON with the transactions array.`,
   return (
     <div className="p-4 space-y-4">
       <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
-      <PageHeader title="Fuel Import" description="Import fuel card transaction files" />
+      <PageHeader
+        title="Fuel Import"
+        description="Import fuel card transaction files"
+        actions={
+          <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowSettings(true)}>
+            <Settings className="w-3.5 h-3.5" /> Import Settings
+          </Button>
+        }
+      />
+      <FuelImportSettings open={showSettings} onClose={() => setShowSettings(false)} tenantId={session?.tenant_id} />
 
       {/* Upload zone */}
       <Card
