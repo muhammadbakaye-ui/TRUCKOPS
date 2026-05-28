@@ -17,6 +17,7 @@ import StatusBadge from '../components/shared/StatusBadge';
 import PageHeader from '../components/shared/PageHeader';
 import { format } from 'date-fns';
 import { useEntitySubscription } from '../hooks/useEntitySubscription';
+import QuickActionSettings from '../components/shared/QuickActionSettings';
 
 const INV_STATUS_STYLES = {
   draft: 'bg-gray-100 text-gray-600 border-gray-200',
@@ -78,6 +79,37 @@ export default function Invoices() {
   const [bulkSaving, setBulkSaving] = useState(false);
 
   const [copiedId, setCopiedId] = useState(null);
+  const [qaEnabled, setQaEnabled] = useState(() => localStorage.getItem('inv_qa_enabled') === 'true');
+  const [qaAction, setQaAction] = useState(() => localStorage.getItem('inv_qa_action') || 'paid');
+
+  const handleQaToggle = (v) => { setQaEnabled(v); localStorage.setItem('inv_qa_enabled', v); };
+  const handleQaAction = (v) => { setQaAction(v); localStorage.setItem('inv_qa_action', v); };
+
+  const qaOptions = [
+    { value: 'draft', label: 'Draft' },
+    { value: 'priority', label: 'Priority' },
+    { value: 'sent', label: 'Sent' },
+    { value: 'partial', label: 'Partial' },
+    { value: 'paid', label: 'Paid' },
+    { value: 'overdue', label: 'Overdue' },
+    { value: 'canceled', label: 'Canceled' },
+  ];
+
+  const handleQuickAction = async (inv) => {
+    try {
+      await base44.entities.Invoice.update(inv.id, { status: qaAction });
+      if (inv.load_id) {
+        const statusMap = { draft: 'invoiced', priority: 'priority', sent: 'sent', partial: 'partial', paid: 'paid', overdue: 'overdue', canceled: 'canceled' };
+        await base44.entities.Load.update(inv.load_id, { invoice_status: statusMap[qaAction] || 'invoiced' });
+        queryClient.invalidateQueries({ queryKey: ['loads'] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      const label = qaOptions.find(o => o.value === qaAction)?.label || qaAction;
+      toast.success(`Invoice marked as ${label}`);
+    } catch (err) {
+      toast.error('Failed: ' + err.message);
+    }
+  };
 
   useEntitySubscription('Invoice', ['invoices', session?.tenant_id], !!session?.tenant_id);
 
@@ -237,23 +269,33 @@ export default function Invoices() {
     { header: 'Status', width: '110px', render: (r) => <div onClick={e => e.stopPropagation()}><InvoiceStatusSelect invoice={r} queryClient={queryClient} /></div> },
     {
       header: '', render: (r) => (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={e => e.stopPropagation()}>
-              <Trash2 className="w-3.5 h-3.5" />
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Invoice?</AlertDialogTitle>
-              <AlertDialogDescription>Invoice #{r.invoice_number} will be moved to Deleted Items and kept for 30 days.</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteMutation.mutate(r)}>Delete</AlertDialogAction>
+        <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+          {qaEnabled && (
+            <button
+              onClick={() => handleQuickAction(r)}
+              className="px-2 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors whitespace-nowrap"
+            >
+              {qaOptions.find(o => o.value === qaAction)?.label || qaAction}
+            </button>
+          )}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={e => e.stopPropagation()}>
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Invoice?</AlertDialogTitle>
+                <AlertDialogDescription>Invoice #{r.invoice_number} will be moved to Deleted Items and kept for 30 days.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteMutation.mutate(r)}>Delete</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        </div>
       )
     },
   ];
@@ -285,6 +327,13 @@ export default function Invoices() {
              <SelectItem value="canceled">Canceled</SelectItem>
            </SelectContent>
          </Select>
+         <QuickActionSettings
+           enabled={qaEnabled}
+           onToggle={handleQaToggle}
+           action={qaAction}
+           onActionChange={handleQaAction}
+           options={qaOptions}
+         />
        </div>
 
        {selected.size > 0 && (

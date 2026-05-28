@@ -23,6 +23,7 @@ import BulkDeleteBar from '../components/shared/BulkDeleteBar';
 import MultiSelectFilter from '../components/shared/MultiSelectFilter';
 import { format, parseISO } from 'date-fns';
 import { useEntitySubscription } from '../hooks/useEntitySubscription';
+import QuickActionSettings from '../components/shared/QuickActionSettings';
 import { chunkAsync } from '../utils/chunkAsync';
 
 const INVOICE_STATUS_STYLES = {
@@ -206,6 +207,29 @@ export default function Loads() {
   const [savingAllDrafts, setSavingAllDrafts] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
   const [undoToast, setUndoToast] = useState(null); // { message, onUndo }
+  const [qaEnabled, setQaEnabled] = useState(() => localStorage.getItem('loads_qa_enabled') === 'true');
+  const [qaAction, setQaAction] = useState(() => localStorage.getItem('loads_qa_action') || 'completed');
+
+  const handleQaToggle = (v) => { setQaEnabled(v); localStorage.setItem('loads_qa_enabled', v); };
+  const handleQaAction = (v) => { setQaAction(v); localStorage.setItem('loads_qa_action', v); };
+
+  const loadsQaOptions = [
+    { value: 'draft', label: 'Draft' },
+    { value: 'saved', label: 'Saved' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'canceled', label: 'Canceled' },
+  ];
+
+  const handleQuickAction = async (load) => {
+    try {
+      await base44.entities.Load.update(load.id, { status: qaAction });
+      queryClient.invalidateQueries({ queryKey: ['loads'] });
+      const label = loadsQaOptions.find(o => o.value === qaAction)?.label || qaAction;
+      toast.success(`Load marked as ${label}`);
+    } catch (err) {
+      toast.error('Failed: ' + err.message);
+    }
+  };
 
   const showUndoToast = (message, onUndo) => {
     setUndoToast({ message, onUndo });
@@ -503,11 +527,18 @@ export default function Loads() {
             <X className="w-3.5 h-3.5" /> Clear Filters
           </Button>
         )}
+        <QuickActionSettings
+          enabled={qaEnabled}
+          onToggle={handleQaToggle}
+          action={qaAction}
+          onActionChange={handleQaAction}
+          options={loadsQaOptions}
+        />
         {loads.some(l => l.status === 'draft') && (
-          <Button 
-            size="sm" 
-            className="h-8 text-xs gap-1" 
-            onClick={handleSaveAllDrafts} 
+          <Button
+            size="sm"
+            className="h-8 text-xs gap-1"
+            onClick={handleSaveAllDrafts}
             disabled={savingAllDrafts}
           >
             {savingAllDrafts ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
@@ -709,6 +740,14 @@ export default function Loads() {
                              </td>
                             <td className="p-2" onClick={e => e.stopPropagation()}>
                               <div className="flex items-center gap-0.5">
+                              {qaEnabled && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleQuickAction(l); }}
+                                  className="px-2 py-0.5 rounded text-[10px] font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors whitespace-nowrap mr-0.5"
+                                >
+                                  {loadsQaOptions.find(o => o.value === qaAction)?.label || qaAction}
+                                </button>
+                              )}
                               <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={(e) => handlePrintLoad(e, l)} title="Download PDF">
                                 <Download className="w-3.5 h-3.5" />
                               </Button>
