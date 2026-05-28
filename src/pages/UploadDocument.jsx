@@ -22,7 +22,8 @@ export default function UploadDocument() {
   const { jobs, submitUpload, cancelJob, dismissJob } = useUploadContext();
   const [dragging, setDragging] = useState(false);
   const [primaryFile, setPrimaryFile] = useState(null);
-  const [extraSlots, setExtraSlots] = useState([]); // [{file: null, label: ''}]
+  const [extraSlots, setExtraSlots] = useState([]); // [{file: null, label: ''}] — bundle mode
+  const [separateFiles, setSeparateFiles] = useState([]); // Mode 2: multiple separate loads
   const [docType, setDocType] = useState('rate_confirmation');
   const fileInputRef = useRef(null);
 
@@ -67,21 +68,39 @@ export default function UploadDocument() {
   }, [primaryFile]);
 
   const handleProcess = () => {
-    if (!primaryFile) return;
-    const bundle = [
-      { file: primaryFile, label: '' },
-      ...extraSlots.filter(s => s.file).map(s => ({ file: s.file, label: s.label })),
-    ];
-    submitUpload({ bundle, docType, selectedDriverId, selectedTruckId, tripNumber, manualAmount, driverAmount, drivers, trucks, tenantId: session?.tenant_id });
-    setPrimaryFile(null);
-    setExtraSlots([]);
+    if (separateFiles.length > 0) {
+      // Mode 2: each file → its own load
+      separateFiles.forEach(file => {
+        submitUpload({ bundle: [{ file, label: '' }], docType, selectedDriverId, selectedTruckId, tripNumber, manualAmount, driverAmount, drivers, trucks, tenantId: session?.tenant_id });
+      });
+      setSeparateFiles([]);
+    } else if (primaryFile) {
+      // Mode 1: all docs → one combined load
+      const bundle = [
+        { file: primaryFile, label: '' },
+        ...extraSlots.filter(s => s.file).map(s => ({ file: s.file, label: s.label })),
+      ];
+      submitUpload({ bundle, docType, selectedDriverId, selectedTruckId, tripNumber, manualAmount, driverAmount, drivers, trucks, tenantId: session?.tenant_id });
+      setPrimaryFile(null);
+      setExtraSlots([]);
+    }
   };
 
   const onDrop = (e) => {
     e.preventDefault();
     setDragging(false);
-    const f = Array.from(e.dataTransfer.files)[0];
-    if (f) setPrimaryFile(f);
+    const dropped = Array.from(e.dataTransfer.files);
+    if (dropped.length === 0) return;
+    if (dropped.length > 1) {
+      // Mode 2: multiple files → separate loads
+      setSeparateFiles(dropped);
+      setPrimaryFile(null);
+      setExtraSlots([]);
+    } else {
+      // Mode 1: single file → bundle mode
+      setPrimaryFile(dropped[0]);
+      setSeparateFiles([]);
+    }
   };
 
   const hasOverrides = manualAmount || driverAmount || tripNumber;
@@ -189,7 +208,7 @@ export default function UploadDocument() {
         {/* Drop zone */}
         <Card
           data-tour="upload-dropzone"
-          className={`border-2 border-dashed transition-colors cursor-pointer ${dragging ? 'border-primary bg-primary/5' : 'border-border'} ${primaryFile ? 'border-green-500 bg-green-500/5' : ''}`}
+          className={`border-2 border-dashed transition-colors cursor-pointer ${dragging ? 'border-primary bg-primary/5' : 'border-border'} ${(primaryFile || separateFiles.length > 0) ? 'border-green-500 bg-green-500/5' : ''}`}
           onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
           onDragLeave={() => setDragging(false)}
           onDrop={(e) => {
@@ -199,14 +218,37 @@ export default function UploadDocument() {
             }
             onDrop(e);
           }}
-          onClick={() => !primaryFile && handleDropZoneClick()}
+          onClick={() => !primaryFile && separateFiles.length === 0 && handleDropZoneClick()}
         >
           <CardContent className="flex flex-col items-center justify-center py-8 gap-3">
-            {primaryFile ? (
+            {separateFiles.length > 0 ? (
+              // Mode 2: separate loads
+              <div className="w-full space-y-2" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-green-600" />
+                    <span className="text-sm font-semibold text-green-700">Analyzing as {separateFiles.length} separate loads</span>
+                  </div>
+                  <button onClick={() => setSeparateFiles([])} className="text-xs text-muted-foreground hover:text-destructive flex items-center gap-1"><X className="w-3 h-3" /> Clear all</button>
+                </div>
+                <div className="space-y-1 max-h-48 overflow-y-auto">
+                  {separateFiles.map((f, i) => (
+                    <div key={i} className="flex items-center gap-2 bg-green-500/10 border border-green-200 rounded-md px-2.5 py-1.5 text-xs">
+                      <span className="text-[10px] font-semibold text-green-700 uppercase tracking-wide w-10 flex-shrink-0">#{i + 1}</span>
+                      <FileText className="w-3 h-3 text-green-600 flex-shrink-0" />
+                      <span className="truncate flex-1 font-medium">{f.name}</span>
+                      <button onClick={() => setSeparateFiles(prev => prev.filter((_, idx) => idx !== i))} className="flex-shrink-0 text-muted-foreground hover:text-destructive"><X className="w-3 h-3" /></button>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground pt-1">Each file will be analyzed independently and create its own load.</p>
+              </div>
+            ) : primaryFile ? (
+              // Mode 1: bundle mode
               <div className="w-full space-y-2" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center gap-2 mb-1">
                   <FileText className="w-5 h-5 text-green-600" />
-                  <span className="text-sm font-semibold text-green-700">Documents for this load</span>
+                  <span className="text-sm font-semibold text-green-700">Analyzing as 1 combined load</span>
                 </div>
 
                 {/* Primary file */}
@@ -267,28 +309,39 @@ export default function UploadDocument() {
                     <Plus className="w-3.5 h-3.5" /> Attach another document to this upload
                   </button>
                 )}
+                <p className="text-[10px] text-muted-foreground pt-1">All attached documents will be analyzed together as one load.</p>
               </div>
             ) : (
               <>
                 <Upload className="w-10 h-10 text-muted-foreground" />
                 <p className="text-sm font-medium">Drop the primary document here or click to browse</p>
-                <p className="text-xs text-muted-foreground">PDF, image, or document formats supported · Ctrl+V to paste image</p>
+                <p className="text-xs text-muted-foreground">Drop one file for bundle mode · Drop multiple files for separate loads · Ctrl+V to paste</p>
               </>
             )}
-            <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.png,.jpg,.jpeg,.tiff,.doc,.docx" onChange={(e) => {
+            <input ref={fileInputRef} type="file" className="hidden" multiple accept=".pdf,.png,.jpg,.jpeg,.tiff,.doc,.docx" onChange={(e) => {
               if (checkFeatureAccess(isInPreview)) {
-                const f = e.target.files?.[0];
-                if (f) setPrimaryFile(f);
+                const files = Array.from(e.target.files || []);
+                if (files.length > 1) {
+                  setSeparateFiles(files);
+                  setPrimaryFile(null);
+                  setExtraSlots([]);
+                } else if (files.length === 1) {
+                  setPrimaryFile(files[0]);
+                  setSeparateFiles([]);
+                }
                 e.target.value = '';
               }
             }} />
           </CardContent>
         </Card>
 
-        {primaryFile && (
+        {(primaryFile || separateFiles.length > 0) && (
           <Button onClick={handleProcess} className="gap-2">
             <Upload className="w-4 h-4" />
-            Analyze {totalDocCount} document{totalDocCount !== 1 ? 's' : ''} → Create Load
+            {separateFiles.length > 0
+              ? `Analyze ${separateFiles.length} files → Create ${separateFiles.length} Loads`
+              : `Analyze ${totalDocCount} document${totalDocCount !== 1 ? 's' : ''} → Create Load`
+            }
           </Button>
         )}
       </div>
