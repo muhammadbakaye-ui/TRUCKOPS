@@ -18,7 +18,7 @@ export default function SettingsPage() {
   const { logout, session, login } = useSession();
   const [form, setForm] = useState({
     company_name: '', address_1: '', address_2: '', city: '', state: '', zip: '',
-    phone: '', email: '', mc_number: '', dot_number: '', next_load_number: '1001',
+    phone: '', email: '', mc_number: '', dot_number: '',
   });
   const [activeTab, setActiveTab] = useState('general');
 
