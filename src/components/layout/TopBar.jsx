@@ -87,7 +87,7 @@ export default function TopBar({ pageTitle, currentPageName }) {
           </form>
 
           {/* Mobile: bell + help + logout all in one row */}
-          <div className="lg:hidden" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, overflow: 'visible' }}>
+          <div className="lg:hidden flex items-center gap-2 flex-shrink-0">
             <div style={{ flexShrink: 0 }}><NotificationBell /></div>
             <div style={{ flexShrink: 0 }}><TourButton onClick={startTour} /></div>
             <AlertDialog>
