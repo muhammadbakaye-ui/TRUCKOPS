@@ -235,16 +235,20 @@
   }
 }
 
-/* Mobile Loads Card Layout - compact card design */
+/* Mobile Loads Card Layout - compact card design matching desktop density */
 @media (max-width: 767px) {
   .mobile-load-row {
     display: block;
     border: 1px solid hsl(var(--border) / 0.3);
     border-radius: var(--radius);
-    margin: 0.25rem 0;
-    padding: 0.75rem;
+    margin: 0;
+    margin-bottom: 6px;
+    padding: 10px 12px;
     background: hsl(var(--card));
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .mobile-load-row:last-child {
+    margin-bottom: 0;
   }
   .mobile-load-row.popped-up {
     transform: translateY(-8px) scale(1.02);
@@ -255,55 +259,56 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    padding: 0.35rem 0;
+    padding: 2px 0;
     border: none;
-    font-size: 0.8rem;
+    font-size: 12px;
   }
   .mobile-load-row td:first-child {
     position: absolute;
-    left: 0.5rem;
-    top: 0.5rem;
+    left: 12px;
+    top: 10px;
   }
   .mobile-load-row .load-card-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 0.5rem;
+    margin-bottom: 6px;
     padding-left: 2rem;
   }
   .mobile-load-row .load-card-number {
     font-family: monospace;
     font-weight: 600;
     color: hsl(var(--primary));
-    font-size: 0.85rem;
+    font-size: 13px;
   }
   .mobile-load-row .load-card-customer {
-    font-weight: 500;
-    font-size: 0.85rem;
-    margin: 0.35rem 0;
+    font-weight: 400;
+    font-size: 13px;
+    margin: 4px 0;
   }
   .mobile-load-row .load-card-route {
-    font-size: 0.75rem;
+    font-size: 12px;
     color: hsl(var(--muted-foreground));
-    margin: 0.25rem 0;
+    margin: 2px 0;
   }
   .mobile-load-row .load-card-dates {
-    font-size: 0.7rem;
+    font-size: 12px;
     color: hsl(var(--muted-foreground));
-    margin: 0.25rem 0;
+    margin: 2px 0;
   }
   .mobile-load-row .load-card-amount {
     font-weight: 600;
-    font-size: 0.85rem;
-    margin-top: 0.5rem;
+    font-size: 12px;
+    margin-top: 4px;
+    color: hsl(var(--foreground));
   }
   .mobile-load-row .load-card-actions {
     display: flex;
-    gap: 0.25rem;
+    gap: 4px;
     justify-content: flex-end;
-    margin-top: 0.5rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid hsl(var(--border));
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid hsl(var(--border) / 0.3);
   }
   /* Hide all table cells on mobile, show only card content */
   .mobile-load-row td:nth-child(n+3) {
@@ -312,6 +317,15 @@
   .mobile-load-row td:nth-child(2) {
     display: block;
     padding-left: 2rem;
+  }
+  /* Date group header - match desktop density */
+  .mobile-load-row .date-group-header {
+    font-size: 12px;
+    padding: 6px 0;
+  }
+  /* Mobile cards container - tighter spacing */
+  .mobile-load-row .md\\:hidden {
+    gap: 6px;
   }
 }
 
@@ -395,6 +409,23 @@
   .button-group > button,
   .button-group > [role="button"] {
     width: 100%;
+  }
+  
+  /* Match desktop button height (36px = h-9) */
+  button[class*="h-8"],
+  button[class*="h-9"],
+  .button-group button {
+    height: 36px !important;
+  }
+  
+  /* Compact filter row - match desktop height */
+  .flex-wrap.md\\:flex-nowrap {
+    row-gap: 8px;
+  }
+  
+  /* Date input containers - match desktop height */
+  .flex.items-center.gap-1.border {
+    height: 36px !important;
   }
 }
 
