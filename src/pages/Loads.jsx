@@ -432,17 +432,80 @@ export default function Loads() {
   return (
     <div className="p-4">
       <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
+      {/* Mobile page header - visible at top */}
+      <div className="md:hidden page-header-mobile">
+        <h1 className="text-xl font-bold">Loads</h1>
+        <div className="flex items-center gap-2">
+          {/* Bell icon and help icon will appear here from PageHeader */}
+        </div>
+      </div>
+      
+      {/* Mobile New Load button - full width, 44px */}
+      <div className="md:hidden">
+        <Button className="new-load-btn-mobile" onClick={() => navigate(createPageUrl('LoadDetail?new=1'))}>
+          <Plus className="w-4 h-4" /> New Load
+        </Button>
+      </div>
+
       <PageHeader
         title="Loads"
         description={`${filtered.length} of ${loads.length}${loads.length >= 1000 ? '+' : ''} loads`}
         actions={
-          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => navigate(createPageUrl('LoadDetail?new=1'))}>
+          <Button size="sm" className="h-8 text-xs gap-1 hidden md:inline-flex" onClick={() => navigate(createPageUrl('LoadDetail?new=1'))}>
             <Plus className="w-3.5 h-3.5" /> New Load
           </Button>
         }
       />
 
-      <div className="flex gap-2 mb-3 flex-wrap md:flex-nowrap">
+      {/* Mobile filter area - compact stacked layout */}
+      <div className="md:hidden filter-area-mobile">
+        {/* Pickup date row - full width, 36px */}
+        <div className="pickup-date-row">
+          <div className="flex items-center gap-1 border border-input rounded-md px-2 h-9 flex-1 bg-background">
+            <span className="text-xs text-muted-foreground whitespace-nowrap">Pickup:</span>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={e => setDateFrom(e.target.value)}
+              className="text-xs bg-transparent outline-none w-28 text-foreground"
+              placeholder="From"
+            />
+            <span className="text-xs text-muted-foreground">–</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={e => setDateTo(e.target.value)}
+              className="text-xs bg-transparent outline-none w-28 text-foreground"
+              placeholder="To"
+            />
+          </div>
+        </div>
+        
+        {/* Quick actions and Save All Drafts row */}
+        <div className="quick-actions-row">
+          <QuickActionSettings
+            enabled={qaEnabled}
+            onToggle={handleQaToggle}
+            action={qaAction}
+            onActionChange={handleQaAction}
+            options={loadsQaOptions}
+          />
+          {loads.some(l => l.status === 'draft') && (
+            <Button
+              size="sm"
+              className="flex-1 h-9 text-xs gap-1"
+              onClick={handleSaveAllDrafts}
+              disabled={savingAllDrafts}
+            >
+              {savingAllDrafts ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              Save All Drafts
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Desktop filter row */}
+      <div className="hidden md:flex gap-2 mb-3 flex-wrap md:flex-nowrap">
         <SearchInput value={search} onChange={setSearch} placeholder="Search loads..." className="w-full md:w-64" />
         <MultiSelectFilter
           label="Status"
@@ -457,19 +520,19 @@ export default function Loads() {
           ]}
         />
         <MultiSelectFilter
-         label="Invoice"
-         selected={invoiceFilter}
-         onChange={setInvoiceFilter}
-         width="w-32"
-         options={[
-           { value: 'not_invoiced', label: 'Not Invoiced' },
-           { value: 'invoiced', label: 'Invoiced' },
-           { value: 'priority', label: 'Priority' },
-           { value: 'sent', label: 'Sent' },
-           { value: 'partial', label: 'Partial' },
-           { value: 'paid', label: 'Paid' },
-           { value: 'overdue', label: 'Overdue' },
-         ]}
+          label="Invoice"
+          selected={invoiceFilter}
+          onChange={setInvoiceFilter}
+          width="w-32"
+          options={[
+            { value: 'not_invoiced', label: 'Not Invoiced' },
+            { value: 'invoiced', label: 'Invoiced' },
+            { value: 'priority', label: 'Priority' },
+            { value: 'sent', label: 'Sent' },
+            { value: 'partial', label: 'Partial' },
+            { value: 'paid', label: 'Paid' },
+            { value: 'overdue', label: 'Overdue' },
+          ]}
         />
         <MultiSelectFilter
           label="Driver"
@@ -561,6 +624,61 @@ export default function Loads() {
             Save All Drafts
           </Button>
         )}
+      </div>
+
+      {/* Mobile clear filters button */}
+      <div className="md:hidden mb-2">
+        {(search || statusFilter.length > 0 || invoiceFilter.length > 0 || driverFilter.length > 0 || truckFilter.length > 0 || tripFilter.length > 0 || dateFrom || dateTo) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full h-9 text-xs gap-1"
+            onClick={() => {
+              setSearch('');
+              setStatusFilter([]);
+              setInvoiceFilter([]);
+              setDriverFilter([]);
+              setTruckFilter([]);
+              setTripFilter([]);
+              setDateFrom('');
+              setDateTo('');
+            }}
+          >
+            <X className="w-3.5 h-3.5" /> Clear All Filters
+          </Button>
+        )}
+      </div>
+      
+      {/* Mobile filter drawers - compact */}
+      <div className="md:hidden flex gap-2 mb-3 overflow-x-auto">
+        <SearchInput value={search} onChange={setSearch} placeholder="Search..." className="w-40 flex-shrink-0" />
+        <MultiSelectFilter
+          label="Status"
+          selected={statusFilter}
+          onChange={setStatusFilter}
+          width="w-24 flex-shrink-0"
+          options={[
+            { value: 'draft', label: 'Draft' },
+            { value: 'saved', label: 'Saved' },
+            { value: 'completed', label: 'Completed' },
+            { value: 'canceled', label: 'Canceled' },
+          ]}
+        />
+        <MultiSelectFilter
+          label="Invoice"
+          selected={invoiceFilter}
+          onChange={setInvoiceFilter}
+          width="w-24 flex-shrink-0"
+          options={[
+            { value: 'not_invoiced', label: 'Not Invoiced' },
+            { value: 'invoiced', label: 'Invoiced' },
+            { value: 'priority', label: 'Priority' },
+            { value: 'sent', label: 'Sent' },
+            { value: 'partial', label: 'Partial' },
+            { value: 'paid', label: 'Paid' },
+            { value: 'overdue', label: 'Overdue' },
+          ]}
+        />
       </div>
 
       {selected.size > 0 && (
