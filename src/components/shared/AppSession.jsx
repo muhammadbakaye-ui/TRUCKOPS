@@ -84,6 +84,11 @@ export function SessionProvider({ children }) {
               localStorage.removeItem(SESSION_KEY);
               setSession(null);
             }
+          })
+          .catch(() => {
+            // 401 or other error — session invalid, log out silently
+            localStorage.removeItem(SESSION_KEY);
+            setSession(null);
           });
       } catch {
         localStorage.removeItem(SESSION_KEY);
