@@ -202,7 +202,7 @@ function AppShell({ children, currentPageName }) {
           <PreviewModeBanner />
           <TopBar pageTitle={pageTitles[currentPageName] || currentPageName} currentPageName={currentPageName} />
           {/* Extra bottom padding on mobile to clear the bottom nav */}
-          <main ref={mainRef} className="flex-1 overflow-auto px-2 lg:px-0 pb-16 md:pb-0">
+          <main ref={mainRef} className="flex-1 overflow-auto px-2 lg:px-4 pb-20 md:pb-0">
             {(validating || !onboardingChecked) ? (
               <div className="flex items-center justify-center h-full">
                 <div className="w-8 h-8 border-4 border-border border-t-primary rounded-full animate-spin" />

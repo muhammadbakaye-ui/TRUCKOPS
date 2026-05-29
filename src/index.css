@@ -120,11 +120,56 @@
 button, a, [role="button"] {
   user-select: none;
   -webkit-user-select: none;
+  min-height: 44px; /* Minimum tap target */
 }
 svg {
   user-select: none;
   -webkit-user-select: none;
   pointer-events: none;
+}
+
+/* Mobile-first responsive layout */
+@media (max-width: 767px) {
+  /* Prevent horizontal overflow on all pages */
+  body, main, div[class*="flex"] {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  
+  /* Ensure all containers respect mobile width */
+  .container, .max-w-full {
+    max-width: 100vw !important;
+  }
+  
+  /* Fix button groups - stack vertically on mobile */
+  .flex.gap-2:has(button), .flex.gap-3:has(button), .flex.gap-4:has(button) {
+    flex-wrap: wrap;
+  }
+  
+  /* Ensure buttons are full width on mobile when in groups */
+  .flex.gap-2 > button, .flex.gap-3 > button, .flex.gap-4 > button {
+    flex: 1 1 100%;
+    min-width: auto;
+  }
+  
+  /* Fix table overflow - allow horizontal scroll with indicator */
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Ensure all form inputs are mobile-friendly */
+  input, select, textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+    min-height: 44px;
+  }
+  
+  /* Fix page headers on mobile */
+  h1, h2, h3, h4, h5, h6 {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
 }
 
 /* Responsive card tables — collapse on mobile */
@@ -134,17 +179,25 @@ svg {
     display: block;
     border: 1px solid hsl(var(--border));
     border-radius: var(--radius);
-    margin-bottom: 0.5rem;
-    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
     background: hsl(var(--card));
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .mobile-card-table tbody tr:last-child {
+    margin-bottom: 0;
   }
   .mobile-card-table td {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 3px 0;
-    font-size: 0.8rem;
+    padding: 0.5rem 0;
+    font-size: 0.85rem;
     border: none;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+  .mobile-card-table td:last-child {
+    border-bottom: none;
   }
   .mobile-card-table td::before {
     content: attr(data-label);
@@ -153,8 +206,15 @@ svg {
     color: hsl(var(--muted-foreground));
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    margin-right: 0.5rem;
+    margin-right: 0.75rem;
     white-space: nowrap;
+  }
+  /* Action buttons in table - stack vertically on mobile */
+  .mobile-card-table td:last-child {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+    padding-top: 0.75rem;
   }
 }
 

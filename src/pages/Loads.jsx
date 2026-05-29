@@ -440,8 +440,8 @@ export default function Loads() {
         }
       />
 
-      <div className="flex gap-2 mb-3 flex-wrap">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search loads..." className="w-64" />
+      <div className="flex gap-2 mb-3 flex-wrap md:flex-nowrap">
+        <SearchInput value={search} onChange={setSearch} placeholder="Search loads..." className="w-full md:w-64" />
         <MultiSelectFilter
           label="Status"
           selected={statusFilter}
@@ -619,8 +619,9 @@ export default function Loads() {
               </CardHeader>
               {isExpanded && (
                 <CardContent className="p-0">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs">
+                  <div className="overflow-x-auto -mx-4 md:mx-0">
+                    <div className="inline-block min-w-full align-middle md:block">
+                      <table className="w-full text-xs mobile-card-table md:table">
                       <thead className="bg-muted/50 border-y">
                         <tr>
                           <th className="text-left p-2 font-medium">
@@ -790,6 +791,7 @@ export default function Loads() {
                         ))}
                       </tbody>
                     </table>
+                    </div>
                   </div>
                 </CardContent>
               )}
