@@ -648,14 +648,13 @@ export default function Loads() {
                           <th className="p-2"></th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="hidden md:table-row-group">
                         {dateLoads.map(l => (
-                          <React.Fragment key={l.id}>
-                            {/* Desktop table row */}
-                            <tr
-                              className={`hidden md:table-row border-b hover:bg-muted/30 transition-colors ${bulkEditMode && selected.has(l.id) ? 'bg-primary/5 cursor-default' : 'cursor-pointer'}`}
-                              onClick={() => !bulkEditMode && navigate(createPageUrl(`LoadDetail?id=${l.id}`))}
-                            >
+                          <tr
+                            key={l.id}
+                            className={`border-b hover:bg-muted/30 transition-colors ${bulkEditMode && selected.has(l.id) ? 'bg-primary/5 cursor-default' : 'cursor-pointer'}`}
+                            onClick={() => !bulkEditMode && navigate(createPageUrl(`LoadDetail?id=${l.id}`))}
+                          >
                               <td className="p-2">
                                 <Checkbox
                                   checked={selected.has(l.id)}
@@ -790,29 +789,15 @@ export default function Loads() {
                                 </div>
                               </td>
                             </tr>
-                            {/* Mobile card */}
-                            <tr className="md:hidden">
-                              <td colSpan={12}>
-                                <MobileLoadCard
-                                  load={l}
-                                  selected={selected}
-                                  onToggleSelect={(id, checked) => {
-                                    const next = new Set(selected);
-                                    checked ? next.add(id) : next.delete(id);
-                                    setSelected(next);
-                                  }}
-                                  onNavigate={(id) => navigate(createPageUrl(`LoadDetail?id=${id}`))}
-                                  onPrint={handlePrintLoad}
-                                  onDelete={deleteMutation.mutate}
-                                  bulkEditMode={bulkEditMode}
-                                  onBulkEditChange={(field, value) => setBulkEdits(prev => ({ ...prev, [l.id]: value }))}
-                                />
-                              </td>
-                            </tr>
-                          </React.Fragment>
                         ))}
                       </tbody>
                     </table>
+                    {/* Mobile cards - separate from desktop table */}
+                    <div className="md:hidden mt-2">
+                      {dateLoads.map(l => (
+                        <MobileLoadCard key={l.id} load={l} />
+                      ))}
+                    </div>
                     </div>
                   </div>
                 </CardContent>
