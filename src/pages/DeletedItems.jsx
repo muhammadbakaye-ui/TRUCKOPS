@@ -22,7 +22,6 @@ export default function DeletedItems() {
   const { data: deletedItems = [] } = useQuery({
     queryKey: ['deleted-items', session?.tenant_id],
     queryFn: () => session?.tenant_id ? base44.entities.DeletedItem.filter({ tenant_id: session.tenant_id }, '-created_date', 1000) : Promise.resolve([]),
-    enabled: !!session?.tenant_id,
   });
 
   // Filter out items older than 30 days
