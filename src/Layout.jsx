@@ -97,7 +97,7 @@ function useMainScrollRestoration() {
 function useSidebarScrollRestoration() {
   const sidebarRef = useRef(null);
   const location = useLocation();
-  const sidebarKey = 'scroll_sidebar';
+  const sidebarKey = `scroll_sidebar_${location.pathname}`;
 
   // Save scroll position on every scroll event
   useEffect(() => {
@@ -128,7 +128,7 @@ function useSidebarScrollRestoration() {
       }, 50);
       return () => clearTimeout(timer);
     }
-  }, [location.pathname]);
+  }, [sidebarKey]);
 
   return sidebarRef;
 }
