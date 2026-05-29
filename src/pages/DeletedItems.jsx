@@ -196,11 +196,7 @@ export default function DeletedItems() {
         </Card>
       )}
 
-      {isLoading ? (
-        <div className="flex items-center justify-center h-40">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-        </div>
-      ) : filtered.length === 0 ? (
+      {filtered.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <Trash2 className="w-10 h-10 mb-3 opacity-20" />
