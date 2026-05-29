@@ -9,7 +9,7 @@ export default function MobileLoadCard({ load, isPopped, onCardClick }) {
 
   if (!load) return null;
 
-  const statusLabel = load.dispatch_status || 'draft';
+  const statusLabel = load.status || 'draft';
 
   return (
     <div

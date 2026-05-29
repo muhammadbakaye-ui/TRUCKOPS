@@ -16,20 +16,18 @@ export default function MobileLoadsHeader({
 }) {
   return (
     <div className="mobile-loads-header">
-      {/* Top bar: Title + New Load button */}
-      <div className="mobile-loads-top-bar">
-        <div>
-          <h1 className="text-lg font-bold text-foreground">Loads</h1>
-          <p className="text-xs text-muted-foreground">
-            {filteredCount} of {totalCount >= 1000 ? '1000+' : totalCount} loads
-          </p>
-        </div>
-        <Button 
-          className="new-load-btn" 
+      {/* Top bar: Count + New Load button — NO title (TopBar shows it) */}
+      <div className="flex items-center justify-between mb-2" style={{ minHeight: '36px' }}>
+        <span className="text-xs text-muted-foreground">
+          {filteredCount} of {totalCount >= 1000 ? '1000+' : totalCount} loads
+        </span>
+        <Button
+          size="sm"
+          className="h-9 text-xs gap-1 px-3"
           onClick={onNewLoad}
         >
-          <Plus className="w-4 h-4" /> 
-          <span>New Load</span>
+          <Plus className="w-3.5 h-3.5" />
+          New Load
         </Button>
       </div>
 
