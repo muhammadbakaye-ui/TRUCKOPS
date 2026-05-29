@@ -468,7 +468,7 @@ export default function StatementBuilder() {
           {/* Header */}
           <Card>
             <CardHeader className="py-3.5 px-5 border-b"><CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Statement Header</CardTitle></CardHeader>
-            <CardContent className="px-5 pb-5 grid grid-cols-4 gap-4">
+            <CardContent className="px-5 pb-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
                 <Label className="text-xs">Driver</Label>
                 <Select value={form.driver_id || ''} onValueChange={(v) => {
@@ -493,7 +493,7 @@ export default function StatementBuilder() {
                   <SelectContent>{trucks.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div>
+              <div className="col-span-2 sm:col-span-1">
                 <Label className="text-xs">Due Date ({DAY_NAMES[statementSettings.dueDay]})</Label>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -531,11 +531,11 @@ export default function StatementBuilder() {
           <Card>
             <CardHeader className="py-3.5 px-5 flex flex-row items-center justify-between border-b">
               <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Settlement Items ({tripLines.length})</CardTitle>
-              <div className="flex gap-1">
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={handleAutoLoadWeek} disabled={!form.driver_id || !form.period_start || autoLoading} title="Auto-add all loads due this week">
+              <div className="flex gap-2 flex-nowrap">
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1 flex-1" onClick={handleAutoLoadWeek} disabled={!form.driver_id || !form.period_start || autoLoading} title="Auto-add all loads due this week">
                   {autoLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />} Auto Week
                 </Button>
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => { if (!form.driver_id) { toast.error('Select a driver first'); return; } setLoadPickerOpen(true); }} disabled={!form.driver_id}>
+                <Button variant="outline" size="sm" className="h-7 text-xs gap-1 flex-1" onClick={() => { if (!form.driver_id) { toast.error('Select a driver first'); return; } setLoadPickerOpen(true); }} disabled={!form.driver_id}>
                    <Truck className="w-3 h-3" /> Pick Loads
                  </Button>
               </div>

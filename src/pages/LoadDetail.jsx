@@ -356,38 +356,50 @@ export default function LoadDetail() {
                       </Button>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                       <Label className="text-[10px]">Type</Label>
-                       <Sel value={stop.stop_type} onChange={(v) => setStop(i, 'stop_type', v)} options={[{value:'pickup',label:'Pickup'},{value:'delivery',label:'Delivery'},{value:'stop',label:'Stop'}]} />
-                     </div>
-                     <div className="col-span-1 sm:col-span-3">
-                      <Label className="text-[10px]">Company</Label>
-                      <TextInput value={stop.company_name} onChange={(v) => setStop(i, 'company_name', v)} />
+                  <div className="space-y-2">
+                    {/* Type (120px) + Company (remaining) */}
+                    <div className="flex gap-2">
+                      <div style={{ width: '120px', flexShrink: 0 }}>
+                        <Label className="text-[10px]">Type</Label>
+                        <Sel value={stop.stop_type} onChange={(v) => setStop(i, 'stop_type', v)} options={[{value:'pickup',label:'Pickup'},{value:'delivery',label:'Delivery'},{value:'stop',label:'Stop'}]} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <Label className="text-[10px]">Company</Label>
+                        <TextInput value={stop.company_name} onChange={(v) => setStop(i, 'company_name', v)} />
+                      </div>
                     </div>
-                    <div>
-                      <Label className="text-[10px]">Date</Label>
-                      <Input type="date" value={stop.appointment_date || ''} onChange={(e) => setStop(i, 'appointment_date', e.target.value)} className="h-8 text-xs" />
+                    {/* Date + Time From (50/50) */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-[10px]">Date</Label>
+                        <Input type="date" value={stop.appointment_date || ''} onChange={(e) => setStop(i, 'appointment_date', e.target.value)} className="h-8 text-xs w-full" />
+                      </div>
+                      <div>
+                        <Label className="text-[10px]">Time From</Label>
+                        <TextInput value={stop.time_from} onChange={(v) => setStop(i, 'time_from', v)} placeholder="08:00" />
+                      </div>
                     </div>
-                    <div>
-                      <Label className="text-[10px]">Time From</Label>
-                      <TextInput value={stop.time_from} onChange={(v) => setStop(i, 'time_from', v)} placeholder="08:00" />
+                    {/* City + State (50/50) */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-[10px]">City</Label>
+                        <TextInput value={stop.city} onChange={(v) => setStop(i, 'city', v)} />
+                      </div>
+                      <div>
+                        <Label className="text-[10px]">State</Label>
+                        <TextInput value={stop.state} onChange={(v) => setStop(i, 'state', v)} />
+                      </div>
                     </div>
-                    <div>
-                      <Label className="text-[10px]">City</Label>
-                      <TextInput value={stop.city} onChange={(v) => setStop(i, 'city', v)} />
-                    </div>
-                    <div>
-                      <Label className="text-[10px]">State</Label>
-                      <TextInput value={stop.state} onChange={(v) => setStop(i, 'state', v)} />
-                    </div>
-                    <div className="col-span-1 sm:col-span-2">
-                      <Label className="text-[10px]">Reference / BOL #</Label>
-                      <TextInput value={stop.reference_number} onChange={(v) => setStop(i, 'reference_number', v)} />
-                    </div>
-                    <div className="col-span-1 sm:col-span-2">
-                      <Label className="text-[10px]">Directions / Notes</Label>
-                      <TextInput value={stop.memo} onChange={(v) => setStop(i, 'memo', v)} />
+                    {/* Reference + Notes (50/50) */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-[10px]">Reference / BOL #</Label>
+                        <TextInput value={stop.reference_number} onChange={(v) => setStop(i, 'reference_number', v)} />
+                      </div>
+                      <div>
+                        <Label className="text-[10px]">Directions / Notes</Label>
+                        <TextInput value={stop.memo} onChange={(v) => setStop(i, 'memo', v)} />
+                      </div>
                     </div>
                   </div>
                 </div>
