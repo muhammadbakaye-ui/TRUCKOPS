@@ -262,17 +262,16 @@ export default function LoadDetail() {
   return (
     <div className="p-4 space-y-4 max-w-5xl">
       {showDialog && <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />}
-      <div className="flex items-center gap-3 flex-wrap">
-        <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => navigate(createPageUrl('Loads'))}>
+      <div className="flex items-center gap-2 flex-wrap">
+        <Button variant="ghost" size="sm" className="h-8 gap-1 flex-shrink-0" onClick={() => navigate(createPageUrl('Loads'))}>
           <ArrowLeft className="w-3.5 h-3.5" /> Loads
         </Button>
-        <h2 className="text-sm font-semibold">
+        <h2 className="text-sm font-semibold truncate min-w-0">
           {(isNew && !savedLoadIdRef.current) ? 'New Load' : `Load ${form.internal_load_number}`}
         </h2>
         <StatusBadge status={form.status} />
-        {/* Auto-save indicator */}
         {form.status === 'draft' && (
-          <span className="flex items-center gap-1 text-[11px] text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+          <span className="flex items-center gap-1 text-[11px] text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full flex-shrink-0">
             {autoSaving
               ? <><Loader2 className="w-3 h-3 animate-spin" /> Auto-saving…</>
               : lastAutoSaved
@@ -281,14 +280,14 @@ export default function LoadDetail() {
             }
           </span>
         )}
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto flex gap-2 flex-shrink-0">
            <Button size="sm" className="h-8 gap-1" onClick={handleSave} disabled={saving}>
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            {form.status === 'draft' ? 'Save' : 'Save'}
+            Save
           </Button>
           {(loadId || savedLoadIdRef.current) && (
             <Button size="sm" className="h-8 gap-1 bg-green-700 hover:bg-green-800 text-white" onClick={handlePrint}>
-              <Download className="w-3.5 h-3.5" /> Download PDF
+              <Download className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Download PDF</span><span className="sm:hidden">PDF</span>
             </Button>
           )}
         </div>
@@ -300,7 +299,7 @@ export default function LoadDetail() {
           {/* Load Info */}
           <Card>
             <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Load Information</CardTitle></CardHeader>
-            <CardContent className="px-4 pb-4 grid grid-cols-3 gap-3">
+            <CardContent className="px-4 pb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <Field label="Internal Load #"><TextInput value={form.internal_load_number} onChange={(v) => set('internal_load_number', v)} /></Field>
               <Field label="External / Broker Load #"><TextInput value={form.external_load_number} onChange={(v) => set('external_load_number', v)} /></Field>
               <Field label="Trip #"><TextInput value={form.trip_number} onChange={(v) => set('trip_number', v)} /></Field>
@@ -342,12 +341,12 @@ export default function LoadDetail() {
                       </Button>
                     )}
                   </div>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <Label className="text-[10px]">Type</Label>
-                      <Sel value={stop.stop_type} onChange={(v) => setStop(i, 'stop_type', v)} options={[{value:'pickup',label:'Pickup'},{value:'delivery',label:'Delivery'},{value:'stop',label:'Stop'}]} />
-                    </div>
-                    <div className="col-span-3">
+                       <Label className="text-[10px]">Type</Label>
+                       <Sel value={stop.stop_type} onChange={(v) => setStop(i, 'stop_type', v)} options={[{value:'pickup',label:'Pickup'},{value:'delivery',label:'Delivery'},{value:'stop',label:'Stop'}]} />
+                     </div>
+                     <div className="col-span-1 sm:col-span-3">
                       <Label className="text-[10px]">Company</Label>
                       <TextInput value={stop.company_name} onChange={(v) => setStop(i, 'company_name', v)} />
                     </div>
@@ -367,11 +366,11 @@ export default function LoadDetail() {
                       <Label className="text-[10px]">State</Label>
                       <TextInput value={stop.state} onChange={(v) => setStop(i, 'state', v)} />
                     </div>
-                    <div className="col-span-2">
+                    <div className="col-span-1 sm:col-span-2">
                       <Label className="text-[10px]">Reference / BOL #</Label>
                       <TextInput value={stop.reference_number} onChange={(v) => setStop(i, 'reference_number', v)} />
                     </div>
-                    <div className="col-span-2">
+                    <div className="col-span-1 sm:col-span-2">
                       <Label className="text-[10px]">Directions / Notes</Label>
                       <TextInput value={stop.memo} onChange={(v) => setStop(i, 'memo', v)} />
                     </div>
