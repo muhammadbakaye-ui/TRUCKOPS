@@ -716,7 +716,7 @@ export default function Loads() {
           return (
             <Card key={dateKey}>
               <CardHeader
-                className="py-3 px-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                className="py-3 px-2 cursor-pointer hover:bg-muted/50 transition-colors"
                 onClick={() => toggleDate(dateKey, sortedDateKeys)}
               >
                 <div className="flex items-center justify-between">
@@ -732,8 +732,8 @@ export default function Loads() {
               </CardHeader>
               {isExpanded && (
                 <CardContent className="p-0">
-                  <div className="md:overflow-x-auto md:-mx-4">
-                    <div className="md:inline-block md:min-w-full md:align-middle">
+                  <div className="md:overflow-x-auto">
+                    <div>
                       <table className="w-full text-xs mobile-card-table md:table">
                       <thead className="bg-muted/50 border-y">
                         <tr>
@@ -905,7 +905,7 @@ export default function Loads() {
                       </tbody>
                     </table>
                     {/* Mobile cards - separate from desktop table */}
-                     <div className="md:hidden mobile-loads-list space-y-0.5">
+                    <div className="md:hidden mobile-loads-list space-y-0.5">
                       {dateLoads.map(l => (
                         <MobileLoadCard
                           key={l.id}
