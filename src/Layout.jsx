@@ -75,10 +75,7 @@ function useMainScrollRestoration() {
     const el = mainRef.current;
     if (!el) return;
     
-    // Reset to top first (ensures clean state)
-    el.scrollTop = 0;
-    
-    // Then restore saved position immediately
+    // Restore saved position immediately (no reset to top)
     const saved = sessionStorage.getItem(key);
     if (saved) {
       const target = parseInt(saved, 10);
