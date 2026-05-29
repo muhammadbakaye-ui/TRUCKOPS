@@ -174,25 +174,21 @@ export default function Loads() {
   const { data: loads = [], isLoading } = useQuery({
     queryKey: ['loads', session?.tenant_id],
     queryFn: () => session?.tenant_id ? base44.entities.Load.filter({ tenant_id: session.tenant_id }, '-created_date', 1000) : Promise.resolve([]),
-    enabled: !!session?.tenant_id,
   });
 
   const { data: drivers = [] } = useQuery({
     queryKey: ['drivers', session?.tenant_id],
     queryFn: () => session?.tenant_id ? base44.entities.Driver.filter({ tenant_id: session.tenant_id, status: 'active' }, 'full_name', 200) : Promise.resolve([]),
-    enabled: !!session?.tenant_id,
   });
 
   const { data: trucks = [] } = useQuery({
     queryKey: ['trucks', session?.tenant_id],
     queryFn: () => session?.tenant_id ? base44.entities.Truck.filter({ tenant_id: session.tenant_id, status: 'active' }, 'unit_number', 200) : Promise.resolve([]),
-    enabled: !!session?.tenant_id,
   });
 
   const { data: company = {} } = useQuery({
     queryKey: ['company-settings', session?.tenant_id],
     queryFn: async () => { const r = session?.tenant_id ? await base44.entities.Company.filter({ tenant_id: session.tenant_id, company_type: 'carrier' }, '-created_date', 1) : []; return r[0] || {}; },
-    enabled: !!session?.tenant_id,
   });
 
   // Live updates: invalidate cache when loads change on the server
