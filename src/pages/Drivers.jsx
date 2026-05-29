@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 import SearchInput from '../components/shared/SearchInput';
 import DataTable from '../components/shared/DataTable';
 import StatusBadge from '../components/shared/StatusBadge';
-import PageHeader from '../components/shared/PageHeader';
+
 import { logAudit } from '../components/shared/AuditLogger';
 import { QRCodeSVG } from 'qrcode.react';
 import { usePagination } from '../hooks/usePagination';
@@ -330,15 +330,15 @@ export default function Drivers() {
   return (
     <div className="p-4">
       <PreviewFeatureDialog open={showDialog} onSubscribe={() => navigate('/pricing')} onDismiss={handleDismiss} />
-      <PageHeader
-        title="Drivers"
-        description={`${drivers.length} total drivers`}
-        actions={
-          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { setEditing(null); setDialogOpen(true); }}>
-            <Plus className="w-3.5 h-3.5" /> Add Driver
-          </Button>
-        }
-      />
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold">Drivers</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">{drivers.length} total drivers</p>
+        </div>
+        <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { setEditing(null); setDialogOpen(true); }}>
+          <Plus className="w-3.5 h-3.5" /> Add Driver
+        </Button>
+      </div>
       <div className="mb-3">
         <SearchInput value={search} onChange={setSearch} placeholder="Search drivers..." className="w-72" />
       </div>

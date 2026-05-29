@@ -7,7 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import SearchInput from '../components/shared/SearchInput';
 import DataTable from '../components/shared/DataTable';
 import StatusBadge from '../components/shared/StatusBadge';
-import PageHeader from '../components/shared/PageHeader';
+
 import EntityFormDialog from '../components/shared/EntityFormDialog';
 import { logAudit } from '../components/shared/AuditLogger';
 import { useNavigate } from 'react-router-dom';
@@ -138,15 +138,15 @@ export default function Companies() {
   return (
     <div className="p-4">
       <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
-      <PageHeader
-        title="Companies / Brokers"
-        description={`${companies.length} total companies`}
-        actions={
-          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { if (!checkFeatureAccess(isInPreview)) return; setEditing(null); setDialogOpen(true); }}>
-            <Plus className="w-3.5 h-3.5" /> Add Company
-          </Button>
-        }
-      />
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold">Companies / Brokers</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">{companies.length} total companies</p>
+        </div>
+        <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { if (!checkFeatureAccess(isInPreview)) return; setEditing(null); setDialogOpen(true); }}>
+          <Plus className="w-3.5 h-3.5" /> Add Company
+        </Button>
+      </div>
       
       <div className="mb-3">
         <SearchInput value={search} onChange={setSearch} placeholder="Search companies..." className="w-72" />

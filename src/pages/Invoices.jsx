@@ -14,7 +14,7 @@ import { useSession } from '../components/shared/AppSession';
 import { toast } from 'sonner';
 import DataTable from '../components/shared/DataTable';
 import StatusBadge from '../components/shared/StatusBadge';
-import PageHeader from '../components/shared/PageHeader';
+
 import { format } from 'date-fns';
 import { useEntitySubscription } from '../hooks/useEntitySubscription';
 import QuickActionSettings from '../components/shared/QuickActionSettings';
@@ -308,14 +308,6 @@ export default function Invoices() {
 
   return (
     <div className="p-4">
-      <PageHeader
-        title="Invoices"
-        description={
-          <span>
-            {filtered.length} invoices · <span className="text-orange-600 font-medium">${totalUnpaid.toLocaleString()} unpaid</span>
-          </span>
-        }
-      />
       <div className="flex gap-2 mb-3">
          <SearchInput value={search} onChange={setSearch} placeholder="Search invoices..." className="w-64" />
          <Select value={statusFilter} onValueChange={setStatusFilter}>
