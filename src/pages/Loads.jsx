@@ -734,7 +734,21 @@ export default function Loads() {
                 <CardContent className="p-0">
                   <div className="md:overflow-x-auto md:-mx-4">
                     <div className="md:inline-block md:min-w-full md:align-middle">
-                      <table className="w-full text-xs mobile-card-table md:table">
+                      <table className="w-full text-xs mobile-card-table md:table" style={{ tableLayout: 'fixed' }}>
+                        <colgroup>
+                          <col style={{ width: '3%' }} />
+                          <col style={{ width: '6%' }} />
+                          <col style={{ width: '11%' }} />
+                          <col style={{ width: '10%' }} />
+                          <col style={{ width: '15%' }} />
+                          <col style={{ width: '12%' }} />
+                          <col style={{ width: '9%' }} />
+                          <col style={{ width: '6%' }} />
+                          <col style={{ width: '7%' }} />
+                          <col style={{ width: '7%' }} />
+                          <col style={{ width: '10%' }} />
+                          <col style={{ width: '4%' }} />
+                        </colgroup>
                       {dateIndex === 0 && (
                         <thead className="bg-muted/50 border-y">
                           <tr>
