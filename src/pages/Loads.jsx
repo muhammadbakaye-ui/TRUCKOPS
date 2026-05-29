@@ -707,7 +707,7 @@ export default function Loads() {
       )}
 
       <div className="space-y-3">
-        {sortedDateKeys.map((dateKey, dateIndex) => {
+        {sortedDateKeys.map(dateKey => {
           const dateLoads = groupedByDate[dateKey];
           const isExpanded = expandedDates === null || expandedDates.has(dateKey);
           const totalAmount = dateLoads.reduce((sum, l) => sum + (l.invoice_amount || 0), 0);
@@ -735,33 +735,31 @@ export default function Loads() {
                   <div className="md:overflow-x-auto md:-mx-4">
                     <div className="md:inline-block md:min-w-full md:align-middle">
                       <table className="w-full text-xs mobile-card-table md:table">
-                      {dateIndex === 0 && (
-                        <thead className="bg-muted/50 border-y">
-                          <tr>
-                            <th className="text-left p-2 font-medium">
-                              <Checkbox
-                                checked={dateLoads.every(l => selected.has(l.id))}
-                                onCheckedChange={(checked) => {
-                                  const next = new Set(selected);
-                                  dateLoads.forEach(l => checked ? next.add(l.id) : next.delete(l.id));
-                                  setSelected(next);
-                                }}
-                              />
-                            </th>
-                            <th className="text-left p-2 font-medium">Load #</th>
-                            <th className="text-left p-2 font-medium">Customer</th>
-                            <th className="text-left p-2 font-medium">Broker Load #</th>
-                            <th className="text-left p-2 font-medium">Route</th>
-                            <th className="text-left p-2 font-medium">Pickup → Delivery</th>
-                            <th className="text-left p-2 font-medium">Driver(s)</th>
-                            <th className="text-left p-2 font-medium">Truck</th>
-                            <th className="text-left p-2 font-medium">Amount</th>
-                            <th className="text-left p-2 font-medium">Status</th>
-                            <th className="text-left p-2 font-medium">Invoice</th>
-                            <th className="p-2"></th>
-                          </tr>
-                        </thead>
-                      )}
+                      <thead className="bg-muted/50 border-y">
+                        <tr>
+                          <th className="text-left p-2 font-medium">
+                            <Checkbox
+                              checked={dateLoads.every(l => selected.has(l.id))}
+                              onCheckedChange={(checked) => {
+                                const next = new Set(selected);
+                                dateLoads.forEach(l => checked ? next.add(l.id) : next.delete(l.id));
+                                setSelected(next);
+                              }}
+                            />
+                          </th>
+                          <th className="text-left p-2 font-medium">Load #</th>
+                          <th className="text-left p-2 font-medium">Customer</th>
+                          <th className="text-left p-2 font-medium">Broker Load #</th>
+                          <th className="text-left p-2 font-medium">Route</th>
+                          <th className="text-left p-2 font-medium">Pickup → Delivery</th>
+                          <th className="text-left p-2 font-medium">Driver(s)</th>
+                          <th className="text-left p-2 font-medium">Truck</th>
+                          <th className="text-left p-2 font-medium">Amount</th>
+                          <th className="text-left p-2 font-medium">Status</th>
+                          <th className="text-left p-2 font-medium">Invoice</th>
+                          <th className="p-2"></th>
+                        </tr>
+                      </thead>
                       <tbody className="hidden md:table-row-group">
                         {dateLoads.map(l => (
                           <tr
