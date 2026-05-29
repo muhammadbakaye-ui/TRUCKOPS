@@ -116,16 +116,18 @@
   }
 }
 
-/* Mobile safe area & touch */
-button, a, [role="button"] {
-  user-select: none;
-  -webkit-user-select: none;
-  min-height: 44px; /* Minimum tap target */
-}
-svg {
-  user-select: none;
-  -webkit-user-select: none;
-  pointer-events: none;
+/* Mobile safe area & touch - mobile only */
+@media (max-width: 767px) {
+  button, a, [role="button"] {
+    user-select: none;
+    -webkit-user-select: none;
+    min-height: 44px; /* Minimum tap target */
+  }
+  svg {
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+  }
 }
 
 /* Mobile-first responsive layout */
@@ -164,18 +166,16 @@ svg {
     font-size: 16px; /* Prevents zoom on iOS */
     min-height: 44px;
   }
-
-  /* Fix checkbox/select sizing on desktop */
-  @media (min-width: 768px) {
-    input[type="checkbox"], input[type="radio"] {
-      width: 1rem;
-      height: 1rem;
-    }
-    select, input[type="text"], input[type="number"], input[type="date"], textarea {
-      font-size: 14px;
-      min-height: auto;
-      height: auto;
-    }
+  
+  /* Fix checkbox/select sizing on desktop - RESET mobile styles */
+  input[type="checkbox"], input[type="radio"] {
+    width: 1rem;
+    height: 1rem;
+  }
+  select, input[type="text"], input[type="number"], input[type="date"], textarea {
+    font-size: 14px;
+    min-height: auto;
+    height: auto;
   }
   
   /* Fix page headers on mobile */
