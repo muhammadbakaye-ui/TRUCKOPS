@@ -237,7 +237,18 @@
 
 /* Mobile Loads Card Layout - compact card design matching desktop density */
 @media (max-width: 767px) {
+  .mobile-loads-list {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    padding: 0;
+  }
   .mobile-load-row {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
     display: block;
     border: 1px solid hsl(var(--border) / 0.3);
     border-radius: var(--radius);

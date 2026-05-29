@@ -434,7 +434,7 @@ export default function Loads() {
   const hasActiveFilters = search || statusFilter.length > 0 || invoiceFilter.length > 0 || driverFilter.length > 0 || truckFilter.length > 0 || tripFilter.length > 0 || dateFrom || dateTo;
 
   return (
-    <div className="p-4">
+    <div className="p-4" style={{ overflowX: 'hidden', boxSizing: 'border-box', width: '100%' }}>
       <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
       
       {/* Mobile Header */}
@@ -905,7 +905,7 @@ export default function Loads() {
                       </tbody>
                     </table>
                     {/* Mobile cards - separate from desktop table */}
-                    <div className="md:hidden space-y-0.5">
+                     <div className="md:hidden mobile-loads-list space-y-0.5">
                       {dateLoads.map(l => (
                         <MobileLoadCard
                           key={l.id}

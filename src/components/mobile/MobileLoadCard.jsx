@@ -21,7 +21,7 @@ export default function MobileLoadCard({ load, isPopped, onCardClick }) {
         "mobile-load-row",
         isPopped && "popped-up"
       )}
-      style={{ lineHeight: '1.3' }}
+      style={{ lineHeight: '1.3', boxSizing: 'border-box', width: '100%', maxWidth: '100%', overflow: 'hidden' }}
     >
       {/* Header: Load # + Status */}
       <div className="load-card-header" style={{ lineHeight: '1.3' }}>
