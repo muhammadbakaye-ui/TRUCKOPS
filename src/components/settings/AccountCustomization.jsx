@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Save, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSession } from '@/components/shared/AppSession';
+import { formatPhone } from '@/utils/phoneFormatter';
 
 export default function AccountCustomization() {
   const { session } = useSession();
@@ -116,7 +117,8 @@ export default function AccountCustomization() {
   });
 
   const handleAccountChange = (field, value) => {
-    setAccountForm(prev => ({ ...prev, [field]: value }));
+    const finalValue = field === 'phone' ? formatPhone(value) : value;
+    setAccountForm(prev => ({ ...prev, [field]: finalValue }));
   };
 
   const handlePasswordChange = (field, value) => {
