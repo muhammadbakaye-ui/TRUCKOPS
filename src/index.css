@@ -152,16 +152,7 @@
     max-width: 100vw !important;
   }
   
-  /* Fix button groups - stack vertically on mobile */
-  .flex.gap-2:has(button), .flex.gap-3:has(button), .flex.gap-4:has(button) {
-    flex-wrap: wrap;
-  }
-  
-  /* Ensure buttons are full width on mobile when in groups */
-  .flex.gap-2 > button, .flex.gap-3 > button, .flex.gap-4 > button {
-    flex: 1 1 100%;
-    min-width: auto;
-  }
+  /* NOTE: Removed blanket flex button rules — they broke SelectTriggers and other UI */
   
   /* Fix table overflow - allow horizontal scroll with indicator */
   table {

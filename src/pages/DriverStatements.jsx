@@ -187,14 +187,14 @@ export default function DriverStatements() {
       />
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 items-center">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 pl-8 text-xs w-48" />
+          <Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 pl-8 text-xs w-full sm:w-48" />
         </div>
 
         <Select value={periodFilter} onValueChange={setPeriodFilter}>
-          <SelectTrigger className="h-8 text-xs w-52">
+          <SelectTrigger className="h-8 text-xs w-full sm:w-52">
             <SelectValue placeholder="All Periods" />
           </SelectTrigger>
           <SelectContent>
@@ -206,7 +206,7 @@ export default function DriverStatements() {
         </Select>
 
         <Select value={driverFilter} onValueChange={setDriverFilter}>
-          <SelectTrigger className="h-8 text-xs w-44">
+          <SelectTrigger className="h-8 text-xs w-full sm:w-44">
             <SelectValue placeholder="All Drivers" />
           </SelectTrigger>
           <SelectContent>
@@ -216,7 +216,7 @@ export default function DriverStatements() {
         </Select>
 
         <Select value={truckFilter} onValueChange={setTruckFilter}>
-          <SelectTrigger className="h-8 text-xs w-36">
+          <SelectTrigger className="h-8 text-xs w-full sm:w-36">
             <SelectValue placeholder="All Trucks" />
           </SelectTrigger>
           <SelectContent>
@@ -226,7 +226,7 @@ export default function DriverStatements() {
         </Select>
 
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-8 text-xs w-36">
+          <SelectTrigger className="h-8 text-xs w-full sm:w-36">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>

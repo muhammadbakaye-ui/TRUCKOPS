@@ -15,7 +15,7 @@ export default function MobileLoadCard({ load, isPopped, onCardClick }) {
     <div
       onClick={() => {
         onCardClick?.();
-        navigate(createPageUrl('LoadDetail'), { state: { loadId: load.id } });
+        navigate(createPageUrl(`LoadDetail?id=${load.id}`));
       }}
       className={cn(
         "mobile-load-row",
