@@ -115,7 +115,9 @@ export default function BottomNav({ currentPage }) {
               )}
             >
               <Icon className={cn('w-5 h-5', isActive && 'stroke-[2.5px]')} />
-              <span>{item.label}</span>
+              <span className="truncate max-w-full px-0.5" style={{ fontSize: '10px', lineHeight: '1.2' }}>
+                {item.label === 'Driver Statements' ? 'Statements' : item.label}
+              </span>
             </Link>
           );
         })}

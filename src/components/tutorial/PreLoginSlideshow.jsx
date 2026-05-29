@@ -92,9 +92,9 @@ export default function PreLoginSlideshow({ onClose }) {
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-10 w-7 h-7 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white transition-colors"
+          className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-white transition-colors"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="w-4 h-4" />
         </button>
 
         {/* Screenshot header */}
@@ -161,8 +161,8 @@ export default function PreLoginSlideshow({ onClose }) {
               <button
                 key={i}
                 onClick={() => go(i)}
-                className={`rounded-full transition-all ${
-                  i === current ? 'w-5 h-2 bg-primary' : 'w-2 h-2 bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                className={`w-2 h-2 rounded-full transition-all ${
+                  i === current ? 'bg-primary' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
                 }`}
               />
             ))}

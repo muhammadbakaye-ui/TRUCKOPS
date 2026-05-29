@@ -107,9 +107,44 @@ export default function Dashboard() {
             </Button>
           </CardHeader>
           <CardContent className="px-4 pb-3">
-            <div className="space-y-1">
+            {/* Mobile: stacked cards */}
+            <div className="md:hidden space-y-2">
               {displayLoads.map(load => (
-                <div 
+                <div
+                  key={load.id}
+                  className="rounded-lg border border-border/50 p-3 cursor-pointer hover:bg-muted/30 active:bg-muted/50 transition-colors"
+                  onClick={() => navigate(createPageUrl(`LoadDetail?id=${load.id}`))}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-mono font-semibold text-primary text-sm">{load.internal_load_number}</span>
+                    <StatusBadge status={load.status} />
+                  </div>
+                  <p className="text-sm font-medium text-foreground mb-1">{load.customer_name || 'No customer'}</p>
+                  {(load.pickup_city || load.delivery_city) && (
+                    <p className="text-xs text-muted-foreground mb-1">
+                      {load.pickup_city ? `${load.pickup_city}, ${load.pickup_state}` : '—'} → {load.delivery_city ? `${load.delivery_city}, ${load.delivery_state}` : '—'}
+                    </p>
+                  )}
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-xs text-muted-foreground">
+                      {load.pickup_date ? format(new Date(load.pickup_date), 'MMM d') : ''}
+                    </span>
+                    {load.invoice_amount ? (
+                      <span className="font-semibold text-sm">${load.invoice_amount.toLocaleString()}</span>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+              {displayLoads.length === 0 && (
+                <div className="text-center py-8 text-sm text-muted-foreground">
+                  No loads yet. <Button variant="link" className="text-sm p-0 h-auto" onClick={() => navigate(createPageUrl('UploadDocument'))}>Upload a document</Button> to get started.
+                </div>
+              )}
+            </div>
+            {/* Desktop: row layout */}
+            <div className="hidden md:block space-y-1">
+              {displayLoads.map(load => (
+                <div
                   key={load.id}
                   className="flex items-center justify-between py-2 px-3 rounded hover:bg-muted/50 cursor-pointer text-[13px]"
                   onClick={() => navigate(createPageUrl(`LoadDetail?id=${load.id}`))}
