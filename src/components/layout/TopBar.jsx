@@ -85,7 +85,25 @@ export default function TopBar({ pageTitle, currentPageName }) {
             />
           </form>
           <div data-tour="notification-bell" className="flex-shrink-0"><NotificationBell /></div>
-          <TourButton onClick={startTour} className="lg:flex hidden flex-shrink-0" />
+          <TourButton onClick={startTour} className="flex flex-shrink-0" />
+          {/* Mobile-only logout icon */}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button className="flex lg:hidden items-center justify-center w-8 h-8 text-muted-foreground hover:text-foreground flex-shrink-0">
+                <LogOut className="w-5 h-5" />
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Log Out</AlertDialogTitle>
+                <AlertDialogDescription>Are you sure you want to log out?</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={logout}>Log Out</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <div className="hidden lg:flex items-center gap-2 pl-2 border-l border-border flex-shrink-0">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Shield className="w-3.5 h-3.5" />
