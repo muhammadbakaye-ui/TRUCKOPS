@@ -19,7 +19,7 @@ export default function DeletedItems() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [selectedIds, setSelectedIds] = useState(new Set());
 
-  const { data: deletedItems = [], isLoading } = useQuery({
+  const { data: deletedItems = [] } = useQuery({
     queryKey: ['deleted-items', session?.tenant_id],
     queryFn: () => session?.tenant_id ? base44.entities.DeletedItem.filter({ tenant_id: session.tenant_id }, '-created_date', 1000) : Promise.resolve([]),
     enabled: !!session?.tenant_id,
