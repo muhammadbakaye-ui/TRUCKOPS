@@ -78,16 +78,11 @@ function useMainScrollRestoration() {
     // Reset to top first (ensures clean state)
     el.scrollTop = 0;
     
-    // Then restore saved position after a brief delay for content to render
+    // Then restore saved position immediately
     const saved = sessionStorage.getItem(key);
     if (saved) {
       const target = parseInt(saved, 10);
-      const timer = setTimeout(() => {
-        if (mainRef.current) {
-          mainRef.current.scrollTop = target;
-        }
-      }, 100);
-      return () => clearTimeout(timer);
+      el.scrollTop = target;
     }
   }, [location.pathname]);
 
@@ -117,16 +112,11 @@ function useSidebarScrollRestoration() {
     const el = sidebarRef.current;
     if (!el) return;
     
-    // Restore saved position after a brief delay
+    // Restore saved position immediately
     const saved = sessionStorage.getItem(sidebarKey);
     if (saved) {
       const target = parseInt(saved, 10);
-      const timer = setTimeout(() => {
-        if (sidebarRef.current) {
-          sidebarRef.current.scrollTop = target;
-        }
-      }, 50);
-      return () => clearTimeout(timer);
+      el.scrollTop = target;
     }
   }, [sidebarKey]);
 
