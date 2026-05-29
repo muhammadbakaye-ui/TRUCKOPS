@@ -128,10 +128,7 @@
     -webkit-user-select: none;
     pointer-events: none;
   }
-}
-
-/* Mobile-first responsive layout */
-@media (max-width: 767px) {
+  
   /* Prevent horizontal overflow on all pages */
   body, main, div[class*="flex"] {
     max-width: 100%;
@@ -167,7 +164,15 @@
     min-height: 44px;
   }
   
-  /* Fix checkbox/select sizing on desktop - RESET mobile styles */
+  /* Fix page headers on mobile */
+  h1, h2, h3, h4, h5, h6 {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+}
+
+/* Desktop input sizing - these apply to desktop ONLY (768px and up) */
+@media (min-width: 768px) {
   input[type="checkbox"], input[type="radio"] {
     width: 1rem;
     height: 1rem;
@@ -176,12 +181,6 @@
     font-size: 14px;
     min-height: auto;
     height: auto;
-  }
-  
-  /* Fix page headers on mobile */
-  h1, h2, h3, h4, h5, h6 {
-    word-wrap: break-word;
-    overflow-wrap: break-word;
   }
 }
 
