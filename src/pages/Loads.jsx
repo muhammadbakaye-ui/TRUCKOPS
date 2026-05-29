@@ -209,6 +209,7 @@ export default function Loads() {
   const [undoToast, setUndoToast] = useState(null); // { message, onUndo }
   const [qaEnabled, setQaEnabled] = useState(() => localStorage.getItem('loads_qa_enabled') === 'true');
   const [qaAction, setQaAction] = useState(() => localStorage.getItem('loads_qa_action') || 'paid');
+  const [poppedLoad, setPoppedLoad] = useState(null);
 
   const handleQaToggle = (v) => { setQaEnabled(v); localStorage.setItem('loads_qa_enabled', v); };
   const handleQaAction = (v) => { setQaAction(v); localStorage.setItem('loads_qa_action', v); };
@@ -793,9 +794,18 @@ export default function Loads() {
                       </tbody>
                     </table>
                     {/* Mobile cards - separate from desktop table */}
-                    <div className="md:hidden mt-2">
+                    <div className="md:hidden">
                       {dateLoads.map(l => (
-                        <MobileLoadCard key={l.id} load={l} />
+                        <tr
+                          key={l.id}
+                          className={`table-row md:hidden cursor-pointer transition-all ${poppedLoad === l.id ? 'popped-up' : ''}`}
+                          onClick={() => setPoppedLoad(poppedLoad === l.id ? null : l.id)}
+                          onMouseLeave={() => setPoppedLoad(null)}
+                        >
+                          <td data-label="Load" colSpan="11" className="!border-0 !padding-0 p-0 m-0">
+                            <MobileLoadCard load={l} />
+                          </td>
+                        </tr>
                       ))}
                     </div>
                     </div>
