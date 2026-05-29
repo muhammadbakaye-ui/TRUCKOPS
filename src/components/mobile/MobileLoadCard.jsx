@@ -24,8 +24,9 @@ const invoiceStatusStyles = {
 export default function MobileLoadCard({ load }) {
   const navigate = useNavigate();
 
+  if (!load) return null;
+
   const statusLabel = load.dispatch_status || 'draft';
-  const invoiceStatusLabel = load.invoice_status || 'not_invoiced';
 
   return (
     <div
