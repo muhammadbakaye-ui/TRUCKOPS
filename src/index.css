@@ -118,10 +118,22 @@
 
 /* Mobile safe area & touch - mobile only */
 @media (max-width: 767px) {
-  button, a, [role="button"] {
+  button:not([role="switch"]):not([role="checkbox"]):not([role="radio"]),
+  a,
+  [role="button"] {
     user-select: none;
     -webkit-user-select: none;
-    min-height: 44px; /* Minimum tap target */
+    min-height: 36px;
+    height: auto;
+    font-size: 13px;
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+  button[role="switch"],
+  button[role="checkbox"],
+  button[role="radio"] {
+    user-select: none;
+    -webkit-user-select: none;
   }
   svg {
     user-select: none;
@@ -159,9 +171,20 @@
   }
   
   /* Ensure all form inputs are mobile-friendly */
-  input, select, textarea {
-    font-size: 16px; /* Prevents zoom on iOS */
-    min-height: 44px;
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]),
+  select {
+    font-size: 14px !important;
+    min-height: 40px;
+    height: 40px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  textarea {
+    font-size: 14px !important;
+    min-height: 80px;
+    height: auto;
+    width: 100%;
+    box-sizing: border-box;
   }
   
   /* Fix page headers on mobile */
@@ -564,6 +587,109 @@
   /* Date input containers - match desktop height */
   .flex.items-center.gap-1.border {
     height: 36px !important;
+  }
+}
+
+/* ─── GLOBAL MOBILE STANDARDS ─── */
+@media (max-width: 767px) {
+  /* Universal box-sizing */
+  *, *::before, *::after { box-sizing: border-box; }
+
+  /* Prevent horizontal scroll globally */
+  html, body { overflow-x: hidden; max-width: 100%; }
+  .p-4, .p-3, .p-2, .px-4, .px-3, .space-y-4, .space-y-3, form, fieldset {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* ── TOGGLE SWITCHES ── */
+  button[role="switch"] {
+    width: 44px !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    min-width: 44px !important;
+    border-radius: 12px !important;
+    flex-shrink: 0 !important;
+    padding: 0 !important;
+  }
+  /* Radix Switch thumb span */
+  button[role="switch"] > span {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+    max-width: 20px !important;
+    max-height: 20px !important;
+  }
+
+  /* ── CHECKBOXES ── */
+  input[type="checkbox"] {
+    width: 18px !important;
+    height: 18px !important;
+    min-height: 18px !important;
+    min-width: 18px !important;
+    flex-shrink: 0;
+    appearance: auto;
+    -webkit-appearance: auto;
+  }
+  button[role="checkbox"] {
+    width: 18px !important;
+    height: 18px !important;
+    min-height: 18px !important;
+    min-width: 18px !important;
+    max-width: 18px !important;
+    max-height: 18px !important;
+    padding: 0 !important;
+    flex-shrink: 0 !important;
+    border-radius: 3px !important;
+  }
+  button[role="checkbox"] svg {
+    width: 12px !important;
+    height: 12px !important;
+  }
+
+  /* ── BUTTON ROWS (pass/fail/n-a etc) ── */
+  .flex.gap-1 > button:not([role="switch"]):not([role="checkbox"]),
+  .flex.gap-2 > button:not([role="switch"]):not([role="checkbox"]) {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ── PAGE HEADER: title truncates, button stays visible ── */
+  .flex.items-center.justify-between > h1,
+  .flex.items-center.justify-between > h2,
+  .flex.items-center.justify-between > span,
+  .flex.items-center.justify-between > div > h1,
+  .flex.items-center.justify-between > div > h2 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex-shrink: 1;
+  }
+  .flex.items-center.justify-between > button,
+  .flex.items-center.justify-between > a,
+  .flex.items-center.justify-between > div:last-child {
+    flex-shrink: 0;
+  }
+
+  /* ── GENERAL BUTTON OVERRIDES (height 36px) ── */
+  button:not([role="switch"]):not([role="checkbox"]):not([role="radio"]):not([role="tab"]) {
+    min-height: 36px !important;
+    font-size: 13px;
+    padding-left: 12px;
+    padding-right: 12px;
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+  /* Icon-only buttons — keep square, no extra padding */
+  button.h-6, button.h-7, button[class*="size-icon"], button[class*="w-6"], button[class*="w-7"],
+  button[class*="w-8"][class*="h-8"] {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
   }
 }
 
