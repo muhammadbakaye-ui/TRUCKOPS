@@ -20,6 +20,16 @@ export default function TopBar({ pageTitle, currentPageName }) {
   const companyName = session?.company_name || '';
   const queryClient = useQueryClient();
 
+  const rootPages = new Set([
+    'Dashboard','Loads','Invoices','DriverStatements','Drivers','Trucks','Trailers',
+    'Companies','FuelImport','Reports','SettingsPage','AuditLogPage','DispatchBoard',
+    'Taxes1099','Factoring','DriverQualifications','DriverViolations','DrugAlcoholTests',
+    'AccidentsClaims','VehicleMaintenance','TruckInspections','EquipmentWarnings',
+    'LicenseExpirationWarnings','IFTAReports','InsurancePolicies','PermitsLicenses',
+    'HighwayUseTax','DeletedItems','AdminDriverDocuments',
+  ]);
+  const showMobileBack = !!currentPageName && !rootPages.has(currentPageName);
+
   const startTour = () => setShowTour(true);
 
   React.useEffect(() => {
@@ -70,6 +80,15 @@ export default function TopBar({ pageTitle, currentPageName }) {
               <RotateCw className="w-3.5 h-3.5" />
             </Button>
           </div>
+          {showMobileBack && (
+            <button
+              onClick={() => navigate(-1)}
+              className="lg:hidden flex-shrink-0 flex items-center justify-center w-9 h-9 -ml-1 text-muted-foreground hover:text-foreground"
+              aria-label="Go back"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          )}
           <h1 className="text-sm font-semibold text-foreground leading-none truncate">{pageTitle}</h1>
         </div>
 

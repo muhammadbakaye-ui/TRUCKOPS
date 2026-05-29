@@ -905,7 +905,7 @@ export default function Loads() {
                       </tbody>
                     </table>
                     {/* Mobile cards - separate from desktop table */}
-                    <div className="md:hidden mobile-loads-list space-y-0.5">
+                    <div className="md:hidden mobile-loads-list space-y-2">
                       {dateLoads.map(l => (
                         <MobileLoadCard
                           key={l.id}

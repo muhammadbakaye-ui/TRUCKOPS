@@ -123,7 +123,7 @@
   [role="button"] {
     user-select: none;
     -webkit-user-select: none;
-    min-height: 36px;
+    min-height: 44px;
     height: auto;
     font-size: 13px;
     box-sizing: border-box;
@@ -587,7 +587,7 @@
   *, *::before, *::after { box-sizing: border-box; }
 
   /* Prevent horizontal scroll globally */
-  html, body { overflow-x: hidden; max-width: 100%; }
+  html, body { overflow-x: hidden; max-width: 100%; overscroll-behavior: none; }
   .p-4, .p-3, .p-2, .px-4, .px-3, .space-y-4, .space-y-3, form, fieldset {
     max-width: 100%;
     box-sizing: border-box;
@@ -667,9 +667,9 @@
     flex-shrink: 0;
   }
 
-  /* ── GENERAL BUTTON OVERRIDES (height 36px) ── */
+  /* ── GENERAL BUTTON OVERRIDES (height 44px) ── */
   button:not([role="switch"]):not([role="checkbox"]):not([role="radio"]):not([role="tab"]) {
-    min-height: 36px !important;
+    min-height: 44px !important;
     font-size: 13px;
     padding-left: 12px;
     padding-right: 12px;
