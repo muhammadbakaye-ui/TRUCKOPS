@@ -16,6 +16,23 @@ export default function MobileLoadsHeader({
 }) {
   return (
     <div className="mobile-loads-header">
+      {/* Top bar: Title + New Load button */}
+      <div className="mobile-loads-top-bar">
+        <div>
+          <h1 className="text-lg font-bold text-foreground">Loads</h1>
+          <p className="text-xs text-muted-foreground">
+            {filteredCount} of {totalCount >= 1000 ? '1000+' : totalCount} loads
+          </p>
+        </div>
+        <Button 
+          className="new-load-btn" 
+          onClick={onNewLoad}
+        >
+          <Plus className="w-4 h-4" /> 
+          <span>New Load</span>
+        </Button>
+      </div>
+
       {/* Search bar */}
       <div className="mobile-search-bar">
         <Search className="w-4 h-4 text-muted-foreground" />
