@@ -256,7 +256,22 @@ export default function LoadDetail() {
   const removeStop = (i) => setStops(prev => prev.filter((_, idx) => idx !== i));
   const setStop = (i, key, val) => setStops(prev => prev.map((s, idx) => idx === i ? { ...s, [key]: val } : s));
 
-  if (!isNew && isLoading) return <div className="p-4 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="w-4 h-4 animate-spin" /> Loading...</div>;
+  // Sync form from query data if setForm inside queryFn was skipped (cached data path)
+  React.useEffect(() => {
+    if (load && !form) {
+      const l = { ...load };
+      if (!l.charge_line_items?.length) {
+        const items = [];
+        if (l.freight_rate) items.push({ description: 'Line Haul', amount: l.freight_rate });
+        if (l.fuel_surcharge) items.push({ description: 'Fuel Surcharge', amount: l.fuel_surcharge });
+        if (l.extra_charges) items.push({ description: 'Extra Charges', amount: l.extra_charges });
+        l.charge_line_items = items;
+      }
+      setForm(l);
+    }
+  }, [load]);
+
+  if (!isNew && (isLoading || (!form && !!loadId))) return <div className="p-4 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="w-4 h-4 animate-spin" /> Loading...</div>;
   if (!form) return null;
 
   return (
