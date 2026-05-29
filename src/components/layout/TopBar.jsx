@@ -75,6 +75,7 @@ export default function TopBar({ pageTitle, currentPageName }) {
 
         {/* Right: Icons */}
         <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
+          {/* Desktop search */}
           <form onSubmit={handleSearch} className="relative hidden lg:block" data-tour="topbar-search">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <Input
@@ -84,40 +85,16 @@ export default function TopBar({ pageTitle, currentPageName }) {
               className="w-64 h-8 pl-8 text-xs bg-muted border-0"
             />
           </form>
-          <div data-tour="notification-bell" className="flex-shrink-0"><NotificationBell /></div>
-          <TourButton onClick={startTour} className="flex flex-shrink-0" />
-          {/* Mobile-only logout icon */}
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <button className="flex lg:hidden items-center justify-center w-8 h-8 text-muted-foreground hover:text-foreground flex-shrink-0">
-                <LogOut className="w-5 h-5" />
-              </button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Log Out</AlertDialogTitle>
-                <AlertDialogDescription>Are you sure you want to log out?</AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={logout}>Log Out</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          <div className="hidden lg:flex items-center gap-2 pl-2 border-l border-border flex-shrink-0">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Shield className="w-3.5 h-3.5" />
-              <span className="font-medium">Admin</span>
-            </div>
+
+          {/* Mobile: bell + help + logout all in one row */}
+          <div className="flex lg:hidden items-center gap-3">
+            <NotificationBell />
+            <TourButton onClick={startTour} />
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
-                >
-                  <LogOut className="w-3.5 h-3.5" /> Logout
-                </Button>
+                <button className="flex items-center justify-center text-muted-foreground hover:text-foreground" style={{ width: 28, height: 28 }}>
+                  <LogOut className="w-5 h-5" />
+                </button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -130,6 +107,35 @@ export default function TopBar({ pageTitle, currentPageName }) {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+          </div>
+
+          {/* Desktop: bell + help + logout */}
+          <div className="hidden lg:flex items-center gap-2">
+            <div data-tour="notification-bell"><NotificationBell /></div>
+            <TourButton onClick={startTour} />
+            <div className="flex items-center gap-2 pl-2 border-l border-border">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Shield className="w-3.5 h-3.5" />
+                <span className="font-medium">Admin</span>
+              </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground">
+                    <LogOut className="w-3.5 h-3.5" /> Logout
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Log Out</AlertDialogTitle>
+                    <AlertDialogDescription>Are you sure you want to log out?</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={logout}>Log Out</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </div>
         </div>
       </div>
