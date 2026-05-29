@@ -53,10 +53,10 @@ export default function TopBar({ pageTitle, currentPageName }) {
   };
 
   return (
-    <div>
+    <>
       {showTour && <AppTour steps={ADMIN_TOUR_STEPS} onClose={() => setShowTour(false)} />}
       {showUploadTour && <AppTour steps={UPLOAD_TOUR_STEPS} onClose={() => setShowUploadTour(false)} />}
-      <div className="h-14 border-b border-border bg-card flex items-center justify-between px-3 lg:px-4 flex-shrink-0" style={{ paddingLeft: 'max(0.75rem, env(safe-area-inset-left))', paddingRight: 'max(0.75rem, env(safe-area-inset-right))' }}>
+      <div className="sticky top-0 z-40 h-14 border-b border-border bg-card flex items-center justify-between px-3 lg:px-4 flex-shrink-0" style={{ paddingLeft: 'max(0.75rem, env(safe-area-inset-left))', paddingRight: 'max(0.75rem, env(safe-area-inset-right))' }}>
         {/* Left: Page Title */}
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <div className="hidden lg:flex items-center gap-0.5 flex-shrink-0">
@@ -85,7 +85,7 @@ export default function TopBar({ pageTitle, currentPageName }) {
             />
           </form>
           <div data-tour="notification-bell" className="flex-shrink-0"><NotificationBell /></div>
-          <TourButton onClick={startTour} className="hidden lg:flex flex-shrink-0" />
+          <TourButton onClick={startTour} className="lg:flex hidden flex-shrink-0" />
           <div className="hidden lg:flex items-center gap-2 pl-2 border-l border-border flex-shrink-0">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Shield className="w-3.5 h-3.5" />
@@ -115,6 +115,6 @@ export default function TopBar({ pageTitle, currentPageName }) {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
