@@ -4,7 +4,7 @@ import { createPageUrl } from '@/utils';
 import { 
   X, LogOut, FolderOpen, Users, Truck, ClipboardList, Shield, Wrench, 
   FileText, Settings, BarChart3, Upload, ChevronRight, Container, 
-  Package, FileCheck, AlertTriangle, Calendar, CheckCircle, AlertCircle, Grid3x3, Check
+  Package, FileCheck, AlertTriangle, Calendar, CheckCircle, AlertCircle, Grid3x3
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -124,7 +124,7 @@ export default function MobileMenuDrawer({ open, onOpenChange, currentPage, edit
               onClick={onSaveCustomization}
               disabled={tempSelection.length === 0}
             >
-              Save
+              Done
             </Button>
           )}
           {!editMode && (
@@ -136,16 +136,6 @@ export default function MobileMenuDrawer({ open, onOpenChange, currentPage, edit
               title="Customize bottom menu"
             >
               <Grid3x3 className="w-5 h-5" />
-            </Button>
-          )}
-          {editMode && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onEditModeChange(false)}
-              className="text-sidebar-foreground hover:bg-sidebar-accent/50"
-            >
-              <X className="w-5 h-5" />
             </Button>
           )}
           {!editMode && (

@@ -53,7 +53,7 @@ export default function BottomNav({ currentPage }) {
 
   useEffect(() => {
     if (editMode) {
-      setTempSelection(visiblePages);
+      setTempSelection(visiblePages.length > 0 ? visiblePages : ['Dashboard', 'Loads']);
     }
   }, [editMode]);
 
@@ -92,45 +92,57 @@ export default function BottomNav({ currentPage }) {
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         {/* 4 customizable tabs */}
-        {displayPages.map((page, index) => {
-          if (index >= 4) return null; // Only show first 4
-          const item = ALL_NAV_ITEMS.find(i => i.page === page) || ALL_AVAILABLE_PAGES.find(p => p.page === page);
-          if (!item) return null;
-          const Icon = item.icon;
-          const isActive = currentPage === page;
-          
-          if (editMode) {
+        {editMode ? (
+          // Edit mode: show checkboxes on the 4 slots
+          ALL_AVAILABLE_PAGES.slice(0, 4).map((item, index) => {
+            const page = tempSelection[index];
+            const pageItem = page ? (ALL_NAV_ITEMS.find(i => i.page === page) || ALL_AVAILABLE_PAGES.find(p => p.page === page)) : null;
+            const Icon = pageItem?.icon || item.icon;
+            
             return (
-              <div
-                key={page}
-                className="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[11px] font-medium relative min-h-[56px]"
+              <button
+                key={index}
+                onClick={() => page && handleTogglePage(page)}
+                className="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[11px] font-medium relative min-h-[56px] text-sidebar-foreground/70"
               >
                 <Checkbox
-                  checked={tempSelection.includes(page)}
-                  onCheckedChange={() => handleTogglePage(page)}
-                  className="absolute top-1 right-1 h-4 w-4 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                  checked={!!page}
+                  className="absolute top-0.5 right-1 h-4 w-4"
+                  onClick={(e) => e.stopPropagation()}
                 />
-                <Icon className={cn('w-6 h-6', isActive && 'stroke-[2.5px]')} />
-                <span className={isActive ? 'text-sidebar-primary' : 'text-sidebar-foreground/70'}>{item.label}</span>
-              </div>
+                {page && (
+                  <>
+                    <Icon className="w-6 h-6" />
+                    <span>{pageItem?.label}</span>
+                  </>
+                )}
+              </button>
             );
-          }
-          
-          return (
-            <Link
-              key={page}
-              to={createPageUrl(page)}
-              data-tour={item.tourAttr}
-              className={cn(
-                'flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[11px] font-medium transition-colors select-none min-h-[56px]',
-                isActive ? 'text-sidebar-primary bg-sidebar-accent/20' : 'text-sidebar-foreground/70 hover:text-sidebar-foreground'
-              )}
-            >
-              <Icon className={cn('w-6 h-6', isActive && 'stroke-[2.5px]')} />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
+          })
+        ) : (
+          // Normal mode: show actual nav tabs
+          displayPages.slice(0, 4).map((page, index) => {
+            const item = ALL_NAV_ITEMS.find(i => i.page === page) || ALL_AVAILABLE_PAGES.find(p => p.page === page);
+            if (!item) return null;
+            const Icon = item.icon;
+            const isActive = currentPage === page;
+            
+            return (
+              <Link
+                key={page}
+                to={createPageUrl(page)}
+                data-tour={item.tourAttr}
+                className={cn(
+                  'flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[11px] font-medium transition-colors select-none min-h-[56px]',
+                  isActive ? 'text-sidebar-primary bg-sidebar-accent/20' : 'text-sidebar-foreground/70 hover:text-sidebar-foreground'
+                )}
+              >
+                <Icon className={cn('w-6 h-6', isActive && 'stroke-[2.5px]')} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })
+        )}
 
         {/* "More" Menu Button - always visible as 5th slot */}
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>

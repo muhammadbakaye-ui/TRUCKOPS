@@ -56,9 +56,10 @@ export default function TopBar({ pageTitle, currentPageName }) {
     <div>
       {showTour && <AppTour steps={ADMIN_TOUR_STEPS} onClose={() => setShowTour(false)} />}
       {showUploadTour && <AppTour steps={UPLOAD_TOUR_STEPS} onClose={() => setShowUploadTour(false)} />}
-      <div className="h-14 border-b border-border bg-card flex items-center justify-between px-4 flex-shrink-0" style={{ paddingLeft: 'max(1rem, env(safe-area-inset-left))', paddingRight: 'max(1rem, env(safe-area-inset-right))' }}>
-        <div className="flex items-center gap-2">
-          <div className="hidden lg:flex items-center gap-0.5">
+      <div className="h-14 border-b border-border bg-card flex items-center justify-between px-3 lg:px-4 flex-shrink-0" style={{ paddingLeft: 'max(0.75rem, env(safe-area-inset-left))', paddingRight: 'max(0.75rem, env(safe-area-inset-right))' }}>
+        {/* Left: Page Title */}
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div className="hidden lg:flex items-center gap-0.5 flex-shrink-0">
             <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => navigate(-1)}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
@@ -69,13 +70,11 @@ export default function TopBar({ pageTitle, currentPageName }) {
               <RotateCw className="w-3.5 h-3.5" />
             </Button>
           </div>
-          <div>
-
-            <h1 className="text-sm font-semibold text-foreground leading-none">{pageTitle}</h1>
-          </div>
+          <h1 className="text-sm font-semibold text-foreground leading-none truncate">{pageTitle}</h1>
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* Right: Icons */}
+        <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">
           <form onSubmit={handleSearch} className="relative hidden lg:block" data-tour="topbar-search">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <Input
@@ -85,9 +84,9 @@ export default function TopBar({ pageTitle, currentPageName }) {
               className="w-64 h-8 pl-8 text-xs bg-muted border-0"
             />
           </form>
-          <div data-tour="notification-bell"><NotificationBell /></div>
-          <TourButton onClick={startTour} className="hidden lg:flex" />
-          <div className="hidden lg:flex items-center gap-2 pl-2 border-l border-border">
+          <div data-tour="notification-bell" className="flex-shrink-0"><NotificationBell /></div>
+          <TourButton onClick={startTour} className="hidden lg:flex flex-shrink-0" />
+          <div className="hidden lg:flex items-center gap-2 pl-2 border-l border-border flex-shrink-0">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Shield className="w-3.5 h-3.5" />
               <span className="font-medium">Admin</span>

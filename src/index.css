@@ -169,6 +169,12 @@
     word-wrap: break-word;
     overflow-wrap: break-word;
   }
+  
+  /* Fix TopBar layout - prevent icon overlap */
+  .h-14.border-b {
+    padding-left: max(0.75rem, env(safe-area-inset-left)) !important;
+    padding-right: max(0.75rem, env(safe-area-inset-right)) !important;
+  }
 }
 
 /* Desktop input sizing - these apply to desktop ONLY (768px and up) */
