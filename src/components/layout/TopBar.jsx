@@ -87,13 +87,13 @@ export default function TopBar({ pageTitle, currentPageName }) {
           </form>
 
           {/* Mobile: bell + help + logout all in one row */}
-          <div className="flex lg:hidden items-center gap-3">
-            <NotificationBell />
-            <TourButton onClick={startTour} />
+          <div className="lg:hidden" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, overflow: 'visible' }}>
+            <div style={{ flexShrink: 0 }}><NotificationBell /></div>
+            <div style={{ flexShrink: 0 }}><TourButton onClick={startTour} /></div>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <button className="flex items-center justify-center text-muted-foreground hover:text-foreground" style={{ width: 28, height: 28 }}>
-                  <LogOut className="w-5 h-5" />
+                <button style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, flexShrink: 0, color: 'hsl(var(--muted-foreground))' }}>
+                  <LogOut style={{ width: 18, height: 18 }} />
                 </button>
               </AlertDialogTrigger>
               <AlertDialogContent>
