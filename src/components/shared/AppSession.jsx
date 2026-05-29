@@ -86,9 +86,8 @@ export function SessionProvider({ children }) {
             }
           })
           .catch(() => {
-            // 401 or other error — session invalid, log out silently
-            localStorage.removeItem(SESSION_KEY);
-            setSession(null);
+            // Network error or timeout — keep existing session, don't log out
+            // Only log out on explicit server rejection (handled in .then above)
           });
       } catch {
         localStorage.removeItem(SESSION_KEY);
