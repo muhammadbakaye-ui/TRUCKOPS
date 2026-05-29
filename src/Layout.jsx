@@ -165,14 +165,6 @@ function AppShell({ children, currentPageName }) {
 
   // No subscription redirect - preview mode is open
 
-  if (validating || !onboardingChecked) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-sidebar">
-        <div className="w-8 h-8 border-4 border-sidebar-border border-t-sidebar-primary rounded-full animate-spin" />
-      </div>
-    );
-  }
-
   if (showOnboarding && session) {
     return <OnboardingFlow session={session} onComplete={handleOnboardingComplete} />;
   }
@@ -207,7 +199,13 @@ function AppShell({ children, currentPageName }) {
           <TopBar pageTitle={pageTitles[currentPageName] || currentPageName} currentPageName={currentPageName} />
           {/* Extra bottom padding on mobile to clear the bottom nav */}
           <main ref={mainRef} className="flex-1 overflow-auto px-2 lg:px-0 pb-16 md:pb-0">
-            {children}
+            {(validating || !onboardingChecked) ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="w-8 h-8 border-4 border-border border-t-primary rounded-full animate-spin" />
+              </div>
+            ) : (
+              children
+            )}
           </main>
         </div>
         {/* Bottom nav: mobile only */}
