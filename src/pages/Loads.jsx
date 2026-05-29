@@ -171,10 +171,13 @@ export default function Loads() {
   useEffect(() => { localStorage.setItem('loads_date_to', dateTo); }, [dateTo]);
   useEffect(() => { sessionStorage.setItem('loads_selected', JSON.stringify([...selected])); }, [selected]);
 
-  const { data: loads = [], isLoading } = useQuery({
+  const { data: loads = [], isLoading, isFetching } = useQuery({
     queryKey: ['loads', session?.tenant_id],
     queryFn: () => session?.tenant_id ? base44.entities.Load.filter({ tenant_id: session.tenant_id }, '-created_date', 1000) : Promise.resolve([]),
   });
+  
+  // Show loading only on first load (no cached data), not when refetching in background
+  const showLoading = isLoading && loads.length === 0;
 
   const { data: drivers = [] } = useQuery({
     queryKey: ['drivers', session?.tenant_id],

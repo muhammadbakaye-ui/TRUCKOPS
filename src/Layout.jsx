@@ -126,11 +126,14 @@ function AppShell({ children, currentPageName }) {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
 
-  // Check if onboarding is needed for this session
+  // Check if onboarding is needed for this session (only once per session)
   useEffect(() => {
     if (validating) { setOnboardingChecked(false); return; }
     if (!session || session.role === 'driver') { setOnboardingChecked(true); return; }
     if (session.onboarding_completed) { setOnboardingChecked(true); return; }
+    // Already checked this session? Skip
+    if (onboardingChecked) return;
+    
     setOnboardingChecked(false);
     // Check DB via authAdmin — enforce 6s timeout so the overlay never hangs forever
     const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000));
@@ -145,13 +148,14 @@ function AppShell({ children, currentPageName }) {
       .then(res => {
         if (res.data?.onboarding_completed) {
           login({ ...session, onboarding_completed: true });
+          setOnboardingChecked(true);
         } else {
           setShowOnboarding(true);
+          setOnboardingChecked(true);
         }
       })
-      .catch(() => { /* keep onboarding hidden on error / timeout */ })
-      .finally(() => setOnboardingChecked(true));
-  }, [session?.admin_email, validating]);
+      .catch(() => { setOnboardingChecked(true); /* keep onboarding hidden on error / timeout */ })
+  }, [session?.admin_email, validating, onboardingChecked]);
 
   const handleOnboardingComplete = () => {
     login({ ...session, onboarding_completed: true });
