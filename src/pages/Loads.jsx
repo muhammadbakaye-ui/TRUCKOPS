@@ -25,7 +25,7 @@ import { format, parseISO } from 'date-fns';
 import { useEntitySubscription } from '../hooks/useEntitySubscription';
 import QuickActionSettings from '../components/shared/QuickActionSettings';
 import { chunkAsync } from '../utils/chunkAsync';
-import MobileLoadCard from '../components/loads/MobileLoadCard';
+import MobileLoadCard from '../components/mobile/MobileLoadCard';
 
 const INVOICE_STATUS_STYLES = {
   not_invoiced: 'bg-muted text-muted-foreground border-border',
