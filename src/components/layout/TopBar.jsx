@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, LogOut, Shield, ChevronLeft, ChevronRight, RotateCw } from 'lucide-react';
+import { Search, LogOut, Shield, ChevronLeft, ChevronRight, RotateCw, Grid3x3 } from 'lucide-react';
+import CustomizeLayoutModal from '../mobile/CustomizeLayoutModal';
 import { useSession } from '../shared/AppSession';
 import NotificationBell from './NotificationBell';
 import TourButton from '../tutorial/TourButton';
@@ -15,6 +16,7 @@ export default function TopBar({ pageTitle, currentPageName }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showTour, setShowTour] = useState(false);
   const [showUploadTour, setShowUploadTour] = useState(false);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
   const navigate = useNavigate();
   const { logout, session } = useSession();
   const companyName = session?.company_name || '';
@@ -54,6 +56,7 @@ export default function TopBar({ pageTitle, currentPageName }) {
 
   return (
     <div>
+      <CustomizeLayoutModal open={customizeOpen} onOpenChange={setCustomizeOpen} />
       {showTour && <AppTour steps={ADMIN_TOUR_STEPS} onClose={() => setShowTour(false)} />}
       {showUploadTour && <AppTour steps={UPLOAD_TOUR_STEPS} onClose={() => setShowUploadTour(false)} />}
       <div className="h-14 border-b border-border bg-card flex items-center justify-between px-4 flex-shrink-0" style={{ paddingLeft: 'max(1rem, env(safe-area-inset-left))', paddingRight: 'max(1rem, env(safe-area-inset-right))' }}>
@@ -69,6 +72,15 @@ export default function TopBar({ pageTitle, currentPageName }) {
               <RotateCw className="w-3.5 h-3.5" />
             </Button>
           </div>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-7 w-7 text-muted-foreground hover:text-foreground md:hidden" 
+            onClick={() => setCustomizeOpen(true)}
+            title="Customize bottom menu"
+          >
+            <Grid3x3 className="w-4 h-4" />
+          </Button>
           <div>
 
             <h1 className="text-sm font-semibold text-foreground leading-none">{pageTitle}</h1>

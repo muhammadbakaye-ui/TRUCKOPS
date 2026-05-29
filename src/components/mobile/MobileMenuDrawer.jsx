@@ -4,7 +4,7 @@ import { createPageUrl } from '@/utils';
 import { 
   X, LogOut, FolderOpen, Users, Truck, ClipboardList, Shield, Wrench, 
   FileText, Settings, BarChart3, Upload, ChevronRight, Container, 
-  Package, FileCheck, AlertTriangle, Calendar, CheckCircle, AlertCircle
+  Package, FileCheck, AlertTriangle, Calendar, CheckCircle, AlertCircle, Grid3x3
 } from 'lucide-react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -89,7 +89,7 @@ const MENU_SECTIONS = [
   },
 ];
 
-export default function MobileMenuDrawer({ open, onOpenChange, currentPage }) {
+export default function MobileMenuDrawer({ open, onOpenChange, currentPage, onCustomizeClick }) {
   const { logout, session } = useSession();
 
   const handleLogout = () => {
@@ -104,19 +104,30 @@ export default function MobileMenuDrawer({ open, onOpenChange, currentPage }) {
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-sidebar-border bg-sidebar-accent/20">
+       <div className="flex items-center justify-between p-4 border-b border-sidebar-border bg-sidebar-accent/20">
         <div>
           <h2 className="text-lg font-semibold text-sidebar-foreground">Menu</h2>
           <p className="text-xs text-sidebar-foreground/60">{session?.company_name || 'TruckOps'}</p>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onOpenChange(false)}
-          className="text-sidebar-foreground hover:bg-sidebar-accent/50"
-        >
-          <X className="w-5 h-5" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onCustomizeClick}
+            className="text-sidebar-foreground hover:bg-sidebar-accent/50"
+            title="Customize bottom menu"
+          >
+            <Grid3x3 className="w-5 h-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onOpenChange(false)}
+            className="text-sidebar-foreground hover:bg-sidebar-accent/50"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
       </div>
 
       {/* Scrollable Menu */}
@@ -152,7 +163,6 @@ export default function MobileMenuDrawer({ open, onOpenChange, currentPage }) {
                           <Icon className={cn('w-5 h-5', isActive && 'stroke-[2.5px]')} />
                           <span className="text-sm font-medium">{item.label}</span>
                         </div>
-                        <ChevronRight className={cn('w-4 h-4', isActive ? 'text-sidebar-primary' : 'text-sidebar-foreground/40')} />
                       </Link>
                     );
                   })}

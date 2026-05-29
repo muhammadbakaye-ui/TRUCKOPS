@@ -164,6 +164,19 @@ svg {
     font-size: 16px; /* Prevents zoom on iOS */
     min-height: 44px;
   }
+
+  /* Fix checkbox/select sizing on desktop */
+  @media (min-width: 768px) {
+    input[type="checkbox"], input[type="radio"] {
+      width: 1rem;
+      height: 1rem;
+    }
+    select, input[type="text"], input[type="number"], input[type="date"], textarea {
+      font-size: 14px;
+      min-height: auto;
+      height: auto;
+    }
+  }
   
   /* Fix page headers on mobile */
   h1, h2, h3, h4, h5, h6 {
@@ -238,6 +251,35 @@ svg {
 .dense-table td, .dense-table th {
   padding: 6px 10px;
   font-size: 0.8125rem;
+}
+
+/* Select dropdown fixes */
+select {
+  height: auto;
+}
+
+/* Checkbox/radio fixes */
+input[type="checkbox"],
+input[type="radio"] {
+  cursor: pointer;
+}
+
+/* Button group fixes */
+.button-group button {
+  flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+  /* Stack buttons vertically on mobile */
+  .button-group {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+  
+  .button-group > button,
+  .button-group > [role="button"] {
+    width: 100%;
+  }
 }
 
 /* Print styles */
