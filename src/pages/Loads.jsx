@@ -794,18 +794,14 @@ export default function Loads() {
                       </tbody>
                     </table>
                     {/* Mobile cards - separate from desktop table */}
-                    <div className="md:hidden">
+                    <div className="md:hidden space-y-0.5">
                       {dateLoads.map(l => (
-                        <tr
+                        <MobileLoadCard
                           key={l.id}
-                          className={`table-row md:hidden cursor-pointer transition-all ${poppedLoad === l.id ? 'popped-up' : ''}`}
-                          onClick={() => setPoppedLoad(poppedLoad === l.id ? null : l.id)}
-                          onMouseLeave={() => setPoppedLoad(null)}
-                        >
-                          <td data-label="Load" colSpan="11" className="!border-0 !padding-0 p-0 m-0">
-                            <MobileLoadCard load={l} />
-                          </td>
-                        </tr>
+                          load={l}
+                          isPopped={poppedLoad === l.id}
+                          onCardClick={() => setPoppedLoad(poppedLoad === l.id ? null : l.id)}
+                        />
                       ))}
                     </div>
                     </div>

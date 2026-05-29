@@ -21,17 +21,29 @@ const invoiceStatusStyles = {
   canceled: 'bg-gray-500/10 text-gray-600',
 };
 
-export default function MobileLoadCard({ load }) {
+export default function MobileLoadCard({ load, isPopped, onCardClick }) {
   const navigate = useNavigate();
 
   if (!load) return null;
 
   const statusLabel = load.dispatch_status || 'draft';
 
+  const handleClick = (e) => {
+    e.stopPropagation();
+    if (onCardClick) {
+      onCardClick();
+    } else {
+      navigate(createPageUrl('LoadDetail'), { state: { loadId: load.id } });
+    }
+  };
+
   return (
     <div
-      onClick={() => navigate(createPageUrl('LoadDetail'), { state: { loadId: load.id } })}
-      className="bg-card rounded-lg p-3 mb-2 border border-border active:opacity-80 transition-opacity cursor-pointer"
+      onClick={handleClick}
+      className={cn(
+        'bg-card rounded-lg p-3 border border-border/30 active:opacity-80 transition-opacity cursor-pointer mobile-load-row',
+        isPopped ? 'popped-up' : ''
+      )}
     >
       {/* Header: Load # + Status */}
       <div className="flex justify-between items-center mb-2">
