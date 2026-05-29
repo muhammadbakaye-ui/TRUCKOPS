@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { 
@@ -6,6 +6,7 @@ import {
   FileText, Settings, BarChart3, Upload, ChevronRight, Container, 
   Package, FileCheck, AlertTriangle, Calendar, CheckCircle, AlertCircle, Grid3x3
 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -91,6 +92,37 @@ const MENU_SECTIONS = [
 
 export default function MobileMenuDrawer({ open, onOpenChange, currentPage, onCustomizeClick }) {
   const { logout, session } = useSession();
+  const [editMode, setEditMode] = useState(false);
+  const [selected, setSelected] = useState([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('bottomNav_customization');
+    if (saved) {
+      setSelected(JSON.parse(saved));
+    } else {
+      setSelected(['Dashboard', 'Loads']);
+    }
+  }, [open]);
+
+  const handleToggle = (page) => {
+    setSelected(prev => {
+      const isSelected = prev.includes(page);
+      if (isSelected) {
+        return prev.filter(p => p !== page);
+      } else {
+        if (prev.length < 5) {
+          return [...prev, page];
+        }
+        return prev;
+      }
+    });
+  };
+
+  const handleSaveCustomization = () => {
+    localStorage.setItem('bottomNav_customization', JSON.stringify(selected));
+    setEditMode(false);
+    window.location.reload();
+  };
 
   const handleLogout = () => {
     onOpenChange(false);
@@ -106,27 +138,50 @@ export default function MobileMenuDrawer({ open, onOpenChange, currentPage, onCu
       {/* Header */}
        <div className="flex items-center justify-between p-4 border-b border-sidebar-border bg-sidebar-accent/20">
         <div>
-          <h2 className="text-lg font-semibold text-sidebar-foreground">Menu</h2>
-          <p className="text-xs text-sidebar-foreground/60">{session?.company_name || 'TruckOps'}</p>
+          <h2 className="text-lg font-semibold text-sidebar-foreground">{editMode ? 'Customize Menu' : 'Menu'}</h2>
+          <p className="text-xs text-sidebar-foreground/60">{editMode ? `${selected.length} of 5 selected` : session?.company_name || 'TruckOps'}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onCustomizeClick}
-            className="text-sidebar-foreground hover:bg-sidebar-accent/50"
-            title="Customize bottom menu"
-          >
-            <Grid3x3 className="w-5 h-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onOpenChange(false)}
-            className="text-sidebar-foreground hover:bg-sidebar-accent/50"
-          >
-            <X className="w-5 h-5" />
-          </Button>
+          {editMode && (
+            <Button
+              size="sm"
+              className="h-8 text-xs gap-1"
+              onClick={handleSaveCustomization}
+            >
+              Save
+            </Button>
+          )}
+          {!editMode && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setEditMode(true)}
+              className="text-sidebar-foreground hover:bg-sidebar-accent/50"
+              title="Customize bottom menu"
+            >
+              <Grid3x3 className="w-5 h-5" />
+            </Button>
+          )}
+          {editMode && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setEditMode(false)}
+              className="text-sidebar-foreground hover:bg-sidebar-accent/50"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          )}
+          {!editMode && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onOpenChange(false)}
+              className="text-sidebar-foreground hover:bg-sidebar-accent/50"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -147,7 +202,28 @@ export default function MobileMenuDrawer({ open, onOpenChange, currentPage, onCu
                   {section.items.map((item) => {
                     const Icon = item.icon;
                     const isActive = currentPage === item.page;
-                    return (
+                    return editMode ? (
+                      <button
+                        key={item.page}
+                        onClick={() => handleToggle(item.page)}
+                        className={cn(
+                          'w-full flex items-center gap-3 p-3 rounded-lg transition-colors min-h-[48px]',
+                          'text-sidebar-foreground/80 hover:bg-sidebar-accent/30'
+                        )}
+                      >
+                        <Checkbox
+                          checked={selected.includes(item.page)}
+                          disabled={!selected.includes(item.page) && selected.length >= 5}
+                          className="h-5 w-5"
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleToggle(item.page);
+                          }}
+                        />
+                        <Icon className="w-5 h-5" />
+                        <span className="text-sm font-medium">{item.label}</span>
+                      </button>
+                    ) : (
                       <Link
                         key={item.page}
                         to={createPageUrl(item.page)}

@@ -253,22 +253,7 @@ svg {
   font-size: 0.8125rem;
 }
 
-/* Select dropdown fixes */
-select {
-  height: auto;
-}
-
-/* Checkbox/radio fixes */
-input[type="checkbox"],
-input[type="radio"] {
-  cursor: pointer;
-}
-
-/* Button group fixes */
-.button-group button {
-  flex-shrink: 0;
-}
-
+/* Mobile-only button group fixes */
 @media (max-width: 767px) {
   /* Stack buttons vertically on mobile */
   .button-group {

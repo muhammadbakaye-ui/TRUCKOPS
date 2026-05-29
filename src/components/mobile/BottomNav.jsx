@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { LayoutDashboard, Container, MoreHorizontal, FileText, Users, Truck, Settings } from 'lucide-react';
+import { LayoutDashboard, Container, MoreHorizontal, FileText, Users, Truck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSession } from '../shared/AppSession';
 import MobileMenuDrawer from './MobileMenuDrawer';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import CustomizeLayoutModal from './CustomizeLayoutModal';
 
 const ALL_NAV_ITEMS = [
   { label: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard', tourAttr: 'mobile-nav-dashboard' },
@@ -39,7 +37,6 @@ export default function BottomNav({ currentPage }) {
 
   return (
     <>
-      <CustomizeLayoutModal open={customizeOpen} onOpenChange={setCustomizeOpen} />
       <nav
         className="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar border-t border-sidebar-border flex z-50 shadow-lg"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
