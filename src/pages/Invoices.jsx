@@ -18,6 +18,7 @@ import PageHeader from '../components/shared/PageHeader';
 import { format } from 'date-fns';
 import { useEntitySubscription } from '../hooks/useEntitySubscription';
 import QuickActionSettings from '../components/shared/QuickActionSettings';
+import MobileInvoiceCard from '../components/invoices/MobileInvoiceCard';
 
 const INV_STATUS_STYLES = {
   draft: 'bg-gray-100 text-gray-600 border-gray-200',
@@ -379,13 +380,44 @@ export default function Invoices() {
            )}
          </div>
        )}
-      <DataTable
-        columns={columns}
-        data={filtered}
-        isLoading={isLoading}
-        onRowClick={(row) => navigate(createPageUrl(`InvoiceDetail?id=${row.id}`))}
-        emptyMessage="No invoices found"
-      />
+      {/* Desktop table */}
+      <div className="hidden md:block">
+        <DataTable
+          columns={columns}
+          data={filtered}
+          isLoading={isLoading}
+          onRowClick={(row) => navigate(createPageUrl(`InvoiceDetail?id=${row.id}`))}
+          emptyMessage="No invoices found"
+        />
+      </div>
+      
+      {/* Mobile cards */}
+      <div className="md:hidden">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-8 h-8 border-4 border-border border-t-primary rounded-full animate-spin" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+            No invoices found
+          </div>
+        ) : (
+          filtered.map(inv => (
+            <MobileInvoiceCard
+              key={inv.id}
+              invoice={inv}
+              selected={selected}
+              onToggleSelect={(id, checked) => {
+                const next = new Set(selected);
+                checked ? next.add(id) : next.delete(id);
+                setSelected(next);
+              }}
+              onNavigate={(id) => navigate(createPageUrl(`InvoiceDetail?id=${id}`))}
+              onDelete={deleteMutation.mutate}
+            />
+          ))
+        )}
+      </div>
     </div>
   );
 }

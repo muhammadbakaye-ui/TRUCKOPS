@@ -230,6 +230,127 @@
   }
 }
 
+/* Mobile Loads Card Layout - compact card design */
+@media (max-width: 767px) {
+  .mobile-load-row {
+    display: block;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    margin: 0.5rem 0;
+    padding: 0.75rem;
+    background: hsl(var(--card));
+  }
+  .mobile-load-row td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 0.35rem 0;
+    border: none;
+    font-size: 0.8rem;
+  }
+  .mobile-load-row td:first-child {
+    position: absolute;
+    left: 0.5rem;
+    top: 0.5rem;
+  }
+  .mobile-load-row .load-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+    padding-left: 2rem;
+  }
+  .mobile-load-row .load-card-number {
+    font-family: monospace;
+    font-weight: 600;
+    color: hsl(var(--primary));
+    font-size: 0.85rem;
+  }
+  .mobile-load-row .load-card-customer {
+    font-weight: 500;
+    font-size: 0.85rem;
+    margin: 0.35rem 0;
+  }
+  .mobile-load-row .load-card-route {
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+    margin: 0.25rem 0;
+  }
+  .mobile-load-row .load-card-dates {
+    font-size: 0.7rem;
+    color: hsl(var(--muted-foreground));
+    margin: 0.25rem 0;
+  }
+  .mobile-load-row .load-card-amount {
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+  }
+  .mobile-load-row .load-card-actions {
+    display: flex;
+    gap: 0.25rem;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid hsl(var(--border));
+  }
+  /* Hide all table cells on mobile, show only card content */
+  .mobile-load-row td:nth-child(n+3) {
+    display: none;
+  }
+  .mobile-load-row td:nth-child(2) {
+    display: block;
+    padding-left: 2rem;
+  }
+}
+
+/* Mobile Invoice Card Layout */
+@media (max-width: 767px) {
+  .mobile-invoice-card {
+    display: block;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 0.75rem;
+    background: hsl(var(--card));
+    margin-bottom: 0.5rem;
+  }
+  .mobile-invoice-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+  }
+  .mobile-invoice-number {
+    font-family: monospace;
+    font-weight: 600;
+    color: hsl(var(--primary));
+    font-size: 0.85rem;
+  }
+  .mobile-invoice-customer {
+    font-weight: 500;
+    font-size: 0.85rem;
+    margin: 0.35rem 0;
+  }
+  .mobile-invoice-due-date {
+    font-size: 0.7rem;
+    color: hsl(var(--muted-foreground));
+    margin: 0.25rem 0;
+  }
+  .mobile-invoice-amount {
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+  }
+  .mobile-invoice-actions {
+    display: flex;
+    gap: 0.25rem;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid hsl(var(--border));
+  }
+}
+
 /* Desktop scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;

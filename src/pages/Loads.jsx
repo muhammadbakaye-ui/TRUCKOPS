@@ -25,6 +25,7 @@ import { format, parseISO } from 'date-fns';
 import { useEntitySubscription } from '../hooks/useEntitySubscription';
 import QuickActionSettings from '../components/shared/QuickActionSettings';
 import { chunkAsync } from '../utils/chunkAsync';
+import MobileLoadCard from '../components/loads/MobileLoadCard';
 
 const INVOICE_STATUS_STYLES = {
   not_invoiced: 'bg-muted text-muted-foreground border-border',
@@ -649,145 +650,166 @@ export default function Loads() {
                       </thead>
                       <tbody>
                         {dateLoads.map(l => (
-                          <tr
-                            key={l.id}
-                            className={`border-b hover:bg-muted/30 transition-colors ${bulkEditMode && selected.has(l.id) ? 'bg-primary/5 cursor-default' : 'cursor-pointer'}`}
-                            onClick={() => !bulkEditMode && navigate(createPageUrl(`LoadDetail?id=${l.id}`))}
-                          >
-                            <td className="p-2">
-                              <Checkbox
-                                checked={selected.has(l.id)}
-                                onCheckedChange={(checked) => {
-                                  const next = new Set(selected);
-                                  checked ? next.add(l.id) : next.delete(l.id);
-                                  setSelected(next);
-                                }}
-                                onClick={e => e.stopPropagation()}
-                              />
-                            </td>
-                            <td className="p-2" onClick={e => e.stopPropagation()}>
-                              <span className="font-mono font-semibold text-primary">{l.internal_load_number}</span>
-                              {bulkEditMode === 'trip' && selected.has(l.id) ? (
-                                <input
-                                  type="text"
-                                  value={bulkEdits[l.id] ?? ''}
-                                  onChange={e => setBulkEdits(prev => ({ ...prev, [l.id]: e.target.value }))}
-                                  placeholder="Trip #"
-                                  className="mt-1 h-7 w-24 rounded border border-primary bg-background px-2 text-xs text-foreground block"
+                          <React.Fragment key={l.id}>
+                            {/* Desktop table row */}
+                            <tr
+                              className={`hidden md:table-row border-b hover:bg-muted/30 transition-colors ${bulkEditMode && selected.has(l.id) ? 'bg-primary/5 cursor-default' : 'cursor-pointer'}`}
+                              onClick={() => !bulkEditMode && navigate(createPageUrl(`LoadDetail?id=${l.id}`))}
+                            >
+                              <td className="p-2">
+                                <Checkbox
+                                  checked={selected.has(l.id)}
+                                  onCheckedChange={(checked) => {
+                                    const next = new Set(selected);
+                                    checked ? next.add(l.id) : next.delete(l.id);
+                                    setSelected(next);
+                                  }}
+                                  onClick={e => e.stopPropagation()}
                                 />
-                              ) : (
-                                l.trip_number && <div className="text-muted-foreground">Trip: {l.trip_number}</div>
-                              )}
-                            </td>
-                            <td className="p-2 font-medium">{l.customer_name || '—'}</td>
-                            <td className="p-2" onClick={e => e.stopPropagation()}>
-                              <div className="flex items-center gap-1">
-                                {l.external_load_number ? (
-                                  <>
-                                    <span className="font-mono text-primary">{l.external_load_number}</span>
-                                    <button
-                                      onClick={(e) => handleCopyLoadNumber(e, l.external_load_number)}
-                                      className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                                      title="Copy broker load #"
-                                    >
-                                      {copiedId === l.external_load_number
-                                        ? <Check className="w-3 h-3 text-green-600" />
-                                        : <Copy className="w-3 h-3" />}
-                                    </button>
-                                  </>
-                                ) : <span className="text-muted-foreground">—</span>}
-                                {qaEnabled && (
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); handleQuickAction(l); }}
-                                    className={`px-2 py-0.5 rounded text-[10px] font-medium border transition-colors whitespace-nowrap ${INVOICE_STATUS_STYLES[qaAction] || 'bg-primary/10 text-primary border-primary/20'}`}
-                                  >
-                                    {loadsQaOptions.find(o => o.value === qaAction)?.label || qaAction}
-                                  </button>
+                              </td>
+                              <td className="p-2" onClick={e => e.stopPropagation()}>
+                                <span className="font-mono font-semibold text-primary">{l.internal_load_number}</span>
+                                {bulkEditMode === 'trip' && selected.has(l.id) ? (
+                                  <input
+                                    type="text"
+                                    value={bulkEdits[l.id] ?? ''}
+                                    onChange={e => setBulkEdits(prev => ({ ...prev, [l.id]: e.target.value }))}
+                                    placeholder="Trip #"
+                                    className="mt-1 h-7 w-24 rounded border border-primary bg-background px-2 text-xs text-foreground block"
+                                  />
+                                ) : (
+                                  l.trip_number && <div className="text-muted-foreground">Trip: {l.trip_number}</div>
                                 )}
-                              </div>
-                            </td>
-                            <td className="p-2">
-                              {l.pickup_city || l.delivery_city
-                                ? `${l.pickup_city || ''}${l.pickup_state ? ', ' + l.pickup_state : ''} → ${l.delivery_city || ''}${l.delivery_state ? ', ' + l.delivery_state : ''}`
-                                : '—'}
-                            </td>
-                            <td className="p-2 whitespace-nowrap">
-                              {l.pickup_date || l.delivery_date
-                                ? <>{l.pickup_date || '—'}<span className="text-muted-foreground mx-1">→</span>{l.delivery_date || '—'}</>
-                                : '—'}
-                            </td>
-                            <td className="p-2" onClick={e => e.stopPropagation()}>
-                              {bulkEditMode === 'driver' && selected.has(l.id) ? (
-                                <select
-                                  value={bulkEdits[l.id] ?? ''}
-                                  onChange={e => setBulkEdits(prev => ({ ...prev, [l.id]: e.target.value }))}
-                                  className="h-7 rounded border border-primary bg-background px-1 text-xs text-foreground w-32"
-                                >
-                                  <option value="">— Unassigned —</option>
-                                  {drivers.map(d => <option key={d.id} value={d.id}>{d.full_name}</option>)}
-                                </select>
-                              ) : (
-                                <>
-                                  {l.driver_1_name || '—'}
-                                  {l.driver_2_name && <div>{l.driver_2_name}</div>}
-                                </>
-                              )}
-                            </td>
-                            <td className="p-2 font-mono" onClick={e => e.stopPropagation()}>
-                              {bulkEditMode === 'truck' && selected.has(l.id) ? (
-                                <select
-                                  value={bulkEdits[l.id] ?? ''}
-                                  onChange={e => setBulkEdits(prev => ({ ...prev, [l.id]: e.target.value }))}
-                                  className="h-7 rounded border border-primary bg-background px-1 text-xs text-foreground w-24"
-                                >
-                                  <option value="">— Unassigned —</option>
-                                  {trucks.map(t => <option key={t.id} value={t.id}>{t.unit_number}</option>)}
-                                </select>
-                              ) : (
-                                l.truck_number || '—'
-                              )}
-                            </td>
-                            <td className="p-2" onClick={e => e.stopPropagation()}>
-                              {bulkEditMode === 'amount' && selected.has(l.id) ? (
-                                <input
-                                  type="number"
-                                  value={bulkEdits[l.id] ?? ''}
-                                  onChange={e => setBulkEdits(prev => ({ ...prev, [l.id]: e.target.value }))}
-                                  className="h-7 w-24 rounded border border-primary bg-background px-2 text-xs text-foreground"
-                                />
-                              ) : (
-                                l.invoice_amount ? `$${l.invoice_amount.toLocaleString()}` : '—'
-                              )}
-                            </td>
-                            <td className="p-2"><StatusBadge status={l.status} /></td>
-                            <td className="p-2" onClick={e => e.stopPropagation()}>
-                               <InvoiceStatusSelect load={l} queryClient={queryClient} />
-                             </td>
-                            <td className="p-2" onClick={e => e.stopPropagation()}>
-                              <div className="flex items-center gap-0.5">
-                                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={(e) => handlePrintLoad(e, l)} title="Download PDF">
-                                  <Download className="w-3.5 h-3.5" />
-                                </Button>
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>Delete Load?</AlertDialogTitle>
-                                      <AlertDialogDescription>Load #{l.internal_load_number} will be moved to Deleted Items.</AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteMutation.mutate(l)}>Delete</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              </div>
-                            </td>
+                              </td>
+                              <td className="p-2 font-medium">{l.customer_name || '—'}</td>
+                              <td className="p-2" onClick={e => e.stopPropagation()}>
+                                <div className="flex items-center gap-1">
+                                  {l.external_load_number ? (
+                                    <>
+                                      <span className="font-mono text-primary">{l.external_load_number}</span>
+                                      <button
+                                        onClick={(e) => handleCopyLoadNumber(e, l.external_load_number)}
+                                        className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                                        title="Copy broker load #"
+                                      >
+                                        {copiedId === l.external_load_number
+                                          ? <Check className="w-3 h-3 text-green-600" />
+                                          : <Copy className="w-3 h-3" />}
+                                      </button>
+                                    </>
+                                  ) : <span className="text-muted-foreground">—</span>}
+                                  {qaEnabled && (
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); handleQuickAction(l); }}
+                                      className={`px-2 py-0.5 rounded text-[10px] font-medium border transition-colors whitespace-nowrap ${INVOICE_STATUS_STYLES[qaAction] || 'bg-primary/10 text-primary border-primary/20'}`}
+                                    >
+                                      {loadsQaOptions.find(o => o.value === qaAction)?.label || qaAction}
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="p-2">
+                                {l.pickup_city || l.delivery_city
+                                  ? `${l.pickup_city || ''}${l.pickup_state ? ', ' + l.pickup_state : ''} → ${l.delivery_city || ''}${l.delivery_state ? ', ' + l.delivery_state : ''}`
+                                  : '—'}
+                              </td>
+                              <td className="p-2 whitespace-nowrap">
+                                {l.pickup_date || l.delivery_date
+                                  ? <>{l.pickup_date || '—'}<span className="text-muted-foreground mx-1">→</span>{l.delivery_date || '—'}</>
+                                  : '—'}
+                              </td>
+                              <td className="p-2" onClick={e => e.stopPropagation()}>
+                                {bulkEditMode === 'driver' && selected.has(l.id) ? (
+                                  <select
+                                    value={bulkEdits[l.id] ?? ''}
+                                    onChange={e => setBulkEdits(prev => ({ ...prev, [l.id]: e.target.value }))}
+                                    className="h-7 rounded border border-primary bg-background px-1 text-xs text-foreground w-32"
+                                  >
+                                    <option value="">— Unassigned —</option>
+                                    {drivers.map(d => <option key={d.id} value={d.id}>{d.full_name}</option>)}
+                                  </select>
+                                ) : (
+                                  <>
+                                    {l.driver_1_name || '—'}
+                                    {l.driver_2_name && <div>{l.driver_2_name}</div>}
+                                  </>
+                                )}
+                              </td>
+                              <td className="p-2 font-mono" onClick={e => e.stopPropagation()}>
+                                {bulkEditMode === 'truck' && selected.has(l.id) ? (
+                                  <select
+                                    value={bulkEdits[l.id] ?? ''}
+                                    onChange={e => setBulkEdits(prev => ({ ...prev, [l.id]: e.target.value }))}
+                                    className="h-7 rounded border border-primary bg-background px-1 text-xs text-foreground w-24"
+                                  >
+                                    <option value="">— Unassigned —</option>
+                                    {trucks.map(t => <option key={t.id} value={t.id}>{t.unit_number}</option>)}
+                                  </select>
+                                ) : (
+                                  l.truck_number || '—'
+                                )}
+                              </td>
+                              <td className="p-2" onClick={e => e.stopPropagation()}>
+                                {bulkEditMode === 'amount' && selected.has(l.id) ? (
+                                  <input
+                                    type="number"
+                                    value={bulkEdits[l.id] ?? ''}
+                                    onChange={e => setBulkEdits(prev => ({ ...prev, [l.id]: e.target.value }))}
+                                    className="h-7 w-24 rounded border border-primary bg-background px-2 text-xs text-foreground"
+                                  />
+                                ) : (
+                                  l.invoice_amount ? `$${l.invoice_amount.toLocaleString()}` : '—'
+                                )}
+                              </td>
+                              <td className="p-2"><StatusBadge status={l.status} /></td>
+                              <td className="p-2" onClick={e => e.stopPropagation()}>
+                                 <InvoiceStatusSelect load={l} queryClient={queryClient} />
+                               </td>
+                              <td className="p-2" onClick={e => e.stopPropagation()}>
+                                <div className="flex items-center gap-0.5">
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={(e) => handlePrintLoad(e, l)} title="Download PDF">
+                                    <Download className="w-3.5 h-3.5" />
+                                  </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Delete Load?</AlertDialogTitle>
+                                        <AlertDialogDescription>Load #{l.internal_load_number} will be moved to Deleted Items.</AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteMutation.mutate(l)}>Delete</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
+                              </td>
                             </tr>
+                            {/* Mobile card */}
+                            <tr className="md:hidden">
+                              <td colSpan={12}>
+                                <MobileLoadCard
+                                  load={l}
+                                  selected={selected}
+                                  onToggleSelect={(id, checked) => {
+                                    const next = new Set(selected);
+                                    checked ? next.add(id) : next.delete(id);
+                                    setSelected(next);
+                                  }}
+                                  onNavigate={(id) => navigate(createPageUrl(`LoadDetail?id=${id}`))}
+                                  onPrint={handlePrintLoad}
+                                  onDelete={deleteMutation.mutate}
+                                  bulkEditMode={bulkEditMode}
+                                  onBulkEditChange={(field, value) => setBulkEdits(prev => ({ ...prev, [l.id]: value }))}
+                                />
+                              </td>
+                            </tr>
+                          </React.Fragment>
                         ))}
                       </tbody>
                     </table>
