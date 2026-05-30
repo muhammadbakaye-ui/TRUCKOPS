@@ -110,7 +110,8 @@ export default function LoadDetail() {
   const { data: carrierCompany = [] } = useQuery({ queryKey: ['owner-company', tenantId], queryFn: async () => { const cos = await base44.entities.Company.filter({ tenant_id: tenantId }, '-created_date', 20); const best = cos.find(c => c.is_owner_profile) || cos.find(c => c.company_type === 'owner_operator') || cos.find(c => c.company_type === 'carrier') || cos[0]; return best ? [best] : []; }, enabled: !!tenantId });
 
   const handlePrint = () => {
-    printLoad({ company: carrierCompany[0] || {}, load: form, stops, drivers, trucks, trailers: trailers });
+    const companyData = carrierCompany[0] || { company_name: session?.company_name || '' };
+    printLoad({ company: companyData, load: form, stops, drivers, trucks, trailers: trailers });
   };
 
   // Initialize empty form for new load
