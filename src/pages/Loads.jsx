@@ -181,6 +181,7 @@ export default function Loads() {
   const { data: loads = [], isLoading, isFetching } = useQuery({
     queryKey: ['loads', session?.tenant_id],
     queryFn: () => session?.tenant_id ? base44.entities.Load.filter({ tenant_id: session.tenant_id }, '-created_date', 1000) : Promise.resolve([]),
+    refetchInterval: 60000,
   });
   
   // Show loading only on first load (no cached data), not when refetching in background

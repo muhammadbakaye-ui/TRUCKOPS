@@ -28,6 +28,7 @@ export default function Dashboard() {
     queryKey: ['loads-dash-recent', tenantId],
     queryFn: () => tenantId ? base44.entities.Load.filter({ tenant_id: tenantId }, '-delivery_date', 50) : Promise.resolve([]),
     enabled: !!tenantId,
+    refetchInterval: 60000,
   });
 
   // Single query for all invoices — used for charts and unpaid count
@@ -35,6 +36,7 @@ export default function Dashboard() {
     queryKey: ['invoices-dash-all', tenantId],
     queryFn: () => tenantId ? base44.entities.Invoice.filter({ tenant_id: tenantId }, '-created_date', 500) : Promise.resolve([]),
     enabled: !!tenantId,
+    refetchInterval: 60000,
   });
 
   // Derive unpaid from the same dataset — no extra network calls

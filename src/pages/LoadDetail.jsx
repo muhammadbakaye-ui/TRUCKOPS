@@ -14,6 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Save, ArrowLeft, Plus, Trash2, Download, Cloud, CloudOff } from 'lucide-react';
 import StatusBadge from '../components/shared/StatusBadge';
 import { logAudit } from '../components/shared/AuditLogger';
+import { computeDispatchStatus } from '../lib/dispatchStatus';
+import { getTimezone } from '../lib/useTimezone';
 import { toast } from 'sonner';
 import { printLoad } from '../components/print/printLoad';
 
@@ -128,7 +130,7 @@ export default function LoadDetail() {
   React.useEffect(() => {
     if (isNew && !form) {
       setForm({
-        status: 'draft', invoice_status: 'not_invoiced', dispatch_status: 'delivered',
+        status: 'draft', invoice_status: 'not_invoiced', dispatch_status: 'available',
         load_type: 'FTL', hazmat: false, sealed: false, tonu: false, canceled: false,
       });
       setStops([
@@ -223,7 +225,8 @@ export default function LoadDetail() {
       const currentId = savedLoadIdRef.current || loadId;
       const saveStatus = form.status === 'draft' ? 'saved' : form.status;
       const derived = deriveStopFields(form, stops);
-      const payload = { ...derived, status: saveStatus };
+      const computedDispatch = computeDispatchStatus({ ...derived, driver_1_id: form.driver_1_id, dispatch_status: form.dispatch_status }, getTimezone());
+      const payload = { ...derived, status: saveStatus, dispatch_status: computedDispatch };
 
       if (!currentId) {
         // Never auto-saved yet
@@ -342,7 +345,7 @@ export default function LoadDetail() {
                 </Select>
               </Field>
               <Field label="Status"><Sel value={form.status} onChange={(v) => set('status', v)} options={[{value:'draft',label:'Draft'},{value:'saved',label:'Saved'},{value:'completed',label:'Completed'},{value:'canceled',label:'Canceled'}]} /></Field>
-              <Field label="Dispatch Status"><Sel value={form.dispatch_status} onChange={(v) => set('dispatch_status', v)} options={[{value:'pending',label:'Pending'},{value:'dispatched',label:'Dispatched'},{value:'in_transit',label:'In Transit'},{value:'delivered',label:'Delivered'},{value:'completed',label:'Completed'}]} /></Field>
+              <Field label="Dispatch Status"><Sel value={form.dispatch_status} onChange={(v) => set('dispatch_status', v)} options={[{value:'available',label:'Available'},{value:'assigned',label:'Assigned'},{value:'in_transit',label:'In Transit'},{value:'delivered',label:'Delivered'}]} /></Field>
               <Field label="Load Type"><Sel value={form.load_type} onChange={(v) => set('load_type', v)} options={['FTL','LTL','partial','other'].map(v=>({value:v,label:v.toUpperCase()}))} /></Field>
               <Field label="Equipment"><Sel value={form.equipment_type} onChange={(v) => set('equipment_type', v)} options={['dry_van','reefer','flatbed','step_deck','lowboy','tanker','intermodal','other'].map(v=>({value:v,label:v.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}))} /></Field>
               <Field label="Commodity"><TextInput value={form.commodity} onChange={(v) => set('commodity', v)} /></Field>

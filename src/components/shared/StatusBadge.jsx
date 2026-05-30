@@ -10,6 +10,8 @@ const statusStyles = {
   matched: 'bg-green-500/10 text-green-600 border-green-500/30',
   delivered: 'bg-green-500/10 text-green-600 border-green-500/30',
   
+  available: 'bg-blue-500/10 text-blue-600 border-blue-500/30',
+  assigned: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30',
   pending: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30',
   draft: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30',
   in_transit: 'bg-blue-500/10 text-blue-600 border-blue-500/30',
