@@ -8,8 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Truck, Upload, FileText, LogOut, Download, Loader2, Calendar, Printer, User } from 'lucide-react';
+import { Truck, Upload, FileText, LogOut, Download, Loader2, Calendar, Printer, User, LayoutGrid } from 'lucide-react';
 import DriverMyProfile from './DriverMyProfile';
+import DriverDispatchBoard from './DriverDispatchBoard';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -43,7 +44,7 @@ const statusConfig = {
 export default function DriverPortalView() {
   const { session, logout } = useSession();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState('documents');
+  const [activeTab, setActiveTab] = useState('dispatch');
   const [uploading, setUploading] = useState(false);
   const [viewingStatement, setViewingStatement] = useState(null);
   const [showTour, setShowTour] = useState(false);
@@ -134,6 +135,7 @@ export default function DriverPortalView() {
   };
 
   const tabs = [
+    { key: 'dispatch', label: 'My Loads', icon: LayoutGrid, tourAttr: 'driver-dispatch-tab' },
     { key: 'documents', label: 'My Documents', icon: FileText, tourAttr: 'driver-documents-tab' },
     { key: 'statements', label: 'My Statements', icon: Calendar, tourAttr: 'driver-statements-tab' },
     { key: 'profile', label: 'My Profile', icon: User, tourAttr: 'driver-profile-tab' },
@@ -165,8 +167,8 @@ export default function DriverPortalView() {
           <Truck className="w-4 h-4 md:w-5 md:h-5 text-sidebar-primary" />
           <div>
             <span className="font-bold text-sidebar-primary-foreground text-xs md:text-sm tracking-widest">TRUCKOPS</span>
-            {companyName && (
-              <p className="text-[10px] md:text-[11px] font-bold leading-tight" style={{ color: '#a855f7' }}>{companyName}</p>
+            {(companyName || session?.company_name) && (
+              <p className="text-[10px] md:text-[11px] font-bold leading-tight" style={{ color: '#a855f7' }}>{companyName || session?.company_name}</p>
             )}
           </div>
         </div>
@@ -212,6 +214,11 @@ export default function DriverPortalView() {
       {/* Content */}
       <div className="flex-1 overflow-auto p-3 md:p-6">
         <div className="max-w-3xl mx-auto space-y-3 md:space-y-5">
+
+          {/* DISPATCH BOARD TAB */}
+          {activeTab === 'dispatch' && (
+            <DriverDispatchBoard session={session} />
+          )}
 
           {/* DOCUMENTS TAB */}
           {activeTab === 'documents' && (
