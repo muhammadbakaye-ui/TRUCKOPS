@@ -4,6 +4,7 @@ import { CheckCircle2, XCircle, Truck } from 'lucide-react';
 
 export default function LoadRequestNotification({ notification, onAccept, onDeny }) {
   const metadata = notification.metadata || {};
+  const loadNumber = metadata.load_number || notification.related_entity_id?.substring(0, 8) || 'Unknown';
   
   return (
     <div className="flex items-center justify-between p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
@@ -15,7 +16,7 @@ export default function LoadRequestNotification({ notification, onAccept, onDeny
           <p className="text-sm font-semibold text-foreground">{notification.title}</p>
           <p className="text-xs text-muted-foreground truncate">{notification.message}</p>
           <p className="text-[11px] text-muted-foreground mt-1">
-            Driver: {metadata.driver_name}
+            Driver: {metadata.driver_name || 'Unknown'} • Load: {loadNumber}
           </p>
         </div>
       </div>
@@ -23,7 +24,7 @@ export default function LoadRequestNotification({ notification, onAccept, onDeny
         <Button
           size="sm"
           className="h-8 text-xs bg-green-600 hover:bg-green-700"
-          onClick={() => onAccept(notification.id, metadata.load_id, metadata.driver_id, metadata.driver_name)}
+          onClick={() => onAccept(notification.id, metadata.load_id, metadata.driver_id, metadata.driver_name, loadNumber)}
         >
           <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
           Accept

@@ -114,6 +114,14 @@
       "default": false,
       "description": "If true, this load is visible to drivers on the Driver Dispatch Board"
     },
+    "requested_by_driver_ids": {
+      "type": "array",
+      "description": "Array of driver IDs who have requested this load",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
     "pickup_time": {
       "type": "string",
       "description": "HH:MM of first pickup stop \u2014 used for time-based dispatch automation"

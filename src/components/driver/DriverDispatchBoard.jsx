@@ -13,7 +13,7 @@ const COLUMNS = [
   { key: 'delivered',  label: 'Delivered',   color: 'border-green-500',  headerColor: 'bg-green-500/10 text-green-600', emptyMsg: 'No delivered loads yet' },
 ];
 
-function LoadCard({ load, onRequest }) {
+function LoadCard({ load, onRequest, isPending }) {
   const isRequested = load._requested;
 
   return (
@@ -58,7 +58,7 @@ function LoadCard({ load, onRequest }) {
           variant={isRequested ? "secondary" : "outline"}
           className={`w-full h-7 text-xs ${isRequested ? 'opacity-50' : ''}`}
           onClick={(e) => { e.stopPropagation(); onRequest(load.id); }}
-          disabled={isRequested}
+          disabled={isRequested || isPending}
         >
           <Handshake className="w-3 h-3 mr-1" />
           {isRequested ? 'Requested' : 'Request Load'}
@@ -88,6 +88,29 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
     enabled: !!driverId,
     refetchInterval: 60000,
   });
+
+  // Get pending requests for this driver to persist requested state across refreshes
+  const { data: driverRequests = [] } = useQuery({
+    queryKey: ['driver-load-requests', driverId, tenantId],
+    queryFn: () => base44.entities.Notification.filter(
+      { tenant_id: tenantId, notification_type: 'driver_load_request', deleted: false },
+      '-created_date',
+      100
+    ),
+    enabled: !!driverId && !!tenantId,
+    refetchInterval: 30000,
+  });
+
+  // Build set of load IDs this driver has pending requests for
+  const requestedLoadIds = useMemo(() => {
+    const ids = new Set();
+    driverRequests.forEach(n => {
+      if (n.metadata?.driver_id === driverId && n.metadata?.request_status !== 'denied') {
+        ids.add(n.metadata.load_id);
+      }
+    });
+    return ids;
+  }, [driverRequests, driverId]);
 
   // Available loads visible to all drivers (not filtered by driverId)
   const { data: availableRaw = [], isLoading: l3 } = useQuery({
@@ -119,9 +142,9 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
       .filter(l => l.status !== 'canceled' && !l.canceled)
       .map(l => ({
         ...l,
-        _requested: requestedLoads.has(l.id) || (l.metadata?.requested_by_driver_ids || []).includes(driverId)
+        _requested: requestedLoadIds.has(l.id)
       }));
-  }, [availableRaw, requestedLoads, driverId]);
+  }, [availableRaw, requestedLoadIds]);
 
   const getColumnLoads = (colKey) => {
     if (colKey === 'available') return availableLoads;
@@ -142,8 +165,8 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
     },
     onSuccess: (data, loadId) => {
       if (data.success) {
-        setRequestedLoads(prev => new Set(prev).add(loadId));
         toast.success('Load requested! You\'ll be notified if accepted.');
+        queryClient.invalidateQueries({ queryKey: ['driver-load-requests', driverId, tenantId] });
         queryClient.invalidateQueries({ queryKey: ['driver-dispatch-available', tenantId] });
       }
     },
@@ -156,6 +179,9 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
     if (!session?.driver_name) {
       toast.error('Driver name not found. Please refresh the page.');
       return;
+    }
+    if (requestLoadMutation.isPending) {
+      return; // Prevent double-tap
     }
     requestLoadMutation.mutate(loadId);
   };
@@ -201,6 +227,7 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
                       key={load.id} 
                       load={load} 
                       onRequest={col.key === 'available' ? handleRequest : null}
+                      isPending={requestLoadMutation.isPending}
                     />
                   ))
                 )}

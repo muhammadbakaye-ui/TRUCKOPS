@@ -12,6 +12,30 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Load not found' }, { status: 404 });
       }
 
+      // Check if driver already requested this load
+      const existingRequests = await base44.entities.Notification.filter({
+        tenant_id,
+        notification_type: 'driver_load_request',
+        related_entity_id: load_id
+      });
+      
+      const alreadyRequested = existingRequests.some(n => 
+        n.metadata?.driver_id === driver_id && !n.deleted
+      );
+      
+      if (alreadyRequested) {
+        return Response.json({ error: 'You already requested this load', status: 400 });
+      }
+
+      // Update load to track requested drivers
+      const requestedByDrivers = load.requested_by_driver_ids || [];
+      if (!requestedByDrivers.includes(driver_id)) {
+        requestedByDrivers.push(driver_id);
+      }
+      await base44.entities.Load.update(load_id, {
+        requested_by_driver_ids: requestedByDrivers
+      });
+
       // Create notification for owner-op
       const notification = await base44.entities.Notification.create({
         tenant_id,
@@ -22,6 +46,7 @@ Deno.serve(async (req) => {
         related_entity_id: load_id,
         link_url: `/DispatchBoard`,
         read: false,
+        deleted: false,
         metadata: {
           driver_id,
           driver_name,
@@ -41,13 +66,73 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Load not found' }, { status: 404 });
       }
 
+      // Get user info for audit trail
+      const user = await base44.auth.me();
+      const acceptedBy = user?.full_name || user?.email || 'Owner';
+
       // Update load with driver assignment
+      const statusHistory = load.dispatch_status_history || [];
+      statusHistory.push({
+        from: load.dispatch_status || 'available',
+        to: 'assigned',
+        changed_by: acceptedBy,
+        changed_by_type: 'manual',
+        timestamp: new Date().toISOString()
+      });
+
       await base44.entities.Load.update(load_id, {
         driver_1_id: driver_id,
         driver_1_name: driver_name,
         dispatch_status: 'assigned',
-        driver_visibility: false
+        manual_dispatch_override: true,
+        driver_visibility: false,
+        dispatch_status_history: statusHistory.slice(-20)
       });
+
+      // Deny all other pending requests for this load
+      const allRequests = await base44.entities.Notification.filter({
+        tenant_id,
+        notification_type: 'driver_load_request',
+        related_entity_id: load_id
+      });
+
+      for (const req of allRequests) {
+        if (req.metadata?.driver_id !== driver_id && !req.deleted) {
+          // Mark other requests as denied
+          await base44.entities.Notification.update(req.id, {
+            read: true,
+            deleted: true,
+            metadata: { ...req.metadata, request_status: 'denied' }
+          });
+
+          // Notify denied drivers
+          await base44.entities.Notification.create({
+            tenant_id,
+            notification_type: 'load_request_denied',
+            title: `Load ${load.internal_load_number} request not accepted`,
+            message: `Your request for load ${load.internal_load_number} was not accepted. The load has been assigned to another driver.`,
+            related_entity_type: 'load',
+            related_entity_id: load_id,
+            link_url: `/DriverPublicPortal`,
+            read: false,
+            metadata: {
+              driver_id: req.metadata?.driver_id,
+              load_id,
+              load_number: load.internal_load_number
+            }
+          });
+        }
+      }
+
+      // Mark accepted request as handled
+      const acceptedRequest = allRequests.find(n => n.metadata?.driver_id === driver_id);
+      if (acceptedRequest) {
+        await base44.entities.Notification.update(acceptedRequest.id, {
+          read: true,
+          deleted: true,
+          metadata: { ...acceptedRequest.metadata, request_status: 'accepted' }
+        });
+      }
 
       // Notify driver that request was accepted
       await base44.entities.Notification.create({
@@ -70,24 +155,54 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'deny_request') {
-      // Owner denies - just mark notification as handled (no driver notification)
-      // Find the pending request notification and mark as read/deleted
+      // Owner denies request
+      const load = await base44.entities.Load.get(load_id);
+      if (!load) {
+        return Response.json({ error: 'Load not found' }, { status: 404 });
+      }
+
+      // Find the pending request notification
       const notifications = await base44.entities.Notification.filter({
         tenant_id,
         notification_type: 'driver_load_request',
-        read: false
+        related_entity_id: load_id
       });
       
       const reqNotification = notifications.find(n => 
-        n.metadata?.load_id === load_id && n.metadata?.driver_id === driver_id
+        n.metadata?.driver_id === driver_id && !n.deleted
       );
 
       if (reqNotification) {
         await base44.entities.Notification.update(reqNotification.id, {
           read: true,
-          deleted: true
+          deleted: true,
+          metadata: { ...reqNotification.metadata, request_status: 'denied' }
         });
       }
+
+      // Remove driver from load's requested_by_driver_ids
+      const currentRequestedBy = load.requested_by_driver_ids || [];
+      const updatedRequestedBy = currentRequestedBy.filter(id => id !== driver_id);
+      await base44.entities.Load.update(load_id, {
+        requested_by_driver_ids: updatedRequestedBy
+      });
+
+      // Notify driver that request was denied (they can request again)
+      await base44.entities.Notification.create({
+        tenant_id,
+        notification_type: 'load_request_denied',
+        title: `Load ${load.internal_load_number} request not accepted`,
+        message: `Your request for load ${load.internal_load_number} was not accepted. You may request again if the load is still available.`,
+        related_entity_type: 'load',
+        related_entity_id: load_id,
+        link_url: `/DriverPublicPortal`,
+        read: false,
+        metadata: {
+          driver_id,
+          load_id,
+          load_number: load.internal_load_number
+        }
+      });
 
       return Response.json({ success: true });
     }

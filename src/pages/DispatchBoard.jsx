@@ -118,6 +118,7 @@ export default function DispatchBoard() {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [confirmVisibility, setConfirmVisibility] = useState(null); // { loadId, currentValue }
   const [showRequests, setShowRequests] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState(null); // { type: 'accept'|'deny', notificationId, loadId, driverId, driverName, loadNumber }
 
   const { data: loads = [], isLoading } = useQuery({
     queryKey: ['loads-dispatch', tenantId],
@@ -140,11 +141,11 @@ export default function DispatchBoard() {
     enabled: !!tenantId,
   });
 
-  // Load request notifications
+  // Load request notifications - show all pending requests (not just unread)
   const { data: requestNotifications = [], refetch: refetchRequests } = useQuery({
     queryKey: ['load-requests', tenantId],
     queryFn: () => base44.entities.Notification.filter(
-      { tenant_id: tenantId, notification_type: 'driver_load_request', read: false },
+      { tenant_id: tenantId, notification_type: 'driver_load_request', deleted: false },
       '-created_date',
       50
     ),
@@ -152,7 +153,7 @@ export default function DispatchBoard() {
     refetchInterval: 30000,
   });
 
-  const handleAcceptRequest = async (notificationId, loadId, driverId, driverName) => {
+  const executeAcceptRequest = async (notificationId, loadId, driverId, driverName) => {
     try {
       await base44.functions.invoke('handleLoadRequest', {
         action: 'accept_request',
@@ -162,14 +163,26 @@ export default function DispatchBoard() {
         tenant_id: tenantId
       });
       await base44.entities.Notification.update(notificationId, { read: true, deleted: true });
-      toast.success('Request accepted - driver assigned!');
+      toast.success(`Request accepted - ${driverName} assigned to load!`);
       refetchRequests();
+      queryClient.invalidateQueries({ queryKey: ['loads-dispatch', tenantId] });
     } catch (err) {
       toast.error('Failed to accept: ' + err.message);
     }
   };
 
-  const handleDenyRequest = async (notificationId, loadId, driverId) => {
+  const handleAcceptRequest = (notificationId, loadId, driverId, driverName, loadNumber) => {
+    setConfirmDialog({
+      type: 'accept',
+      notificationId,
+      loadId,
+      driverId,
+      driverName,
+      loadNumber
+    });
+  };
+
+  const executeDenyRequest = async (notificationId, loadId, driverId) => {
     try {
       await base44.functions.invoke('handleLoadRequest', {
         action: 'deny_request',
@@ -182,6 +195,15 @@ export default function DispatchBoard() {
     } catch (err) {
       toast.error('Failed to deny: ' + err.message);
     }
+  };
+
+  const handleDenyRequest = (notificationId, loadId, driverId) => {
+    setConfirmDialog({
+      type: 'deny',
+      notificationId,
+      loadId,
+      driverId
+    });
   };
 
   // Bug Fix 1 + Feature 1: Automation — skips manual_dispatch_override loads
@@ -388,6 +410,61 @@ export default function DispatchBoard() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Confirmation dialog */}
+      <AlertDialog open={!!confirmDialog} onOpenChange={(open) => !open && setConfirmDialog(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmDialog?.type === 'accept' ? 'Accept Request' : 'Deny Request'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmDialog?.type === 'accept' ? (
+                <p>
+                  Assign <strong>{confirmDialog.driverName}</strong> to Load <strong>{confirmDialog.loadNumber}</strong>?
+                  This will:
+                  <ul className="list-disc list-inside mt-2 text-sm">
+                    <li>Assign the driver to this load</li>
+                    <li>Change the dispatch status to Assigned</li>
+                    <li>Move the load on both dispatch boards</li>
+                    <li>Notify {confirmDialog.driverName}</li>
+                    <li>Deny all other pending requests for this load</li>
+                  </ul>
+                </p>
+              ) : (
+                <p>
+                  Deny <strong>{confirmDialog.driverId ? 'this driver' : 'the request'}</strong> for Load <strong>{confirmDialog.loadNumber}</strong>?
+                </p>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel onClick={() => setConfirmDialog(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                if (confirmDialog?.type === 'accept') {
+                  executeAcceptRequest(
+                    confirmDialog.notificationId,
+                    confirmDialog.loadId,
+                    confirmDialog.driverId,
+                    confirmDialog.driverName
+                  );
+                } else {
+                  executeDenyRequest(
+                    confirmDialog.notificationId,
+                    confirmDialog.loadId,
+                    confirmDialog.driverId
+                  );
+                }
+                setConfirmDialog(null);
+              }}
+              className={confirmDialog?.type === 'deny' ? 'bg-destructive hover:bg-destructive/90' : ''}
+            >
+              {confirmDialog?.type === 'accept' ? 'Confirm' : 'Deny'}
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <PageHeader
         title="Dispatch Board"
         description={`${filteredLoads.length} active loads`}
@@ -432,7 +509,7 @@ export default function DispatchBoard() {
               Close
             </Button>
           </div>
-          {requestNotifications.length === 0 ? (
+          {requestNotifications.filter(n => n.metadata?.request_status !== 'accepted').length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">No pending requests</p>
           ) : (
             <div className="space-y-2">
