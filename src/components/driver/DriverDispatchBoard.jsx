@@ -72,7 +72,6 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
   const driverId = driverIdProp || session?.driver_id;
   const tenantId = tenantIdProp || session?.tenant_id;
   const [requestedLoads, setRequestedLoads] = useState(new Set());
-  const [lastRequestResult, setLastRequestResult] = useState(null); // { success: boolean, message: string, raw?: any }
   const queryClient = useQueryClient();
 
   // Loads where THIS driver is explicitly assigned (driver 1 or driver 2)
@@ -150,7 +149,7 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
       .filter(l => l.status !== 'canceled' && !l.canceled)
       .map(l => ({
         ...l,
-        _requested: requestedLoadIds.has(l.id)
+        _requested: requestedLoadIds.has(l.id) || (l.requested_by_driver_ids || []).includes(driverId)
       }));
   }, [availableLoadsFiltered, requestedLoadIds]);
 
@@ -174,21 +173,9 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
   });
 
   const handleRequest = (loadId) => {
-    if (requestLoadMutation.isPending) {
-      return; // Prevent double-tap
-    }
-    
-    // Clear previous result
-    setLastRequestResult(null);
-    
-    // Execute mutation with explicit then/catch
+    if (requestLoadMutation.isPending) return;
     requestLoadMutation.mutateAsync(loadId)
       .then((data) => {
-        setLastRequestResult({
-          success: true,
-          message: 'Request succeeded!',
-          raw: data
-        });
         if (data.success) {
           toast.success('Load requested! You\'ll be notified if accepted.');
           queryClient.invalidateQueries({ queryKey: ['driver-load-requests', driverId, tenantId] });
@@ -196,12 +183,7 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
         }
       })
       .catch((error) => {
-        setLastRequestResult({
-          success: false,
-          message: error.message || 'Unknown error',
-          raw: error
-        });
-        toast.error('Request failed: ' + error.message);
+        toast.error('Request failed: ' + (error.message || 'Unknown error'));
       });
   };
 
@@ -213,36 +195,6 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
     );
   }
 
-  // Debug result display
-  const renderDebugResult = () => {
-    if (!lastRequestResult) return null;
-    
-    return (
-      <div className={`mb-4 p-4 rounded-lg border-2 ${
-        lastRequestResult.success 
-          ? 'bg-green-50 border-green-500 text-green-900' 
-          : 'bg-red-50 border-red-500 text-red-900'
-      }`}>
-        <div className="flex items-center gap-2 mb-2">
-          <strong className="text-sm font-bold">
-            {lastRequestResult.success ? '✅ SUCCESS' : '❌ ERROR'}
-          </strong>
-          <span className="text-xs">{lastRequestResult.message}</span>
-        </div>
-        {lastRequestResult.raw && (
-          <pre className="text-xs bg-white/50 p-3 rounded overflow-auto max-h-64">
-            {JSON.stringify(lastRequestResult.raw, null, 2)}
-          </pre>
-        )}
-        <button 
-          onClick={() => setLastRequestResult(null)}
-          className="mt-2 text-xs underline hover:opacity-70"
-        >
-          Dismiss
-        </button>
-      </div>
-    );
-  };
 
   const totalLoads = assignedLoads.length + availableLoads.length;
 
@@ -257,7 +209,6 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
 
   return (
     <div className="p-3 lg:p-4 space-y-3 lg:space-y-4">
-      {renderDebugResult()}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-4">
         {COLUMNS.map(col => {
           const colLoads = getColumnLoads(col.key);

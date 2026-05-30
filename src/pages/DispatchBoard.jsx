@@ -175,9 +175,9 @@ export default function DispatchBoard() {
     setConfirmDialog({
       type: 'accept',
       notificationId: notification.id,
-      loadId: notification.metadata?.load_id,
+      loadId: notification.related_entity_id || notification.metadata?.load_id,
       driverId: notification.metadata?.driver_id,
-      driverName: notification.metadata?.driver_name,
+      driverName: notification.metadata?.driver_name || notification.title?.split(' requested')[0],
       loadNumber: notification.metadata?.load_number
     });
   };
@@ -201,7 +201,7 @@ export default function DispatchBoard() {
     setConfirmDialog({
       type: 'deny',
       notificationId: notification.id,
-      loadId: notification.metadata?.load_id,
+      loadId: notification.related_entity_id || notification.metadata?.load_id,
       driverId: notification.metadata?.driver_id,
       loadNumber: notification.metadata?.load_number
     });
@@ -584,9 +584,6 @@ export default function DispatchBoard() {
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-foreground">{notification.title}</p>
                       <p className="text-xs text-muted-foreground truncate">{notification.message}</p>
-                      <p className="text-[11px] text-muted-foreground mt-1">
-                        Driver: {notification.metadata?.driver_name || 'Unknown'} • Load: {notification.metadata?.load_number || 'Unknown'}
-                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0 ml-3">

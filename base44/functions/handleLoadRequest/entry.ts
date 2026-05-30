@@ -38,6 +38,12 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Load not found' }, { status: 404 });
       }
 
+      // Fast duplicate check — if driver already in requested_by_driver_ids, block immediately
+      if ((load.requested_by_driver_ids || []).includes(driver_id)) {
+        console.log('[handleLoadRequest] Driver already in requested_by_driver_ids, blocking duplicate');
+        return Response.json({ error: 'You already have a pending request for this load' }, { status: 400 });
+      }
+
       // Check if load is still available
       if (load.dispatch_status !== 'available' || load.canceled || load.status === 'canceled') {
         console.log('[handleLoadRequest] Load not available:', { dispatch_status: load.dispatch_status, canceled: load.canceled });
