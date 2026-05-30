@@ -106,7 +106,7 @@ export default function StatementBuilder() {
   const tenantId = session?.tenant_id;
   const { data: drivers = [] } = useQuery({ queryKey: ['drivers', tenantId], queryFn: () => tenantId ? base44.entities.Driver.filter({ status: 'active', tenant_id: tenantId }, 'full_name', 200) : Promise.resolve([]), enabled: !!tenantId });
   const { data: trucks = [] } = useQuery({ queryKey: ['trucks', tenantId], queryFn: () => tenantId ? base44.entities.Truck.filter({ status: 'active', tenant_id: tenantId }, 'unit_number', 200) : Promise.resolve([]), enabled: !!tenantId });
-  const { data: carrierCompany = [] } = useQuery({ queryKey: ['settings-company', tenantId], queryFn: () => tenantId ? base44.entities.Company.filter({ company_type: 'carrier', tenant_id: tenantId }, '-created_date', 1) : Promise.resolve([]), enabled: !!tenantId });
+  const { data: carrierCompany = [] } = useQuery({ queryKey: ['settings-company', tenantId], queryFn: async () => { if (!tenantId) return []; const cos = await base44.entities.Company.filter({ tenant_id: tenantId }, '-created_date', 20); const best = cos.find(c => c.is_owner_profile) || cos.find(c => c.company_type === 'owner_operator') || cos.find(c => c.company_type === 'carrier') || cos[0]; return best ? [best] : []; }, enabled: !!tenantId });
   const { data: defaultDeductions = [] } = useQuery({ queryKey: ['default-deductions', tenantId], queryFn: () => tenantId ? base44.entities.DefaultDeduction.filter({ tenant_id: tenantId }, 'deduction_name', 200) : Promise.resolve([]), enabled: !!tenantId });
 
   const handleDateSelect = (date) => {
