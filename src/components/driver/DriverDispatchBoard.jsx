@@ -114,6 +114,7 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
   }, [driverRequests, driverId]);
 
   // Available loads visible to all drivers (not filtered by driverId)
+  // FIX 2: Only show loads where driver_1_id is empty/null (no driver assigned yet)
   const { data: availableRaw = [], isLoading: l3 } = useQuery({
     queryKey: ['driver-dispatch-available', tenantId],
     queryFn: () => base44.entities.Load.filter(
@@ -124,6 +125,11 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
     enabled: !!tenantId,
     refetchInterval: 60000,
   });
+
+  // Filter out loads that already have a driver assigned
+  const availableLoadsFiltered = useMemo(() => {
+    return availableRaw.filter(l => !l.driver_1_id && !l.driver_2_id);
+  }, [availableRaw]);
 
   const isLoading = l1 || l2 || l3;
 
@@ -137,15 +143,15 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
     });
   }, [loads1, loads2]);
 
-  // Available loads — exclude canceled, mark requested ones
+  // Available loads — exclude canceled, mark requested ones, exclude loads with drivers
   const availableLoads = useMemo(() => {
-    return availableRaw
+    return availableLoadsFiltered
       .filter(l => l.status !== 'canceled' && !l.canceled)
       .map(l => ({
         ...l,
         _requested: requestedLoadIds.has(l.id)
       }));
-  }, [availableRaw, requestedLoadIds]);
+  }, [availableLoadsFiltered, requestedLoadIds]);
 
   const getColumnLoads = (colKey) => {
     if (colKey === 'available') return availableLoads;

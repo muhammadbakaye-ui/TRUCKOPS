@@ -477,6 +477,10 @@ export default function LoadDetail() {
                 <Select value={form.driver_1_id || ''} onValueChange={(v) => {
                   const d = drivers.find(d => d.id === v);
                   set('driver_1_id', v); set('driver_1_name', d?.full_name || '');
+                  // FIX 3: When assigning a driver, hide load from other drivers
+                  if (v && !form.driver_1_id) {
+                    set('driver_visibility', false);
+                  }
                   // Auto-select truck if driver has assigned truck
                   if (d?.assigned_truck_id) {
                     const t = trucks.find(t => t.id === d.assigned_truck_id);
