@@ -127,19 +127,22 @@ export default function DispatchBoard() {
       ? base44.entities.Load.filter({ tenant_id: tenantId }, '-updated_date', 500)
       : Promise.resolve([]),
     enabled: !!tenantId,
-    refetchInterval: 60000, // Bug Fix 2: poll every 60s
+    staleTime: 60000,
+    refetchInterval: 120000,
   });
 
   const { data: drivers = [] } = useQuery({
     queryKey: ['drivers', tenantId],
     queryFn: () => tenantId ? base44.entities.Driver.filter({ tenant_id: tenantId }, 'full_name', 200) : Promise.resolve([]),
     enabled: !!tenantId,
+    staleTime: 300000,
   });
 
   const { data: trucks = [] } = useQuery({
     queryKey: ['trucks', tenantId],
     queryFn: () => tenantId ? base44.entities.Truck.filter({ tenant_id: tenantId }, 'unit_number', 200) : Promise.resolve([]),
     enabled: !!tenantId,
+    staleTime: 300000,
   });
 
   // Load request notifications
@@ -151,7 +154,8 @@ export default function DispatchBoard() {
       50
     ),
     enabled: !!tenantId,
-    refetchInterval: 30000,
+    staleTime: 60000,
+    refetchInterval: 60000,
   });
 
   const executeAcceptRequest = async (notificationId, loadId, driverId, driverName, loadNumber) => {

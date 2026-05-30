@@ -93,14 +93,16 @@ export default function DriverDispatchBoard({ session, tenantId: tenantIdProp })
     queryKey: ['driver-loads1', driverId],
     queryFn:  () => base44.entities.Load.filter({ driver_1_id: driverId }, '-pickup_date', 100),
     enabled:  !!driverId,
-    refetchInterval: 60000,
+    staleTime: 120000,
+    refetchInterval: 120000,
   });
 
   const { data: loads2 = [], isLoading: l2 } = useQuery({
     queryKey: ['driver-loads2', driverId],
     queryFn:  () => base44.entities.Load.filter({ driver_2_id: driverId }, '-pickup_date', 100),
     enabled:  !!driverId,
-    refetchInterval: 60000,
+    staleTime: 120000,
+    refetchInterval: 120000,
   });
 
   const { data: availableRaw = [], isLoading: l3 } = useQuery({
@@ -110,7 +112,8 @@ export default function DriverDispatchBoard({ session, tenantId: tenantIdProp })
       '-pickup_date', 100
     ),
     enabled: !!tenantId,
-    refetchInterval: 30000,
+    staleTime: 60000,
+    refetchInterval: 60000,
   });
 
   const availableLoads = useMemo(() =>
