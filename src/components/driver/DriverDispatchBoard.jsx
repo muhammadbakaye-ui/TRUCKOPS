@@ -174,10 +174,6 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
   });
 
   const handleRequest = (loadId) => {
-    if (!session?.driver_name) {
-      setLastRequestResult({ success: false, message: 'Driver name not found. Please refresh the page.' });
-      return;
-    }
     if (requestLoadMutation.isPending) {
       return; // Prevent double-tap
     }

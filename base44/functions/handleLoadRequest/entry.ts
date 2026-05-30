@@ -17,11 +17,11 @@ Deno.serve(async (req) => {
 
     if (action === 'request_load') {
       // Validate driver info
-      if (!driver_id || !driver_name) {
-        console.error('[handleLoadRequest] Missing driver info');
-        console.log('FUNCTION RETURNING:', JSON.stringify({ error: 'Driver information required', status: 400 }));
-        return Response.json({ error: 'Driver information required' }, { status: 400 });
+      if (!driver_id) {
+        console.error('[handleLoadRequest] Missing driver_id');
+        return Response.json({ error: 'Driver ID required' }, { status: 400 });
       }
+      const effectiveDriverName = driver_name || driver_id;
 
       // Get load using service role (driver portal uses token auth, not standard session)
       let load;
@@ -89,8 +89,8 @@ Deno.serve(async (req) => {
         const notification = await base44.asServiceRole.entities.Notification.create({
           tenant_id,
           notification_type: 'load_request',
-          title: `${driver_name} requested load ${load.internal_load_number}`,
-          message: `${driver_name} wants to be assigned to this load`,
+          title: `${effectiveDriverName} requested load ${load.internal_load_number}`,
+          message: `${effectiveDriverName} wants to be assigned to this load`,
           related_entity_type: 'load',
           related_entity_id: load_id,
           link_url: `/DispatchBoard`,
@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
           deleted: false,
           metadata: {
             driver_id,
-            driver_name,
+            driver_name: effectiveDriverName,
             load_id,
             load_number: load.internal_load_number,
             request_status: 'pending',
@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
       }
 
       // Mark all requests for this load as resolved
-      const allRequests = await base44.entities.Notification.filter({
+      const allRequests = await base44.asServiceRole.entities.Notification.filter({
         tenant_id,
         notification_type: 'load_request',
         related_entity_id: load_id
@@ -177,7 +177,7 @@ Deno.serve(async (req) => {
 
       for (const req of allRequests) {
         const isAcceptedDriver = req.metadata?.driver_id === driver_id;
-        await base44.entities.Notification.update(req.id, {
+        await base44.asServiceRole.entities.Notification.update(req.id, {
           read: true,
           deleted: true,
           metadata: { 
@@ -189,7 +189,7 @@ Deno.serve(async (req) => {
 
         // Notify drivers who were denied
         if (!isAcceptedDriver && req.metadata?.driver_id) {
-          await base44.entities.Notification.create({
+          await base44.asServiceRole.entities.Notification.create({
             tenant_id,
             notification_type: 'load_request_denied',
             title: `Load ${load.internal_load_number} assigned to another driver`,
@@ -208,7 +208,7 @@ Deno.serve(async (req) => {
       }
 
       // Notify accepted driver
-      await base44.entities.Notification.create({
+      await base44.asServiceRole.entities.Notification.create({
         tenant_id,
         notification_type: 'load_request_accepted',
         title: `Load ${load.internal_load_number} assigned to you`,
@@ -290,7 +290,7 @@ Deno.serve(async (req) => {
       }
 
       // Notify driver
-      await base44.entities.Notification.create({
+      await base44.asServiceRole.entities.Notification.create({
         tenant_id,
         notification_type: 'load_request_denied',
         title: `Load ${load.internal_load_number} request not accepted`,
