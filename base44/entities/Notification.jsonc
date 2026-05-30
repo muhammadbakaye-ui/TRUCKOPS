@@ -1,0 +1,60 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant/account identifier for multi-tenancy"
+    },
+    "notification_type": {
+      "type": "string",
+      "enum": [
+        "driver_document_upload",
+        "fuel_import_complete",
+        "statement_published",
+        "load_created",
+        "load_request",
+        "request_accepted",
+        "request_denied",
+        "other"
+      ],
+      "default": "other"
+    },
+    "title": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "related_entity_type": {
+      "type": "string"
+    },
+    "related_entity_id": {
+      "type": "string"
+    },
+    "link_url": {
+      "type": "string"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false
+    },
+    "read_by": {
+      "type": "string"
+    },
+    "deleted": {
+      "type": "boolean",
+      "default": false
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Extra data for this notification (e.g. driver_id, load_id, load_number)",
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "notification_type",
+    "title",
+    "message"
+  ]
+}

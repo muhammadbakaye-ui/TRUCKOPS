@@ -112,12 +112,12 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, d
       '-pickup_date', 100
     ),
     enabled: !!tenantId,
-    staleTime: 60000,
-    refetchInterval: 60000,
+    staleTime: 15000,
+    refetchInterval: 15000,
   });
 
   const availableLoads = useMemo(() =>
-    availableRaw.filter(l => !l.driver_1_id && !l.driver_2_id && l.status !== 'canceled' && !l.canceled),
+    availableRaw.filter(l => l.status !== 'canceled' && !l.canceled),
     [availableRaw]
   );
 

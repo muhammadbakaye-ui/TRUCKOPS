@@ -154,8 +154,8 @@ export default function DispatchBoard() {
       50
     ),
     enabled: !!tenantId,
-    staleTime: 60000,
-    refetchInterval: 60000,
+    staleTime: 10000,
+    refetchInterval: 15000,
   });
 
   const executeAcceptRequest = async (notificationId, loadId, driverId, driverName, loadNumber) => {
