@@ -92,15 +92,59 @@
     "dispatch_status": {
       "type": "string",
       "enum": [
+        "available",
+        "assigned",
+        "in_transit",
+        "delivered",
         "pending",
         "dispatched",
-        "in_transit",
         "at_pickup",
         "at_delivery",
-        "delivered",
         "completed"
       ],
-      "default": "pending"
+      "default": "available"
+    },
+    "manual_dispatch_override": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, automation will never change this load's dispatch status"
+    },
+    "driver_visibility": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, this load is visible to drivers on the Driver Dispatch Board"
+    },
+    "pickup_time": {
+      "type": "string",
+      "description": "HH:MM of first pickup stop \u2014 used for time-based dispatch automation"
+    },
+    "resolved_timezone": {
+      "type": "string",
+      "description": "IANA timezone resolved from pickup location, driver, or company settings"
+    },
+    "dispatch_status_history": {
+      "type": "array",
+      "description": "Audit log of dispatch status changes",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "changed_by": {
+            "type": "string"
+          },
+          "changed_by_type": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          }
+        }
+      }
     },
     "division": {
       "type": "string"
@@ -134,7 +178,7 @@
     },
     "charge_line_items": {
       "type": "array",
-      "description": "Individual charge line items extracted from documents or entered manually",
+      "description": "Individual charge line items",
       "items": {
         "type": "object",
         "properties": {
@@ -153,7 +197,7 @@
     },
     "driver_rate": {
       "type": "number",
-      "description": "Amount used for driver statement calculations (overrides freight_rate for pay purposes)"
+      "description": "Amount used for driver statement calculations"
     },
     "fuel_surcharge": {
       "type": "number"

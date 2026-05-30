@@ -11,10 +11,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Save, ArrowLeft, Plus, Trash2, Download, Cloud, CloudOff } from 'lucide-react';
+import { Loader2, Save, ArrowLeft, Plus, Trash2, Download, Cloud, CloudOff, Lock, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react';
 import StatusBadge from '../components/shared/StatusBadge';
 import { logAudit } from '../components/shared/AuditLogger';
-import { computeDispatchStatus } from '../lib/dispatchStatus';
+import { computeDispatchStatus, normalizeDispatchStatus } from '../lib/dispatchStatus';
 import { getTimezone } from '../lib/useTimezone';
 import { toast } from 'sonner';
 import { printLoad } from '../components/print/printLoad';
@@ -59,6 +59,8 @@ export default function LoadDetail() {
   const autoSaveTimerRef = useRef(null);
   const savedLoadIdRef = useRef(loadId); // tracks the ID even for new loads
   const initialLoadRef = useRef(true); // skip first render for autosave
+  const [dispatchManuallyChanged, setDispatchManuallyChanged] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
 
@@ -140,7 +142,7 @@ export default function LoadDetail() {
     }
   }, [isNew]);
 
-  // Derive pickup/delivery fields from stops
+  // Derive pickup/delivery fields from stops (Feature 2: also derives pickup_time)
   const deriveStopFields = useCallback((currentForm, currentStops) => {
     const firstPickup = currentStops.find(s => s.stop_type === 'pickup');
     const lastDelivery = [...currentStops].reverse().find(s => s.stop_type === 'delivery');
@@ -149,6 +151,7 @@ export default function LoadDetail() {
       pickup_date: firstPickup?.appointment_date || currentForm.pickup_date || '',
       pickup_city: firstPickup?.city || currentForm.pickup_city || '',
       pickup_state: firstPickup?.state || currentForm.pickup_state || '',
+      pickup_time: firstPickup?.time_from || currentForm.pickup_time || '',
       delivery_date: lastDelivery?.appointment_date || currentForm.delivery_date || '',
       delivery_city: lastDelivery?.city || currentForm.delivery_city || '',
       delivery_state: lastDelivery?.state || currentForm.delivery_state || '',
@@ -225,8 +228,17 @@ export default function LoadDetail() {
       const currentId = savedLoadIdRef.current || loadId;
       const saveStatus = form.status === 'draft' ? 'saved' : form.status;
       const derived = deriveStopFields(form, stops);
-      const computedDispatch = computeDispatchStatus({ ...derived, driver_1_id: form.driver_1_id, dispatch_status: form.dispatch_status }, getTimezone());
-      const payload = { ...derived, status: saveStatus, dispatch_status: computedDispatch };
+      // Feature 1: Respect manual override — only auto-compute if not manually set
+      const isManual = dispatchManuallyChanged || !!form.manual_dispatch_override;
+      const computedDispatch = isManual
+        ? form.dispatch_status
+        : computeDispatchStatus({ ...derived, driver_1_id: form.driver_1_id, dispatch_status: form.dispatch_status }, getTimezone());
+      // Feature 7: Append status change to history
+      const oldStatus = normalizeDispatchStatus(form.dispatch_status);
+      const statusChanged = oldStatus !== computedDispatch;
+      const historyEntry = statusChanged ? { from: oldStatus, to: computedDispatch, changed_by: session?.admin_name || 'Admin', changed_by_type: isManual ? 'manual' : 'automation', timestamp: new Date().toISOString() } : null;
+      const newHistory = historyEntry ? [...(form.dispatch_status_history || []).slice(-19), historyEntry] : (form.dispatch_status_history || []);
+      const payload = { ...derived, status: saveStatus, dispatch_status: computedDispatch, manual_dispatch_override: isManual, dispatch_status_history: newHistory };
 
       if (!currentId) {
         // Never auto-saved yet
@@ -345,7 +357,39 @@ export default function LoadDetail() {
                 </Select>
               </Field>
               <Field label="Status"><Sel value={form.status} onChange={(v) => set('status', v)} options={[{value:'draft',label:'Draft'},{value:'saved',label:'Saved'},{value:'completed',label:'Completed'},{value:'canceled',label:'Canceled'}]} /></Field>
-              <Field label="Dispatch Status"><Sel value={form.dispatch_status} onChange={(v) => set('dispatch_status', v)} options={[{value:'available',label:'Available'},{value:'assigned',label:'Assigned'},{value:'in_transit',label:'In Transit'},{value:'delivered',label:'Delivered'}]} /></Field>
+              <Field label="Dispatch Status">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex-1 min-w-0">
+                      <Sel
+                        value={form.dispatch_status}
+                        onChange={(v) => {
+                          set('dispatch_status', v);
+                          set('manual_dispatch_override', true);
+                          setDispatchManuallyChanged(true);
+                        }}
+                        options={[{value:'available',label:'Available'},{value:'assigned',label:'Assigned'},{value:'in_transit',label:'In Transit'},{value:'delivered',label:'Delivered'}]}
+                      />
+                    </div>
+                    {form.manual_dispatch_override && (
+                      <>
+                        <Lock className="w-3 h-3 text-amber-500 flex-shrink-0" title="Manually overridden" />
+                        <button
+                          onClick={() => {
+                            const computed = computeDispatchStatus({ ...form, manual_dispatch_override: false }, getTimezone());
+                            setForm(prev => ({ ...prev, dispatch_status: computed, manual_dispatch_override: false }));
+                            setDispatchManuallyChanged(false);
+                          }}
+                          className="flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-primary transition-colors whitespace-nowrap"
+                          title="Return to automation control"
+                        >
+                          <RotateCcw className="w-3 h-3" /> Auto
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </Field>
               <Field label="Load Type"><Sel value={form.load_type} onChange={(v) => set('load_type', v)} options={['FTL','LTL','partial','other'].map(v=>({value:v,label:v.toUpperCase()}))} /></Field>
               <Field label="Equipment"><Sel value={form.equipment_type} onChange={(v) => set('equipment_type', v)} options={['dry_van','reefer','flatbed','step_deck','lowboy','tanker','intermodal','other'].map(v=>({value:v,label:v.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}))} /></Field>
               <Field label="Commodity"><TextInput value={form.commodity} onChange={(v) => set('commodity', v)} /></Field>
@@ -545,6 +589,46 @@ export default function LoadDetail() {
               <Textarea value={form.notes || ''} onChange={(e) => set('notes', e.target.value)} className="text-xs h-24" placeholder="Internal notes..." />
             </CardContent>
           </Card>
+
+          {/* Feature 7: Status History */}
+          {(form.dispatch_status_history?.length > 0) && (
+            <Card>
+              <CardHeader
+                className="py-3 px-4 cursor-pointer hover:bg-muted/30 transition-colors"
+                onClick={() => setShowHistory(!showHistory)}
+              >
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status History</CardTitle>
+                  {showHistory ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
+                </div>
+              </CardHeader>
+              {showHistory && (
+                <CardContent className="px-4 pb-4">
+                  <div className="space-y-2">
+                    {[...(form.dispatch_status_history || [])].reverse().slice(0, 10).map((entry, i) => (
+                      <div key={i} className="text-[11px] border-b border-border/40 pb-1.5 last:border-0">
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <span className="text-muted-foreground">{(entry.from || '').replace('_', ' ')}</span>
+                          <span className="text-muted-foreground">→</span>
+                          <span className="font-medium text-foreground">{(entry.to || '').replace('_', ' ')}</span>
+                          <span className={`text-[10px] px-1 rounded ml-1 ${
+                            entry.changed_by_type === 'automation'
+                              ? 'bg-blue-500/10 text-blue-600'
+                              : 'bg-amber-500/10 text-amber-600'
+                          }`}>
+                            {entry.changed_by_type}
+                          </span>
+                        </div>
+                        <div className="text-muted-foreground mt-0.5">
+                          {entry.changed_by} · {entry.timestamp ? new Date(entry.timestamp).toLocaleString() : ''}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+          )}
         </div>
       </div>
     </div>

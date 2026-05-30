@@ -64,10 +64,14 @@
     "ytd_gross_legacy": {
       "type": "number",
       "default": 0,
-      "description": "Year-to-date gross from previous system (Jan 1 - today)"
+      "description": "Year-to-date gross from previous system"
     },
     "assigned_truck_id": {
       "type": "string"
+    },
+    "timezone": {
+      "type": "string",
+      "description": "Optional IANA timezone override for this driver (e.g. America/Chicago). Overrides company timezone for this driver's loads."
     },
     "status": {
       "type": "string",

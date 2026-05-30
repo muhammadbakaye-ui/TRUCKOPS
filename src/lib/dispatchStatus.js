@@ -3,35 +3,50 @@ import { getTimezone } from './useTimezone';
 // Returns today's date as YYYY-MM-DD in the user's local timezone
 export function getLocalDateString(timezone) {
   const tz = timezone || getTimezone();
-  // en-CA locale produces YYYY-MM-DD format natively
   return new Intl.DateTimeFormat('en-CA', { timeZone: tz }).format(new Date());
 }
 
+// Returns current time as HH:MM in the given timezone (Feature 2)
+export function getCurrentTimeInTimezone(timezone) {
+  const tz = timezone || getTimezone();
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false
+  }).formatToParts(new Date());
+  const hour = (parts.find(p => p.type === 'hour')?.value || '00').padStart(2, '0');
+  const minute = (parts.find(p => p.type === 'minute')?.value || '00').padStart(2, '0');
+  return `${hour}:${minute}`;
+}
+
 /**
- * Compute the correct dispatch_status for a load based on 4-status rules.
- * - available: no driver assigned
- * - assigned:  driver assigned, pickup in the future
- * - in_transit: pickup date today or past, driver assigned, delivery not yet passed
- * - delivered: delivery date has passed OR manually set to delivered
+ * Compute the correct dispatch_status for a load.
+ * Feature 1: Returns current status unchanged if manual_dispatch_override is set.
+ * Feature 2: Uses pickup_time for time-based In Transit trigger.
  */
 export function computeDispatchStatus(load, timezone) {
-  const today = getLocalDateString(timezone);
+  // Feature 1: Never touch manually overridden loads
+  if (load.manual_dispatch_override) return normalizeDispatchStatus(load.dispatch_status);
+
+  const tz = timezone || load.resolved_timezone || getTimezone();
+  const today = getLocalDateString(tz);
+  const currentTime = getCurrentTimeInTimezone(tz);
   const pickup = load.pickup_date || '';
+  const pickupTime = load.pickup_time || '00:00'; // from first stop's time_from
   const delivery = load.delivery_date || '';
   const hasDriver = !!(load.driver_1_id);
   const current = normalizeDispatchStatus(load.dispatch_status);
 
-  // Already delivered, or delivery date passed → delivered
+  // Already delivered — preserve (user manually set)
   if (current === 'delivered') return 'delivered';
+  // Delivery date passed → delivered
   if (delivery && delivery < today) return 'delivered';
 
-  // Pickup today or past + driver assigned + delivery not passed → in_transit
-  if (pickup && pickup <= today && hasDriver) return 'in_transit';
+  // Feature 2: In Transit — pickup date in the past
+  if (pickup && pickup < today && hasDriver) return 'in_transit';
+  // Feature 2: In Transit — pickup is today AND pickup time has arrived
+  if (pickup === today && currentTime >= pickupTime && hasDriver) return 'in_transit';
 
-  // Driver assigned (pickup in future) → assigned
+  // Has driver (pickup in future or no pickup date) → assigned
   if (hasDriver) return 'assigned';
-
-  // No driver → available
   return 'available';
 }
 

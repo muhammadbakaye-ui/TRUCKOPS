@@ -6,11 +6,14 @@ import { base44 } from '@/api/base44Client';
 import { useSession } from '@/components/shared/AppSession';
 import PageHeader from '@/components/shared/PageHeader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, LayoutGrid, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Loader2, LayoutGrid, AlertTriangle, Lock, Eye, EyeOff } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { toast } from 'sonner';
 import { computeDispatchStatus, normalizeDispatchStatus } from '../lib/dispatchStatus';
 import { getTimezone } from '../lib/useTimezone';
+import UndoToast from '../components/shared/UndoToast';
 
 const COLUMNS = [
   { key: 'available',  label: 'Available',  color: 'border-blue-500',   headerColor: 'bg-blue-500/10 text-blue-400' },
@@ -19,18 +22,53 @@ const COLUMNS = [
   { key: 'delivered',  label: 'Delivered',  color: 'border-green-500',  headerColor: 'bg-green-500/10 text-green-400' },
 ];
 
-function LoadCard({ load, drivers, trucks, onClick, noDriverWarning }) {
+const STATUS_OPTIONS = [
+  { key: 'available', label: 'Available' },
+  { key: 'assigned',  label: 'Assigned' },
+  { key: 'in_transit', label: 'In Transit' },
+  { key: 'delivered', label: 'Delivered' },
+];
+
+function LoadCard({ load, drivers, trucks, onClick, noDriverWarning, selectMode, isSelected, onSelect, onToggleVisibility }) {
   const driver = drivers.find(d => d.id === load.driver_1_id);
   const truck = trucks.find(t => t.id === load.truck_id);
+  const colKey = normalizeDispatchStatus(load.dispatch_status);
 
   return (
     <div
-      onClick={onClick}
+      onClick={selectMode ? onSelect : onClick}
       className="bg-card border border-border rounded-lg p-3 cursor-pointer hover:border-primary/50 hover:bg-muted/40 transition-all space-y-2"
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-mono font-semibold text-xs text-primary">{load.internal_load_number}</span>
+      <div className="flex items-center gap-1.5">
+        {selectMode && (
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={onSelect}
+            onClick={e => e.stopPropagation()}
+            className="flex-shrink-0"
+          />
+        )}
+        <span className="font-mono font-semibold text-xs text-primary flex-1 min-w-0 truncate">
+          {load.internal_load_number}
+        </span>
+        {/* Feature 1: Lock icon for manually overridden loads */}
+        {load.manual_dispatch_override && (
+          <Lock className="w-3 h-3 text-amber-500 flex-shrink-0" title="Manually overridden — automation won't change this" />
+        )}
+        {/* Feature 3 partial: Eye toggle in Available column */}
+        {colKey === 'available' && !selectMode && (
+          <button
+            onClick={e => { e.stopPropagation(); onToggleVisibility(); }}
+            className="text-muted-foreground hover:text-primary transition-colors flex-shrink-0"
+            title={load.driver_visibility ? 'Visible to drivers — click to hide' : 'Hidden from drivers — click to show'}
+          >
+            {load.driver_visibility
+              ? <Eye className="w-3 h-3 text-green-500" />
+              : <EyeOff className="w-3 h-3" />}
+          </button>
+        )}
       </div>
+
       {load.customer_name && (
         <p className="text-xs text-muted-foreground truncate">{load.customer_name}</p>
       )}
@@ -47,7 +85,9 @@ function LoadCard({ load, drivers, trucks, onClick, noDriverWarning }) {
       </div>
       {(load.pickup_date || load.delivery_date) && (
         <div className="flex gap-3 text-[11px] text-muted-foreground">
-          {load.pickup_date && <span>PU: {load.pickup_date}</span>}
+          {load.pickup_date && (
+            <span>PU: {load.pickup_date}{load.pickup_time ? ' ' + load.pickup_time : ''}</span>
+          )}
           {load.delivery_date && <span>DEL: {load.delivery_date}</span>}
         </div>
       )}
@@ -56,8 +96,7 @@ function LoadCard({ load, drivers, trucks, onClick, noDriverWarning }) {
       )}
       {noDriverWarning && (
         <div className="flex items-center gap-1 text-[11px] text-amber-600 bg-amber-500/10 rounded px-1.5 py-1">
-          <AlertTriangle className="w-3 h-3 flex-shrink-0" />
-          No driver assigned
+          <AlertTriangle className="w-3 h-3 flex-shrink-0" /> No driver assigned
         </div>
       )}
     </div>
@@ -71,6 +110,10 @@ export default function DispatchBoard() {
   const queryClient = useQueryClient();
   const [driverFilter, setDriverFilter] = useState('all');
   const [noDriverWarnings, setNoDriverWarnings] = useState(new Set());
+  const [undoToast, setUndoToast] = useState(null);
+  // Feature 6: Bulk select state
+  const [selectModeColumn, setSelectModeColumn] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   const { data: loads = [], isLoading } = useQuery({
     queryKey: ['loads-dispatch', tenantId],
@@ -78,7 +121,7 @@ export default function DispatchBoard() {
       ? base44.entities.Load.filter({ tenant_id: tenantId }, '-updated_date', 500)
       : Promise.resolve([]),
     enabled: !!tenantId,
-    refetchInterval: 60000,
+    refetchInterval: 60000, // Bug Fix 2: poll every 60s
   });
 
   const { data: drivers = [] } = useQuery({
@@ -93,92 +136,169 @@ export default function DispatchBoard() {
     enabled: !!tenantId,
   });
 
-  // Feature 1 + 2: Background automation — evaluate all loads and fix stale dispatch statuses
+  // Bug Fix 1 + Feature 1: Automation — skips manual_dispatch_override loads
   useEffect(() => {
     if (!loads.length || !tenantId) return;
     const tz = getTimezone();
     const toUpdate = loads.filter(l => {
+      if (l.manual_dispatch_override) return false; // Feature 1: never touch
       const expected = computeDispatchStatus(l, tz);
       const current = normalizeDispatchStatus(l.dispatch_status);
       return expected !== current;
     });
     if (!toUpdate.length) return;
 
-    // Optimistic cache update
-    queryClient.setQueryData(['loads-dispatch', tenantId], (old) =>
-      (old || []).map(load => {
-        const expected = computeDispatchStatus(load, tz);
-        const current = normalizeDispatchStatus(load.dispatch_status);
-        return expected !== current ? { ...load, dispatch_status: expected } : load;
-      })
-    );
-    // Also update the main loads cache
-    queryClient.setQueryData(['loads', tenantId], (old) =>
-      Array.isArray(old)
-        ? old.map(load => {
-            const expected = computeDispatchStatus(load, tz);
-            const current = normalizeDispatchStatus(load.dispatch_status);
-            return expected !== current ? { ...load, dispatch_status: expected } : load;
-          })
-        : old
-    );
-    // Persist to server
+    // Optimistic update both caches
+    const applyAutomation = (load) => {
+      if (load.manual_dispatch_override) return load;
+      const expected = computeDispatchStatus(load, tz);
+      const current = normalizeDispatchStatus(load.dispatch_status);
+      return expected !== current ? { ...load, dispatch_status: expected } : load;
+    };
+    queryClient.setQueryData(['loads-dispatch', tenantId], old => Array.isArray(old) ? old.map(applyAutomation) : old);
+    queryClient.setQueryData(['loads', tenantId], old => Array.isArray(old) ? old.map(applyAutomation) : old);
+
+    // Persist to DB with audit entry
     toUpdate.forEach(l => {
       const expected = computeDispatchStatus(l, tz);
-      base44.entities.Load.update(l.id, { dispatch_status: expected });
+      const current = normalizeDispatchStatus(l.dispatch_status);
+      const entry = { from: current, to: expected, changed_by: 'Automation', changed_by_type: 'automation', timestamp: new Date().toISOString() };
+      base44.entities.Load.update(l.id, {
+        dispatch_status: expected,
+        dispatch_status_history: [...(l.dispatch_status_history || []).slice(-19), entry],
+      });
     });
   }, [loads, tenantId]);
 
-  const activeLoads = useMemo(() =>
-    loads.filter(l => !l.canceled && l.status !== 'canceled'),
-    [loads]
-  );
+  const activeLoads = useMemo(() => loads.filter(l => !l.canceled && l.status !== 'canceled'), [loads]);
 
   const filteredLoads = useMemo(() => {
     if (driverFilter === 'all') return activeLoads;
     return activeLoads.filter(l => l.driver_1_id === driverFilter || l.driver_2_id === driverFilter);
   }, [activeLoads, driverFilter]);
 
-  const getColumnLoads = useCallback((key) =>
+  const getColumnLoads = useCallback(key =>
     filteredLoads.filter(l => normalizeDispatchStatus(l.dispatch_status) === key),
     [filteredLoads]
   );
 
-  // Feature 4: Drag and drop handler
-  const handleDragEnd = useCallback(({ draggableId, source, destination }) => {
+  // Bug Fix 1 + 2: DnD with real DB persist, optimistic rollback, undo (Feature 8)
+  const handleDragEnd = useCallback(async ({ draggableId, source, destination }) => {
     if (!destination || source.droppableId === destination.droppableId) return;
     const load = loads.find(l => l.id === draggableId);
     if (!load) return;
     const newStatus = destination.droppableId;
-    const currentStatus = normalizeDispatchStatus(load.dispatch_status);
+    const oldStatus = normalizeDispatchStatus(load.dispatch_status);
+    const wasManual = !!load.manual_dispatch_override;
+    const oldHistory = load.dispatch_status_history || [];
 
-    // Rule: Delivered cannot go back to Available
-    if (currentStatus === 'delivered' && newStatus === 'available') {
-      toast.error("A delivered load can't be moved back to Available");
+    if (oldStatus === 'delivered' && newStatus === 'available') {
+      toast.error("A delivered load can't move back to Available");
       return;
     }
 
-    // Optimistic update
-    queryClient.setQueryData(['loads-dispatch', tenantId], (old) =>
-      (old || []).map(l => l.id === draggableId ? { ...l, dispatch_status: newStatus } : l)
+    // Save cache snapshot for rollback
+    const previousCache = queryClient.getQueryData(['loads-dispatch', tenantId]);
+    const entry = { from: oldStatus, to: newStatus, changed_by: session?.admin_name || 'Admin', changed_by_type: 'manual', timestamp: new Date().toISOString() };
+    const newHistory = [...oldHistory.slice(-19), entry];
+
+    // Bug Fix 2: Optimistic update immediately
+    queryClient.setQueryData(['loads-dispatch', tenantId], old =>
+      (old || []).map(l => l.id === draggableId
+        ? { ...l, dispatch_status: newStatus, manual_dispatch_override: true, dispatch_status_history: newHistory }
+        : l)
     );
 
-    // In Transit with no driver — allow but show inline warning
     if (newStatus === 'in_transit' && !load.driver_1_id) {
       setNoDriverWarnings(prev => new Set([...prev, draggableId]));
     } else {
       setNoDriverWarnings(prev => { const n = new Set(prev); n.delete(draggableId); return n; });
     }
 
-    // Persist
-    base44.entities.Load.update(draggableId, { dispatch_status: newStatus });
-
-    // Assigned with no driver → open load detail so user can assign one
-    if (newStatus === 'assigned' && !load.driver_1_id) {
-      toast.info('Opening load to assign a driver…');
-      setTimeout(() => navigate(createPageUrl(`LoadDetail?id=${draggableId}`)), 400);
+    // Bug Fix 1: Persist to DB
+    try {
+      await base44.entities.Load.update(draggableId, {
+        dispatch_status: newStatus,
+        manual_dispatch_override: true,
+        dispatch_status_history: newHistory,
+      });
+    } catch (err) {
+      // Bug Fix 2: Rollback on failure
+      queryClient.setQueryData(['loads-dispatch', tenantId], () => previousCache);
+      toast.error('Failed to save: ' + err.message);
+      return;
     }
-  }, [loads, tenantId, queryClient, navigate]);
+
+    // Feature 8: Undo toast
+    setUndoToast({
+      message: `Load ${load.internal_load_number} moved to ${newStatus.replace('_', ' ')}`,
+      onUndo: async () => {
+        queryClient.setQueryData(['loads-dispatch', tenantId], old =>
+          (old || []).map(l => l.id === draggableId
+            ? { ...l, dispatch_status: oldStatus, manual_dispatch_override: wasManual, dispatch_status_history: oldHistory }
+            : l)
+        );
+        await base44.entities.Load.update(draggableId, {
+          dispatch_status: oldStatus,
+          manual_dispatch_override: wasManual,
+          dispatch_status_history: oldHistory,
+        });
+      },
+    });
+
+    // Feature 1: Assigned with no driver → open LoadDetail to assign
+    if (newStatus === 'assigned' && !load.driver_1_id) {
+      toast.info('Assign a driver to this load…');
+      setTimeout(() => navigate(createPageUrl(`LoadDetail?id=${draggableId}`)), 500);
+    }
+  }, [loads, tenantId, queryClient, navigate, session]);
+
+  // Feature 6: Bulk move all selected loads
+  const handleBulkMove = async (targetStatus) => {
+    const ids = [...selectedIds];
+    const previousCache = queryClient.getQueryData(['loads-dispatch', tenantId]);
+
+    // Optimistic
+    queryClient.setQueryData(['loads-dispatch', tenantId], old =>
+      (old || []).map(l => ids.includes(l.id)
+        ? { ...l, dispatch_status: targetStatus, manual_dispatch_override: true }
+        : l)
+    );
+
+    try {
+      for (const id of ids) {
+        const load = loads.find(l => l.id === id);
+        const oldStatus = normalizeDispatchStatus(load?.dispatch_status);
+        const entry = { from: oldStatus, to: targetStatus, changed_by: session?.admin_name || 'Admin', changed_by_type: 'manual', timestamp: new Date().toISOString() };
+        await base44.entities.Load.update(id, {
+          dispatch_status: targetStatus,
+          manual_dispatch_override: true,
+          dispatch_status_history: [...(load?.dispatch_status_history || []).slice(-19), entry],
+        });
+      }
+      toast.success(`${ids.length} load${ids.length !== 1 ? 's' : ''} moved to ${targetStatus.replace('_', ' ')}`);
+    } catch (err) {
+      queryClient.setQueryData(['loads-dispatch', tenantId], () => previousCache);
+      toast.error('Bulk move failed: ' + err.message);
+    }
+    setSelectedIds(new Set());
+    setSelectModeColumn(null);
+  };
+
+  // Feature 3 partial: Toggle driver visibility on Available loads
+  const handleToggleVisibility = async (loadId, currentValue) => {
+    queryClient.setQueryData(['loads-dispatch', tenantId], old =>
+      (old || []).map(l => l.id === loadId ? { ...l, driver_visibility: !currentValue } : l)
+    );
+    try {
+      await base44.entities.Load.update(loadId, { driver_visibility: !currentValue });
+    } catch (err) {
+      queryClient.setQueryData(['loads-dispatch', tenantId], old =>
+        (old || []).map(l => l.id === loadId ? { ...l, driver_visibility: currentValue } : l)
+      );
+      toast.error('Failed to update visibility');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -194,15 +314,20 @@ export default function DispatchBoard() {
         title="Dispatch Board"
         description={`${filteredLoads.length} active loads`}
         actions={
-          <Select value={driverFilter} onValueChange={setDriverFilter}>
-            <SelectTrigger className="h-8 text-xs w-44">
-              <SelectValue placeholder="All Drivers" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Drivers</SelectItem>
-              {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2 flex-wrap">
+            {selectModeColumn && (
+              <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => { setSelectModeColumn(null); setSelectedIds(new Set()); }}>
+                Cancel Select
+              </Button>
+            )}
+            <Select value={driverFilter} onValueChange={setDriverFilter}>
+              <SelectTrigger className="h-8 text-xs w-44"><SelectValue placeholder="All Drivers" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Drivers</SelectItem>
+                {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
         }
       />
 
@@ -217,32 +342,47 @@ export default function DispatchBoard() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             {COLUMNS.map(col => {
               const colLoads = getColumnLoads(col.key);
+              const isSelectMode = selectModeColumn === col.key;
+
               return (
                 <div key={col.key} className={`border-t-2 ${col.color} rounded-lg bg-muted/20 flex flex-col`}>
                   <div className={`flex items-center justify-between px-3 py-2 rounded-t-lg ${col.headerColor}`}>
-                    <span className="text-xs font-semibold uppercase tracking-wider">{col.label}</span>
-                    <span className="text-xs font-bold">{colLoads.length}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold uppercase tracking-wider">{col.label}</span>
+                      <span className="text-xs font-bold">{colLoads.length}</span>
+                    </div>
+                    {/* Feature 6: Select mode toggle per column */}
+                    <button
+                      onClick={() => {
+                        if (isSelectMode) { setSelectModeColumn(null); setSelectedIds(new Set()); }
+                        else { setSelectModeColumn(col.key); setSelectedIds(new Set()); }
+                      }}
+                      className="text-[10px] px-1.5 py-0.5 rounded border border-current opacity-60 hover:opacity-100 transition-opacity"
+                    >
+                      {isSelectMode ? 'Done' : 'Select'}
+                    </button>
                   </div>
+
                   <Droppable droppableId={col.key}>
                     {(provided, snapshot) => (
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className={`p-2 space-y-2 flex-1 min-h-[200px] rounded-b-lg transition-colors ${snapshot.isDraggingOver ? 'bg-primary/10 ring-1 ring-primary/20' : ''}`}
+                        className={`p-2 space-y-2 flex-1 min-h-[200px] rounded-b-lg transition-colors ${snapshot.isDraggingOver ? 'bg-primary/10 ring-1 ring-inset ring-primary/30' : ''}`}
                       >
                         {colLoads.length === 0 && !snapshot.isDraggingOver && (
                           <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
-                            Drop loads here
+                            {isSelectMode ? 'No loads' : 'Drop loads here'}
                           </div>
                         )}
                         {colLoads.map((load, idx) => (
-                          <Draggable key={load.id} draggableId={load.id} index={idx}>
+                          <Draggable key={load.id} draggableId={load.id} index={idx} isDragDisabled={isSelectMode}>
                             {(provided, snapshot) => (
                               <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
-                                className={`select-none cursor-grab active:cursor-grabbing transition-transform ${snapshot.isDragging ? 'rotate-1 scale-105 shadow-xl' : ''}`}
+                                className={`select-none cursor-grab active:cursor-grabbing transition-transform ${snapshot.isDragging ? 'rotate-1 scale-105 shadow-xl opacity-90' : ''}`}
                               >
                                 <LoadCard
                                   load={load}
@@ -250,6 +390,16 @@ export default function DispatchBoard() {
                                   trucks={trucks}
                                   onClick={() => !snapshot.isDragging && navigate(createPageUrl(`LoadDetail?id=${load.id}`))}
                                   noDriverWarning={noDriverWarnings.has(load.id)}
+                                  selectMode={isSelectMode}
+                                  isSelected={selectedIds.has(load.id)}
+                                  onSelect={() => {
+                                    setSelectedIds(prev => {
+                                      const n = new Set(prev);
+                                      n.has(load.id) ? n.delete(load.id) : n.add(load.id);
+                                      return n;
+                                    });
+                                  }}
+                                  onToggleVisibility={() => handleToggleVisibility(load.id, !!load.driver_visibility)}
                                 />
                               </div>
                             )}
@@ -264,6 +414,32 @@ export default function DispatchBoard() {
             })}
           </div>
         </DragDropContext>
+      )}
+
+      {/* Feature 6: Floating bulk action bar */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 bg-card border border-border rounded-xl shadow-2xl flex-wrap justify-center">
+          <span className="text-xs font-medium text-muted-foreground">
+            {selectedIds.size} selected — Move to:
+          </span>
+          {STATUS_OPTIONS.map(opt => (
+            <Button key={opt.key} size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleBulkMove(opt.key)}>
+              {opt.label}
+            </Button>
+          ))}
+          <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => { setSelectedIds(new Set()); setSelectModeColumn(null); }}>
+            Cancel
+          </Button>
+        </div>
+      )}
+
+      {/* Feature 8: Undo toast */}
+      {undoToast && (
+        <UndoToast
+          message={undoToast.message}
+          onUndo={undoToast.onUndo}
+          onClose={() => setUndoToast(null)}
+        />
       )}
     </div>
   );
