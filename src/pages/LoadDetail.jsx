@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Save, ArrowLeft, Plus, Trash2, Download, Cloud, CloudOff, Lock, RotateCcw, ChevronDown, ChevronRight } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import StatusBadge from '../components/shared/StatusBadge';
 import { logAudit } from '../components/shared/AuditLogger';
 import { computeDispatchStatus, normalizeDispatchStatus } from '../lib/dispatchStatus';
@@ -61,6 +62,7 @@ export default function LoadDetail() {
   const initialLoadRef = useRef(true); // skip first render for autosave
   const [dispatchManuallyChanged, setDispatchManuallyChanged] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [confirmClearDriver, setConfirmClearDriver] = useState(false);
 
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
 
@@ -305,6 +307,24 @@ export default function LoadDetail() {
   return (
     <div className="p-4 space-y-4 max-w-5xl">
       {showDialog && <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />}
+      <AlertDialog open={confirmClearDriver} onOpenChange={(open) => !open && setConfirmClearDriver(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Driver Assignment?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Setting this load to Available will remove the current driver assignment. Continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel onClick={() => setConfirmClearDriver(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              setForm(prev => ({ ...prev, dispatch_status: 'available', manual_dispatch_override: true, driver_1_id: null, driver_1_name: null, driver_2_id: null, driver_2_name: null }));
+              setDispatchManuallyChanged(true);
+              setConfirmClearDriver(false);
+            }}>Confirm</AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
       <div className="flex items-center gap-2 flex-wrap">
         <Button variant="ghost" size="sm" className="h-8 gap-1 flex-shrink-0" onClick={() => navigate(createPageUrl('Loads'))}>
           <ArrowLeft className="w-3.5 h-3.5" /> Loads
@@ -364,6 +384,10 @@ export default function LoadDetail() {
                       <Sel
                         value={form.dispatch_status}
                         onChange={(v) => {
+                          if (v === 'available' && (form.driver_1_id || form.driver_2_id)) {
+                            setConfirmClearDriver(true);
+                            return;
+                          }
                           set('dispatch_status', v);
                           set('manual_dispatch_override', true);
                           setDispatchManuallyChanged(true);

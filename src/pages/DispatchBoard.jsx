@@ -119,6 +119,7 @@ export default function DispatchBoard() {
   const [confirmVisibility, setConfirmVisibility] = useState(null); // { loadId, currentValue }
   const [showRequests, setShowRequests] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState(null);
+  const [confirmClearDriver, setConfirmClearDriver] = useState(null); // { load, oldStatus, wasManual, oldHistory }
 
   const { data: loads = [], isLoading } = useQuery({
     queryKey: ['loads-dispatch', tenantId],
@@ -267,6 +268,12 @@ export default function DispatchBoard() {
       return;
     }
 
+    // If moving to 'available' and load has a driver assigned, confirm + clear
+    if (newStatus === 'available' && (load.driver_1_id || load.driver_2_id)) {
+      setConfirmClearDriver({ load, oldStatus, wasManual, oldHistory });
+      return;
+    }
+
     // Save cache snapshot for rollback
     const previousCache = queryClient.getQueryData(['loads-dispatch', tenantId]);
     const entry = { from: oldStatus, to: newStatus, changed_by: session?.admin_name || 'Admin', changed_by_type: 'manual', timestamp: new Date().toISOString() };
@@ -322,6 +329,37 @@ export default function DispatchBoard() {
       setTimeout(() => navigate(createPageUrl(`LoadDetail?id=${draggableId}`)), 500);
     }
   }, [loads, tenantId, queryClient, navigate, session]);
+
+  const executeDragToAvailable = useCallback(async ({ load, oldStatus, wasManual, oldHistory }) => {
+    const draggableId = load.id;
+    const newStatus = 'available';
+    const previousCache = queryClient.getQueryData(['loads-dispatch', tenantId]);
+    const entry = { from: oldStatus, to: newStatus, changed_by: session?.admin_name || 'Admin', changed_by_type: 'manual', timestamp: new Date().toISOString() };
+    const newHistory = [...oldHistory.slice(-19), entry];
+    queryClient.setQueryData(['loads-dispatch', tenantId], old =>
+      (old || []).map(l => l.id === draggableId
+        ? { ...l, dispatch_status: newStatus, manual_dispatch_override: true, dispatch_status_history: newHistory, driver_1_id: null, driver_1_name: null, driver_2_id: null, driver_2_name: null }
+        : l)
+    );
+    try {
+      await base44.entities.Load.update(draggableId, { dispatch_status: newStatus, manual_dispatch_override: true, dispatch_status_history: newHistory, driver_1_id: null, driver_1_name: null, driver_2_id: null, driver_2_name: null });
+    } catch (err) {
+      queryClient.setQueryData(['loads-dispatch', tenantId], () => previousCache);
+      toast.error('Failed to save: ' + err.message);
+      return;
+    }
+    setUndoToast({
+      message: `Load ${load.internal_load_number} moved to available (driver cleared)`,
+      onUndo: async () => {
+        queryClient.setQueryData(['loads-dispatch', tenantId], old =>
+          (old || []).map(l => l.id === draggableId
+            ? { ...l, dispatch_status: oldStatus, manual_dispatch_override: wasManual, dispatch_status_history: oldHistory, driver_1_id: load.driver_1_id, driver_1_name: load.driver_1_name, driver_2_id: load.driver_2_id, driver_2_name: load.driver_2_name }
+            : l)
+        );
+        await base44.entities.Load.update(draggableId, { dispatch_status: oldStatus, manual_dispatch_override: wasManual, dispatch_status_history: oldHistory, driver_1_id: load.driver_1_id, driver_1_name: load.driver_1_name, driver_2_id: load.driver_2_id, driver_2_name: load.driver_2_name });
+      },
+    });
+  }, [tenantId, queryClient, session]);
 
   // Feature 6: Bulk move all selected loads
   const handleBulkMove = async (targetStatus) => {
@@ -389,6 +427,27 @@ export default function DispatchBoard() {
 
   return (
     <div className="p-4 space-y-4">
+      {/* Confirm clear driver dialog — moving to Available with a driver assigned */}
+      <AlertDialog open={!!confirmClearDriver} onOpenChange={(open) => !open && setConfirmClearDriver(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Driver Assignment?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Setting this load to Available will remove the current driver assignment. Continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel onClick={() => setConfirmClearDriver(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (confirmClearDriver) executeDragToAvailable(confirmClearDriver);
+              setConfirmClearDriver(null);
+            }}>
+              Confirm
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Confirm visibility dialog */}
       <AlertDialog open={!!confirmVisibility} onOpenChange={(open) => !open && setConfirmVisibility(null)}>
         <AlertDialogContent>
