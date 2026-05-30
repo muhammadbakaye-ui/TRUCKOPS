@@ -167,10 +167,10 @@ export function printInvoice({ company, invoice, lineItems, stops }) {
   <!-- TOP HEADER -->
   <div class="top-header">
     <div class="company-block">
-      <span class="co-name">UNITY TRANSPORTATION LLC</span><br>
-      <span class="co-detail">P.O BOX 56521</span><br>
-      <span class="co-detail">SAINT LOUIS, MO 63156</span><br>
-      <span class="co-detail">Phone #: (573)742-8547</span>
+      <span class="co-name">${(company.company_name || 'Your Company').toUpperCase()}</span><br>
+      ${company.address_1 ? `<span class="co-detail">${company.address_1}</span><br>` : ''}
+      ${(company.city || company.state || company.zip) ? `<span class="co-detail">${[company.city, company.state, company.zip].filter(Boolean).join(', ')}</span><br>` : ''}
+      ${company.phone ? `<span class="co-detail">Phone #: ${company.phone}</span>` : ''}
     </div>
     <div class="invoice-heading">INVOICE</div>
   </div>

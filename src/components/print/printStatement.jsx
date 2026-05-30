@@ -142,10 +142,7 @@ export function printStatement({ company, statement, allLines }) {
   <!-- HEADER -->
   <div class="header">
     <div class="co-info">
-      ${co.company_name || 'UNITY TRANSPORTATION LLC'}<br>
-      ${co.address_1 || 'P.O BOX 56521'}<br>
-      ${[co.city, co.state, co.zip].filter(Boolean).join(', ') || 'SAINT LOUIS, MO 63156'}<br>
-      Phone #: ${co.phone || '(573)742-8547'}
+      ${co.company_name || 'Your Company'}${co.address_1 ? '<br>' + co.address_1 : ''}${(co.city || co.state || co.zip) ? '<br>' + [co.city, co.state, co.zip].filter(Boolean).join(', ') : ''}${co.phone ? '<br>Phone #: ' + co.phone : ''}
     </div>
     <div class="stmt-title">
       Statement<br>

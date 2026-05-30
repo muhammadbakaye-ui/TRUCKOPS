@@ -513,7 +513,7 @@ export default function DriverPortalView() {
                         Close
                       </Button>
                       <Button size="sm" className="gap-1.5 text-xs h-9 flex-1 md:flex-none" onClick={() => {
-                        printStatement({ company: {}, statement: viewingStatement, allLines: statementLines });
+                        printStatement({ company: carrierCompanies[0] || {}, statement: viewingStatement, allLines: statementLines });
                       }}>
                         <Printer className="w-3.5 h-3.5" /> Download PDF
                       </Button>

@@ -123,8 +123,8 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
   <!-- HEADER -->
   <div class="header">
     <div>
-      <div class="co-name">UNITY TRANSPORTATION LLC</div>
-      <div class="co-sub">P.O BOX 56521<br>SAINT LOUIS, MO 63156<br>Phone #: (573)742-8547</div>
+      <div class="co-name">${(company.company_name || 'Your Company').toUpperCase()}</div>
+      <div class="co-sub">${[company.address_1, [company.city, company.state, company.zip].filter(Boolean).join(', '), company.phone ? 'Phone #: ' + company.phone : ''].filter(Boolean).join('<br>')}</div>
     </div>
     <div class="header-right">
       <div class="doc-title">LOAD INVOICE</div>
@@ -200,7 +200,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 
   <!-- FOOTER -->
   <div class="page-footer">
-    <span>${company.company_name || 'Unity Transportation LLC'}</span>
+    <span>${company.company_name || 'Your Company'}</span>
     <span>Load # ${load.internal_load_number || '—'}</span>
     <span>Printed ${new Date().toLocaleDateString()}</span>
   </div>
