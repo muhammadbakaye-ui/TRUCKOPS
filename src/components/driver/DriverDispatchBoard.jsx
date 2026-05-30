@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useState, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Loader2, MapPin, Calendar, DollarSign, Handshake } from 'lucide-react';
 import { normalizeDispatchStatus } from '../../lib/dispatchStatus';
@@ -13,8 +13,17 @@ const COLUMNS = [
   { key: 'delivered',  label: 'Delivered',   color: 'border-green-500',  headerColor: 'bg-green-500/10 text-green-600', emptyMsg: 'No delivered loads yet' },
 ];
 
-function LoadCard({ load, onRequest, isPending }) {
-  const isRequested = load._requested;
+function LoadCard({ load, driverId, onRequest, isPending }) {
+  const [requestError, setRequestError] = useState(null);
+  const isRequested = (load.requested_by_driver_ids || []).includes(driverId);
+
+  const handleClick = async () => {
+    setRequestError(null);
+    const result = await onRequest(load.id);
+    if (!result?.success) {
+      setRequestError(result?.error || 'Request failed');
+    }
+  };
 
   return (
     <div className="bg-card border border-border rounded-lg p-3 space-y-2">
@@ -53,87 +62,62 @@ function LoadCard({ load, onRequest, isPending }) {
         <p className="text-[11px] text-muted-foreground">📦 {load.commodity}</p>
       )}
       {onRequest && (
-        <Button
-          size="sm"
-          variant={isRequested ? "secondary" : "outline"}
-          className={`w-full h-7 text-xs ${isRequested ? 'opacity-50' : ''}`}
-          onClick={(e) => { e.stopPropagation(); onRequest(load.id); }}
-          disabled={isRequested || isPending}
-        >
-          <Handshake className="w-3 h-3 mr-1" />
-          {isRequested ? 'Requested' : 'Request Load'}
-        </Button>
+        <>
+          <Button
+            size="sm"
+            variant={isRequested ? 'secondary' : 'outline'}
+            className={`w-full h-7 text-xs ${isRequested ? 'opacity-50' : ''}`}
+            onClick={handleClick}
+            disabled={isRequested || isPending}
+          >
+            <Handshake className="w-3 h-3 mr-1" />
+            {isRequested ? 'Requested' : isPending ? 'Requesting…' : 'Request Load'}
+          </Button>
+          {requestError && (
+            <p className="text-[11px] text-red-500 text-center mt-1">{requestError}</p>
+          )}
+        </>
       )}
     </div>
   );
 }
 
-export default function DriverDispatchBoard({ session, driverId: driverIdProp, tenantId: tenantIdProp }) {
-  const driverId = driverIdProp || session?.driver_id;
-  const tenantId = tenantIdProp || session?.tenant_id;
-  const [requestedLoads, setRequestedLoads] = useState(new Set());
+export default function DriverDispatchBoard({ session, tenantId: tenantIdProp }) {
+  const driverId   = session?.driver_id;
+  const driverName = session?.driver_name || driverId;
+  const tenantId   = tenantIdProp || session?.tenant_id;
+  const [pending, setPending] = useState(false);
   const queryClient = useQueryClient();
 
-  // Loads where THIS driver is explicitly assigned (driver 1 or driver 2)
   const { data: loads1 = [], isLoading: l1 } = useQuery({
-    queryKey: ['driver-dispatch-loads1', driverId],
-    queryFn: () => base44.entities.Load.filter({ driver_1_id: driverId }, '-pickup_date', 100),
-    enabled: !!driverId,
+    queryKey: ['driver-loads1', driverId],
+    queryFn:  () => base44.entities.Load.filter({ driver_1_id: driverId }, '-pickup_date', 100),
+    enabled:  !!driverId,
     refetchInterval: 60000,
   });
 
   const { data: loads2 = [], isLoading: l2 } = useQuery({
-    queryKey: ['driver-dispatch-loads2', driverId],
-    queryFn: () => base44.entities.Load.filter({ driver_2_id: driverId }, '-pickup_date', 100),
-    enabled: !!driverId,
+    queryKey: ['driver-loads2', driverId],
+    queryFn:  () => base44.entities.Load.filter({ driver_2_id: driverId }, '-pickup_date', 100),
+    enabled:  !!driverId,
     refetchInterval: 60000,
   });
 
-  // Get pending requests for this driver to persist requested state across refreshes
-  const { data: driverRequests = [] } = useQuery({
-    queryKey: ['driver-load-requests', driverId, tenantId],
-    queryFn: () => base44.entities.Notification.filter(
-      { tenant_id: tenantId, notification_type: 'load_request', deleted: false },
-      '-created_date',
-      100
+  const { data: availableRaw = [], isLoading: l3 } = useQuery({
+    queryKey: ['driver-available', tenantId],
+    queryFn:  () => base44.entities.Load.filter(
+      { tenant_id: tenantId, driver_visibility: true, dispatch_status: 'available' },
+      '-pickup_date', 100
     ),
-    enabled: !!driverId && !!tenantId,
+    enabled: !!tenantId,
     refetchInterval: 30000,
   });
 
-  // Build set of load IDs this driver has pending requests for
-  const requestedLoadIds = useMemo(() => {
-    const ids = new Set();
-    driverRequests.forEach(n => {
-      if (n.metadata?.driver_id === driverId && 
-          n.metadata?.request_status === 'pending') {
-        ids.add(n.metadata.load_id);
-      }
-    });
-    return ids;
-  }, [driverRequests, driverId]);
+  const availableLoads = useMemo(() =>
+    availableRaw.filter(l => !l.driver_1_id && !l.driver_2_id && l.status !== 'canceled' && !l.canceled),
+    [availableRaw]
+  );
 
-  // Available loads visible to all drivers (not filtered by driverId)
-  // FIX 2: Only show loads where driver_1_id is empty/null (no driver assigned yet)
-  const { data: availableRaw = [], isLoading: l3 } = useQuery({
-    queryKey: ['driver-dispatch-available', tenantId],
-    queryFn: () => base44.entities.Load.filter(
-      { tenant_id: tenantId, driver_visibility: true, dispatch_status: 'available' },
-      '-pickup_date',
-      100
-    ),
-    enabled: !!tenantId,
-    refetchInterval: 60000,
-  });
-
-  // Filter out loads that already have a driver assigned
-  const availableLoadsFiltered = useMemo(() => {
-    return availableRaw.filter(l => !l.driver_1_id && !l.driver_2_id);
-  }, [availableRaw]);
-
-  const isLoading = l1 || l2 || l3;
-
-  // Merge assigned loads — deduplicate, exclude canceled
   const assignedLoads = useMemo(() => {
     const seen = new Set();
     return [...loads1, ...loads2].filter(l => {
@@ -143,51 +127,35 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
     });
   }, [loads1, loads2]);
 
-  // Available loads — exclude canceled, mark requested ones, exclude loads with drivers
-  const availableLoads = useMemo(() => {
-    return availableLoadsFiltered
-      .filter(l => l.status !== 'canceled' && !l.canceled)
-      .map(l => ({
-        ...l,
-        _requested: requestedLoadIds.has(l.id) || (l.requested_by_driver_ids || []).includes(driverId)
-      }));
-  }, [availableLoadsFiltered, requestedLoadIds]);
-
   const getColumnLoads = (colKey) => {
     if (colKey === 'available') return availableLoads;
-    // For all other statuses: ONLY show loads explicitly assigned to this driver
     return assignedLoads.filter(l => normalizeDispatchStatus(l.dispatch_status) === colKey);
   };
 
-  const requestLoadMutation = useMutation({
-    mutationFn: async (loadId) => {
+  const handleRequest = async (loadId) => {
+    setPending(true);
+    try {
       const res = await base44.functions.invoke('handleLoadRequest', {
-        action: 'request_load',
-        load_id: loadId,
-        driver_id: driverId,
-        driver_name: session?.driver_name || 'Unknown Driver',
-        tenant_id: tenantId
+        action:      'request',
+        load_id:     loadId,
+        driver_id:   driverId,
+        driver_name: driverName,
+        tenant_id:   tenantId,
       });
-      return res.data;
-    },
-  });
-
-  const handleRequest = (loadId) => {
-    if (requestLoadMutation.isPending) return;
-    requestLoadMutation.mutateAsync(loadId)
-      .then((data) => {
-        if (data.success) {
-          toast.success('Load requested! You\'ll be notified if accepted.');
-          queryClient.invalidateQueries({ queryKey: ['driver-load-requests', driverId, tenantId] });
-          queryClient.invalidateQueries({ queryKey: ['driver-dispatch-available', tenantId] });
-        }
-      })
-      .catch((error) => {
-        toast.error('Request failed: ' + (error.message || 'Unknown error'));
-      });
+      const result = res.data;
+      if (result?.success) {
+        toast.success("Load requested! You'll be notified if accepted.");
+        queryClient.invalidateQueries({ queryKey: ['driver-available', tenantId] });
+      }
+      return result;
+    } catch (err) {
+      return { success: false, error: err.message };
+    } finally {
+      setPending(false);
+    }
   };
 
-  if (isLoading) {
+  if (l1 || l2 || l3) {
     return (
       <div className="flex items-center justify-center py-16 text-muted-foreground">
         <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading your loads…
@@ -195,9 +163,7 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
     );
   }
 
-
   const totalLoads = assignedLoads.length + availableLoads.length;
-
   if (totalLoads === 0) {
     return (
       <div className="text-center py-16 text-muted-foreground">
@@ -208,8 +174,8 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
   }
 
   return (
-    <div className="p-3 lg:p-4 space-y-3 lg:space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-4">
+    <div className="p-4 space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {COLUMNS.map(col => {
           const colLoads = getColumnLoads(col.key);
           return (
@@ -225,11 +191,12 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
                   </div>
                 ) : (
                   colLoads.map(load => (
-                    <LoadCard 
-                      key={load.id} 
-                      load={load} 
+                    <LoadCard
+                      key={load.id}
+                      load={load}
+                      driverId={driverId}
                       onRequest={col.key === 'available' ? handleRequest : null}
-                      isPending={requestLoadMutation.isPending}
+                      isPending={pending}
                     />
                   ))
                 )}

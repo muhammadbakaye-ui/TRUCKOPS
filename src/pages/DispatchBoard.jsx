@@ -156,14 +156,16 @@ export default function DispatchBoard() {
 
   const executeAcceptRequest = async (notificationId, loadId, driverId, driverName, loadNumber) => {
     try {
-      await base44.functions.invoke('handleLoadRequest', {
-        action: 'accept_request',
+      const res = await base44.functions.invoke('handleLoadRequest', {
+        action: 'accept',
         load_id: loadId,
         driver_id: driverId,
         driver_name: driverName,
-        tenant_id: tenantId
+        tenant_id: tenantId,
       });
-      toast.success(`${driverName} assigned to load ${loadNumber}`);
+      if (!res.data?.success) throw new Error(res.data?.error || 'Accept failed');
+      await base44.entities.Notification.update(notificationId, { deleted: true });
+      toast.success(`${driverName} assigned to Load #${loadNumber}`);
       refetchRequests();
       queryClient.invalidateQueries({ queryKey: ['loads-dispatch', tenantId] });
     } catch (err) {
@@ -182,15 +184,18 @@ export default function DispatchBoard() {
     });
   };
 
-  const executeDenyRequest = async (notificationId, loadId, driverId, loadNumber) => {
+  const executeDenyRequest = async (notificationId, loadId, driverId, driverName, loadNumber) => {
     try {
-      await base44.functions.invoke('handleLoadRequest', {
-        action: 'deny_request',
+      const res = await base44.functions.invoke('handleLoadRequest', {
+        action: 'deny',
         load_id: loadId,
         driver_id: driverId,
-        tenant_id: tenantId
+        driver_name: driverName,
+        tenant_id: tenantId,
       });
-      toast.success(`Request denied for load ${loadNumber}`);
+      if (!res.data?.success) throw new Error(res.data?.error || 'Deny failed');
+      await base44.entities.Notification.update(notificationId, { deleted: true });
+      toast.success(`Request denied for Load #${loadNumber}`);
       refetchRequests();
     } catch (err) {
       toast.error('Failed to deny: ' + err.message);
@@ -514,6 +519,7 @@ export default function DispatchBoard() {
                     confirmDialog.notificationId,
                     confirmDialog.loadId,
                     confirmDialog.driverId,
+                    confirmDialog.driverName,
                     confirmDialog.loadNumber
                   );
                 }

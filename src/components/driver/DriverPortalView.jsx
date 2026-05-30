@@ -212,13 +212,12 @@ export default function DriverPortalView() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-3 md:p-6">
-        <div className="max-w-3xl mx-auto space-y-3 md:space-y-5">
-
-          {/* DISPATCH BOARD TAB */}
-          {activeTab === 'dispatch' && (
-            <DriverDispatchBoard session={session} tenantId={session?.tenant_id} />
-          )}
+      <div className="flex-1 overflow-auto">
+        {/* DISPATCH BOARD TAB — full width, no container constraint */}
+        {activeTab === 'dispatch' && (
+          <DriverDispatchBoard session={session} tenantId={session?.tenant_id} />
+        )}
+        <div className={`max-w-3xl mx-auto space-y-3 md:space-y-5 p-3 md:p-6${activeTab === 'dispatch' ? ' hidden' : ''}`}>
 
           {/* DOCUMENTS TAB */}
           {activeTab === 'documents' && (

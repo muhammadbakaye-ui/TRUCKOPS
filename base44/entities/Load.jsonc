@@ -122,6 +122,14 @@
       },
       "default": []
     },
+    "requested_by_driver_names": {
+      "type": "array",
+      "description": "Array of driver names parallel to requested_by_driver_ids",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
     "pickup_time": {
       "type": "string",
       "description": "HH:MM of first pickup stop \u2014 used for time-based dispatch automation"
