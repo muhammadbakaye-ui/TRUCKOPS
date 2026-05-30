@@ -413,12 +413,12 @@ export default function DriverPublicPortal() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto p-4 md:p-6">
-        <div className="max-w-3xl mx-auto space-y-3">
+      <div className="flex-1 overflow-auto">
+        {activeTab === 'dispatch' && (
+          <DriverDispatchBoard driverId={driver.id} driverName={driver.full_name} tenantId={driver.tenant_id} />
+        )}
+        <div className={`max-w-3xl mx-auto space-y-3 p-4 md:p-6${activeTab === 'dispatch' ? ' hidden' : ''}`}>
 
-          {activeTab === 'dispatch' && (
-            <DriverDispatchBoard driverId={driver.id} tenantId={driver.tenant_id} />
-          )}
 
           {activeTab === 'statements' && (
             <>

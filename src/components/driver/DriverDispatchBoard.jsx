@@ -82,9 +82,9 @@ function LoadCard({ load, driverId, onRequest, isPending }) {
   );
 }
 
-export default function DriverDispatchBoard({ session, tenantId: tenantIdProp }) {
-  const driverId   = session?.driver_id;
-  const driverName = session?.driver_name || driverId;
+export default function DriverDispatchBoard({ session, driverId: driverIdProp, driverName: driverNameProp, tenantId: tenantIdProp }) {
+  const driverId   = driverIdProp || session?.driver_id;
+  const driverName = driverNameProp || session?.driver_name || driverId;
   const tenantId   = tenantIdProp || session?.tenant_id;
   const [pending, setPending] = useState(false);
   const queryClient = useQueryClient();
