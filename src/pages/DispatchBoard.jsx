@@ -420,19 +420,19 @@ export default function DispatchBoard() {
             <AlertDialogDescription>
               {confirmDialog?.type === 'accept' ? (
                 <p>
-                  Assign <strong>{confirmDialog.driverName}</strong> to Load <strong>{confirmDialog.loadNumber}</strong>?
+                  Assign <strong>{confirmDialog?.driverName || 'Unknown Driver'}</strong> to Load <strong>{confirmDialog?.loadNumber || 'Unknown'}</strong>?
                   This will:
                   <ul className="list-disc list-inside mt-2 text-sm">
                     <li>Assign the driver to this load</li>
                     <li>Change the dispatch status to Assigned</li>
                     <li>Move the load on both dispatch boards</li>
-                    <li>Notify {confirmDialog.driverName}</li>
+                    <li>Notify {confirmDialog?.driverName || 'the driver'}</li>
                     <li>Deny all other pending requests for this load</li>
                   </ul>
                 </p>
               ) : (
                 <p>
-                  Deny request from <strong>{confirmDialog.driverName}</strong> for Load <strong>{confirmDialog.loadNumber}</strong>?
+                  Deny request from <strong>{confirmDialog?.driverName || 'Unknown Driver'}</strong> for Load <strong>{confirmDialog?.loadNumber || 'Unknown'}</strong>?
                   The driver will be notified and can request other loads.
                 </p>
               )}
