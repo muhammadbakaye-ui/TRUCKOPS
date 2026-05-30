@@ -190,7 +190,7 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
                 <span className="text-xs font-semibold uppercase tracking-wider">{col.label}</span>
                 <span className="text-xs font-bold">{colLoads.length}</span>
               </div>
-              <div className="p-2 space-y-2 flex-1 min-h-[120px]">
+              <div className="p-2 space-y-2 flex-1 min-h-[200px]">
                 {colLoads.length === 0 ? (
                   <div className="flex items-center justify-center h-20 text-xs text-muted-foreground">
                     {col.emptyMsg}
