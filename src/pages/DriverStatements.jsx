@@ -7,7 +7,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import MobileSelect from '@/components/ui/MobileSelect';
+import MobilePullRefresh from '../components/mobile/MobilePullRefresh';
 import { Plus, Search, Trash2, X, ChevronDown, ChevronRight, Eye, EyeOff, Printer, Loader2, FileText, Settings } from 'lucide-react';
 import DefaultDeductionsSettings from '../components/statements/DefaultDeductionsSettings';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -168,6 +169,7 @@ export default function DriverStatements() {
   const hasFilters = search || statusFilter !== 'all' || periodFilter !== 'all' || driverFilter !== 'all' || truckFilter !== 'all';
 
   return (
+    <MobilePullRefresh onRefresh={() => queryClient.invalidateQueries({ queryKey: ['statements'] })}>
     <div className="p-4 space-y-3">
       <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
       <DefaultDeductionsSettings open={showDeductionSettings} onClose={() => setShowDeductionSettings(false)} tenantId={session?.tenant_id} />
@@ -193,48 +195,46 @@ export default function DriverStatements() {
           <Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 pl-8 text-xs w-full sm:w-48" />
         </div>
 
-        <Select value={periodFilter} onValueChange={setPeriodFilter}>
-          <SelectTrigger className="h-8 text-xs w-full sm:w-52">
-            <SelectValue placeholder="All Periods" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Periods</SelectItem>
-            {usedPeriods.map(p => (
-              <SelectItem key={p.start} value={p.start}>{periodLabel(p.start, p.end)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MobileSelect
+          value={periodFilter}
+          onValueChange={setPeriodFilter}
+          triggerClassName="h-8 text-xs w-full sm:w-52 border border-input rounded-md px-2 bg-background"
+          options={[
+            { value: 'all', label: 'All Periods' },
+            ...usedPeriods.map(p => ({ value: p.start, label: periodLabel(p.start, p.end) }))
+          ]}
+        />
 
-        <Select value={driverFilter} onValueChange={setDriverFilter}>
-          <SelectTrigger className="h-8 text-xs w-full sm:w-44">
-            <SelectValue placeholder="All Drivers" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Drivers</SelectItem>
-            {uniqueDrivers.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <MobileSelect
+          value={driverFilter}
+          onValueChange={setDriverFilter}
+          triggerClassName="h-8 text-xs w-full sm:w-44 border border-input rounded-md px-2 bg-background"
+          options={[
+            { value: 'all', label: 'All Drivers' },
+            ...uniqueDrivers.map(d => ({ value: d, label: d }))
+          ]}
+        />
 
-        <Select value={truckFilter} onValueChange={setTruckFilter}>
-          <SelectTrigger className="h-8 text-xs w-full sm:w-36">
-            <SelectValue placeholder="All Trucks" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Trucks</SelectItem>
-            {uniqueTrucks.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <MobileSelect
+          value={truckFilter}
+          onValueChange={setTruckFilter}
+          triggerClassName="h-8 text-xs w-full sm:w-36 border border-input rounded-md px-2 bg-background"
+          options={[
+            { value: 'all', label: 'All Trucks' },
+            ...uniqueTrucks.map(t => ({ value: t, label: t }))
+          ]}
+        />
 
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-8 text-xs w-full sm:w-36">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="saved">Saved</SelectItem>
-          </SelectContent>
-        </Select>
+        <MobileSelect
+          value={statusFilter}
+          onValueChange={setStatusFilter}
+          triggerClassName="h-8 text-xs w-full sm:w-36 border border-input rounded-md px-2 bg-background"
+          options={[
+            { value: 'all', label: 'All Statuses' },
+            { value: 'draft', label: 'Draft' },
+            { value: 'saved', label: 'Saved' },
+          ]}
+        />
 
         {hasFilters && (
           <Button variant="ghost" size="sm" className="h-8 text-xs gap-1" onClick={() => {
@@ -404,5 +404,6 @@ export default function DriverStatements() {
         )}
       </div>
     </div>
+    </MobilePullRefresh>
   );
 }

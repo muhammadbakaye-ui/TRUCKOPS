@@ -1,11 +1,6 @@
 // Theme values: 'light' | 'dark' | 'very-dark'
 const THEME_KEY = 'app-theme';
 
-export function initTheme() {
-  const saved = localStorage.getItem(THEME_KEY) || 'very-dark';
-  applyTheme(saved);
-}
-
 export function applyTheme(theme) {
   const root = document.documentElement;
   root.classList.remove('dark', 'very-dark');
@@ -18,7 +13,20 @@ export function applyTheme(theme) {
 }
 
 export function getTheme() {
-  return localStorage.getItem(THEME_KEY) || 'very-dark';
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved) return saved;
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+export function initTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved) {
+    applyTheme(saved);
+  } else {
+    // Auto-detect system color scheme on first visit
+    const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+    applyTheme(prefersDark ? 'dark' : 'light');
+  }
 }
 
 import { useState, useEffect } from 'react';
