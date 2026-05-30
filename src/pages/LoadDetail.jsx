@@ -90,17 +90,27 @@ export default function LoadDetail() {
     enabled: !isNew && !!loadId,
   });
 
+  const stopsSetRef = useRef(false);
+
   const { data: loadStops = [] } = useQuery({
     queryKey: ['load-stops', loadId],
     queryFn: async () => {
       if (!loadId || isNew) return [];
-      const s = await base44.entities.LoadStop.filter({ load_id: loadId }, 'stop_order', 20);
-      setStops(s);
-      initialLoadRef.current = true; // reset so the next render is treated as "initial" and skips auto-save
-      return s;
+      return base44.entities.LoadStop.filter({ load_id: loadId }, 'stop_order', 20);
     },
     enabled: !!loadId && !isNew,
+    staleTime: 30000,
   });
+
+  // Sync stops from DB exactly once per load (avoid overwriting user edits on background refetch)
+  useEffect(() => {
+    if (isNew) return;
+    if (!stopsSetRef.current && loadId) {
+      stopsSetRef.current = true;
+      setStops(loadStops);
+      initialLoadRef.current = true;
+    }
+  }, [loadStops]);
 
   const tenantId = session?.tenant_id;
   const { data: drivers = [] } = useQuery({ queryKey: ['drivers', tenantId], queryFn: () => base44.entities.Driver.filter({ status: 'active', tenant_id: tenantId }, 'full_name', 200), enabled: !!tenantId });
@@ -167,6 +177,7 @@ export default function LoadDetail() {
         }
         // Navigate to the new ID without losing the "editing" state
         window.history.replaceState({}, '', `?id=${savedLoad.id}`);
+        queryClient.invalidateQueries({ queryKey: ['loads'] });
       } else {
         // Subsequent auto-saves: update
         const derived = deriveStopFields(currentForm, currentStops);
@@ -187,7 +198,7 @@ export default function LoadDetail() {
     } finally {
       setAutoSaving(false);
     }
-  }, [deriveStopFields]);
+  }, [deriveStopFields, queryClient]);
 
   // Debounce: trigger auto-save 2.5s after last change
   useEffect(() => {
@@ -228,6 +239,7 @@ export default function LoadDetail() {
           await base44.entities.LoadStop.create({ ...stops[i], load_id: savedLoad.id, stop_order: i + 1 });
         }
         await logAudit({ action_type: 'create', entity_type: 'Load', entity_id: savedLoad.id, entity_label: savedLoad.internal_load_number });
+        queryClient.invalidateQueries({ queryKey: ['loads'] });
         navigate(createPageUrl(`LoadDetail?id=${savedLoad.id}`));
       } else {
         await base44.entities.Load.update(currentId, payload);

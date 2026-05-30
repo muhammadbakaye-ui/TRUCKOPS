@@ -443,6 +443,20 @@ export default function Loads() {
 
   const hasActiveFilters = search || statusFilter.length > 0 || invoiceFilter.length > 0 || driverFilter.length > 0 || truckFilter.length > 0 || tripFilter.length > 0 || dateFrom || dateTo;
 
+  // Auto-expand any date keys that aren't in the saved set (e.g. new loads with new dates)
+  useEffect(() => {
+    if (expandedDates === null || sortedDateKeys.length === 0) return;
+    const missing = sortedDateKeys.filter(k => !expandedDates.has(k));
+    if (missing.length === 0) return;
+    setExpandedDates(prev => {
+      if (prev === null) return prev;
+      const next = new Set(prev);
+      missing.forEach(k => next.add(k));
+      localStorage.setItem('loads_expanded_dates', JSON.stringify([...next]));
+      return next;
+    });
+  }, [sortedDateKeys.join(',')]);
+
   return (
     <MobilePullRefresh onRefresh={() => queryClient.invalidateQueries({ queryKey: ['loads'] })}>
     <div className="p-4" style={{ overflowX: 'hidden', boxSizing: 'border-box', width: '100%' }}>
