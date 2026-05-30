@@ -93,7 +93,7 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
   const { data: driverRequests = [] } = useQuery({
     queryKey: ['driver-load-requests', driverId, tenantId],
     queryFn: () => base44.entities.Notification.filter(
-      { tenant_id: tenantId, notification_type: 'driver_load_request', deleted: false },
+      { tenant_id: tenantId, notification_type: 'load_request', deleted: false },
       '-created_date',
       100
     ),
@@ -105,7 +105,8 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
   const requestedLoadIds = useMemo(() => {
     const ids = new Set();
     driverRequests.forEach(n => {
-      if (n.metadata?.driver_id === driverId && n.metadata?.request_status !== 'denied') {
+      if (n.metadata?.driver_id === driverId && 
+          n.metadata?.request_status === 'pending') {
         ids.add(n.metadata.load_id);
       }
     });

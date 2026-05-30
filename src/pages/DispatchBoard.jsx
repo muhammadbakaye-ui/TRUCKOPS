@@ -8,12 +8,12 @@ import PageHeader from '@/components/shared/PageHeader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, LayoutGrid, AlertTriangle, Lock, Eye, EyeOff, Bell } from 'lucide-react';
+import { Loader2, LayoutGrid, AlertTriangle, Lock, Eye, EyeOff, Bell, Truck, CheckCircle2, XCircle } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { toast } from 'sonner';
 import { computeDispatchStatus, normalizeDispatchStatus } from '../lib/dispatchStatus';
-import LoadRequestNotification from '@/components/shared/LoadRequestNotification';
+
 import { getTimezone } from '../lib/useTimezone';
 import UndoToast from '../components/shared/UndoToast';
 
@@ -118,7 +118,7 @@ export default function DispatchBoard() {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [confirmVisibility, setConfirmVisibility] = useState(null); // { loadId, currentValue }
   const [showRequests, setShowRequests] = useState(false);
-  const [confirmDialog, setConfirmDialog] = useState(null); // { type: 'accept'|'deny', notificationId, loadId, driverId, driverName, loadNumber }
+  const [confirmDialog, setConfirmDialog] = useState(null);
 
   const { data: loads = [], isLoading } = useQuery({
     queryKey: ['loads-dispatch', tenantId],
@@ -141,11 +141,11 @@ export default function DispatchBoard() {
     enabled: !!tenantId,
   });
 
-  // Load request notifications - show all pending requests (not just unread)
+  // Load request notifications
   const { data: requestNotifications = [], refetch: refetchRequests } = useQuery({
     queryKey: ['load-requests', tenantId],
     queryFn: () => base44.entities.Notification.filter(
-      { tenant_id: tenantId, notification_type: 'driver_load_request', deleted: false },
+      { tenant_id: tenantId, notification_type: 'load_request', deleted: false },
       '-created_date',
       50
     ),
@@ -153,7 +153,7 @@ export default function DispatchBoard() {
     refetchInterval: 30000,
   });
 
-  const executeAcceptRequest = async (notificationId, loadId, driverId, driverName) => {
+  const executeAcceptRequest = async (notificationId, loadId, driverId, driverName, loadNumber) => {
     try {
       await base44.functions.invoke('handleLoadRequest', {
         action: 'accept_request',
@@ -162,8 +162,7 @@ export default function DispatchBoard() {
         driver_name: driverName,
         tenant_id: tenantId
       });
-      await base44.entities.Notification.update(notificationId, { read: true, deleted: true });
-      toast.success(`Request accepted - ${driverName} assigned to load!`);
+      toast.success(`${driverName} assigned to load ${loadNumber}`);
       refetchRequests();
       queryClient.invalidateQueries({ queryKey: ['loads-dispatch', tenantId] });
     } catch (err) {
@@ -171,18 +170,18 @@ export default function DispatchBoard() {
     }
   };
 
-  const handleAcceptRequest = (notificationId, loadId, driverId, driverName, loadNumber) => {
+  const handleAcceptRequest = (notification) => {
     setConfirmDialog({
       type: 'accept',
-      notificationId,
-      loadId,
-      driverId,
-      driverName,
-      loadNumber
+      notificationId: notification.id,
+      loadId: notification.metadata?.load_id,
+      driverId: notification.metadata?.driver_id,
+      driverName: notification.metadata?.driver_name,
+      loadNumber: notification.metadata?.load_number
     });
   };
 
-  const executeDenyRequest = async (notificationId, loadId, driverId) => {
+  const executeDenyRequest = async (notificationId, loadId, driverId, loadNumber) => {
     try {
       await base44.functions.invoke('handleLoadRequest', {
         action: 'deny_request',
@@ -190,19 +189,20 @@ export default function DispatchBoard() {
         driver_id: driverId,
         tenant_id: tenantId
       });
-      toast.success('Request denied');
+      toast.success(`Request denied for load ${loadNumber}`);
       refetchRequests();
     } catch (err) {
       toast.error('Failed to deny: ' + err.message);
     }
   };
 
-  const handleDenyRequest = (notificationId, loadId, driverId) => {
+  const handleDenyRequest = (notification) => {
     setConfirmDialog({
       type: 'deny',
-      notificationId,
-      loadId,
-      driverId
+      notificationId: notification.id,
+      loadId: notification.metadata?.load_id,
+      driverId: notification.metadata?.driver_id,
+      loadNumber: notification.metadata?.load_number
     });
   };
 
@@ -432,7 +432,8 @@ export default function DispatchBoard() {
                 </p>
               ) : (
                 <p>
-                  Deny <strong>{confirmDialog?.driverId ? 'this driver' : 'the request'}</strong> for Load <strong>{confirmDialog?.loadNumber}</strong>?
+                  Deny request from <strong>{confirmDialog.driverName}</strong> for Load <strong>{confirmDialog.loadNumber}</strong>?
+                  The driver will be notified and can request other loads.
                 </p>
               )}
             </AlertDialogDescription>
@@ -446,13 +447,15 @@ export default function DispatchBoard() {
                     confirmDialog.notificationId,
                     confirmDialog.loadId,
                     confirmDialog.driverId,
-                    confirmDialog.driverName
+                    confirmDialog.driverName,
+                    confirmDialog.loadNumber
                   );
                 } else {
                   executeDenyRequest(
                     confirmDialog.notificationId,
                     confirmDialog.loadId,
-                    confirmDialog.driverId
+                    confirmDialog.driverId,
+                    confirmDialog.loadNumber
                   );
                 }
                 setConfirmDialog(null);
@@ -509,17 +512,44 @@ export default function DispatchBoard() {
               Close
             </Button>
           </div>
-          {requestNotifications.filter(n => n.metadata?.request_status !== 'accepted').length === 0 ? (
+          {requestNotifications.filter(n => n.metadata?.request_status !== 'accepted' && n.metadata?.request_status !== 'denied').length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">No pending requests</p>
           ) : (
             <div className="space-y-2">
-              {requestNotifications.map(notification => (
-                <LoadRequestNotification
-                  key={notification.id}
-                  notification={notification}
-                  onAccept={handleAcceptRequest}
-                  onDeny={handleDenyRequest}
-                />
+              {requestNotifications.filter(n => n.metadata?.request_status !== 'accepted' && n.metadata?.request_status !== 'denied').map(notification => (
+                <div key={notification.id} className="flex items-center justify-between p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="h-10 w-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                      <Truck className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-foreground">{notification.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">{notification.message}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        Driver: {notification.metadata?.driver_name || 'Unknown'} • Load: {notification.metadata?.load_number || 'Unknown'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+                    <Button
+                      size="sm"
+                      className="h-8 text-xs bg-green-600 hover:bg-green-700"
+                      onClick={() => handleAcceptRequest(notification)}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                      Accept
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs"
+                      onClick={() => handleDenyRequest(notification)}
+                    >
+                      <XCircle className="w-3.5 h-3.5 mr-1" />
+                      Deny
+                    </Button>
+                  </div>
+                </div>
               ))}
             </div>
           )}
