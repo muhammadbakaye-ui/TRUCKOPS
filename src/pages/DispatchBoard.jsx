@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, LayoutGrid, AlertTriangle, Lock, Eye, EyeOff } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { toast } from 'sonner';
 import { computeDispatchStatus, normalizeDispatchStatus } from '../lib/dispatchStatus';
@@ -114,6 +115,7 @@ export default function DispatchBoard() {
   // Feature 6: Bulk select state
   const [selectModeColumn, setSelectModeColumn] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [confirmVisibility, setConfirmVisibility] = useState(null); // { loadId, currentValue }
 
   const { data: loads = [], isLoading } = useQuery({
     queryKey: ['loads-dispatch', tenantId],
@@ -286,7 +288,16 @@ export default function DispatchBoard() {
   };
 
   // Feature 3 partial: Toggle driver visibility on Available loads
-  const handleToggleVisibility = async (loadId, currentValue) => {
+  const handleToggleVisibility = (loadId, currentValue) => {
+    // Confirm before making visible
+    if (!currentValue) {
+      setConfirmVisibility({ loadId, currentValue });
+      return;
+    }
+    applyVisibilityToggle(loadId, currentValue);
+  };
+
+  const applyVisibilityToggle = async (loadId, currentValue) => {
     queryClient.setQueryData(['loads-dispatch', tenantId], old =>
       (old || []).map(l => l.id === loadId ? { ...l, driver_visibility: !currentValue } : l)
     );
@@ -310,6 +321,27 @@ export default function DispatchBoard() {
 
   return (
     <div className="p-4 space-y-4">
+      {/* Confirm visibility dialog */}
+      <AlertDialog open={!!confirmVisibility} onOpenChange={(open) => !open && setConfirmVisibility(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Make Load Visible to Drivers?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This load will appear in the Available column on the driver portal for all drivers to see. Continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel onClick={() => setConfirmVisibility(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (confirmVisibility) applyVisibilityToggle(confirmVisibility.loadId, confirmVisibility.currentValue);
+              setConfirmVisibility(null);
+            }}>
+              Make Visible
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <PageHeader
         title="Dispatch Board"
         description={`${filteredLoads.length} active loads`}

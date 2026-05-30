@@ -217,7 +217,7 @@ export default function DriverPortalView() {
 
           {/* DISPATCH BOARD TAB */}
           {activeTab === 'dispatch' && (
-            <DriverDispatchBoard session={session} />
+            <DriverDispatchBoard session={session} tenantId={session?.tenant_id} />
           )}
 
           {/* DOCUMENTS TAB */}

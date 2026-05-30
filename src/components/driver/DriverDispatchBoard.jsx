@@ -5,14 +5,13 @@ import { Loader2, MapPin, Calendar, DollarSign } from 'lucide-react';
 import { normalizeDispatchStatus } from '../../lib/dispatchStatus';
 
 const COLUMNS = [
+  { key: 'available',  label: 'Available',  color: 'border-purple-500', headerColor: 'bg-purple-500/10 text-purple-400', emptyMsg: 'No loads posted yet' },
   { key: 'assigned',   label: 'Upcoming',   color: 'border-yellow-500', headerColor: 'bg-yellow-500/10 text-yellow-600', emptyMsg: 'No upcoming loads' },
   { key: 'in_transit', label: 'In Transit',  color: 'border-blue-500',   headerColor: 'bg-blue-500/10 text-blue-600',   emptyMsg: 'Not currently in transit' },
   { key: 'delivered',  label: 'Delivered',   color: 'border-green-500',  headerColor: 'bg-green-500/10 text-green-600', emptyMsg: 'No delivered loads yet' },
 ];
 
 function LoadCard({ load }) {
-  const status = normalizeDispatchStatus(load.dispatch_status);
-
   return (
     <div className="bg-card border border-border rounded-lg p-3 space-y-2">
       <div className="flex items-center justify-between gap-2">
@@ -43,9 +42,7 @@ function LoadCard({ load }) {
             {load.pickup_date && `PU: ${load.pickup_date}`}
             {load.pickup_time ? ` ${load.pickup_time}` : ''}
           </span>
-          {load.delivery_date && (
-            <span>DEL: {load.delivery_date}</span>
-          )}
+          {load.delivery_date && <span>DEL: {load.delivery_date}</span>}
         </div>
       )}
       {load.commodity && (
@@ -55,9 +52,11 @@ function LoadCard({ load }) {
   );
 }
 
-export default function DriverDispatchBoard({ session, driverId: driverIdProp }) {
+export default function DriverDispatchBoard({ session, driverId: driverIdProp, tenantId: tenantIdProp }) {
   const driverId = driverIdProp || session?.driver_id;
+  const tenantId = tenantIdProp || session?.tenant_id;
 
+  // Loads where THIS driver is explicitly assigned (driver 1 or driver 2)
   const { data: loads1 = [], isLoading: l1 } = useQuery({
     queryKey: ['driver-dispatch-loads1', driverId],
     queryFn: () => base44.entities.Load.filter({ driver_1_id: driverId }, '-pickup_date', 100),
@@ -72,10 +71,22 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp })
     refetchInterval: 60000,
   });
 
-  const isLoading = l1 || l2;
+  // Available loads visible to all drivers (not filtered by driverId)
+  const { data: availableRaw = [], isLoading: l3 } = useQuery({
+    queryKey: ['driver-dispatch-available', tenantId],
+    queryFn: () => base44.entities.Load.filter(
+      { tenant_id: tenantId, driver_visibility: true, dispatch_status: 'available' },
+      '-pickup_date',
+      100
+    ),
+    enabled: !!tenantId,
+    refetchInterval: 60000,
+  });
 
-  // Merge and deduplicate
-  const allLoads = React.useMemo(() => {
+  const isLoading = l1 || l2 || l3;
+
+  // Merge assigned loads — deduplicate, exclude canceled
+  const assignedLoads = useMemo(() => {
     const seen = new Set();
     return [...loads1, ...loads2].filter(l => {
       if (seen.has(l.id)) return false;
@@ -84,8 +95,17 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp })
     });
   }, [loads1, loads2]);
 
-  const getColumnLoads = (colKey) =>
-    allLoads.filter(l => normalizeDispatchStatus(l.dispatch_status) === colKey);
+  // Available loads — exclude canceled
+  const availableLoads = useMemo(() =>
+    availableRaw.filter(l => l.status !== 'canceled' && !l.canceled),
+    [availableRaw]
+  );
+
+  const getColumnLoads = (colKey) => {
+    if (colKey === 'available') return availableLoads;
+    // For all other statuses: ONLY show loads explicitly assigned to this driver
+    return assignedLoads.filter(l => normalizeDispatchStatus(l.dispatch_status) === colKey);
+  };
 
   if (isLoading) {
     return (
@@ -95,7 +115,9 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp })
     );
   }
 
-  if (allLoads.length === 0) {
+  const totalLoads = assignedLoads.length + availableLoads.length;
+
+  if (totalLoads === 0) {
     return (
       <div className="text-center py-16 text-muted-foreground">
         <p className="text-sm font-medium">No loads assigned to you yet.</p>
@@ -106,7 +128,7 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp })
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {COLUMNS.map(col => {
           const colLoads = getColumnLoads(col.key);
           return (

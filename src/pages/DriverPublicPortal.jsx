@@ -417,7 +417,7 @@ export default function DriverPublicPortal() {
         <div className="max-w-3xl mx-auto space-y-3">
 
           {activeTab === 'dispatch' && (
-            <DriverDispatchBoard driverId={driver.id} />
+            <DriverDispatchBoard driverId={driver.id} tenantId={driver.tenant_id} />
           )}
 
           {activeTab === 'statements' && (
