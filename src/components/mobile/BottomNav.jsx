@@ -110,7 +110,7 @@ export default function BottomNav({ currentPage }) {
               key={page}
               onClick={() => isActive
                 ? document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' })
-                : navigate(createPageUrl(page))
+                : navigate(createPageUrl(page), { replace: true })
               }
               className={cn(
                 'flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[11px] font-medium transition-colors select-none min-h-[56px]',

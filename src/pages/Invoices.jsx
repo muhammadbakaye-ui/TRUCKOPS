@@ -321,21 +321,21 @@ export default function Invoices() {
     <div className="p-4">
       <div className="flex gap-2 mb-3">
          <SearchInput value={search} onChange={setSearch} placeholder="Search invoices..." className="w-64" />
-         <Select value={statusFilter} onValueChange={setStatusFilter}>
-           <SelectTrigger className="h-8 text-xs w-36">
-             <SelectValue placeholder="Status" />
-           </SelectTrigger>
-           <SelectContent>
-             <SelectItem value="all">All Statuses</SelectItem>
-             <SelectItem value="draft">Draft</SelectItem>
-             <SelectItem value="priority">Priority</SelectItem>
-             <SelectItem value="sent">Sent</SelectItem>
-             <SelectItem value="partial">Partial</SelectItem>
-             <SelectItem value="paid">Paid</SelectItem>
-             <SelectItem value="overdue">Overdue</SelectItem>
-             <SelectItem value="canceled">Canceled</SelectItem>
-           </SelectContent>
-         </Select>
+         <MobileSelect
+           value={statusFilter}
+           onValueChange={setStatusFilter}
+           triggerClassName="h-8 text-xs w-36 border border-input rounded-md px-2 bg-background"
+           options={[
+             { value: 'all', label: 'All Statuses' },
+             { value: 'draft', label: 'Draft' },
+             { value: 'priority', label: 'Priority' },
+             { value: 'sent', label: 'Sent' },
+             { value: 'partial', label: 'Partial' },
+             { value: 'paid', label: 'Paid' },
+             { value: 'overdue', label: 'Overdue' },
+             { value: 'canceled', label: 'Canceled' },
+           ]}
+         />
          <QuickActionSettings
            enabled={qaEnabled}
            onToggle={handleQaToggle}

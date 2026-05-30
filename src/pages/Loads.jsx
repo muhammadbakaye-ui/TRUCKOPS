@@ -233,6 +233,11 @@ export default function Loads() {
   ];
 
   const handleQuickAction = async (load) => {
+    // Optimistic: update the cache immediately before server responds
+    queryClient.setQueriesData({ queryKey: ['loads'] }, (old) => {
+      if (!Array.isArray(old)) return old;
+      return old.map(l => l.id === load.id ? { ...l, invoice_status: qaAction } : l);
+    });
     try {
       await base44.entities.Load.update(load.id, { invoice_status: qaAction });
       if (qaAction === 'not_invoiced') {
