@@ -332,10 +332,9 @@ export default function DispatchBoard() {
       },
     });
 
-    // Feature 1: Assigned with no driver → open LoadDetail to assign
+    // Notify if assigned with no driver, but do NOT navigate
     if (newStatus === 'assigned' && !load.driver_1_id) {
-      toast.info('Assign a driver to this load…');
-      setTimeout(() => navigate(createPageUrl(`LoadDetail?id=${draggableId}`)), 500);
+      toast.info('Assign a driver to this load in Load Detail.');
     }
   }, [loads, tenantId, queryClient, navigate, session]);
 

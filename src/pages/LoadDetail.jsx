@@ -257,7 +257,9 @@ export default function LoadDetail() {
         }
         await logAudit({ action_type: 'create', entity_type: 'Load', entity_id: savedLoad.id, entity_label: savedLoad.internal_load_number });
         queryClient.invalidateQueries({ queryKey: ['loads'] });
-        navigate(createPageUrl(`LoadDetail?id=${savedLoad.id}`));
+        savedLoadIdRef.current = savedLoad.id;
+        window.history.replaceState({}, '', `?id=${savedLoad.id}`);
+        toast.success('Load saved');
       } else {
         await base44.entities.Load.update(currentId, payload);
         setForm(prev => ({ ...prev, ...derived, status: saveStatus }));
@@ -273,7 +275,7 @@ export default function LoadDetail() {
         await logAudit({ action_type: 'update', entity_type: 'Load', entity_id: currentId, entity_label: form.internal_load_number });
         queryClient.invalidateQueries({ queryKey: ['load', currentId] });
         toast.success('Load saved');
-        if (!loadId) navigate(createPageUrl(`LoadDetail?id=${currentId}`));
+        if (!loadId) window.history.replaceState({}, '', `?id=${currentId}`);
       }
     } catch (err) {
       toast.error('Save failed: ' + err.message);
@@ -326,7 +328,7 @@ export default function LoadDetail() {
         </AlertDialogContent>
       </AlertDialog>
       <div className="flex items-center gap-2 flex-wrap">
-        <Button variant="ghost" size="sm" className="h-8 gap-1 flex-shrink-0" onClick={() => navigate(createPageUrl('Loads'))}>
+        <Button variant="ghost" size="sm" className="h-8 gap-1 flex-shrink-0" onClick={() => navigate(-1)}>
           <ArrowLeft className="w-3.5 h-3.5" /> Loads
         </Button>
         <h2 className="text-sm font-semibold truncate min-w-0">

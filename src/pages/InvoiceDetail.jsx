@@ -95,7 +95,7 @@ export default function InvoiceDetail() {
   return (
     <div className="p-4 space-y-4 max-w-4xl">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => navigate(createPageUrl('Invoices'))}>
+        <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => navigate(-1)}>
           <ArrowLeft className="w-3.5 h-3.5" /> Invoices
         </Button>
         <h2 className="text-sm font-semibold">Invoice {form.invoice_number}</h2>

@@ -234,7 +234,7 @@ export default function StatementBuilder() {
       queryClient.invalidateQueries({ queryKey: ['statements'] });
       toast.success('Statement saved');
       setLastAutoSaved(new Date());
-      if (!statementId && savedIdRef.current) navigate(createPageUrl(`StatementBuilder?id=${savedIdRef.current}`));
+      if (!statementId && savedIdRef.current) window.history.replaceState({}, '', `?id=${savedIdRef.current}`);
     } catch (err) {
       toast.error('Error: ' + err.message);
     } finally {
@@ -408,7 +408,7 @@ export default function StatementBuilder() {
       {showDialog && <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />}
       {/* Top bar */}
       <div className="flex items-center gap-3 flex-wrap">
-        <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => navigate(createPageUrl('DriverStatements'))}>
+        <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => navigate(-1)}>
           <ArrowLeft className="w-3.5 h-3.5" /> Statements
         </Button>
         <h2 className="text-sm font-semibold">{(statementId || savedIdRef.current) ? `Statement — ${form.driver_name || ''}` : 'New Driver Statement'}</h2>
