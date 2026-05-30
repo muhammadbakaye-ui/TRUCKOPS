@@ -690,6 +690,11 @@
   }
 }
 
+/* FIX 2 — Ghost hitbox prevention: elements closing/hidden via data-state lose pointer events */
+[data-state="closed"] {
+  pointer-events: none;
+}
+
 /* Print styles */
 @media print {
   .no-print { display: none !important; }

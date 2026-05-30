@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import MobileSelect from '@/components/ui/MobileSelect';
 import MobilePullRefresh from '../components/mobile/MobilePullRefresh';
 import { Plus, Search, Trash2, X, ChevronDown, ChevronRight, Eye, EyeOff, Printer, Loader2, FileText, Settings } from 'lucide-react';
+import MobileFAB from '../components/mobile/MobileFAB';
 import DefaultDeductionsSettings from '../components/statements/DefaultDeductionsSettings';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -177,16 +178,17 @@ export default function DriverStatements() {
         title="Driver Statements"
         description={`${statements.length} total statements`}
         actions={
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={() => setShowDeductionSettings(true)}>
-              <Settings className="w-3.5 h-3.5" /> Statement Settings
+          <div className="flex gap-2 items-center">
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setShowDeductionSettings(true)} title="Statement Settings">
+              <Settings className="w-4 h-4" />
             </Button>
-            <Button size="sm" className="h-8 text-xs gap-1" onClick={() => navigate(createPageUrl('StatementBuilder'))}>
+            <Button size="sm" className="h-8 text-xs gap-1 hidden sm:flex" onClick={() => navigate(createPageUrl('StatementBuilder'))}>
               <Plus className="w-3.5 h-3.5" /> New Statement
             </Button>
           </div>
         }
       />
+      <MobileFAB onClick={() => navigate(createPageUrl('StatementBuilder'))} title="New Statement" />
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2 items-center">

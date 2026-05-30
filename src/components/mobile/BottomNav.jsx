@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { LayoutDashboard, Container, MoreHorizontal, FileText, Users, Truck, Check, ChevronRight, Shield, Settings, BarChart2, Fuel, AlertTriangle, ClipboardList, BookOpen, Wrench, MapPin } from 'lucide-react';
@@ -117,10 +117,10 @@ export default function BottomNav({ currentPage }) {
     // Stay in drawer (browse mode)
   };
 
-  const handleNavigate = (page) => {
+  const handleNavigate = useCallback((page) => {
     navigate(createPageUrl(page));
     setMenuOpen(false);
-  };
+  }, [navigate]);
 
   return (
     <>
@@ -134,6 +134,7 @@ export default function BottomNav({ currentPage }) {
           return (
             <button
               key={page}
+              onTouchStart={(e) => e.preventDefault()}
               onClick={() => {
                 if (isActive) {
                   document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -142,6 +143,7 @@ export default function BottomNav({ currentPage }) {
                 const savedPath = sessionStorage.getItem(`bnav_stack_${page}`);
                 navigate(savedPath || createPageUrl(page), { replace: true });
               }}
+              style={{ touchAction: 'manipulation' }}
               className={cn(
                 'flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[11px] font-medium transition-colors select-none min-h-[56px]',
                 isActive ? 'text-sidebar-primary bg-sidebar-accent/20' : 'text-sidebar-foreground/70 hover:text-sidebar-foreground'
@@ -160,7 +162,9 @@ export default function BottomNav({ currentPage }) {
           if (!open) { setEditMode(false); setOverLimit(false); }
         }}>
           <button
+            onTouchStart={(e) => e.preventDefault()}
             onClick={() => setMenuOpen(true)}
+            style={{ touchAction: 'manipulation' }}
             className="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[11px] font-medium transition-colors select-none min-h-[56px] text-sidebar-foreground/70 hover:text-sidebar-foreground"
           >
             <MoreHorizontal className="w-5 h-5" />
@@ -173,7 +177,7 @@ export default function BottomNav({ currentPage }) {
           >
             {/* Header */}
             <SheetHeader className="pb-3 border-b border-sidebar-border mb-0 px-4 pt-4">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center pr-10">
                 <SheetTitle className="text-left text-sidebar-foreground text-base font-semibold">
                   {editMode ? 'Customize Nav' : 'All Pages'}
                 </SheetTitle>
