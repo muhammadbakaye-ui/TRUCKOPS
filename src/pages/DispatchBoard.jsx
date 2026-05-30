@@ -8,11 +8,12 @@ import PageHeader from '@/components/shared/PageHeader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, LayoutGrid, AlertTriangle, Lock, Eye, EyeOff } from 'lucide-react';
+import { Loader2, LayoutGrid, AlertTriangle, Lock, Eye, EyeOff, Bell } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { toast } from 'sonner';
 import { computeDispatchStatus, normalizeDispatchStatus } from '../lib/dispatchStatus';
+import LoadRequestNotification from '@/components/shared/LoadRequestNotification';
 import { getTimezone } from '../lib/useTimezone';
 import UndoToast from '../components/shared/UndoToast';
 
@@ -116,6 +117,7 @@ export default function DispatchBoard() {
   const [selectModeColumn, setSelectModeColumn] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [confirmVisibility, setConfirmVisibility] = useState(null); // { loadId, currentValue }
+  const [showRequests, setShowRequests] = useState(false);
 
   const { data: loads = [], isLoading } = useQuery({
     queryKey: ['loads-dispatch', tenantId],
@@ -137,6 +139,50 @@ export default function DispatchBoard() {
     queryFn: () => tenantId ? base44.entities.Truck.filter({ tenant_id: tenantId }, 'unit_number', 200) : Promise.resolve([]),
     enabled: !!tenantId,
   });
+
+  // Load request notifications
+  const { data: requestNotifications = [], refetch: refetchRequests } = useQuery({
+    queryKey: ['load-requests', tenantId],
+    queryFn: () => base44.entities.Notification.filter(
+      { tenant_id: tenantId, notification_type: 'driver_load_request', read: false },
+      '-created_date',
+      50
+    ),
+    enabled: !!tenantId,
+    refetchInterval: 30000,
+  });
+
+  const handleAcceptRequest = async (notificationId, loadId, driverId, driverName) => {
+    try {
+      await base44.functions.invoke('handleLoadRequest', {
+        action: 'accept_request',
+        load_id: loadId,
+        driver_id: driverId,
+        driver_name: driverName,
+        tenant_id: tenantId
+      });
+      await base44.entities.Notification.update(notificationId, { read: true, deleted: true });
+      toast.success('Request accepted - driver assigned!');
+      refetchRequests();
+    } catch (err) {
+      toast.error('Failed to accept: ' + err.message);
+    }
+  };
+
+  const handleDenyRequest = async (notificationId, loadId, driverId) => {
+    try {
+      await base44.functions.invoke('handleLoadRequest', {
+        action: 'deny_request',
+        load_id: loadId,
+        driver_id: driverId,
+        tenant_id: tenantId
+      });
+      toast.success('Request denied');
+      refetchRequests();
+    } catch (err) {
+      toast.error('Failed to deny: ' + err.message);
+    }
+  };
 
   // Bug Fix 1 + Feature 1: Automation — skips manual_dispatch_override loads
   useEffect(() => {
@@ -347,6 +393,20 @@ export default function DispatchBoard() {
         description={`${filteredLoads.length} active loads`}
         actions={
           <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs relative"
+              onClick={() => setShowRequests(!showRequests)}
+            >
+              <Bell className="w-3.5 h-3.5 mr-1" />
+              Requests
+              {requestNotifications.length > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">
+                  {requestNotifications.length}
+                </span>
+              )}
+            </Button>
             {selectModeColumn && (
               <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => { setSelectModeColumn(null); setSelectedIds(new Set()); }}>
                 Cancel Select
@@ -362,6 +422,32 @@ export default function DispatchBoard() {
           </div>
         }
       />
+
+      {/* Load requests panel */}
+      {showRequests && (
+        <div className="bg-card border border-border rounded-lg p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Load Requests</h3>
+            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setShowRequests(false)}>
+              Close
+            </Button>
+          </div>
+          {requestNotifications.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No pending requests</p>
+          ) : (
+            <div className="space-y-2">
+              {requestNotifications.map(notification => (
+                <LoadRequestNotification
+                  key={notification.id}
+                  notification={notification}
+                  onAccept={handleAcceptRequest}
+                  onDeny={handleDenyRequest}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {filteredLoads.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">

@@ -1,8 +1,10 @@
-import React, { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useMemo, useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Loader2, MapPin, Calendar, DollarSign } from 'lucide-react';
+import { Loader2, MapPin, Calendar, DollarSign, Handshake } from 'lucide-react';
 import { normalizeDispatchStatus } from '../../lib/dispatchStatus';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 const COLUMNS = [
   { key: 'available',  label: 'Available',  color: 'border-purple-500', headerColor: 'bg-purple-500/10 text-purple-400', emptyMsg: 'No loads posted yet' },
@@ -11,7 +13,9 @@ const COLUMNS = [
   { key: 'delivered',  label: 'Delivered',   color: 'border-green-500',  headerColor: 'bg-green-500/10 text-green-600', emptyMsg: 'No delivered loads yet' },
 ];
 
-function LoadCard({ load }) {
+function LoadCard({ load, onRequest }) {
+  const isRequested = load._requested;
+
   return (
     <div className="bg-card border border-border rounded-lg p-3 space-y-2">
       <div className="flex items-center justify-between gap-2">
@@ -48,6 +52,18 @@ function LoadCard({ load }) {
       {load.commodity && (
         <p className="text-[11px] text-muted-foreground">📦 {load.commodity}</p>
       )}
+      {onRequest && (
+        <Button
+          size="sm"
+          variant={isRequested ? "secondary" : "outline"}
+          className={`w-full h-7 text-xs ${isRequested ? 'opacity-50' : ''}`}
+          onClick={(e) => { e.stopPropagation(); onRequest(load.id); }}
+          disabled={isRequested}
+        >
+          <Handshake className="w-3 h-3 mr-1" />
+          {isRequested ? 'Requested' : 'Request Load'}
+        </Button>
+      )}
     </div>
   );
 }
@@ -55,6 +71,8 @@ function LoadCard({ load }) {
 export default function DriverDispatchBoard({ session, driverId: driverIdProp, tenantId: tenantIdProp }) {
   const driverId = driverIdProp || session?.driver_id;
   const tenantId = tenantIdProp || session?.tenant_id;
+  const [requestedLoads, setRequestedLoads] = useState(new Set());
+  const queryClient = useQueryClient();
 
   // Loads where THIS driver is explicitly assigned (driver 1 or driver 2)
   const { data: loads1 = [], isLoading: l1 } = useQuery({
@@ -95,16 +113,47 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
     });
   }, [loads1, loads2]);
 
-  // Available loads — exclude canceled
-  const availableLoads = useMemo(() =>
-    availableRaw.filter(l => l.status !== 'canceled' && !l.canceled),
-    [availableRaw]
-  );
+  // Available loads — exclude canceled, mark requested ones
+  const availableLoads = useMemo(() => {
+    return availableRaw
+      .filter(l => l.status !== 'canceled' && !l.canceled)
+      .map(l => ({
+        ...l,
+        _requested: requestedLoads.has(l.id) || (l.metadata?.requested_by_driver_ids || []).includes(driverId)
+      }));
+  }, [availableRaw, requestedLoads, driverId]);
 
   const getColumnLoads = (colKey) => {
     if (colKey === 'available') return availableLoads;
     // For all other statuses: ONLY show loads explicitly assigned to this driver
     return assignedLoads.filter(l => normalizeDispatchStatus(l.dispatch_status) === colKey);
+  };
+
+  const requestLoadMutation = useMutation({
+    mutationFn: async (loadId) => {
+      const res = await base44.functions.invoke('handleLoadRequest', {
+        action: 'request_load',
+        load_id: loadId,
+        driver_id: driverId,
+        driver_name: session?.driver_name,
+        tenant_id: tenantId
+      });
+      return res.data;
+    },
+    onSuccess: (data, loadId) => {
+      if (data.success) {
+        setRequestedLoads(prev => new Set(prev).add(loadId));
+        toast.success('Load requested! You\'ll be notified if accepted.');
+        queryClient.invalidateQueries({ queryKey: ['driver-dispatch-available', tenantId] });
+      }
+    },
+    onError: (error) => {
+      toast.error('Request failed: ' + error.message);
+    }
+  });
+
+  const handleRequest = (loadId) => {
+    requestLoadMutation.mutate(loadId);
   };
 
   if (isLoading) {
@@ -143,7 +192,13 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
                     {col.emptyMsg}
                   </div>
                 ) : (
-                  colLoads.map(load => <LoadCard key={load.id} load={load} />)
+                  colLoads.map(load => (
+                    <LoadCard 
+                      key={load.id} 
+                      load={load} 
+                      onRequest={col.key === 'available' ? handleRequest : null}
+                    />
+                  ))
                 )}
               </div>
             </div>

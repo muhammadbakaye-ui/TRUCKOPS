@@ -140,6 +140,7 @@ const AuthenticatedApp = () => {
       <Route path="/PermitsLicenses" element={<PageTransition><LayoutWrapper currentPageName="PermitsLicenses"><PermitsLicenses /></LayoutWrapper></PageTransition>} />
 
       <Route path="/DriverPublicPortal" element={<PageTransition><DriverPublicPortal /></PageTransition>} />
+      <Route path="/handleLoadRequest" element={<PageTransition><DriverPublicPortal /></PageTransition>} />
       <Route path="/pricing" element={<PageTransition><Pricing /></PageTransition>} />
       <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
       <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
