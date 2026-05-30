@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { LayoutDashboard, Container, MoreHorizontal, FileText, Users, Truck, Check, ChevronRight, Shield, Settings, BarChart2, Fuel, AlertTriangle, ClipboardList, BookOpen, Wrench, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -57,8 +57,21 @@ const DEFAULT_PAGES = ['Dashboard', 'Loads', 'Invoices', 'DriverStatements'];
 const DASHBOARD_ITEM = { label: 'Dashboard', page: 'Dashboard', icon: LayoutDashboard };
 const ALL_PAGES_WITH_DASH = [DASHBOARD_ITEM, ...ALL_PAGES];
 
+// Which child pages each root tab "owns" for active-state and stack restoration
+const TAB_CHILD_PAGES = {
+  Dashboard: [],
+  Loads: ['LoadDetail', 'UploadDocument'],
+  Invoices: ['InvoiceDetail'],
+  DriverStatements: ['StatementBuilder'],
+  Companies: ['CompanyDetail'],
+  Drivers: ['DriverDetail'],
+  Trucks: [],
+  Trailers: [],
+};
+
 export default function BottomNav({ currentPage }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [visiblePages, setVisiblePages] = useState(DEFAULT_PAGES);
   const [editMode, setEditMode] = useState(false);
@@ -71,6 +84,18 @@ export default function BottomNav({ currentPage }) {
       try { setVisiblePages(JSON.parse(saved)); } catch {}
     }
   }, []);
+
+  // Persist current route under its owning tab for stack restoration on re-visit
+  useEffect(() => {
+    const path = location.pathname + location.search;
+    for (const tab of visiblePages) {
+      const children = TAB_CHILD_PAGES[tab] || [];
+      if (currentPage === tab || children.includes(currentPage)) {
+        sessionStorage.setItem(`bnav_stack_${tab}`, path);
+        break;
+      }
+    }
+  }, [location.pathname, location.search, currentPage, visiblePages]);
 
   const handleTogglePage = (page) => {
     setOverLimit(false);
@@ -104,14 +129,19 @@ export default function BottomNav({ currentPage }) {
           const item = ALL_PAGES_WITH_DASH.find(p => p.page === page);
           if (!item) return null;
           const Icon = item.icon;
-          const isActive = currentPage === page;
+          const childPages = TAB_CHILD_PAGES[page] || [];
+          const isActive = currentPage === page || childPages.includes(currentPage);
           return (
             <button
               key={page}
-              onClick={() => isActive
-                ? document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' })
-                : navigate(createPageUrl(page), { replace: true })
-              }
+              onClick={() => {
+                if (isActive) {
+                  document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
+                  return;
+                }
+                const savedPath = sessionStorage.getItem(`bnav_stack_${page}`);
+                navigate(savedPath || createPageUrl(page), { replace: true });
+              }}
               className={cn(
                 'flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[11px] font-medium transition-colors select-none min-h-[56px]',
                 isActive ? 'text-sidebar-primary bg-sidebar-accent/20' : 'text-sidebar-foreground/70 hover:text-sidebar-foreground'
