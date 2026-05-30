@@ -3,7 +3,8 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Truck, Calendar, Fuel, ChevronDown, ChevronUp, AlertCircle, Printer, Upload, FileText, CheckCircle2, X, User } from 'lucide-react';
+import { Loader2, Truck, Calendar, Fuel, ChevronDown, ChevronUp, AlertCircle, Printer, Upload, FileText, CheckCircle2, X, User, LayoutGrid } from 'lucide-react';
+import DriverDispatchBoard from '@/components/driver/DriverDispatchBoard';
 import DriverMyProfile from '@/components/driver/DriverMyProfile';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useRef } from 'react';
@@ -310,7 +311,7 @@ export default function DriverPublicPortal() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
-  const [activeTab, setActiveTab] = useState('statements');
+  const [activeTab, setActiveTab] = useState('dispatch');
   const [token, setToken] = useState(null);
   const [companyName, setCompanyName] = useState('');
 
@@ -332,8 +333,9 @@ export default function DriverPublicPortal() {
         const tenantId = res.data?.driver?.tenant_id;
         if (tenantId) {
           try {
-            const companies = await base44.entities.Company.filter({ company_type: 'carrier', tenant_id: tenantId }, '-created_date', 1);
-            if (companies.length > 0) setCompanyName(companies[0].company_name || '');
+            const companies = await base44.entities.Company.filter({ tenant_id: tenantId }, '-created_date', 10);
+            const company = companies.find(c => c.is_owner_profile) || companies.find(c => c.company_type === 'owner_operator') || companies.find(c => c.company_type === 'carrier') || companies[0];
+            if (company) setCompanyName(company.company_name || '');
           } catch {}
         }
       })
@@ -422,6 +424,7 @@ export default function DriverPublicPortal() {
       <div className="bg-card border-b border-border px-4 md:px-6 flex-shrink-0">
         <div className="flex">
           {[
+            { key: 'dispatch', label: 'My Loads', TabIcon: LayoutGrid },
             { key: 'statements', label: 'My Statements', TabIcon: Calendar },
             { key: 'fuel', label: 'Fuel Transactions', TabIcon: Fuel },
             { key: 'upload', label: 'Upload Docs', TabIcon: Upload },
@@ -444,6 +447,10 @@ export default function DriverPublicPortal() {
       {/* Content */}
       <div className="flex-1 overflow-auto p-4 md:p-6">
         <div className="max-w-2xl mx-auto space-y-3">
+
+          {activeTab === 'dispatch' && (
+            <DriverDispatchBoard driverId={driver.id} />
+          )}
 
           {activeTab === 'statements' && (
             <>

@@ -55,18 +55,20 @@ function LoadCard({ load }) {
   );
 }
 
-export default function DriverDispatchBoard({ session }) {
+export default function DriverDispatchBoard({ session, driverId: driverIdProp }) {
+  const driverId = driverIdProp || session?.driver_id;
+
   const { data: loads1 = [], isLoading: l1 } = useQuery({
-    queryKey: ['driver-dispatch-loads1', session?.driver_id],
-    queryFn: () => base44.entities.Load.filter({ driver_1_id: session.driver_id }, '-pickup_date', 100),
-    enabled: !!session?.driver_id,
+    queryKey: ['driver-dispatch-loads1', driverId],
+    queryFn: () => base44.entities.Load.filter({ driver_1_id: driverId }, '-pickup_date', 100),
+    enabled: !!driverId,
     refetchInterval: 60000,
   });
 
   const { data: loads2 = [], isLoading: l2 } = useQuery({
-    queryKey: ['driver-dispatch-loads2', session?.driver_id],
-    queryFn: () => base44.entities.Load.filter({ driver_2_id: session.driver_id }, '-pickup_date', 100),
-    enabled: !!session?.driver_id,
+    queryKey: ['driver-dispatch-loads2', driverId],
+    queryFn: () => base44.entities.Load.filter({ driver_2_id: driverId }, '-pickup_date', 100),
+    enabled: !!driverId,
     refetchInterval: 60000,
   });
 
