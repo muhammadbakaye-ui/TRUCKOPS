@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSession } from '@/components/shared/AppSession';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,12 +13,15 @@ import {
 import StatCard from '../components/dashboard/StatCard';
 import StatusBadge from '../components/shared/StatusBadge';
 import RevenueCharts from '../components/dashboard/RevenueCharts';
+import MobilePullRefresh from '../components/mobile/MobilePullRefresh';
 import { format } from 'date-fns';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { session } = useSession();
   const tenantId = session?.tenant_id;
+  const queryClient = useQueryClient();
+  const handleRefresh = () => queryClient.invalidateQueries();
 
   // Load only what the dashboard actually renders — filtered by tenant
   const { data: recentLoads = [] } = useQuery({
@@ -84,6 +87,7 @@ export default function Dashboard() {
   const activeTrucks = trucks.filter(t => t.status === 'active');
 
   return (
+    <MobilePullRefresh onRefresh={handleRefresh}>
     <div className="p-4 space-y-4">
       {/* Stats row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3">
@@ -228,5 +232,6 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
+    </MobilePullRefresh>
   );
 }

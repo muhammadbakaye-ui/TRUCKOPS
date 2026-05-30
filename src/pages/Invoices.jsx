@@ -19,6 +19,8 @@ import { format } from 'date-fns';
 import { useEntitySubscription } from '../hooks/useEntitySubscription';
 import QuickActionSettings from '../components/shared/QuickActionSettings';
 import MobileInvoiceCard from '../components/invoices/MobileInvoiceCard';
+import MobilePullRefresh from '../components/mobile/MobilePullRefresh';
+import MobileSelect from '@/components/ui/MobileSelect';
 
 const INV_STATUS_STYLES = {
   draft: 'bg-gray-100 text-gray-600 border-gray-200',
@@ -32,7 +34,11 @@ const INV_STATUS_STYLES = {
 
 function InvoiceStatusSelect({ invoice, queryClient }) {
   const [saving, setSaving] = useState(false);
+  const [optimisticStatus, setOptimisticStatus] = useState(null);
+  const current = optimisticStatus ?? (invoice.status || 'draft');
+
   const handleChange = async (value) => {
+    setOptimisticStatus(value);
     setSaving(true);
     try {
       await base44.entities.Invoice.update(invoice.id, { status: value });
@@ -42,30 +48,34 @@ function InvoiceStatusSelect({ invoice, queryClient }) {
         queryClient.invalidateQueries({ queryKey: ['loads'] });
       }
       queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      setOptimisticStatus(null);
       toast.success('Status updated');
     } catch (err) {
+      setOptimisticStatus(null);
       toast.error('Failed to update status: ' + err.message);
     } finally {
       setSaving(false);
     }
   };
-  const current = invoice.status || 'draft';
-  return (
-    <Select value={current} onValueChange={handleChange} disabled={saving}>
-      <SelectTrigger className={`h-6 text-xs px-2 border rounded-md font-medium w-28 ${INV_STATUS_STYLES[current] || ''}`}>
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent className="min-w-[7rem] w-28">
-        <SelectItem value="draft" className="text-xs">Draft</SelectItem>
-        <SelectItem value="priority" className="text-xs">Priority</SelectItem>
-        <SelectItem value="sent" className="text-xs">Sent</SelectItem>
-        <SelectItem value="partial" className="text-xs">Partial</SelectItem>
-        <SelectItem value="paid" className="text-xs">Paid</SelectItem>
-        <SelectItem value="overdue" className="text-xs">Overdue</SelectItem>
-        <SelectItem value="canceled" className="text-xs">Canceled</SelectItem>
-      </SelectContent>
 
-    </Select>
+  const options = [
+    { value: 'draft', label: 'Draft' },
+    { value: 'priority', label: 'Priority' },
+    { value: 'sent', label: 'Sent' },
+    { value: 'partial', label: 'Partial' },
+    { value: 'paid', label: 'Paid' },
+    { value: 'overdue', label: 'Overdue' },
+    { value: 'canceled', label: 'Canceled' },
+  ];
+
+  return (
+    <MobileSelect
+      value={current}
+      onValueChange={handleChange}
+      disabled={saving}
+      options={options}
+      triggerClassName={`h-6 text-xs px-2 border rounded-md font-medium w-28 ${INV_STATUS_STYLES[current] || ''}`}
+    />
   );
 }
 
@@ -307,6 +317,7 @@ export default function Invoices() {
   ];
 
   return (
+    <MobilePullRefresh onRefresh={() => queryClient.invalidateQueries({ queryKey: ['invoices'] })}>
     <div className="p-4">
       <div className="flex gap-2 mb-3">
          <SearchInput value={search} onChange={setSearch} placeholder="Search invoices..." className="w-64" />
@@ -411,5 +422,6 @@ export default function Invoices() {
         )}
       </div>
     </div>
+    </MobilePullRefresh>
   );
 }

@@ -27,6 +27,8 @@ import QuickActionSettings from '../components/shared/QuickActionSettings';
 import { chunkAsync } from '../utils/chunkAsync';
 import MobileLoadCard from '../components/mobile/MobileLoadCard';
 import MobileLoadsHeader from '../components/mobile/MobileLoadsHeader';
+import MobilePullRefresh from '../components/mobile/MobilePullRefresh';
+import MobileSelect from '@/components/ui/MobileSelect';
 
 const INVOICE_STATUS_STYLES = {
   not_invoiced: 'bg-muted text-muted-foreground border-border',
@@ -52,9 +54,11 @@ const INVOICE_STATUS_LABELS = {
 
 function InvoiceStatusSelect({ load, queryClient }) {
   const [saving, setSaving] = useState(false);
-  const current = load.invoice_status || 'not_invoiced';
+  const [optimisticStatus, setOptimisticStatus] = useState(null);
+  const current = optimisticStatus ?? (load.invoice_status || 'not_invoiced');
 
   const handleChange = async (value) => {
+    setOptimisticStatus(value);
     setSaving(true);
     try {
       await base44.entities.Load.update(load.id, { invoice_status: value });
@@ -99,25 +103,26 @@ function InvoiceStatusSelect({ load, queryClient }) {
       }
 
       queryClient.invalidateQueries({ queryKey: ['loads'] });
+      setOptimisticStatus(null);
       toast.success('Invoice status updated');
     } catch (err) {
+      setOptimisticStatus(null);
       toast.error('Failed to update status: ' + err.message);
     } finally {
       setSaving(false);
     }
   };
 
+  const options = Object.entries(INVOICE_STATUS_LABELS).map(([val, label]) => ({ value: val, label }));
+
   return (
-    <Select value={current} onValueChange={handleChange} disabled={saving}>
-      <SelectTrigger className={`h-6 text-[11px] px-2 border rounded-md font-medium w-32 ${INVOICE_STATUS_STYLES[current] || ''}`}>
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {Object.entries(INVOICE_STATUS_LABELS).map(([val, label]) => (
-          <SelectItem key={val} value={val} className="text-xs">{label}</SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <MobileSelect
+      value={current}
+      onValueChange={handleChange}
+      disabled={saving}
+      options={options}
+      triggerClassName={`h-6 text-[11px] px-2 border rounded-md font-medium w-32 ${INVOICE_STATUS_STYLES[current] || ''}`}
+    />
   );
 }
 
@@ -434,6 +439,7 @@ export default function Loads() {
   const hasActiveFilters = search || statusFilter.length > 0 || invoiceFilter.length > 0 || driverFilter.length > 0 || truckFilter.length > 0 || tripFilter.length > 0 || dateFrom || dateTo;
 
   return (
+    <MobilePullRefresh onRefresh={() => queryClient.invalidateQueries({ queryKey: ['loads'] })}>
     <div className="p-4" style={{ overflowX: 'hidden', boxSizing: 'border-box', width: '100%' }}>
       <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
       
@@ -935,5 +941,6 @@ export default function Loads() {
         />
       )}
     </div>
+    </MobilePullRefresh>
   );
 }

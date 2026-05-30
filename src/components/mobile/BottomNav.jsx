@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { LayoutDashboard, Container, MoreHorizontal, FileText, Users, Truck, Check, ChevronRight, Shield, Settings, BarChart2, Fuel, AlertTriangle, ClipboardList, BookOpen, Wrench, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -106,9 +106,12 @@ export default function BottomNav({ currentPage }) {
           const Icon = item.icon;
           const isActive = currentPage === page;
           return (
-            <Link
+            <button
               key={page}
-              to={createPageUrl(page)}
+              onClick={() => isActive
+                ? document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' })
+                : navigate(createPageUrl(page))
+              }
               className={cn(
                 'flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[11px] font-medium transition-colors select-none min-h-[56px]',
                 isActive ? 'text-sidebar-primary bg-sidebar-accent/20' : 'text-sidebar-foreground/70 hover:text-sidebar-foreground'
@@ -118,7 +121,7 @@ export default function BottomNav({ currentPage }) {
               <span className="truncate max-w-full px-0.5" style={{ fontSize: '10px', lineHeight: '1.2' }}>
                 {item.label === 'Driver Statements' ? 'Statements' : item.label}
               </span>
-            </Link>
+            </button>
           );
         })}
 
