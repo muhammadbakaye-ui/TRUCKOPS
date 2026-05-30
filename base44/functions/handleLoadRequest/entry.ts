@@ -66,6 +66,14 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Load not found' }, { status: 404 });
       }
 
+      // Get driver info from request or notification metadata
+      const targetDriverId = driver_id;
+      const targetDriverName = driver_name;
+
+      if (!targetDriverId) {
+        return Response.json({ error: 'Driver ID required' }, { status: 400 });
+      }
+
       // Get user info for audit trail
       const user = await base44.auth.me();
       const acceptedBy = user?.full_name || user?.email || 'Owner';
@@ -81,8 +89,8 @@ Deno.serve(async (req) => {
       });
 
       await base44.entities.Load.update(load_id, {
-        driver_1_id: driver_id,
-        driver_1_name: driver_name,
+        driver_1_id: targetDriverId,
+        driver_1_name: targetDriverName,
         dispatch_status: 'assigned',
         manual_dispatch_override: true,
         driver_visibility: false,
@@ -97,7 +105,7 @@ Deno.serve(async (req) => {
       });
 
       for (const req of allRequests) {
-        if (req.metadata?.driver_id !== driver_id && !req.deleted) {
+        if (req.metadata?.driver_id !== targetDriverId && !req.deleted) {
           // Mark other requests as denied
           await base44.entities.Notification.update(req.id, {
             read: true,
@@ -125,7 +133,7 @@ Deno.serve(async (req) => {
       }
 
       // Mark accepted request as handled
-      const acceptedRequest = allRequests.find(n => n.metadata?.driver_id === driver_id);
+      const acceptedRequest = allRequests.find(n => n.metadata?.driver_id === targetDriverId);
       if (acceptedRequest) {
         await base44.entities.Notification.update(acceptedRequest.id, {
           read: true,
@@ -145,7 +153,7 @@ Deno.serve(async (req) => {
         link_url: `/DriverPublicPortal`,
         read: false,
         metadata: {
-          driver_id,
+          driver_id: targetDriverId,
           load_id,
           load_number: load.internal_load_number
         }
@@ -161,6 +169,13 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'Load not found' }, { status: 404 });
       }
 
+      // Get driver ID from request
+      const targetDriverId = driver_id;
+
+      if (!targetDriverId) {
+        return Response.json({ error: 'Driver ID required' }, { status: 400 });
+      }
+
       // Find the pending request notification
       const notifications = await base44.entities.Notification.filter({
         tenant_id,
@@ -169,7 +184,7 @@ Deno.serve(async (req) => {
       });
       
       const reqNotification = notifications.find(n => 
-        n.metadata?.driver_id === driver_id && !n.deleted
+        n.metadata?.driver_id === targetDriverId && !n.deleted
       );
 
       if (reqNotification) {
@@ -182,7 +197,7 @@ Deno.serve(async (req) => {
 
       // Remove driver from load's requested_by_driver_ids
       const currentRequestedBy = load.requested_by_driver_ids || [];
-      const updatedRequestedBy = currentRequestedBy.filter(id => id !== driver_id);
+      const updatedRequestedBy = currentRequestedBy.filter(id => id !== targetDriverId);
       await base44.entities.Load.update(load_id, {
         requested_by_driver_ids: updatedRequestedBy
       });
@@ -198,7 +213,7 @@ Deno.serve(async (req) => {
         link_url: `/DriverPublicPortal`,
         read: false,
         metadata: {
-          driver_id,
+          driver_id: targetDriverId,
           load_id,
           load_number: load.internal_load_number
         }

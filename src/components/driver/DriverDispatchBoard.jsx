@@ -206,8 +206,8 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
   }
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+    <div className="p-3 lg:p-4 space-y-3 lg:space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 lg:gap-4">
         {COLUMNS.map(col => {
           const colLoads = getColumnLoads(col.key);
           return (
