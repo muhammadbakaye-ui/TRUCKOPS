@@ -63,7 +63,9 @@ export default function DriverPortalView() {
 
   const { data: carrierCompanies = [] } = useQuery({
     queryKey: ['carrier-company-portal', session?.tenant_id],
-    queryFn: () => base44.entities.Company.filter({ company_type: 'carrier', tenant_id: session.tenant_id }, '-created_date', 1),
+    queryFn: () => base44.entities.Company.filter({ tenant_id: session.tenant_id }, '-created_date', 10).then(cos => {
+      return (cos.find(c => c.is_owner_profile) || cos.find(c => c.company_type === 'owner_operator') || cos.find(c => c.company_type === 'carrier') || cos[0]) ? [cos.find(c => c.is_owner_profile) || cos.find(c => c.company_type === 'owner_operator') || cos.find(c => c.company_type === 'carrier') || cos[0]] : [];
+    }),
     enabled: !!session?.tenant_id,
   });
   const companyName = carrierCompanies[0]?.company_name || '';

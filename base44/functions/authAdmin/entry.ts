@@ -134,11 +134,13 @@ Deno.serve(async (req) => {
         session_token_expires: sessionExpires,
       });
 
-      // Use carrier Company entity as authoritative company name source
-      const loginCarrierCompanies = await base44.asServiceRole.entities.Company.filter({ tenant_id: loginTenantId, company_type: 'carrier' });
-      const loginCompanyName = loginCarrierCompanies.length > 0
-        ? loginCarrierCompanies[0].company_name
-        : (admin.company_name || sub.company_name || '');
+      // Use owner Company entity as authoritative company name source (owner_operator or carrier)
+      const loginAllCompanies = await base44.asServiceRole.entities.Company.filter({ tenant_id: loginTenantId });
+      const loginOwnerCompany = loginAllCompanies.find(c => c.is_owner_profile) ||
+        loginAllCompanies.find(c => c.company_type === 'owner_operator') ||
+        loginAllCompanies.find(c => c.company_type === 'carrier') ||
+        loginAllCompanies[0];
+      const loginCompanyName = loginOwnerCompany?.company_name || admin.company_name || sub.company_name || '';
 
       return Response.json({
         success: true,
@@ -196,11 +198,13 @@ Deno.serve(async (req) => {
       if (sub.status === 'canceled' || sub.status === 'unpaid') {
         return Response.json({ success: false, message: 'Subscription inactive', code: 'subscription_inactive' }, { status: 403 });
       }
-      // Use carrier Company entity as authoritative company name source
-      const carrierCompanies = await base44.asServiceRole.entities.Company.filter({ tenant_id: tenantId, company_type: 'carrier' });
-      const displayCompanyName = carrierCompanies.length > 0
-        ? carrierCompanies[0].company_name
-        : (admin.company_name || sub.company_name || '');
+      // Use owner Company entity as authoritative company name source (owner_operator or carrier)
+      const allCompanies = await base44.asServiceRole.entities.Company.filter({ tenant_id: tenantId });
+      const ownerCompany = allCompanies.find(c => c.is_owner_profile) ||
+        allCompanies.find(c => c.company_type === 'owner_operator') ||
+        allCompanies.find(c => c.company_type === 'carrier') ||
+        allCompanies[0];
+      const displayCompanyName = ownerCompany?.company_name || admin.company_name || sub.company_name || '';
 
       return Response.json({
         success: true,
