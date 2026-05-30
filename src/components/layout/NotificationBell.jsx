@@ -13,17 +13,20 @@ import { useSession } from '../shared/AppSession';
 function playChime() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(740, ctx.currentTime);
-    gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 1.2);
+    // Two-tone soft bell: high note then lower note
+    [[880, 0, 0.5], [587, 0.12, 0.7]].forEach(([freq, startOffset, duration]) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + startOffset);
+      gain.gain.setValueAtTime(0, ctx.currentTime + startOffset);
+      gain.gain.linearRampToValueAtTime(0.04, ctx.currentTime + startOffset + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + startOffset + duration);
+      osc.start(ctx.currentTime + startOffset);
+      osc.stop(ctx.currentTime + startOffset + duration);
+    });
   } catch (e) {}
 }
 
@@ -34,7 +37,7 @@ export default function NotificationBell() {
   const [showDeleted, setShowDeleted] = useState(false);
   const { session } = useSession();
   const tenantId = session?.tenant_id;
-  const prevUnreadRef = useRef(null);
+  const seenIdsRef = useRef(null);
 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', tenantId],
@@ -95,17 +98,17 @@ export default function NotificationBell() {
     return unsubscribe;
   }, [queryClient, tenantId]);
 
-  // Play chime when new unread notifications arrive
+  // Play chime once per new unread notification (track by ID to avoid loops from refetches)
   useEffect(() => {
-    if (prevUnreadRef.current === null) {
-      prevUnreadRef.current = unreadCount;
+    const unreadIds = active.filter(n => !n.read).map(n => n.id);
+    if (seenIdsRef.current === null) {
+      seenIdsRef.current = new Set(unreadIds);
       return;
     }
-    if (unreadCount > prevUnreadRef.current) {
-      playChime();
-    }
-    prevUnreadRef.current = unreadCount;
-  }, [unreadCount]);
+    const hasNew = unreadIds.some(id => !seenIdsRef.current.has(id));
+    if (hasNew) playChime();
+    seenIdsRef.current = new Set(unreadIds);
+  }, [active.map(n => n.id).join(',')]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
