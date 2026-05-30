@@ -21,7 +21,8 @@ import StatusBadge from '../components/shared/StatusBadge';
 import PageHeader from '../components/shared/PageHeader';
 import BulkDeleteBar from '../components/shared/BulkDeleteBar';
 import MultiSelectFilter from '../components/shared/MultiSelectFilter';
-import { format, parseISO } from 'date-fns';
+import { parseISO } from 'date-fns';
+import { formatInUserTimezone, getUserTimezone } from '@/utils/formatTimezone';
 import { useEntitySubscription } from '../hooks/useEntitySubscription';
 import QuickActionSettings from '../components/shared/QuickActionSettings';
 import { chunkAsync } from '../utils/chunkAsync';
@@ -737,7 +738,7 @@ export default function Loads() {
           const dateLoads = groupedByDate[dateKey];
           const isExpanded = expandedDates === null || expandedDates.has(dateKey);
           const totalAmount = dateLoads.reduce((sum, l) => sum + (l.invoice_amount || 0), 0);
-          const label = dateKey === 'No Pickup Date' ? 'No Pickup Date' : format(parseISO(dateKey), 'EEEE, MMM d, yyyy');
+          const label = dateKey === 'No Pickup Date' ? 'No Pickup Date' : formatInUserTimezone(dateKey, 'date', getUserTimezone());
 
           return (
             <Card key={dateKey}>

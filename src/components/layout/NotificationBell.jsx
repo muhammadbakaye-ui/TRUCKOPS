@@ -7,6 +7,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
+import { formatInUserTimezone, getUserTimezone } from '@/utils/formatTimezone';
 import { useSession } from '../shared/AppSession';
 
 function playChime() {
@@ -153,7 +154,7 @@ export default function NotificationBell() {
                         <p className="text-sm font-medium">{n.title}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {formatDistanceToNow(new Date(n.created_date), { addSuffix: true })}
+                          {formatInUserTimezone(n.created_date, 'datetime', getUserTimezone())}
                         </p>
                       </button>
                     <div className="flex gap-1 flex-shrink-0">
@@ -199,7 +200,7 @@ export default function NotificationBell() {
                       <p className="text-xs font-medium">{n.title}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        {formatDistanceToNow(new Date(n.created_date), { addSuffix: true })}
+                        {formatInUserTimezone(n.created_date, 'datetime', getUserTimezone())}
                       </p>
                     </div>
                   ))}

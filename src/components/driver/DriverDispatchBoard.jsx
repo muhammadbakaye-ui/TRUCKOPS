@@ -135,7 +135,7 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
         action: 'request_load',
         load_id: loadId,
         driver_id: driverId,
-        driver_name: session?.driver_name,
+        driver_name: session?.driver_name || 'Unknown Driver',
         tenant_id: tenantId
       });
       return res.data;
@@ -153,6 +153,10 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, t
   });
 
   const handleRequest = (loadId) => {
+    if (!session?.driver_name) {
+      toast.error('Driver name not found. Please refresh the page.');
+      return;
+    }
     requestLoadMutation.mutate(loadId);
   };
 

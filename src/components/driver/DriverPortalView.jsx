@@ -12,7 +12,7 @@ import { Truck, Upload, FileText, LogOut, Download, Loader2, Calendar, Printer, 
 import DriverMyProfile from './DriverMyProfile';
 import DriverDispatchBoard from './DriverDispatchBoard';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { formatInUserTimezone, getUserTimezone } from '@/utils/formatTimezone';
 
 import { printStatement } from '../print/printStatement';
 import StatementLoadDetails from './StatementLoadDetails';
@@ -286,7 +286,7 @@ export default function DriverPortalView() {
                             <div className="min-w-0 flex-1">
                               <p className="text-[11px] md:text-xs font-medium truncate">{doc.file_name}</p>
                               <p className="text-[10px] text-muted-foreground">
-                                {doc.updated_date ? format(new Date(doc.updated_date), 'MMM d, yyyy h:mm a') : doc.created_date ? format(new Date(doc.created_date), 'MMM d, yyyy') : '—'}
+                                {doc.updated_date ? formatInUserTimezone(doc.updated_date, 'datetime', getUserTimezone()) : doc.created_date ? formatInUserTimezone(doc.created_date, 'date', getUserTimezone()) : '—'}
                               </p>
                             </div>
                           </div>
@@ -340,7 +340,7 @@ export default function DriverPortalView() {
                           <div className="space-y-0.5 flex-1 min-w-0">
                             <p className="text-xs md:text-sm font-semibold">
                               {stmt.period_start && stmt.period_end
-                                ? `${format(new Date(stmt.period_start + 'T12:00:00'), 'MMM d')} – ${format(new Date(stmt.period_end + 'T12:00:00'), 'MMM d')}`
+                                ? `${formatInUserTimezone(stmt.period_start + 'T12:00:00', 'short', getUserTimezone())} – ${formatInUserTimezone(stmt.period_end + 'T12:00:00', 'short', getUserTimezone())}`
                                 : stmt.statement_date || '—'}
                             </p>
                           </div>
@@ -374,7 +374,7 @@ export default function DriverPortalView() {
                           <p className="text-[10px] text-muted-foreground">Period</p>
                           <p className="text-xs font-semibold">
                             {viewingStatement.period_start && viewingStatement.period_end
-                              ? `${format(new Date(viewingStatement.period_start + 'T12:00:00'), 'MMM d')} – ${format(new Date(viewingStatement.period_end + 'T12:00:00'), 'MMM d, yyyy')}`
+                              ? `${formatInUserTimezone(viewingStatement.period_start + 'T12:00:00', 'short', getUserTimezone())} – ${formatInUserTimezone(viewingStatement.period_end + 'T12:00:00', 'datetime', getUserTimezone())}`
                               : '—'}
                           </p>
                         </div>
