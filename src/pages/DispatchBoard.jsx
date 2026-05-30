@@ -432,7 +432,7 @@ export default function DispatchBoard() {
                 </p>
               ) : (
                 <p>
-                  Deny <strong>{confirmDialog.driverId ? 'this driver' : 'the request'}</strong> for Load <strong>{confirmDialog.loadNumber}</strong>?
+                  Deny <strong>{confirmDialog?.driverId ? 'this driver' : 'the request'}</strong> for Load <strong>{confirmDialog?.loadNumber}</strong>?
                 </p>
               )}
             </AlertDialogDescription>
