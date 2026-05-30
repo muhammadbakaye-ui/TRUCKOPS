@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import MobileSelect from '@/components/ui/MobileSelect';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -99,14 +100,16 @@ function QualDialog({ open, onClose, driver, qual, onSave, saving }) {
           <div className="col-span-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide pt-1 border-t">CDL Information</div>
           <div>
             <Label className="text-xs">CDL Class</Label>
-            <Select value={form.cdl_class || ''} onValueChange={v => set('cdl_class', v)}>
-              <SelectTrigger className="h-8 text-xs mt-1"><SelectValue placeholder="Select" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="A">Class A</SelectItem>
-                <SelectItem value="B">Class B</SelectItem>
-                <SelectItem value="C">Class C</SelectItem>
-              </SelectContent>
-            </Select>
+            <MobileSelect
+              value={form.cdl_class || ''}
+              onValueChange={v => set('cdl_class', v)}
+              triggerClassName="h-8 text-xs mt-1 w-full border border-input rounded-md px-2 bg-background"
+              options={[
+                { value: 'A', label: 'Class A' },
+                { value: 'B', label: 'Class B' },
+                { value: 'C', label: 'Class C' },
+              ]}
+            />
           </div>
           <div>
             <Label className="text-xs">CDL Number</Label>

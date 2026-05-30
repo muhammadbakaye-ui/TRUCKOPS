@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import MobileSelect from '@/components/ui/MobileSelect';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
@@ -64,10 +65,12 @@ function ViolationDialog({ open, onClose, editing, drivers, tenantId, onSave, sa
         <div className="grid grid-cols-2 gap-3 py-2">
           <div className="col-span-2">
             <Label className="text-xs">Driver <span className="text-destructive">*</span></Label>
-            <Select value={form.driver_id || ''} onValueChange={v => { const d = drivers.find(d => d.id === v); set('driver_id', v); set('driver_name', d?.full_name || ''); }}>
-              <SelectTrigger className="h-8 text-xs mt-1"><SelectValue placeholder="Select driver" /></SelectTrigger>
-              <SelectContent>{drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}</SelectContent>
-            </Select>
+            <MobileSelect
+              value={form.driver_id || ''}
+              onValueChange={v => { const d = drivers.find(d => d.id === v); set('driver_id', v); set('driver_name', d?.full_name || ''); }}
+              triggerClassName="h-8 text-xs mt-1 w-full border border-input rounded-md px-2 bg-background"
+              options={drivers.map(d => ({ value: d.id, label: d.full_name }))}
+            />
           </div>
           <div>
             <Label className="text-xs">Date of Violation <span className="text-destructive">*</span></Label>
@@ -75,21 +78,25 @@ function ViolationDialog({ open, onClose, editing, drivers, tenantId, onSave, sa
           </div>
           <div>
             <Label className="text-xs">Violation Type <span className="text-destructive">*</span></Label>
-            <Select value={form.violation_type || ''} onValueChange={v => set('violation_type', v)}>
-              <SelectTrigger className="h-8 text-xs mt-1"><SelectValue placeholder="Select" /></SelectTrigger>
-              <SelectContent>{VIOLATION_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
-            </Select>
+            <MobileSelect
+              value={form.violation_type || ''}
+              onValueChange={v => set('violation_type', v)}
+              triggerClassName="h-8 text-xs mt-1 w-full border border-input rounded-md px-2 bg-background"
+              options={VIOLATION_TYPES}
+            />
           </div>
           <div>
             <Label className="text-xs">Severity <span className="text-destructive">*</span></Label>
-            <Select value={form.severity || 'minor'} onValueChange={v => set('severity', v)}>
-              <SelectTrigger className="h-8 text-xs mt-1"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="minor">Minor</SelectItem>
-                <SelectItem value="major">Major</SelectItem>
-                <SelectItem value="critical">Critical</SelectItem>
-              </SelectContent>
-            </Select>
+            <MobileSelect
+              value={form.severity || 'minor'}
+              onValueChange={v => set('severity', v)}
+              triggerClassName="h-8 text-xs mt-1 w-full border border-input rounded-md px-2 bg-background"
+              options={[
+                { value: 'minor', label: 'Minor' },
+                { value: 'major', label: 'Major' },
+                { value: 'critical', label: 'Critical' },
+              ]}
+            />
           </div>
           <div>
             <Label className="text-xs">Reported By</Label>
@@ -198,22 +205,26 @@ export default function DriverViolations() {
 
       <div className="flex flex-wrap gap-2">
         <SearchInput value={search} onChange={setSearch} placeholder="Search..." className="w-56" />
-        <Select value={driverFilter} onValueChange={setDriverFilter}>
-          <SelectTrigger className="h-8 text-xs w-44"><SelectValue placeholder="All Drivers" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Drivers</SelectItem>
-            {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={severityFilter} onValueChange={setSeverityFilter}>
-          <SelectTrigger className="h-8 text-xs w-32"><SelectValue placeholder="Severity" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Severity</SelectItem>
-            <SelectItem value="minor">Minor</SelectItem>
-            <SelectItem value="major">Major</SelectItem>
-            <SelectItem value="critical">Critical</SelectItem>
-          </SelectContent>
-        </Select>
+        <MobileSelect
+          value={driverFilter}
+          onValueChange={setDriverFilter}
+          triggerClassName="h-8 text-xs w-44 border border-input rounded-md px-2 bg-background"
+          options={[
+            { value: 'all', label: 'All Drivers' },
+            ...drivers.map(d => ({ value: d.id, label: d.full_name }))
+          ]}
+        />
+        <MobileSelect
+          value={severityFilter}
+          onValueChange={setSeverityFilter}
+          triggerClassName="h-8 text-xs w-32 border border-input rounded-md px-2 bg-background"
+          options={[
+            { value: 'all', label: 'All Severity' },
+            { value: 'minor', label: 'Minor' },
+            { value: 'major', label: 'Major' },
+            { value: 'critical', label: 'Critical' },
+          ]}
+        />
         <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-8 text-xs w-36" />
         <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-8 text-xs w-36" />
       </div>

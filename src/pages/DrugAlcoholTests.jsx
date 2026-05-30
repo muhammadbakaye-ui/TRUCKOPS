@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import MobileSelect from '@/components/ui/MobileSelect';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
@@ -62,10 +63,12 @@ function TestDialog({ open, onClose, editing, drivers, onSave, saving }) {
         <div className="grid grid-cols-2 gap-3 py-2">
           <div className="col-span-2">
             <Label className="text-xs">Driver <span className="text-destructive">*</span></Label>
-            <Select value={form.driver_id || ''} onValueChange={v => { const d = drivers.find(d => d.id === v); set('driver_id', v); set('driver_name', d?.full_name || ''); }}>
-              <SelectTrigger className="h-8 text-xs mt-1"><SelectValue placeholder="Select driver" /></SelectTrigger>
-              <SelectContent>{drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}</SelectContent>
-            </Select>
+            <MobileSelect
+              value={form.driver_id || ''}
+              onValueChange={v => { const d = drivers.find(d => d.id === v); set('driver_id', v); set('driver_name', d?.full_name || ''); }}
+              triggerClassName="h-8 text-xs mt-1 w-full border border-input rounded-md px-2 bg-background"
+              options={drivers.map(d => ({ value: d.id, label: d.full_name }))}
+            />
           </div>
           <div>
             <Label className="text-xs">Test Date <span className="text-destructive">*</span></Label>
@@ -73,10 +76,12 @@ function TestDialog({ open, onClose, editing, drivers, onSave, saving }) {
           </div>
           <div>
             <Label className="text-xs">Test Type <span className="text-destructive">*</span></Label>
-            <Select value={form.test_type || ''} onValueChange={v => set('test_type', v)}>
-              <SelectTrigger className="h-8 text-xs mt-1"><SelectValue placeholder="Select" /></SelectTrigger>
-              <SelectContent>{TEST_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
-            </Select>
+            <MobileSelect
+              value={form.test_type || ''}
+              onValueChange={v => set('test_type', v)}
+              triggerClassName="h-8 text-xs mt-1 w-full border border-input rounded-md px-2 bg-background"
+              options={TEST_TYPES}
+            />
           </div>
           <div>
             <Label className="text-xs">Testing Facility / Lab</Label>
@@ -88,25 +93,29 @@ function TestDialog({ open, onClose, editing, drivers, onSave, saving }) {
           </div>
           <div>
             <Label className="text-xs">Substance Tested For</Label>
-            <Select value={form.substance_tested || ''} onValueChange={v => set('substance_tested', v)}>
-              <SelectTrigger className="h-8 text-xs mt-1"><SelectValue placeholder="Select" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="drugs">Drugs</SelectItem>
-                <SelectItem value="alcohol">Alcohol</SelectItem>
-                <SelectItem value="both">Both</SelectItem>
-              </SelectContent>
-            </Select>
+            <MobileSelect
+              value={form.substance_tested || ''}
+              onValueChange={v => set('substance_tested', v)}
+              triggerClassName="h-8 text-xs mt-1 w-full border border-input rounded-md px-2 bg-background"
+              options={[
+                { value: 'drugs', label: 'Drugs' },
+                { value: 'alcohol', label: 'Alcohol' },
+                { value: 'both', label: 'Both' },
+              ]}
+            />
           </div>
           <div>
             <Label className="text-xs">Result <span className="text-destructive">*</span></Label>
-            <Select value={form.result || 'pass'} onValueChange={v => set('result', v)}>
-              <SelectTrigger className="h-8 text-xs mt-1"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pass">Pass</SelectItem>
-                <SelectItem value="fail">Fail</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-              </SelectContent>
-            </Select>
+            <MobileSelect
+              value={form.result || 'pass'}
+              onValueChange={v => set('result', v)}
+              triggerClassName="h-8 text-xs mt-1 w-full border border-input rounded-md px-2 bg-background"
+              options={[
+                { value: 'pass', label: 'Pass' },
+                { value: 'fail', label: 'Fail' },
+                { value: 'pending', label: 'Pending' },
+              ]}
+            />
           </div>
           {form.result === 'fail' && (
             <div className="col-span-2">
@@ -213,29 +222,35 @@ export default function DrugAlcoholTests() {
 
       <div className="flex flex-wrap gap-2">
         <SearchInput value={search} onChange={setSearch} placeholder="Search driver..." className="w-48" />
-        <Select value={driverFilter} onValueChange={setDriverFilter}>
-          <SelectTrigger className="h-8 text-xs w-44"><SelectValue placeholder="All Drivers" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Drivers</SelectItem>
-            {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="h-8 text-xs w-44"><SelectValue placeholder="All Types" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            {TEST_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={resultFilter} onValueChange={setResultFilter}>
-          <SelectTrigger className="h-8 text-xs w-32"><SelectValue placeholder="All Results" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Results</SelectItem>
-            <SelectItem value="pass">Pass</SelectItem>
-            <SelectItem value="fail">Fail</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-          </SelectContent>
-        </Select>
+        <MobileSelect
+          value={driverFilter}
+          onValueChange={setDriverFilter}
+          triggerClassName="h-8 text-xs w-44 border border-input rounded-md px-2 bg-background"
+          options={[
+            { value: 'all', label: 'All Drivers' },
+            ...drivers.map(d => ({ value: d.id, label: d.full_name }))
+          ]}
+        />
+        <MobileSelect
+          value={typeFilter}
+          onValueChange={setTypeFilter}
+          triggerClassName="h-8 text-xs w-44 border border-input rounded-md px-2 bg-background"
+          options={[
+            { value: 'all', label: 'All Types' },
+            ...TEST_TYPES
+          ]}
+        />
+        <MobileSelect
+          value={resultFilter}
+          onValueChange={setResultFilter}
+          triggerClassName="h-8 text-xs w-32 border border-input rounded-md px-2 bg-background"
+          options={[
+            { value: 'all', label: 'All Results' },
+            { value: 'pass', label: 'Pass' },
+            { value: 'fail', label: 'Fail' },
+            { value: 'pending', label: 'Pending' },
+          ]}
+        />
       </div>
 
       {isLoading ? (

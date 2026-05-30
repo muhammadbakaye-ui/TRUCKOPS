@@ -140,6 +140,12 @@
     -webkit-user-select: none;
     pointer-events: none;
   }
+
+  /* Tab bars & icons: prevent accidental selection */
+  [role="tab"], [role="tablist"] {
+    user-select: none;
+    -webkit-user-select: none;
+  }
   
   /* Prevent horizontal overflow on all pages */
   body, main, div[class*="flex"] {

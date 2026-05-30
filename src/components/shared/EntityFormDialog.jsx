@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import MobileSelect from '@/components/ui/MobileSelect';
 import { Loader2 } from 'lucide-react';
 
 export default function EntityFormDialog({ open, onClose, title, fields, initialData, onSave, saving }) {
@@ -48,19 +49,12 @@ export default function EntityFormDialog({ open, onClose, title, fields, initial
                 return (
                   <div key={field.name} className={field.fullWidth ? 'col-span-2' : ''}>
                     <Label className="text-xs">{field.label}</Label>
-                    <Select
+                    <MobileSelect
                       value={formData[field.name] || ''}
                       onValueChange={(v) => handleChange(field.name, v)}
-                    >
-                      <SelectTrigger className="h-8 text-xs mt-1">
-                        <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {field.options.map(opt => (
-                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      triggerClassName="h-8 text-xs mt-1 w-full border border-input rounded-md px-2 bg-background"
+                      options={field.options}
+                    />
                   </div>
                 );
               }

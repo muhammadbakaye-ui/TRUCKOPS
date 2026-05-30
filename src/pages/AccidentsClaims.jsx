@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import MobileSelect from '@/components/ui/MobileSelect';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
@@ -77,27 +78,33 @@ function AccidentDialog({ open, onClose, editing, drivers, trucks, trailers, onS
           </div>
           <div>
             <Label className="text-xs">Driver</Label>
-            <Select value={form.driver_id || ''} onValueChange={v => { const d = drivers.find(d => d.id === v); set('driver_id', v); set('driver_name', d?.full_name || ''); }}>
-              <SelectTrigger className="h-8 text-xs mt-1"><SelectValue placeholder="Select" /></SelectTrigger>
-              <SelectContent>{drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}</SelectContent>
-            </Select>
+            <MobileSelect
+              value={form.driver_id || ''}
+              onValueChange={v => { const d = drivers.find(d => d.id === v); set('driver_id', v); set('driver_name', d?.full_name || ''); }}
+              triggerClassName="h-8 text-xs mt-1 w-full border border-input rounded-md px-2 bg-background"
+              options={drivers.map(d => ({ value: d.id, label: d.full_name }))}
+            />
           </div>
           <div>
             <Label className="text-xs">Truck</Label>
-            <Select value={form.truck_id || ''} onValueChange={v => { const t = trucks.find(t => t.id === v); set('truck_id', v); set('truck_number', t?.unit_number || ''); }}>
-              <SelectTrigger className="h-8 text-xs mt-1"><SelectValue placeholder="Select" /></SelectTrigger>
-              <SelectContent>{trucks.map(t => <SelectItem key={t.id} value={t.id}>#{t.unit_number}</SelectItem>)}</SelectContent>
-            </Select>
+            <MobileSelect
+              value={form.truck_id || ''}
+              onValueChange={v => { const t = trucks.find(t => t.id === v); set('truck_id', v); set('truck_number', t?.unit_number || ''); }}
+              triggerClassName="h-8 text-xs mt-1 w-full border border-input rounded-md px-2 bg-background"
+              options={trucks.map(t => ({ value: t.id, label: `#${t.unit_number}` }))}
+            />
           </div>
           <div>
             <Label className="text-xs">Trailer (optional)</Label>
-            <Select value={form.trailer_id || ''} onValueChange={v => { const t = trailers.find(t => t.id === v); set('trailer_id', v); set('trailer_number', t?.unit_number || ''); }}>
-              <SelectTrigger className="h-8 text-xs mt-1"><SelectValue placeholder="Select" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={null}>None</SelectItem>
-                {trailers.map(t => <SelectItem key={t.id} value={t.id}>#{t.unit_number}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <MobileSelect
+              value={form.trailer_id || ''}
+              onValueChange={v => { const t = trailers.find(t => t.id === v); set('trailer_id', v); set('trailer_number', t?.unit_number || ''); }}
+              triggerClassName="h-8 text-xs mt-1 w-full border border-input rounded-md px-2 bg-background"
+              options={[
+                { value: '', label: 'None' },
+                ...trailers.map(t => ({ value: t.id, label: `#${t.unit_number}` }))
+              ]}
+            />
           </div>
           <div>
             <Label className="text-xs">Location</Label>
@@ -134,7 +141,7 @@ function AccidentDialog({ open, onClose, editing, drivers, trucks, trailers, onS
           </div>
 
           {/* Insurance */}
-          <div className="col-span-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide border-t pt-3">Insurance & Claim</div>
+          <div className="col-span-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide border-t pt-3">Insurance {'&'} Claim</div>
           <div>
             <Label className="text-xs">Insurance Company</Label>
             <Input value={form.insurance_company || ''} onChange={e => set('insurance_company', e.target.value)} className="h-8 text-xs mt-1" />
@@ -145,16 +152,18 @@ function AccidentDialog({ open, onClose, editing, drivers, trucks, trailers, onS
           </div>
           <div>
             <Label className="text-xs">Claim Status</Label>
-            <Select value={form.claim_status || 'not_filed'} onValueChange={v => set('claim_status', v)}>
-              <SelectTrigger className="h-8 text-xs mt-1"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="not_filed">Not Filed</SelectItem>
-                <SelectItem value="open">Open</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="settled">Settled</SelectItem>
-                <SelectItem value="closed">Closed</SelectItem>
-              </SelectContent>
-            </Select>
+            <MobileSelect
+              value={form.claim_status || 'not_filed'}
+              onValueChange={v => set('claim_status', v)}
+              triggerClassName="h-8 text-xs mt-1 w-full border border-input rounded-md px-2 bg-background"
+              options={[
+                { value: 'not_filed', label: 'Not Filed' },
+                { value: 'open', label: 'Open' },
+                { value: 'in_progress', label: 'In Progress' },
+                { value: 'settled', label: 'Settled' },
+                { value: 'closed', label: 'Closed' },
+              ]}
+            />
           </div>
           <div>
             <Label className="text-xs">Estimated Damage Cost ($)</Label>
@@ -240,24 +249,28 @@ export default function AccidentsClaims() {
 
       <div className="flex flex-wrap gap-2">
         <SearchInput value={search} onChange={setSearch} placeholder="Search driver / location..." className="w-56" />
-        <Select value={driverFilter} onValueChange={setDriverFilter}>
-          <SelectTrigger className="h-8 text-xs w-44"><SelectValue placeholder="All Drivers" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Drivers</SelectItem>
-            {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="h-8 text-xs w-40"><SelectValue placeholder="All Statuses" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="not_filed">Not Filed</SelectItem>
-            <SelectItem value="open">Open</SelectItem>
-            <SelectItem value="in_progress">In Progress</SelectItem>
-            <SelectItem value="settled">Settled</SelectItem>
-            <SelectItem value="closed">Closed</SelectItem>
-          </SelectContent>
-        </Select>
+        <MobileSelect
+          value={driverFilter}
+          onValueChange={setDriverFilter}
+          triggerClassName="h-8 text-xs w-44 border border-input rounded-md px-2 bg-background"
+          options={[
+            { value: 'all', label: 'All Drivers' },
+            ...drivers.map(d => ({ value: d.id, label: d.full_name }))
+          ]}
+        />
+        <MobileSelect
+          value={statusFilter}
+          onValueChange={setStatusFilter}
+          triggerClassName="h-8 text-xs w-40 border border-input rounded-md px-2 bg-background"
+          options={[
+            { value: 'all', label: 'All Statuses' },
+            { value: 'not_filed', label: 'Not Filed' },
+            { value: 'open', label: 'Open' },
+            { value: 'in_progress', label: 'In Progress' },
+            { value: 'settled', label: 'Settled' },
+            { value: 'closed', label: 'Closed' },
+          ]}
+        />
         <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-8 text-xs w-36" />
         <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-8 text-xs w-36" />
       </div>
