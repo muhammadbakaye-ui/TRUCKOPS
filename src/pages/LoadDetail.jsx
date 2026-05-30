@@ -107,7 +107,7 @@ export default function LoadDetail() {
   const { data: trucks = [] } = useQuery({ queryKey: ['trucks', tenantId], queryFn: () => base44.entities.Truck.filter({ status: 'active', tenant_id: tenantId }, 'unit_number', 200), enabled: !!tenantId });
   const { data: trailers = [] } = useQuery({ queryKey: ['trailers', tenantId], queryFn: () => base44.entities.Trailer.filter({ status: 'active', tenant_id: tenantId }, 'unit_number', 200), enabled: !!tenantId });
   const { data: companies = [] } = useQuery({ queryKey: ['companies', tenantId], queryFn: () => base44.entities.Company.filter({ tenant_id: tenantId }, 'company_name', 500), enabled: !!tenantId });
-  const { data: carrierCompany = [] } = useQuery({ queryKey: ['settings-company', tenantId], queryFn: async () => { const cos = await base44.entities.Company.filter({ tenant_id: tenantId }, '-created_date', 20); const best = cos.find(c => c.is_owner_profile) || cos.find(c => c.company_type === 'owner_operator') || cos.find(c => c.company_type === 'carrier') || cos[0]; return best ? [best] : []; }, enabled: !!tenantId });
+  const { data: carrierCompany = [] } = useQuery({ queryKey: ['owner-company', tenantId], queryFn: async () => { const cos = await base44.entities.Company.filter({ tenant_id: tenantId }, '-created_date', 20); const best = cos.find(c => c.is_owner_profile) || cos.find(c => c.company_type === 'owner_operator') || cos.find(c => c.company_type === 'carrier') || cos[0]; return best ? [best] : []; }, enabled: !!tenantId });
 
   const handlePrint = () => {
     printLoad({ company: carrierCompany[0] || {}, load: form, stops, drivers, trucks, trailers: trailers });
