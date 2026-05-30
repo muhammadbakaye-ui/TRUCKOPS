@@ -4,12 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2, Truck, Calendar, Fuel, ChevronDown, ChevronUp, AlertCircle, Printer, Upload, FileText, CheckCircle2, X, User, LayoutGrid } from 'lucide-react';
-import DriverDispatchBoard from '@/components/driver/DriverDispatchBoard';
 import DriverMyProfile from '@/components/driver/DriverMyProfile';
+import DriverDispatchBoard from '@/components/driver/DriverDispatchBoard';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useRef } from 'react';
 import { printStatement } from '@/components/print/printStatement';
-import { format, parse } from 'date-fns';
+import { format } from 'date-fns';
 
 const fmt = (n) => `$${(Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -57,13 +57,7 @@ function StatementCard({ statement, lines }) {
             <p className="text-[10px] text-muted-foreground">net pay</p>
           </div>
           <div className="flex items-center gap-1.5">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
-              onClick={handlePrint}
-              title="Print"
-            >
+            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-muted-foreground hover:text-primary" onClick={handlePrint} title="Print">
               <Printer className="w-3.5 h-3.5" />
             </Button>
             {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
@@ -73,7 +67,6 @@ function StatementCard({ statement, lines }) {
 
       {expanded && (
         <div className="border-t px-4 pb-4 space-y-4 pt-3">
-          {/* Totals row */}
           <div className="grid grid-cols-3 gap-2">
             <div className="bg-green-500/10 rounded-lg p-2 text-center">
               <p className="text-[10px] text-muted-foreground">Gross</p>
@@ -88,8 +81,6 @@ function StatementCard({ statement, lines }) {
               <p className="text-xs font-bold text-orange-600">-{fmt(statement.fuel_total)}</p>
             </div>
           </div>
-
-          {/* Trips */}
           {tripLines.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-muted-foreground mb-1.5">Trips</p>
@@ -103,8 +94,6 @@ function StatementCard({ statement, lines }) {
               </div>
             </div>
           )}
-
-          {/* Credits */}
           {creditLines.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-muted-foreground mb-1.5">Credits</p>
@@ -118,8 +107,6 @@ function StatementCard({ statement, lines }) {
               </div>
             </div>
           )}
-
-          {/* Deductions */}
           {deductionLines.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-muted-foreground mb-1.5">Deductions</p>
@@ -133,8 +120,6 @@ function StatementCard({ statement, lines }) {
               </div>
             </div>
           )}
-
-          {/* Fuel */}
           {fuelLines.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-muted-foreground mb-1.5">Fuel Card</p>
@@ -177,10 +162,7 @@ function DocUploadTab({ driver }) {
   const [error, setError] = useState(null);
   const fileRef = useRef(null);
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0] || null);
-    setError(null);
-  };
+  const handleFileChange = (e) => { setFile(e.target.files[0] || null); setError(null); };
 
   const handleUpload = async () => {
     if (!file) return;
@@ -197,7 +179,6 @@ function DocUploadTab({ driver }) {
       });
       setUploaded(prev => [...prev, { name: file.name, type: docType }]);
       setFile(null);
-      // Notify admin
       try {
         await base44.entities.Notification.create({
           tenant_id: driver.tenant_id,
@@ -208,7 +189,6 @@ function DocUploadTab({ driver }) {
           read: false,
         });
       } catch {}
-      // Reset file input
       const input = document.getElementById('portal-file-input');
       if (input) input.value = '';
     } catch (err) {
@@ -225,64 +205,48 @@ function DocUploadTab({ driver }) {
           <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Upload Document</CardTitle>
         </CardHeader>
         <CardContent className="p-4 space-y-4">
-          <div>
-            <p className="text-xs text-muted-foreground mb-3">Submit documents directly to dispatch.</p>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-medium text-foreground mb-1.5 block">Document Type</label>
-                <Select value={docType} onValueChange={setDocType}>
-                  <SelectTrigger className="h-10 text-sm"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {DOC_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-xs font-medium text-foreground mb-1.5 block">Select File</label>
-                <label
-                  htmlFor="portal-file-input"
-                  className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-border rounded-xl cursor-pointer hover:bg-muted/30 transition-colors"
-                >
-                  {file ? (
-                    <div className="flex items-center gap-2 px-3 text-center">
-                      <FileText className="w-5 h-5 text-primary shrink-0" />
-                      <span className="text-xs text-foreground font-medium truncate max-w-[200px]">{file.name}</span>
-                      <button onClick={(e) => { e.preventDefault(); setFile(null); const input = document.getElementById('portal-file-input'); if (input) input.value = ''; }}>
-                        <X className="w-4 h-4 text-muted-foreground hover:text-destructive" />
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <Upload className="w-6 h-6 text-muted-foreground mb-1" />
-                      <span className="text-xs text-muted-foreground">Tap to select a photo or PDF</span>
-                    </>
-                  )}
-                </label>
-                <input
-                  ref={fileRef}
-                  id="portal-file-input"
-                  type="file"
-                  accept="image/*,application/pdf,.doc,.docx"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-              </div>
-
-              {error && <p className="text-xs text-destructive">{error}</p>}
-
-              <button
-                onClick={handleUpload}
-                disabled={!file || uploading}
-                className="w-full h-10 rounded-lg bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-opacity"
-              >
-                {uploading ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</> : <><Upload className="w-4 h-4" /> Submit Document</>}
-              </button>
+          <p className="text-xs text-muted-foreground">Submit documents directly to dispatch.</p>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs font-medium text-foreground mb-1.5 block">Document Type</label>
+              <Select value={docType} onValueChange={setDocType}>
+                <SelectTrigger className="h-10 text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {DOC_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
+            <div>
+              <label className="text-xs font-medium text-foreground mb-1.5 block">Select File</label>
+              <label htmlFor="portal-file-input" className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-border rounded-xl cursor-pointer hover:bg-muted/30 transition-colors">
+                {file ? (
+                  <div className="flex items-center gap-2 px-3 text-center">
+                    <FileText className="w-5 h-5 text-primary shrink-0" />
+                    <span className="text-xs text-foreground font-medium truncate max-w-[200px]">{file.name}</span>
+                    <button onClick={(e) => { e.preventDefault(); setFile(null); const input = document.getElementById('portal-file-input'); if (input) input.value = ''; }}>
+                      <X className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <Upload className="w-6 h-6 text-muted-foreground mb-1" />
+                    <span className="text-xs text-muted-foreground">Tap to select a photo or PDF</span>
+                  </>
+                )}
+              </label>
+              <input ref={fileRef} id="portal-file-input" type="file" accept="image/*,application/pdf,.doc,.docx" className="hidden" onChange={handleFileChange} />
+            </div>
+            {error && <p className="text-xs text-destructive">{error}</p>}
+            <button
+              onClick={handleUpload}
+              disabled={!file || uploading}
+              className="w-full h-10 rounded-lg bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-opacity"
+            >
+              {uploading ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</> : <><Upload className="w-4 h-4" /> Submit Document</>}
+            </button>
           </div>
         </CardContent>
       </Card>
-
       {uploaded.length > 0 && (
         <Card>
           <CardHeader className="py-3 px-4 border-b">
@@ -307,6 +271,14 @@ function DocUploadTab({ driver }) {
   );
 }
 
+const TABS = [
+  { key: 'dispatch',    label: 'My Loads',          TabIcon: LayoutGrid },
+  { key: 'statements', label: 'My Statements',      TabIcon: Calendar },
+  { key: 'fuel',       label: 'Fuel Transactions',  TabIcon: Fuel },
+  { key: 'upload',     label: 'Upload Docs',        TabIcon: Upload },
+  { key: 'profile',    label: 'My Profile',         TabIcon: User },
+];
+
 export default function DriverPublicPortal() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -329,12 +301,14 @@ export default function DriverPublicPortal() {
       .then(async res => {
         setData(res.data);
         setLoading(false);
-        // Fetch company name from carrier Company entity
         const tenantId = res.data?.driver?.tenant_id;
         if (tenantId) {
           try {
             const companies = await base44.entities.Company.filter({ tenant_id: tenantId }, '-created_date', 10);
-            const company = companies.find(c => c.is_owner_profile) || companies.find(c => c.company_type === 'owner_operator') || companies.find(c => c.company_type === 'carrier') || companies[0];
+            const company = companies.find(c => c.is_owner_profile)
+              || companies.find(c => c.company_type === 'owner_operator')
+              || companies.find(c => c.company_type === 'carrier')
+              || companies[0];
             if (company) setCompanyName(company.company_name || '');
           } catch {}
         }
@@ -359,7 +333,7 @@ export default function DriverPublicPortal() {
         <div className="text-center space-y-3 max-w-sm">
           <AlertCircle className="w-10 h-10 text-destructive mx-auto" />
           <h2 className="font-semibold text-lg">Access Denied</h2>
-          <p className="text-sm text-muted-foreground">{error || 'This link is invalid or has expired. Please contact your dispatcher for a new link.'}</p>
+          <p className="text-sm text-muted-foreground">{error || 'This link is invalid or has expired.'}</p>
         </div>
       </div>
     );
@@ -379,7 +353,6 @@ export default function DriverPublicPortal() {
   const latestStatement = statements[0] || null;
   const totalGross = latestStatement ? (latestStatement.gross_total || 0) : 0;
 
-  // Group statement lines by statement_id
   const linesByStatement = {};
   for (const line of statementLines) {
     if (!linesByStatement[line.statement_id]) linesByStatement[line.statement_id] = [];
@@ -392,11 +365,12 @@ export default function DriverPublicPortal() {
       <div className="h-13 bg-sidebar border-b border-sidebar-border flex items-center justify-between px-4 md:px-6 flex-shrink-0">
         <div className="flex items-center gap-2">
           <Truck className="w-4 h-4 text-sidebar-primary" />
-          <span className="font-bold text-sidebar-primary-foreground text-xs tracking-widest">TRUCKOPS</span>
-          {companyName
-            ? <span className="text-xs font-bold ml-1" style={{ color: '#a855f7' }}>{companyName}</span>
-            : <span className="text-sidebar-foreground/40 text-xs ml-1">· Driver Portal</span>
-          }
+          <div>
+            <span className="font-bold text-sidebar-primary-foreground text-xs tracking-widest">TRUCKOPS</span>
+            {companyName && (
+              <p className="text-[10px] font-bold leading-tight" style={{ color: '#a855f7' }}>{companyName}</p>
+            )}
+          </div>
         </div>
         <div className="text-right">
           <p className="text-xs font-semibold text-sidebar-primary-foreground">{driver.full_name}</p>
@@ -421,19 +395,13 @@ export default function DriverPublicPortal() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-card border-b border-border px-4 md:px-6 flex-shrink-0">
+      <div className="bg-card border-b border-border px-2 md:px-6 flex-shrink-0 overflow-x-auto">
         <div className="flex">
-          {[
-            { key: 'dispatch', label: 'My Loads', TabIcon: LayoutGrid },
-            { key: 'statements', label: 'My Statements', TabIcon: Calendar },
-            { key: 'fuel', label: 'Fuel Transactions', TabIcon: Fuel },
-            { key: 'upload', label: 'Upload Docs', TabIcon: Upload },
-            { key: 'profile', label: 'My Profile', TabIcon: User },
-          ].map(({ key, label, TabIcon }) => (
+          {TABS.map(({ key, label, TabIcon }) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
-              className={`flex items-center gap-1.5 px-4 py-3 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`flex items-center gap-1.5 px-3 md:px-4 py-3 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -446,7 +414,7 @@ export default function DriverPublicPortal() {
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-4 md:p-6">
-        <div className="max-w-2xl mx-auto space-y-3">
+        <div className="max-w-3xl mx-auto space-y-3">
 
           {activeTab === 'dispatch' && (
             <DriverDispatchBoard driverId={driver.id} />
@@ -462,11 +430,7 @@ export default function DriverPublicPortal() {
                 </div>
               ) : (
                 statements.map(stmt => (
-                  <StatementCard
-                    key={stmt.id}
-                    statement={stmt}
-                    lines={linesByStatement[stmt.id] || []}
-                  />
+                  <StatementCard key={stmt.id} statement={stmt} lines={linesByStatement[stmt.id] || []} />
                 ))
               )}
             </>
