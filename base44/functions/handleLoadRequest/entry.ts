@@ -3,12 +3,15 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { action, load_id, driver_id, driver_name, tenant_id } = await req.json();
+    const params = await req.json();
+    console.log('FUNCTION CALLED WITH:', JSON.stringify(params));
+    const { action, load_id, driver_id, driver_name, tenant_id } = params;
 
     console.log('[handleLoadRequest] Received request:', { action, load_id, driver_id, driver_name, tenant_id });
 
     if (!load_id || !tenant_id) {
       console.error('[handleLoadRequest] Missing required parameters');
+      console.log('FUNCTION RETURNING:', JSON.stringify({ error: 'Missing required parameters', status: 400 }));
       return Response.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
@@ -16,6 +19,7 @@ Deno.serve(async (req) => {
       // Validate driver info
       if (!driver_id || !driver_name) {
         console.error('[handleLoadRequest] Missing driver info');
+        console.log('FUNCTION RETURNING:', JSON.stringify({ error: 'Driver information required', status: 400 }));
         return Response.json({ error: 'Driver information required' }, { status: 400 });
       }
 
@@ -101,12 +105,14 @@ Deno.serve(async (req) => {
             requested_at: new Date().toISOString()
           }
         });
-        console.log('[handleLoadRequest] Notification created:', notification.id);
-        return Response.json({ 
+        const result = { 
           success: true, 
           notification_id: notification.id,
           message: 'Request submitted successfully'
-        });
+        };
+        console.log('[handleLoadRequest] Notification created:', notification.id);
+        console.log('FUNCTION RETURNING:', JSON.stringify(result));
+        return Response.json(result);
       } catch (err) {
         console.error('[handleLoadRequest] Failed to create notification:', err.message);
         return Response.json({ error: 'Failed to create notification: ' + err.message }, { status: 500 });
@@ -304,9 +310,13 @@ Deno.serve(async (req) => {
       return Response.json({ success: true });
     }
 
-    return Response.json({ error: 'Invalid action' }, { status: 400 });
+    const result = Response.json({ error: 'Invalid action' }, { status: 400 });
+    console.log('FUNCTION RETURNING:', JSON.stringify({ error: 'Invalid action', status: 400 }));
+    return result;
   } catch (error) {
     console.error('Load request error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    const result = Response.json({ error: error.message }, { status: 500 });
+    console.log('FUNCTION RETURNING:', JSON.stringify({ error: error.message, status: 500 }));
+    return result;
   }
 });
