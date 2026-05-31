@@ -437,10 +437,10 @@ export default function StatementBuilder() {
             : <><CloudOff className="w-3 h-3" /> Unsaved</>
           }
         </span>
-        <div className="w-full md:w-auto md:ml-auto flex gap-1.5 md:gap-2 mt-1 md:mt-0">
+        <div className="w-full md:w-auto md:ml-auto flex mt-1 md:mt-0" style={{ gap: '6px' }}>
           <Button
             variant={form.published ? "default" : "outline"}
-            size="sm" className="h-10 md:h-8 text-xs gap-1 flex-1 md:flex-none px-2 md:px-3"
+            size="sm" className="h-10 md:h-8 text-xs gap-1 md:flex-none overflow-hidden" style={{ flex: '1 1 0', minWidth: 0, padding: '0 8px' }}
             onClick={async () => {
               if (isSavingRef.current) return;
               isSavingRef.current = true;
@@ -463,26 +463,27 @@ export default function StatementBuilder() {
             }}
             disabled={saving}
           >
-            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (form.published ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />)}
-            {form.published ? 'Published' : 'Unpublished'}
+            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" /> : (form.published ? <Eye className="w-3.5 h-3.5 flex-shrink-0" /> : <EyeOff className="w-3.5 h-3.5 flex-shrink-0" />)}
+            <span className="truncate">{form.published ? 'Published' : 'Unpublished'}</span>
           </Button>
-          <Button size="sm" className="h-10 md:h-8 text-xs gap-1 flex-1 md:flex-none" onClick={() => handleSave(false)} disabled={saving}>
-            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            Save
+          <Button size="sm" className="h-10 md:h-8 text-xs gap-1 md:flex-none overflow-hidden" style={{ flex: '1 1 0', minWidth: 0, padding: '0 8px' }} onClick={() => handleSave(false)} disabled={saving}>
+            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" /> : <Save className="w-3.5 h-3.5 flex-shrink-0" />}
+            <span className="truncate">Save</span>
           </Button>
-          <Button size="sm" className="h-10 md:h-8 text-xs gap-1 bg-green-700 hover:bg-green-800 text-white flex-1 md:flex-none" onClick={handlePrint}>
-            <Download className="w-3.5 h-3.5" /> Download PDF
+          <Button size="sm" className="h-10 md:h-8 text-xs gap-1 bg-green-700 hover:bg-green-800 text-white md:flex-none overflow-hidden" style={{ flex: '1 1 0', minWidth: 0, padding: '0 8px' }} onClick={handlePrint}>
+            <Download className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="truncate">Download PDF</span>
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-2 md:gap-5">
         <div className="xl:col-span-3 space-y-5">
 
           {/* Header */}
           <Card>
             <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 border-b"><CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Statement Header</CardTitle></CardHeader>
-            <CardContent className="px-3 pb-3 md:px-5 md:pb-5 grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
+            <CardContent className="px-3 pb-3 md:px-5 md:pb-5 grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-4">
               <div>
                 <Label className="text-xs">Driver</Label>
                 <Select value={form.driver_id || ''} onValueChange={(v) => {
@@ -496,22 +497,22 @@ export default function StatementBuilder() {
                     return updates;
                   });
                 }}>
-                  <SelectTrigger className="h-8 text-xs mt-1"><SelectValue placeholder="Select driver" /></SelectTrigger>
+                  <SelectTrigger className="h-9 md:h-8 text-xs mt-1"><SelectValue placeholder="Select driver" /></SelectTrigger>
                   <SelectContent>{drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
                 <Label className="text-xs">Truck</Label>
                 <Select value={form.truck_id || ''} onValueChange={(v) => { const t = trucks.find(t => t.id === v); set('truck_id', v); set('truck_number', t?.unit_number || ''); }}>
-                  <SelectTrigger className="h-8 text-xs mt-1"><SelectValue placeholder="Select truck" /></SelectTrigger>
+                  <SelectTrigger className="h-9 md:h-8 text-xs mt-1"><SelectValue placeholder="Select truck" /></SelectTrigger>
                   <SelectContent>{trucks.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div className="col-span-2 sm:col-span-1">
+              <div className="col-span-2">
                 <Label className="text-xs">Due Date ({DAY_NAMES[statementSettings.dueDay]})</Label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="h-8 text-xs mt-1 w-full justify-start font-normal">
+                    <Button variant="outline" className="h-9 md:h-8 text-xs mt-1 w-full justify-start font-normal">
                       <CalendarIcon className="mr-2 h-3.5 w-3.5" />
                       {form.statement_date ? format(parse(form.statement_date, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy') : 'Select Tuesday Due Date'}
                     </Button>
@@ -532,26 +533,26 @@ export default function StatementBuilder() {
               </div>
               <div>
                 <Label className="text-xs">Period Start ({DAY_NAMES[statementSettings.weekStart]})</Label>
-                <Input type="text" value={form.period_start ? `${format(parse(form.period_start, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy')} (${DAY_NAMES[statementSettings.weekStart].slice(0,3)})` : ''} readOnly className="h-8 text-xs mt-1 bg-muted" />
+                <Input type="text" value={form.period_start ? `${format(parse(form.period_start, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy')} (${DAY_NAMES[statementSettings.weekStart].slice(0,3)})` : ''} readOnly className="h-9 md:h-8 text-xs mt-1 bg-muted" />
               </div>
               <div>
                 <Label className="text-xs">Period End ({DAY_NAMES[(statementSettings.weekStart + 6) % 7]})</Label>
-                <Input type="text" value={form.period_end ? `${format(parse(form.period_end, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy')} (${DAY_NAMES[(statementSettings.weekStart + 6) % 7].slice(0,3)})` : ''} readOnly className="h-8 text-xs mt-1 bg-muted" />
+                <Input type="text" value={form.period_end ? `${format(parse(form.period_end, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy')} (${DAY_NAMES[(statementSettings.weekStart + 6) % 7].slice(0,3)})` : ''} readOnly className="h-9 md:h-8 text-xs mt-1 bg-muted" />
               </div>
             </CardContent>
           </Card>
 
           {/* Settlement Items */}
           <Card>
-            <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 flex flex-wrap md:flex-nowrap items-center justify-between border-b gap-1.5 md:gap-0">
-              <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Settlement Items ({tripLines.length})</CardTitle>
-              <div className="flex gap-2 flex-nowrap">
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1 flex-1" onClick={handleAutoLoadWeek} disabled={!form.driver_id || !form.period_start || autoLoading} title="Auto-add all loads due this week">
-                  {autoLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />} Auto Week
+            <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 flex flex-nowrap items-center justify-between border-b" style={{ gap: '6px' }}>
+              <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground shrink-0">Settlement Items ({tripLines.length})</CardTitle>
+              <div className="flex flex-nowrap shrink-0" style={{ gap: '6px' }}>
+                <Button variant="outline" size="sm" className="h-7 gap-1 shrink" style={{ fontSize: '11px', padding: '0 8px', minWidth: 0 }} onClick={handleAutoLoadWeek} disabled={!form.driver_id || !form.period_start || autoLoading} title="Auto-add all loads due this week">
+                  {autoLoading ? <Loader2 className="w-3 h-3 animate-spin flex-shrink-0" /> : <Zap className="w-3 h-3 flex-shrink-0" />} <span className="truncate">Auto Week</span>
                 </Button>
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1 flex-1" onClick={() => { if (!form.driver_id) { toast.error('Select a driver first'); return; } setLoadPickerOpen(true); }} disabled={!form.driver_id}>
-                   <Truck className="w-3 h-3" /> Pick Loads
-                 </Button>
+                <Button variant="outline" size="sm" className="h-7 gap-1 shrink" style={{ fontSize: '11px', padding: '0 8px', minWidth: 0 }} onClick={() => { if (!form.driver_id) { toast.error('Select a driver first'); return; } setLoadPickerOpen(true); }} disabled={!form.driver_id}>
+                  <Truck className="w-3 h-3 flex-shrink-0" /> <span className="truncate">Pick Loads</span>
+                </Button>
               </div>
             </CardHeader>
             <CardContent className="px-3 pb-3 md:px-5 md:pb-5">
@@ -564,21 +565,21 @@ export default function StatementBuilder() {
 
           {/* Deductions */}
           <Card>
-            <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 flex flex-wrap md:flex-nowrap items-center justify-between border-b gap-1.5 md:gap-0">
-              <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Deductions ({deductionLines.length})</CardTitle>
-              <div className="flex gap-1.5 flex-wrap justify-end">
+            <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 flex flex-nowrap items-center justify-between border-b" style={{ gap: '6px' }}>
+              <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground shrink-0">Deductions ({deductionLines.length})</CardTitle>
+              <div className="flex flex-nowrap shrink-0" style={{ gap: '6px' }}>
                 {defaultDeductions
                   .filter(d => d.applies_to === 'all' || d.applies_to_driver_id === form.driver_id)
                   .map(def => (
-                    <Button key={def.id} variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => addDefaultDeduction(def)}>
-                      <Plus className="w-3 h-3" /> {def.deduction_name}{def.default_amount ? ` $${Number(def.default_amount).toLocaleString()}` : ''}
+                    <Button key={def.id} variant="outline" size="sm" className="h-7 gap-1 shrink" style={{ fontSize: '11px', padding: '0 8px', minWidth: 0 }} onClick={() => addDefaultDeduction(def)}>
+                      <Plus className="w-3 h-3 flex-shrink-0" /> <span className="truncate">{def.deduction_name}{def.default_amount ? ` $${Number(def.default_amount).toLocaleString()}` : ''}</span>
                     </Button>
                   ))
                 }
                 {defaultDeductions.length === 0 && (
-                  <span className="text-[10px] text-muted-foreground self-center">No defaults configured — go to Statement Settings on the Statements page</span>
+                  <span className="text-[10px] text-muted-foreground self-center hidden md:inline">No defaults configured — go to Statement Settings on the Statements page</span>
                 )}
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addCustomDeduction}><Plus className="w-3 h-3" /> Custom</Button>
+                <Button variant="outline" size="sm" className="h-7 gap-1 shrink-0" style={{ fontSize: '11px', padding: '0 8px' }} onClick={addCustomDeduction}><Plus className="w-3 h-3" /> Custom</Button>
               </div>
             </CardHeader>
             <CardContent className="px-3 pb-3 md:px-5 md:pb-5">
@@ -591,13 +592,13 @@ export default function StatementBuilder() {
 
           {/* Fuel */}
           <Card>
-            <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 flex flex-wrap md:flex-nowrap items-center justify-between border-b gap-1.5 md:gap-0">
-              <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Fuel ({fuelLines.length})</CardTitle>
-              <div className="flex gap-1">
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={loadDriverFuel} disabled={loadingFuel || !form.driver_id}>
-                  {loadingFuel ? <Loader2 className="w-3 h-3 animate-spin" /> : <Fuel className="w-3 h-3" />} Load Fuel
+            <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 flex flex-nowrap items-center justify-between border-b" style={{ gap: '6px' }}>
+              <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground shrink-0">Fuel ({fuelLines.length})</CardTitle>
+              <div className="flex flex-nowrap shrink-0" style={{ gap: '6px' }}>
+                <Button variant="outline" size="sm" className="h-7 gap-1 shrink" style={{ fontSize: '11px', padding: '0 8px', minWidth: 0 }} onClick={loadDriverFuel} disabled={loadingFuel || !form.driver_id}>
+                  {loadingFuel ? <Loader2 className="w-3 h-3 animate-spin flex-shrink-0" /> : <Fuel className="w-3 h-3 flex-shrink-0" />} <span className="truncate">Load Fuel</span>
                 </Button>
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addCustomFuel}><Plus className="w-3 h-3" /> Add</Button>
+                <Button variant="outline" size="sm" className="h-7 gap-1 shrink-0" style={{ fontSize: '11px', padding: '0 8px' }} onClick={addCustomFuel}><Plus className="w-3 h-3" /> Add</Button>
               </div>
             </CardHeader>
             <CardContent className="px-3 pb-3 md:px-5 md:pb-5">
@@ -630,8 +631,8 @@ export default function StatementBuilder() {
               <div className="flex justify-between text-xs"><span className="text-muted-foreground">Deductions</span><span className="font-medium text-red-600">-${(form.deductions_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
               <div className="flex justify-between text-xs"><span className="text-muted-foreground">Fuel</span><span className="font-medium text-orange-600">-${(form.fuel_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
               <div className="border-t pt-2 flex justify-between items-center">
-                <span className="font-semibold text-sm">Net Pay</span>
-                <span className="text-2xl font-bold text-primary">${(form.final_check_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                <span className="font-bold text-primary" style={{ fontSize: '14px' }}>Net Pay</span>
+                <span className="font-bold text-primary" style={{ fontSize: '20px' }}>${(form.final_check_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="pt-1 space-y-2">
                 {form.published
