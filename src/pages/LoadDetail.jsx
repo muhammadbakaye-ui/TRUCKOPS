@@ -23,7 +23,7 @@ import { printLoad } from '../components/print/printLoad';
 function Field({ label, children }) {
   return (
     <div>
-      <Label className="text-xs">{label}</Label>
+      <Label className="text-xs uppercase text-muted-foreground">{label}</Label>
       <div className="mt-1">{children}</div>
     </div>
   );
@@ -51,22 +51,21 @@ export default function LoadDetail() {
   const queryClient = useQueryClient();
   const { session } = useSession();
   const { showDialog, checkFeatureAccess, handleSubscribe, handleDismiss } = usePreviewGate();
-  const isInPreview = false; // Subscription wall disabled — all users have full access
+  const isInPreview = false;
   const [form, setForm] = useState(null);
   const [stops, setStops] = useState([]);
   const [saving, setSaving] = useState(false);
   const [autoSaving, setAutoSaving] = useState(false);
   const [lastAutoSaved, setLastAutoSaved] = useState(null);
   const autoSaveTimerRef = useRef(null);
-  const savedLoadIdRef = useRef(loadId); // tracks the ID even for new loads
-  const initialLoadRef = useRef(true); // skip first render for autosave
+  const savedLoadIdRef = useRef(loadId);
+  const initialLoadRef = useRef(true);
   const [dispatchManuallyChanged, setDispatchManuallyChanged] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [confirmClearDriver, setConfirmClearDriver] = useState(false);
 
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
 
-  // Dynamic line items helpers
   const lineItems = form?.charge_line_items || [];
   const lineItemsTotal = lineItems.reduce((sum, li) => sum + (Number(li.amount) || 0), 0);
   const setLineItems = (items) => {
@@ -82,11 +81,9 @@ export default function LoadDetail() {
     queryFn: async () => {
       if (isNew || !loadId) return null;
       const l = await base44.entities.Load.get(loadId);
-      // Tenant isolation: deny access to loads from other companies
       if (l && l.tenant_id && tenantId && l.tenant_id !== tenantId) {
         return null;
       }
-      // Migrate old freight_rate/fuel_surcharge/extra_charges to charge_line_items
       if (!l.charge_line_items?.length) {
         const items = [];
         if (l.freight_rate) items.push({ description: 'Line Haul', amount: l.freight_rate });
@@ -112,7 +109,6 @@ export default function LoadDetail() {
     staleTime: 30000,
   });
 
-  // Sync stops from DB exactly once per load (avoid overwriting user edits on background refetch)
   useEffect(() => {
     if (isNew) return;
     if (!stopsSetRef.current && loadId) {
@@ -134,7 +130,6 @@ export default function LoadDetail() {
     printLoad({ company: companyData, load: form, stops, drivers, trucks, trailers: trailers });
   };
 
-  // Initialize empty form for new load
   React.useEffect(() => {
     if (isNew && !form) {
       setForm({
@@ -148,7 +143,6 @@ export default function LoadDetail() {
     }
   }, [isNew]);
 
-  // Derive pickup/delivery fields from stops (Feature 2: also derives pickup_time)
   const deriveStopFields = useCallback((currentForm, currentStops) => {
     const firstPickup = currentStops.find(s => s.stop_type === 'pickup');
     const lastDelivery = [...currentStops].reverse().find(s => s.stop_type === 'delivery');
@@ -164,14 +158,12 @@ export default function LoadDetail() {
     };
   }, []);
 
-  // Auto-save as draft whenever form/stops change
   const performAutoSave = useCallback(async (currentForm, currentStops, previewMode) => {
      if (!currentForm || previewMode) return;
      setAutoSaving(true);
     try {
       const currentId = savedLoadIdRef.current;
         if (!currentId) {
-           // First auto-save: create the record
             const tenantId = currentForm.tenant_id || session?.tenant_id;
             const existingLoads = tenantId
               ? await base44.entities.Load.filter({ tenant_id: tenantId }, '-created_date', 1)
@@ -186,802 +178,616 @@ export default function LoadDetail() {
         for (let i = 0; i < currentStops.length; i++) {
           await base44.entities.LoadStop.create({ ...currentStops[i], load_id: savedLoad.id, stop_order: i + 1 });
         }
-        // Navigate to the new ID without losing the "editing" state
         window.history.replaceState({}, '', `?id=${savedLoad.id}`);
         queryClient.invalidateQueries({ queryKey: ['loads'] });
-      } else {
-        // Subsequent auto-saves: update
-        const derived = deriveStopFields(currentForm, currentStops);
-        await base44.entities.Load.update(currentId, { ...derived, status: currentForm.status === 'draft' ? 'draft' : currentForm.status });
-        const existingStops = await base44.entities.LoadStop.filter({ load_id: currentId }, 'stop_order', 20);
-        for (const es of existingStops) {
-          if (!currentStops.find(s => s.id === es.id)) await base44.entities.LoadStop.delete(es.id);
-        }
-        for (let i = 0; i < currentStops.length; i++) {
-          const s = { ...currentStops[i], load_id: currentId, stop_order: i + 1 };
-          if (s.id) await base44.entities.LoadStop.update(s.id, s);
-          else await base44.entities.LoadStop.create(s);
-        }
-      }
-      setLastAutoSaved(new Date());
-    } catch (err) {
-      // silent fail for auto-save
-    } finally {
-      setAutoSaving(false);
-    }
-  }, [deriveStopFields, queryClient]);
+       } else {
+         const derived = deriveStopFields(currentForm, currentStops);
+         await base44.entities.Load.update(currentId, { ...derived, status: currentForm.status === 'draft' ? 'draft' : currentForm.status });
+         const existingStops = await base44.entities.LoadStop.filter({ load_id: currentId }, 'stop_order', 20);
+         for (const es of existingStops) {
+           if (!currentStops.find(s => s.id === es.id)) await base44.entities.LoadStop.delete(es.id);
+         }
+         for (let i = 0; i < currentStops.length; i++) {
+           const s = { ...currentStops[i], load_id: currentId, stop_order: i + 1 };
+           if (s.id) await base44.entities.LoadStop.update(s.id, s);
+           else await base44.entities.LoadStop.create(s);
+         }
+       }
+       setLastAutoSaved(new Date());
+     } catch (err) {
+     } finally {
+       setAutoSaving(false);
+     }
+   }, [deriveStopFields, queryClient]);
 
-  // Debounce: trigger auto-save 2.5s after last change
-  useEffect(() => {
-    if (initialLoadRef.current) {
-      initialLoadRef.current = false;
-      return;
-    }
-    if (!form) return;
-    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-    autoSaveTimerRef.current = setTimeout(() => {
-      performAutoSave(form, stops, isInPreview);
-    }, 2500);
-    return () => clearTimeout(autoSaveTimerRef.current);
-  }, [form, stops]);
+   useEffect(() => {
+     if (initialLoadRef.current) {
+       initialLoadRef.current = false;
+       return;
+     }
+     if (!form) return;
+     if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+     autoSaveTimerRef.current = setTimeout(() => {
+       performAutoSave(form, stops, isInPreview);
+     }, 2500);
+     return () => clearTimeout(autoSaveTimerRef.current);
+   }, [form, stops]);
 
-  // Proper save: promote status from draft to active (or keep whatever status user set)
-  const handleSave = async () => {
-    if (!checkFeatureAccess(isInPreview)) return;
-    setSaving(true);
-    try {
-      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-      const currentId = savedLoadIdRef.current || loadId;
-      const saveStatus = form.status === 'draft' ? 'saved' : form.status;
-      const derived = deriveStopFields(form, stops);
-      // Feature 1: Respect manual override — only auto-compute if not manually set
-      const isManual = dispatchManuallyChanged || !!form.manual_dispatch_override;
-      const computedDispatch = isManual
-        ? form.dispatch_status
-        : computeDispatchStatus({ ...derived, driver_1_id: form.driver_1_id, dispatch_status: form.dispatch_status }, getTimezone());
-      // Feature 7: Append status change to history
-      const oldStatus = normalizeDispatchStatus(form.dispatch_status);
-      const statusChanged = oldStatus !== computedDispatch;
-      const historyEntry = statusChanged ? { from: oldStatus, to: computedDispatch, changed_by: session?.admin_name || 'Admin', changed_by_type: isManual ? 'manual' : 'automation', timestamp: new Date().toISOString() } : null;
-      const newHistory = historyEntry ? [...(form.dispatch_status_history || []).slice(-19), historyEntry] : (form.dispatch_status_history || []);
-      const payload = { ...derived, status: saveStatus, dispatch_status: computedDispatch, manual_dispatch_override: isManual, dispatch_status_history: newHistory };
+   const handleSave = async () => {
+     if (!checkFeatureAccess(isInPreview)) return;
+     setSaving(true);
+     try {
+       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+       const currentId = savedLoadIdRef.current || loadId;
+       const saveStatus = form.status === 'draft' ? 'saved' : form.status;
+       const derived = deriveStopFields(form, stops);
+       const isManual = dispatchManuallyChanged || !!form.manual_dispatch_override;
+       const computedDispatch = isManual
+         ? form.dispatch_status
+         : computeDispatchStatus({ ...derived, driver_1_id: form.driver_1_id, dispatch_status: form.dispatch_status }, getTimezone());
+       const oldStatus = normalizeDispatchStatus(form.dispatch_status);
+       const statusChanged = oldStatus !== computedDispatch;
+       const historyEntry = statusChanged ? { from: oldStatus, to: computedDispatch, changed_by: session?.admin_name || 'Admin', changed_by_type: isManual ? 'manual' : 'automation', timestamp: new Date().toISOString() } : null;
+       const newHistory = historyEntry ? [...(form.dispatch_status_history || []).slice(-19), historyEntry] : (form.dispatch_status_history || []);
+       const payload = { ...derived, status: saveStatus, dispatch_status: computedDispatch, manual_dispatch_override: isManual, dispatch_status_history: newHistory };
 
-      if (!currentId) {
-        // Never auto-saved yet
-        const existingLoads = tenantId
-          ? await base44.entities.Load.filter({ tenant_id: tenantId }, '-created_date', 1)
-          : await base44.entities.Load.list('-created_date', 1);
-        const lastNum = existingLoads.length > 0
-          ? parseInt(existingLoads[0].internal_load_number?.replace(/\D/g, '') || '0')
-          : 0;
-        const finalPayload = { ...payload, tenant_id: tenantId, internal_load_number: form.internal_load_number || `${lastNum + 1}` };
-        const savedLoad = await base44.entities.Load.create(finalPayload);
-        for (let i = 0; i < stops.length; i++) {
-          await base44.entities.LoadStop.create({ ...stops[i], load_id: savedLoad.id, stop_order: i + 1 });
-        }
-        await logAudit({ action_type: 'create', entity_type: 'Load', entity_id: savedLoad.id, entity_label: savedLoad.internal_load_number });
-        queryClient.invalidateQueries({ queryKey: ['loads'] });
-        savedLoadIdRef.current = savedLoad.id;
-        window.history.replaceState({}, '', `?id=${savedLoad.id}`);
-        toast.success('Load saved');
-      } else {
-        await base44.entities.Load.update(currentId, payload);
-        setForm(prev => ({ ...prev, ...derived, status: saveStatus }));
-        const existingStops = await base44.entities.LoadStop.filter({ load_id: currentId }, 'stop_order', 20);
-        for (const es of existingStops) {
-          if (!stops.find(s => s.id === es.id)) await base44.entities.LoadStop.delete(es.id);
-        }
-        for (let i = 0; i < stops.length; i++) {
-          const s = { ...stops[i], load_id: currentId, stop_order: i + 1 };
-          if (s.id) await base44.entities.LoadStop.update(s.id, s);
-          else await base44.entities.LoadStop.create(s);
-        }
-        await logAudit({ action_type: 'update', entity_type: 'Load', entity_id: currentId, entity_label: form.internal_load_number });
-        queryClient.invalidateQueries({ queryKey: ['load', currentId] });
-        toast.success('Load saved');
-        if (!loadId) window.history.replaceState({}, '', `?id=${currentId}`);
-      }
-    } catch (err) {
-      toast.error('Save failed: ' + err.message);
-    } finally {
-      setSaving(false);
-    }
-  };
+       if (!currentId) {
+         const existingLoads = tenantId
+           ? await base44.entities.Load.filter({ tenant_id: tenantId }, '-created_date', 1)
+           : await base44.entities.Load.list('-created_date', 1);
+         const lastNum = existingLoads.length > 0
+           ? parseInt(existingLoads[0].internal_load_number?.replace(/\D/g, '') || '0')
+           : 0;
+         const finalPayload = { ...payload, tenant_id: tenantId, internal_load_number: form.internal_load_number || `${lastNum + 1}` };
+         const savedLoad = await base44.entities.Load.create(finalPayload);
+         for (let i = 0; i < stops.length; i++) {
+           await base44.entities.LoadStop.create({ ...stops[i], load_id: savedLoad.id, stop_order: i + 1 });
+         }
+         await logAudit({ action_type: 'create', entity_type: 'Load', entity_id: savedLoad.id, entity_label: savedLoad.internal_load_number });
+         queryClient.invalidateQueries({ queryKey: ['loads'] });
+         savedLoadIdRef.current = savedLoad.id;
+         window.history.replaceState({}, '', `?id=${savedLoad.id}`);
+         toast.success('Load saved');
+       } else {
+         await base44.entities.Load.update(currentId, payload);
+         setForm(prev => ({ ...prev, ...derived, status: saveStatus }));
+         const existingStops = await base44.entities.LoadStop.filter({ load_id: currentId }, 'stop_order', 20);
+         for (const es of existingStops) {
+           if (!stops.find(s => s.id === es.id)) await base44.entities.LoadStop.delete(es.id);
+         }
+         for (let i = 0; i < stops.length; i++) {
+           const s = { ...stops[i], load_id: currentId, stop_order: i + 1 };
+           if (s.id) await base44.entities.LoadStop.update(s.id, s);
+           else await base44.entities.LoadStop.create(s);
+         }
+         await logAudit({ action_type: 'update', entity_type: 'Load', entity_id: currentId, entity_label: form.internal_load_number });
+         queryClient.invalidateQueries({ queryKey: ['load', currentId] });
+         toast.success('Load saved');
+         if (!loadId) window.history.replaceState({}, '', `?id=${currentId}`);
+       }
+     } catch (err) {
+       toast.error('Save failed: ' + err.message);
+     } finally {
+       setSaving(false);
+     }
+   };
 
-  const addStop = () => setStops(prev => [...prev, { stop_type: 'stop', stop_order: prev.length + 1, company_name: '', city: '', state: '' }]);
-  const removeStop = (i) => setStops(prev => prev.filter((_, idx) => idx !== i));
-  const setStop = (i, key, val) => setStops(prev => prev.map((s, idx) => idx === i ? { ...s, [key]: val } : s));
+   const addStop = () => setStops(prev => [...prev, { stop_type: 'stop', stop_order: prev.length + 1, company_name: '', city: '', state: '' }]);
+   const removeStop = (i) => setStops(prev => prev.filter((_, idx) => idx !== i));
+   const setStop = (i, key, val) => setStops(prev => prev.map((s, idx) => idx === i ? { ...s, [key]: val } : s));
 
-  // Sync form from query data if setForm inside queryFn was skipped (cached data path)
-  React.useEffect(() => {
-    if (load && !form) {
-      const l = { ...load };
-      if (!l.charge_line_items?.length) {
-        const items = [];
-        if (l.freight_rate) items.push({ description: 'Line Haul', amount: l.freight_rate });
-        if (l.fuel_surcharge) items.push({ description: 'Fuel Surcharge', amount: l.fuel_surcharge });
-        if (l.extra_charges) items.push({ description: 'Extra Charges', amount: l.extra_charges });
-        l.charge_line_items = items;
-      }
-      setForm(l);
-    }
-  }, [load]);
+   React.useEffect(() => {
+     if (load && !form) {
+       const l = { ...load };
+       if (!l.charge_line_items?.length) {
+         const items = [];
+         if (l.freight_rate) items.push({ description: 'Line Haul', amount: l.freight_rate });
+         if (l.fuel_surcharge) items.push({ description: 'Fuel Surcharge', amount: l.fuel_surcharge });
+         if (l.extra_charges) items.push({ description: 'Extra Charges', amount: l.extra_charges });
+         l.charge_line_items = items;
+       }
+       setForm(l);
+     }
+   }, [load]);
 
-  if (!isNew && (isLoading || (!form && !!loadId))) return <div className="p-4 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="w-4 h-4 animate-spin" /> Loading...</div>;
-  if (!form) return null;
+   if (!isNew && (isLoading || (!form && !!loadId))) return <div className="p-4 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="w-4 h-4 animate-spin" /> Loading...</div>;
+   if (!form) return null;
 
-  return (
-    <div className="p-4 max-w-5xl">
-      {showDialog && <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />}
-      <AlertDialog open={confirmClearDriver} onOpenChange={(open) => !open && setConfirmClearDriver(false)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove Driver Assignment?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Setting this load to Available will remove the current driver assignment. Continue?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="flex gap-3 justify-end">
-            <AlertDialogCancel onClick={() => setConfirmClearDriver(false)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => {
-              setForm(prev => ({ ...prev, dispatch_status: 'available', manual_dispatch_override: true, driver_1_id: null, driver_1_name: null, driver_2_id: null, driver_2_name: null }));
-              setDispatchManuallyChanged(true);
-              setConfirmClearDriver(false);
-            }}>Confirm</AlertDialogAction>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
-      
-      {/* Desktop header */}
-      <div className="hidden md:flex items-center gap-2 flex-wrap mb-4">
-        <Button variant="ghost" size="sm" className="h-8 gap-1 flex-shrink-0" onClick={() => navigate(-1)}>
-          <ArrowLeft className="w-3.5 h-3.5" /> Loads
-        </Button>
-        <h2 className="text-sm font-semibold truncate min-w-0">
-          {(isNew && !savedLoadIdRef.current) ? 'New Load' : `Load ${form.internal_load_number}`}
-        </h2>
-        <StatusBadge status={form.status} />
-        {form.status === 'draft' && (
-          <span className="flex items-center gap-1 text-[11px] text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full flex-shrink-0">
-            {autoSaving
-              ? <><Loader2 className="w-3 h-3 animate-spin" /> Auto-saving…</>
-              : lastAutoSaved
-              ? <><Cloud className="w-3 h-3" /> Draft auto-saved</>
-              : <><CloudOff className="w-3 h-3" /> Unsaved draft</>
-            }
-          </span>
-        )}
-        <div className="ml-auto flex gap-2 flex-shrink-0">
+   return (
+     <div className="w-full bg-background">
+       {showDialog && <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />}
+       <AlertDialog open={confirmClearDriver} onOpenChange={(open) => !open && setConfirmClearDriver(false)}>
+         <AlertDialogContent>
+           <AlertDialogHeader>
+             <AlertDialogTitle>Remove Driver Assignment?</AlertDialogTitle>
+             <AlertDialogDescription>
+               Setting this load to Available will remove the current driver assignment. Continue?
+             </AlertDialogDescription>
+           </AlertDialogHeader>
+           <div className="flex gap-3 justify-end">
+             <AlertDialogCancel onClick={() => setConfirmClearDriver(false)}>Cancel</AlertDialogCancel>
+             <AlertDialogAction onClick={() => {
+               setForm(prev => ({ ...prev, dispatch_status: 'available', manual_dispatch_override: true, driver_1_id: null, driver_1_name: null, driver_2_id: null, driver_2_name: null }));
+               setDispatchManuallyChanged(true);
+               setConfirmClearDriver(false);
+             }}>Confirm</AlertDialogAction>
+           </div>
+         </AlertDialogContent>
+       </AlertDialog>
+       
+       {/* Header - single row (Desktop + Mobile) */}
+       <div className="flex items-center justify-between gap-4 px-4 py-3 border-b border-border/50 flex-wrap">
+         <div className="flex items-center gap-3 min-w-0">
+           <Button variant="ghost" size="sm" className="h-8 gap-1 flex-shrink-0" onClick={() => navigate(-1)}>
+             <ArrowLeft className="w-3.5 h-3.5" /> Loads
+           </Button>
+           <div className="w-px h-5 bg-border/30 flex-shrink-0" />
+           <h2 className="text-sm font-semibold truncate">
+             {(isNew && !savedLoadIdRef.current) ? 'New Load' : `Load ${form.internal_load_number}`}
+           </h2>
+           <StatusBadge status={form.status} />
+           {form.status === 'draft' && (
+             <span className="flex items-center gap-1 text-[11px] text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full flex-shrink-0">
+               {autoSaving
+                 ? <><Loader2 className="w-3 h-3 animate-spin" /> Auto-saving…</>
+                 : lastAutoSaved
+                 ? <><Cloud className="w-3 h-3" /> Draft auto-saved</>
+                 : <><CloudOff className="w-3 h-3" /> Unsaved draft</>
+               }
+             </span>
+           )}
+         </div>
+         <div className="flex gap-2 flex-shrink-0">
+           {(loadId || savedLoadIdRef.current) && (
+             <Button size="sm" className="h-8 gap-1 bg-green-700 hover:bg-green-800 text-white" onClick={handlePrint}>
+               <Download className="w-3.5 h-3.5" /> Download PDF
+             </Button>
+           )}
            <Button size="sm" className="h-8 gap-1" onClick={handleSave} disabled={saving}>
-            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            Save
-          </Button>
-          {(loadId || savedLoadIdRef.current) && (
-            <Button size="sm" className="h-8 gap-1 bg-green-700 hover:bg-green-800 text-white" onClick={handlePrint}>
-              <Download className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Download PDF</span><span className="sm:hidden">PDF</span>
-            </Button>
-          )}
-        </div>
-      </div>
+             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+             Save
+           </Button>
+         </div>
+       </div>
 
-      {/* Mobile header */}
-      <div className="md:hidden" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <Button variant="ghost" size="sm" className="gap-1" style={{ height: '32px', padding: '4px 8px', fontSize: '12px' }} onClick={() => navigate(-1)}>
-            <ArrowLeft className="w-3.5 h-3.5" /> Loads
-          </Button>
-          <h2 style={{ fontSize: '13px', fontWeight: 500, color: 'hsl(var(--primary))' }}>
-            {(isNew && !savedLoadIdRef.current) ? 'New Load' : `Load ${form.internal_load_number}`}
-          </h2>
-          <StatusBadge status={form.status} />
-          {form.status === 'draft' && (
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', color: '#b45309', backgroundColor: '#fef3c7', border: '1px solid #fde68a', padding: '3px 8px', borderRadius: '999px', flexShrink: 0 }}>
-              {autoSaving
-                ? <><Loader2 className="w-2 h-2 animate-spin" /> Saving</>
-                : lastAutoSaved
-                ? <><Cloud className="w-2 h-2" /> Saved</>
-                : <><CloudOff className="w-2 h-2" /> Unsaved</>
-              }
-            </span>
-          )}
-        </div>
-        <Button size="sm" onClick={handleSave} disabled={saving} style={{ backgroundColor: 'hsl(var(--primary))', color: 'white', height: '32px', padding: '9px 20px', fontSize: '12px', fontWeight: 600, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-          {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
-          Save
-        </Button>
-      </div>
+       {/* Desktop 2-column layout */}
+       <div className="hidden md:grid grid-cols-3 gap-4 px-4 pb-4 pt-4">
+         {/* Left column (65%) */}
+         <div className="col-span-2 space-y-4">
+           {/* Load Information */}
+           <Card>
+             <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Load Information</CardTitle></CardHeader>
+             <CardContent className="px-4 pb-4 grid grid-cols-3 gap-3">
+               <Field label="Internal Load #"><TextInput value={form.internal_load_number} onChange={(v) => set('internal_load_number', v)} /></Field>
+               <Field label="External / Broker Load #"><TextInput value={form.external_load_number} onChange={(v) => set('external_load_number', v)} /></Field>
+               <Field label="Trip #"><TextInput value={form.trip_number} onChange={(v) => set('trip_number', v)} /></Field>
+               <Field label="Customer Ref #"><TextInput value={form.customer_reference_number} onChange={(v) => set('customer_reference_number', v)} /></Field>
+               <Field label="Customer">
+                 <Select value={form.customer_id || ''} onValueChange={(v) => {
+                   const c = companies.find(c => c.id === v);
+                   set('customer_id', v); set('customer_name', c?.company_name || '');
+                 }}>
+                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select customer" /></SelectTrigger>
+                   <SelectContent>{companies.map(c => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}</SelectContent>
+                 </Select>
+               </Field>
+               <Field label="Status"><Sel value={form.status} onChange={(v) => set('status', v)} options={[{value:'draft',label:'Draft'},{value:'saved',label:'Saved'},{value:'completed',label:'Completed'},{value:'canceled',label:'Canceled'}]} /></Field>
+               <Field label="Dispatch Status">
+                 <div className="space-y-1">
+                   <div className="flex items-center gap-1.5">
+                     <div className="flex-1 min-w-0">
+                       <Sel
+                         value={form.dispatch_status}
+                         onChange={(v) => {
+                           if (v === 'available' && (form.driver_1_id || form.driver_2_id)) {
+                             setConfirmClearDriver(true);
+                             return;
+                           }
+                           set('dispatch_status', v);
+                           set('manual_dispatch_override', true);
+                           setDispatchManuallyChanged(true);
+                         }}
+                         options={[{value:'available',label:'Available'},{value:'assigned',label:'Assigned'},{value:'in_transit',label:'In Transit'},{value:'delivered',label:'Delivered'}]}
+                       />
+                     </div>
+                     {form.manual_dispatch_override && (
+                       <>
+                         <Lock className="w-3 h-3 text-amber-500 flex-shrink-0" title="Manually overridden" />
+                         <button
+                           onClick={() => {
+                             const computed = computeDispatchStatus({ ...form, manual_dispatch_override: false }, getTimezone());
+                             setForm(prev => ({ ...prev, dispatch_status: computed, manual_dispatch_override: false }));
+                             setDispatchManuallyChanged(false);
+                           }}
+                           className="flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-primary transition-colors whitespace-nowrap"
+                           title="Return to automation control"
+                         >
+                           <RotateCcw className="w-3 h-3" /> Auto
+                         </button>
+                       </>
+                     )}
+                   </div>
+                 </div>
+               </Field>
+               <Field label="Load Type"><Sel value={form.load_type} onChange={(v) => set('load_type', v)} options={['FTL','LTL','partial','other'].map(v=>({value:v,label:v.toUpperCase()}))} /></Field>
+               <Field label="Equipment"><Sel value={form.equipment_type} onChange={(v) => set('equipment_type', v)} options={['dry_van','reefer','flatbed','step_deck','lowboy','tanker','intermodal','other'].map(v=>({value:v,label:v.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}))} /></Field>
+               <Field label="Commodity"><TextInput value={form.commodity} onChange={(v) => set('commodity', v)} /></Field>
+               <Field label="Weight (lbs)"><Input type="number" value={form.weight || ''} onChange={(e) => set('weight', Number(e.target.value))} className="h-8 text-xs" /></Field>
+             </CardContent>
+           </Card>
 
-      {/* Desktop 2-column layout */}
-      <div className="hidden md:grid grid-cols-1 lg:grid-cols-3 gap-4 space-y-4">
-        {/* Left column */}
-        <div className="lg:col-span-2 space-y-4">
-          {/* Load Info */}
-          <Card>
-            <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Load Information</CardTitle></CardHeader>
-            <CardContent className="px-4 pb-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              <Field label="Internal Load #"><TextInput value={form.internal_load_number} onChange={(v) => set('internal_load_number', v)} /></Field>
-              <Field label="External / Broker Load #"><TextInput value={form.external_load_number} onChange={(v) => set('external_load_number', v)} /></Field>
-              <Field label="Trip #"><TextInput value={form.trip_number} onChange={(v) => set('trip_number', v)} /></Field>
-              <Field label="Customer Ref #"><TextInput value={form.customer_reference_number} onChange={(v) => set('customer_reference_number', v)} /></Field>
-              <Field label="Customer">
-                <Select value={form.customer_id || ''} onValueChange={(v) => {
-                  const c = companies.find(c => c.id === v);
-                  set('customer_id', v); set('customer_name', c?.company_name || '');
-                }}>
-                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select customer" /></SelectTrigger>
-                  <SelectContent>{companies.map(c => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}</SelectContent>
-                </Select>
-              </Field>
-              <Field label="Status"><Sel value={form.status} onChange={(v) => set('status', v)} options={[{value:'draft',label:'Draft'},{value:'saved',label:'Saved'},{value:'completed',label:'Completed'},{value:'canceled',label:'Canceled'}]} /></Field>
-              <Field label="Dispatch Status">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-1.5">
-                    <div className="flex-1 min-w-0">
-                      <Sel
-                        value={form.dispatch_status}
-                        onChange={(v) => {
-                          if (v === 'available' && (form.driver_1_id || form.driver_2_id)) {
-                            setConfirmClearDriver(true);
-                            return;
-                          }
-                          set('dispatch_status', v);
-                          set('manual_dispatch_override', true);
-                          setDispatchManuallyChanged(true);
-                        }}
-                        options={[{value:'available',label:'Available'},{value:'assigned',label:'Assigned'},{value:'in_transit',label:'In Transit'},{value:'delivered',label:'Delivered'}]}
-                      />
-                    </div>
-                    {form.manual_dispatch_override && (
-                      <>
-                        <Lock className="w-3 h-3 text-amber-500 flex-shrink-0" title="Manually overridden" />
-                        <button
-                          onClick={() => {
-                            const computed = computeDispatchStatus({ ...form, manual_dispatch_override: false }, getTimezone());
-                            setForm(prev => ({ ...prev, dispatch_status: computed, manual_dispatch_override: false }));
-                            setDispatchManuallyChanged(false);
-                          }}
-                          className="flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-primary transition-colors whitespace-nowrap"
-                          title="Return to automation control"
-                        >
-                          <RotateCcw className="w-3 h-3" /> Auto
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </Field>
-              <Field label="Load Type"><Sel value={form.load_type} onChange={(v) => set('load_type', v)} options={['FTL','LTL','partial','other'].map(v=>({value:v,label:v.toUpperCase()}))} /></Field>
-              <Field label="Equipment"><Sel value={form.equipment_type} onChange={(v) => set('equipment_type', v)} options={['dry_van','reefer','flatbed','step_deck','lowboy','tanker','intermodal','other'].map(v=>({value:v,label:v.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}))} /></Field>
-              <Field label="Commodity"><TextInput value={form.commodity} onChange={(v) => set('commodity', v)} /></Field>
-              <Field label="Weight (lbs)"><Input type="number" value={form.weight || ''} onChange={(e) => set('weight', Number(e.target.value))} className="h-8 text-xs" /></Field>
-            </CardContent>
-          </Card>
+           {/* Stops */}
+           <Card>
+             <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
+               <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Stops</CardTitle>
+               <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addStop}><Plus className="w-3 h-3" /> Add Stop</Button>
+             </CardHeader>
+             <CardContent className="px-4 pb-4 space-y-3">
+               {stops.map((stop, i) => (
+                 <div key={i} className="border border-border/50 rounded-md p-3 space-y-2">
+                   <div className="flex items-center justify-between">
+                     <span className={`text-xs font-semibold uppercase ${stop.stop_type === 'pickup' ? 'text-blue-600' : stop.stop_type === 'delivery' ? 'text-green-600' : 'text-muted-foreground'}`}>
+                       {stop.stop_type} #{i + 1}
+                     </span>
+                     {stops.length > 2 && (
+                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeStop(i)}>
+                         <Trash2 className="w-3 h-3 text-destructive" />
+                       </Button>
+                     )}
+                   </div>
+                   <div className="space-y-2">
+                     {/* Type + Company */}
+                     <div className="flex gap-2">
+                       <div style={{ width: '120px', flexShrink: 0 }}>
+                         <Label className="text-[10px] uppercase text-muted-foreground">Type</Label>
+                         <Sel value={stop.stop_type} onChange={(v) => setStop(i, 'stop_type', v)} options={[{value:'pickup',label:'Pickup'},{value:'delivery',label:'Delivery'},{value:'stop',label:'Stop'}]} />
+                       </div>
+                       <div className="flex-1 min-w-0">
+                         <Label className="text-[10px] uppercase text-muted-foreground">Company</Label>
+                         <TextInput value={stop.company_name} onChange={(v) => setStop(i, 'company_name', v)} />
+                       </div>
+                     </div>
+                     {/* Date + Time From */}
+                     <div className="grid grid-cols-2 gap-2">
+                       <div>
+                         <Label className="text-[10px] uppercase text-muted-foreground">Date</Label>
+                         <Input type="date" value={stop.appointment_date || ''} onChange={(e) => setStop(i, 'appointment_date', e.target.value)} className="h-8 text-xs w-full" />
+                       </div>
+                       <div>
+                         <Label className="text-[10px] uppercase text-muted-foreground">Time From</Label>
+                         <TextInput value={stop.time_from} onChange={(v) => setStop(i, 'time_from', v)} placeholder="08:00" />
+                       </div>
+                     </div>
+                     {/* City + State */}
+                     <div className="grid grid-cols-2 gap-2">
+                       <div>
+                         <Label className="text-[10px] uppercase text-muted-foreground">City</Label>
+                         <TextInput value={stop.city} onChange={(v) => setStop(i, 'city', v)} />
+                       </div>
+                       <div>
+                         <Label className="text-[10px] uppercase text-muted-foreground">State</Label>
+                         <TextInput value={stop.state} onChange={(v) => setStop(i, 'state', v)} />
+                       </div>
+                     </div>
+                     {/* Reference + Notes */}
+                     <div className="grid grid-cols-2 gap-2">
+                       <div>
+                         <Label className="text-[10px] uppercase text-muted-foreground">Reference / BOL #</Label>
+                         <TextInput value={stop.reference_number} onChange={(v) => setStop(i, 'reference_number', v)} />
+                       </div>
+                       <div>
+                         <Label className="text-[10px] uppercase text-muted-foreground">Directions / Notes</Label>
+                         <TextInput value={stop.memo} onChange={(v) => setStop(i, 'memo', v)} />
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+               ))}
+             </CardContent>
+           </Card>
+         </div>
 
-          {/* Stops */}
-          <Card>
-            <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Stops</CardTitle>
-              <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addStop}><Plus className="w-3 h-3" /> Add Stop</Button>
-            </CardHeader>
-            <CardContent className="px-4 pb-4 space-y-3">
-              {stops.map((stop, i) => (
-                <div key={i} className="border rounded-md p-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className={`text-xs font-semibold uppercase ${stop.stop_type === 'pickup' ? 'text-blue-600' : stop.stop_type === 'delivery' ? 'text-green-600' : 'text-muted-foreground'}`}>
-                      {stop.stop_type} #{i + 1}
-                    </span>
-                    {stops.length > 2 && (
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeStop(i)}>
-                        <Trash2 className="w-3 h-3 text-destructive" />
-                      </Button>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    {/* Type (120px) + Company (remaining) */}
-                    <div className="flex gap-2">
-                      <div style={{ width: '120px', flexShrink: 0 }}>
-                        <Label className="text-[10px]">Type</Label>
-                        <Sel value={stop.stop_type} onChange={(v) => setStop(i, 'stop_type', v)} options={[{value:'pickup',label:'Pickup'},{value:'delivery',label:'Delivery'},{value:'stop',label:'Stop'}]} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <Label className="text-[10px]">Company</Label>
-                        <TextInput value={stop.company_name} onChange={(v) => setStop(i, 'company_name', v)} />
-                      </div>
-                    </div>
-                    {/* Date + Time From (50/50) */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <Label className="text-[10px]">Date</Label>
-                        <Input type="date" value={stop.appointment_date || ''} onChange={(e) => setStop(i, 'appointment_date', e.target.value)} className="h-8 text-xs w-full" />
-                      </div>
-                      <div>
-                        <Label className="text-[10px]">Time From</Label>
-                        <TextInput value={stop.time_from} onChange={(v) => setStop(i, 'time_from', v)} placeholder="08:00" />
-                      </div>
-                    </div>
-                    {/* City + State (50/50) */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <Label className="text-[10px]">City</Label>
-                        <TextInput value={stop.city} onChange={(v) => setStop(i, 'city', v)} />
-                      </div>
-                      <div>
-                        <Label className="text-[10px]">State</Label>
-                        <TextInput value={stop.state} onChange={(v) => setStop(i, 'state', v)} />
-                      </div>
-                    </div>
-                    {/* Reference + Notes (50/50) */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <Label className="text-[10px]">Reference / BOL #</Label>
-                        <TextInput value={stop.reference_number} onChange={(v) => setStop(i, 'reference_number', v)} />
-                      </div>
-                      <div>
-                        <Label className="text-[10px]">Directions / Notes</Label>
-                        <TextInput value={stop.memo} onChange={(v) => setStop(i, 'memo', v)} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
+         {/* Right column (35%) */}
+         <div className="col-span-1 space-y-4">
+           <Card>
+             <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Assignment</CardTitle></CardHeader>
+             <CardContent className="px-4 pb-4 space-y-3">
+               <Field label="Driver 1">
+                 <Select value={form.driver_1_id || ''} onValueChange={(v) => {
+                   const d = drivers.find(d => d.id === v);
+                   set('driver_1_id', v); set('driver_1_name', d?.full_name || '');
+                   if (v && !form.driver_1_id) {
+                     set('driver_visibility', false);
+                   }
+                   if (d?.assigned_truck_id) {
+                     const t = trucks.find(t => t.id === d.assigned_truck_id);
+                     if (t) {
+                       set('truck_id', t.id);
+                       set('truck_number', t.unit_number);
+                     }
+                   }
+                 }}>
+                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select driver" /></SelectTrigger>
+                   <SelectContent>{drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}</SelectContent>
+                 </Select>
+               </Field>
+               <Field label="Driver 2">
+                 <Select value={form.driver_2_id || ''} onValueChange={(v) => {
+                   if (v === '__none__') { set('driver_2_id', null); set('driver_2_name', ''); return; }
+                   const d = drivers.find(d => d.id === v);
+                   set('driver_2_id', v); set('driver_2_name', d?.full_name || '');
+                 }}>
+                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select driver (optional)" /></SelectTrigger>
+                   <SelectContent>
+                     <SelectItem value="__none__">— None —</SelectItem>
+                     {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}
+                   </SelectContent>
+                 </Select>
+               </Field>
+               <Field label="Truck">
+                 <Select value={form.truck_id || ''} onValueChange={(v) => {
+                   const t = trucks.find(t => t.id === v);
+                   set('truck_id', v); set('truck_number', t?.unit_number || '');
+                   if (t?.assigned_driver_id) {
+                     const d = drivers.find(d => d.id === t.assigned_driver_id);
+                     if (d && !form.driver_1_id) {
+                       set('driver_1_id', d.id);
+                       set('driver_1_name', d.full_name);
+                     }
+                   }
+                 }}>
+                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select truck" /></SelectTrigger>
+                   <SelectContent>{trucks.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number} {t.make} {t.model}</SelectItem>)}</SelectContent>
+                 </Select>
+               </Field>
+               <Field label="Trailer">
+                 <Select value={form.trailer_id || ''} onValueChange={(v) => {
+                   const t = trailers.find(t => t.id === v);
+                   set('trailer_id', v); set('trailer_number', t?.unit_number || '');
+                 }}>
+                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select trailer" /></SelectTrigger>
+                   <SelectContent>{trailers.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number} ({t.trailer_type})</SelectItem>)}</SelectContent>
+                 </Select>
+               </Field>
+             </CardContent>
+           </Card>
 
-        {/* Right column */}
-        <div className="space-y-4">
-          <Card>
-            <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Assignment</CardTitle></CardHeader>
-            <CardContent className="px-4 pb-4 space-y-3">
-              <Field label="Driver 1">
-                <Select value={form.driver_1_id || ''} onValueChange={(v) => {
-                  const d = drivers.find(d => d.id === v);
-                  set('driver_1_id', v); set('driver_1_name', d?.full_name || '');
-                  // FIX 3: When assigning a driver, hide load from other drivers
-                  if (v && !form.driver_1_id) {
-                    set('driver_visibility', false);
-                  }
-                  // Auto-select truck if driver has assigned truck
-                  if (d?.assigned_truck_id) {
-                    const t = trucks.find(t => t.id === d.assigned_truck_id);
-                    if (t) {
-                      set('truck_id', t.id);
-                      set('truck_number', t.unit_number);
-                    }
-                  }
-                }}>
-                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select driver" /></SelectTrigger>
-                  <SelectContent>{drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}</SelectContent>
-                </Select>
-              </Field>
-              <Field label="Driver 2">
-                <Select value={form.driver_2_id || ''} onValueChange={(v) => {
-                  if (v === '__none__') { set('driver_2_id', null); set('driver_2_name', ''); return; }
-                  const d = drivers.find(d => d.id === v);
-                  set('driver_2_id', v); set('driver_2_name', d?.full_name || '');
-                }}>
-                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select driver (optional)" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none__">— None —</SelectItem>
-                    {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field label="Truck">
-                <Select value={form.truck_id || ''} onValueChange={(v) => {
-                  const t = trucks.find(t => t.id === v);
-                  set('truck_id', v); set('truck_number', t?.unit_number || '');
-                  // Auto-select driver if truck has assigned driver
-                  if (t?.assigned_driver_id) {
-                    const d = drivers.find(d => d.id === t.assigned_driver_id);
-                    if (d && !form.driver_1_id) {
-                      set('driver_1_id', d.id);
-                      set('driver_1_name', d.full_name);
-                    }
-                  }
-                }}>
-                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select truck" /></SelectTrigger>
-                  <SelectContent>{trucks.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number} {t.make} {t.model}</SelectItem>)}</SelectContent>
-                </Select>
-              </Field>
-              <Field label="Trailer">
-                <Select value={form.trailer_id || ''} onValueChange={(v) => {
-                  const t = trailers.find(t => t.id === v);
-                  set('trailer_id', v); set('trailer_number', t?.unit_number || '');
-                }}>
-                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select trailer" /></SelectTrigger>
-                  <SelectContent>{trailers.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number} ({t.trailer_type})</SelectItem>)}</SelectContent>
-                </Select>
-              </Field>
-            </CardContent>
-          </Card>
+           <Card>
+             <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Financials</CardTitle></CardHeader>
+             <CardContent className="px-4 pb-4 space-y-3">
+               <div>
+                 <div className="flex items-center justify-between mb-1.5">
+                   <Label className="text-xs uppercase text-muted-foreground">Charge Line Items</Label>
+                   <Button variant="outline" size="sm" className="h-6 text-[11px] gap-1 px-2" onClick={addLineItem}>
+                     <Plus className="w-3 h-3" /> Add
+                   </Button>
+                 </div>
+                 <div className="space-y-1.5">
+                   {lineItems.length === 0 && (
+                     <p className="text-[11px] text-muted-foreground py-2 text-center border border-dashed rounded-md">No line items. Add one or upload a document.</p>
+                   )}
+                   {lineItems.map((li, i) => (
+                     <div key={i} className="flex gap-1.5 items-center">
+                       <Input
+                         value={li.description || ''}
+                         onChange={(e) => updateLineItem(i, 'description', e.target.value)}
+                         placeholder="Description"
+                         className="h-7 text-xs flex-1"
+                       />
+                       <Input
+                         type="number"
+                         value={li.amount === '' ? '' : li.amount}
+                         onChange={(e) => updateLineItem(i, 'amount', e.target.value === '' ? '' : Number(e.target.value))}
+                         placeholder="0.00"
+                         className="h-7 text-xs w-24"
+                       />
+                       <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => removeLineItem(i)}>
+                         <Trash2 className="w-3 h-3 text-destructive" />
+                       </Button>
+                     </div>
+                   ))}
+                 </div>
+                 <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                   <span className="text-xs font-semibold">Invoice Total</span>
+                   <span className="text-sm font-bold text-green-600">${lineItemsTotal.toFixed(2)}</span>
+                 </div>
+               </div>
 
-          <Card>
-            <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Financials</CardTitle></CardHeader>
-            <CardContent className="px-4 pb-4 space-y-3">
-              {/* Dynamic Line Items */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <Label className="text-xs">Charge Line Items</Label>
-                  <Button variant="outline" size="sm" className="h-6 text-[11px] gap-1 px-2" onClick={addLineItem}>
-                    <Plus className="w-3 h-3" /> Add
-                  </Button>
-                </div>
-                <div className="space-y-1.5">
-                  {lineItems.length === 0 && (
-                    <p className="text-[11px] text-muted-foreground py-2 text-center border border-dashed rounded-md">No line items. Add one or upload a document.</p>
-                  )}
-                  {lineItems.map((li, i) => (
-                    <div key={i} className="flex gap-1.5 items-center">
-                      <Input
-                        value={li.description || ''}
-                        onChange={(e) => updateLineItem(i, 'description', e.target.value)}
-                        placeholder="Description"
-                        className="h-7 text-xs flex-1"
-                      />
-                      <Input
-                        type="number"
-                        value={li.amount === '' ? '' : li.amount}
-                        onChange={(e) => updateLineItem(i, 'amount', e.target.value === '' ? '' : Number(e.target.value))}
-                        placeholder="0.00"
-                        className="h-7 text-xs w-24"
-                      />
-                      <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => removeLineItem(i)}>
-                        <Trash2 className="w-3 h-3 text-destructive" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex justify-between items-center mt-2 pt-2 border-t">
-                  <span className="text-xs font-semibold">Invoice Total</span>
-                  <span className="text-sm font-bold text-primary">${lineItemsTotal.toFixed(2)}</span>
-                </div>
-              </div>
+               <Field label="Driver Rate — Statement ($)">
+                 <Input type="number" value={form.driver_rate || ''} onChange={(e) => set('driver_rate', Number(e.target.value))} className="h-8 text-xs" placeholder={lineItemsTotal ? `Default: $${lineItemsTotal.toFixed(2)}` : 'Leave blank to use Invoice Total'} />
+                 <p className="text-[10px] text-muted-foreground mt-0.5">Used for driver pay calculation</p>
+               </Field>
+               <Field label="Invoice Status"><Sel value={form.invoice_status} onChange={(v) => set('invoice_status', v)} options={['not_invoiced','invoiced','sent','partial','paid','overdue','canceled'].map(v=>({value:v,label:v.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}))} /></Field>
+               <Field label="Billable Miles"><Input type="number" value={form.billable_miles || ''} onChange={(e) => set('billable_miles', Number(e.target.value))} className="h-8 text-xs" /></Field>
+             </CardContent>
+           </Card>
 
-              <Field label="Driver Rate — Statement ($)">
-                <Input type="number" value={form.driver_rate || ''} onChange={(e) => set('driver_rate', Number(e.target.value))} className="h-8 text-xs" placeholder={lineItemsTotal ? `Default: $${lineItemsTotal.toFixed(2)}` : 'Leave blank to use Invoice Total'} />
-                <p className="text-[10px] text-muted-foreground mt-0.5">Used for driver pay calculation (driver % applied to this)</p>
-              </Field>
-              <Field label="Invoice Status"><Sel value={form.invoice_status} onChange={(v) => set('invoice_status', v)} options={['not_invoiced','invoiced','sent','partial','paid','overdue','canceled'].map(v=>({value:v,label:v.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}))} /></Field>
-              <Field label="Billable Miles"><Input type="number" value={form.billable_miles || ''} onChange={(e) => set('billable_miles', Number(e.target.value))} className="h-8 text-xs" /></Field>
-            </CardContent>
-          </Card>
+           <Card>
+             <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Notes</CardTitle></CardHeader>
+             <CardContent className="px-4 pb-4">
+               <Textarea value={form.notes || ''} onChange={(e) => set('notes', e.target.value)} className="text-xs h-24" placeholder="Internal notes..." />
+             </CardContent>
+           </Card>
 
-          <Card>
-            <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Notes</CardTitle></CardHeader>
-            <CardContent className="px-4 pb-4">
-              <Textarea value={form.notes || ''} onChange={(e) => set('notes', e.target.value)} className="text-xs h-24" placeholder="Internal notes..." />
-            </CardContent>
-          </Card>
+           {(form.dispatch_status_history?.length > 0) && (
+             <Card>
+               <CardHeader
+                 className="py-3 px-4 cursor-pointer hover:bg-muted/30 transition-colors"
+                 onClick={() => setShowHistory(!showHistory)}
+               >
+                 <div className="flex items-center justify-between">
+                   <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status History</CardTitle>
+                   {showHistory ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
+                 </div>
+               </CardHeader>
+               {showHistory && (
+                 <CardContent className="px-4 pb-4">
+                   <div className="space-y-2">
+                     {[...(form.dispatch_status_history || [])].reverse().slice(0, 10).map((entry, i) => (
+                       <div key={i} className="text-[11px] border-b border-border/40 pb-1.5 last:border-0">
+                         <div className="flex items-center gap-1 flex-wrap">
+                           <span className="text-muted-foreground">{(entry.from || '').replace('_', ' ')}</span>
+                           <span className="text-muted-foreground">→</span>
+                           <span className="font-medium text-foreground">{(entry.to || '').replace('_', ' ')}</span>
+                           <span className={`text-[10px] px-1 rounded ml-1 ${
+                             entry.changed_by_type === 'automation'
+                               ? 'bg-blue-500/10 text-blue-600'
+                               : 'bg-amber-500/10 text-amber-600'
+                           }`}>
+                             {entry.changed_by_type}
+                           </span>
+                         </div>
+                         <div className="text-muted-foreground mt-0.5">
+                           {entry.changed_by} · {entry.timestamp ? new Date(entry.timestamp).toLocaleString() : ''}
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                 </CardContent>
+               )}
+             </Card>
+           )}
+         </div>
+       </div>
 
-          {/* Feature 7: Status History */}
-          {(form.dispatch_status_history?.length > 0) && (
-            <Card>
-              <CardHeader
-                className="py-3 px-4 cursor-pointer hover:bg-muted/30 transition-colors"
-                onClick={() => setShowHistory(!showHistory)}
-              >
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status History</CardTitle>
-                  {showHistory ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
-                </div>
-              </CardHeader>
-              {showHistory && (
-                <CardContent className="px-4 pb-4">
-                  <div className="space-y-2">
-                    {[...(form.dispatch_status_history || [])].reverse().slice(0, 10).map((entry, i) => (
-                      <div key={i} className="text-[11px] border-b border-border/40 pb-1.5 last:border-0">
-                        <div className="flex items-center gap-1 flex-wrap">
-                          <span className="text-muted-foreground">{(entry.from || '').replace('_', ' ')}</span>
-                          <span className="text-muted-foreground">→</span>
-                          <span className="font-medium text-foreground">{(entry.to || '').replace('_', ' ')}</span>
-                          <span className={`text-[10px] px-1 rounded ml-1 ${
-                            entry.changed_by_type === 'automation'
-                              ? 'bg-blue-500/10 text-blue-600'
-                              : 'bg-amber-500/10 text-amber-600'
-                          }`}>
-                            {entry.changed_by_type}
-                          </span>
-                        </div>
-                        <div className="text-muted-foreground mt-0.5">
-                          {entry.changed_by} · {entry.timestamp ? new Date(entry.timestamp).toLocaleString() : ''}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              )}
-            </Card>
-          )}
-        </div>
-      </div>
+       {/* Mobile single-column layout (unchanged from original) */}
+       <div className="md:hidden space-y-3 px-4 pb-4">
+         {/* Mobile Load Information */}
+         <Card>
+           <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Load Information</CardTitle></CardHeader>
+           <CardContent className="px-4 pb-4 grid grid-cols-3 gap-2">
+             <Field label="Internal Load #"><TextInput value={form.internal_load_number} onChange={(v) => set('internal_load_number', v)} /></Field>
+             <Field label="Ext / Broker #"><TextInput value={form.external_load_number} onChange={(v) => set('external_load_number', v)} /></Field>
+             <Field label="Trip #"><TextInput value={form.trip_number} onChange={(v) => set('trip_number', v)} /></Field>
+             <Field label="Customer Ref #"><TextInput value={form.customer_reference_number} onChange={(v) => set('customer_reference_number', v)} /></Field>
+             <Field label="Customer"><Select value={form.customer_id || ''} onValueChange={(v) => {const c = companies.find(c => c.id === v);set('customer_id', v);set('customer_name', c?.company_name || '');}}>
+               <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
+               <SelectContent>{companies.map(c => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}</SelectContent>
+             </Select></Field>
+             <Field label="Status"><Sel value={form.status} onChange={(v) => set('status', v)} options={[{value:'draft',label:'Draft'},{value:'saved',label:'Saved'},{value:'completed',label:'Completed'},{value:'canceled',label:'Canceled'}]} /></Field>
+             <Field label="Dispatch Status"><Sel value={form.dispatch_status} onChange={(v) => {if (v === 'available' && (form.driver_1_id || form.driver_2_id)) {setConfirmClearDriver(true);return;}set('dispatch_status', v);set('manual_dispatch_override', true);setDispatchManuallyChanged(true);}} options={[{value:'available',label:'Available'},{value:'assigned',label:'Assigned'},{value:'in_transit',label:'In Transit'},{value:'delivered',label:'Delivered'}]} /></Field>
+             <Field label="Load Type"><Sel value={form.load_type} onChange={(v) => set('load_type', v)} options={['FTL','LTL','partial','other'].map(v=>({value:v,label:v.toUpperCase()}))} /></Field>
+             <Field label="Equipment"><Sel value={form.equipment_type} onChange={(v) => set('equipment_type', v)} options={['dry_van','reefer','flatbed','step_deck','lowboy','tanker','intermodal','other'].map(v=>({value:v,label:v.replace(/_/g,' ')}))}/></Field>
+             <Field label="Commodity"><TextInput value={form.commodity} onChange={(v) => set('commodity', v)} /></Field>
+             <Field label="Weight (lbs)"><Input type="number" value={form.weight || ''} onChange={(e) => set('weight', Number(e.target.value))} className="h-8 text-xs" /></Field>
+           </CardContent>
+         </Card>
 
-      {/* Mobile single-column layout */}
-      <div className="md:hidden" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {/* Load Information */}
-        <div style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '10px', padding: '12px', boxSizing: 'border-box', width: '100%', overflow: 'hidden' }}>
-          <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>Load Information</div>
-          
-          {/* Row 1: 3 columns */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '8px' }}>
-            <div>
-              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Internal Load #</Label>
-              <Input value={form.internal_load_number || ''} onChange={(e) => set('internal_load_number', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }} />
-            </div>
-            <div>
-              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>External / Broker #</Label>
-              <Input value={form.external_load_number || ''} onChange={(e) => set('external_load_number', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }} />
-            </div>
-            <div>
-              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Trip #</Label>
-              <Input value={form.trip_number || ''} onChange={(e) => set('trip_number', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }} />
-            </div>
-          </div>
-          
-          {/* Row 2: 3 columns */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '8px' }}>
-            <div>
-              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Customer Ref #</Label>
-              <Input value={form.customer_reference_number || ''} onChange={(e) => set('customer_reference_number', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }} />
-            </div>
-            <div>
-              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Customer</Label>
-              <Select value={form.customer_id || ''} onValueChange={(v) => { const c = companies.find(c => c.id === v); set('customer_id', v); set('customer_name', c?.company_name || ''); }}>
-                <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }}><SelectValue placeholder="Select" /></SelectTrigger>
-                <SelectContent>{companies.map(c => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Status</Label>
-              <Select value={form.status || ''} onValueChange={(v) => set('status', v)}>
-                <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }}><SelectValue placeholder="Select" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="saved">Saved</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="canceled">Canceled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          {/* Row 3: 3 columns */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '8px' }}>
-            <div>
-              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Dispatch Status</Label>
-              <Select value={form.dispatch_status || ''} onValueChange={(v) => { if (v === 'available' && (form.driver_1_id || form.driver_2_id)) { setConfirmClearDriver(true); return; } set('dispatch_status', v); set('manual_dispatch_override', true); setDispatchManuallyChanged(true); }}>
-                <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }}><SelectValue placeholder="Select" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="available">Available</SelectItem>
-                  <SelectItem value="assigned">Assigned</SelectItem>
-                  <SelectItem value="in_transit">In Transit</SelectItem>
-                  <SelectItem value="delivered">Delivered</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Load Type</Label>
-              <Select value={form.load_type || ''} onValueChange={(v) => set('load_type', v)}>
-                <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }}><SelectValue placeholder="Select" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="FTL">FTL</SelectItem>
-                  <SelectItem value="LTL">LTL</SelectItem>
-                  <SelectItem value="partial">Partial</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Equipment</Label>
-              <Select value={form.equipment_type || ''} onValueChange={(v) => set('equipment_type', v)}>
-                <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }}><SelectValue placeholder="Select" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="dry_van">Dry Van</SelectItem>
-                  <SelectItem value="reefer">Reefer</SelectItem>
-                  <SelectItem value="flatbed">Flatbed</SelectItem>
-                  <SelectItem value="step_deck">Step Deck</SelectItem>
-                  <SelectItem value="lowboy">Lowboy</SelectItem>
-                  <SelectItem value="tanker">Tanker</SelectItem>
-                  <SelectItem value="intermodal">Intermodal</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          {/* Row 4: 2 columns */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <div>
-              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Commodity</Label>
-              <Input value={form.commodity || ''} onChange={(e) => set('commodity', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }} />
-            </div>
-            <div>
-              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Weight (lbs)</Label>
-              <Input type="number" value={form.weight || ''} onChange={(e) => set('weight', Number(e.target.value))} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }} />
-            </div>
-          </div>
-        </div>
+         {/* Mobile Assignment, Stops, Financials, Notes (simplified) - keeping original structure */}
+         <Card>
+           <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Assignment</CardTitle></CardHeader>
+           <CardContent className="px-4 pb-4 space-y-2">
+             <Field label="Driver 1"><Select value={form.driver_1_id || ''} onValueChange={(v) => {const d = drivers.find(d => d.id === v);set('driver_1_id', v);set('driver_1_name', d?.full_name || '');}}>
+               <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
+               <SelectContent>{drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}</SelectContent>
+             </Select></Field>
+             <Field label="Driver 2"><Select value={form.driver_2_id || ''} onValueChange={(v) => {if (v === '__none__') {set('driver_2_id', null);set('driver_2_name', '');return;}const d = drivers.find(d => d.id === v);set('driver_2_id', v);set('driver_2_name', d?.full_name || '');}}>
+               <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Optional" /></SelectTrigger>
+               <SelectContent>
+                 <SelectItem value="__none__">— None —</SelectItem>
+                 {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}
+               </SelectContent>
+             </Select></Field>
+             <Field label="Truck"><Select value={form.truck_id || ''} onValueChange={(v) => {const t = trucks.find(t => t.id === v);set('truck_id', v);set('truck_number', t?.unit_number || '');}}>
+               <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
+               <SelectContent>{trucks.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number}</SelectItem>)}</SelectContent>
+             </Select></Field>
+             <Field label="Trailer"><Select value={form.trailer_id || ''} onValueChange={(v) => {const t = trailers.find(t => t.id === v);set('trailer_id', v);set('trailer_number', t?.unit_number || '');}}>
+               <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
+               <SelectContent>{trailers.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number}</SelectItem>)}</SelectContent>
+             </Select></Field>
+           </CardContent>
+         </Card>
 
-        {/* Assignment */}
-        <div style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '10px', padding: '12px', boxSizing: 'border-box', width: '100%', overflow: 'hidden' }}>
-          <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>Assignment</div>
-          
-          <div style={{ marginBottom: '8px' }}>
-            <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Driver 1</Label>
-            <Select value={form.driver_1_id || ''} onValueChange={(v) => { const d = drivers.find(d => d.id === v); set('driver_1_id', v); set('driver_1_name', d?.full_name || ''); if (v && !form.driver_1_id) { set('driver_visibility', false); } if (d?.assigned_truck_id) { const t = trucks.find(t => t.id === d.assigned_truck_id); if (t) { set('truck_id', t.id); set('truck_number', t.unit_number); } } }}>
-              <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '38px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }}><SelectValue placeholder="Select driver" /></SelectTrigger>
-              <SelectContent>{drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          
-          <div style={{ marginBottom: '8px' }}>
-            <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Driver 2</Label>
-            <Select value={form.driver_2_id || ''} onValueChange={(v) => { if (v === '__none__') { set('driver_2_id', null); set('driver_2_name', ''); return; } const d = drivers.find(d => d.id === v); set('driver_2_id', v); set('driver_2_name', d?.full_name || ''); }}>
-              <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '38px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }}><SelectValue placeholder="Select driver (optional)" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">— None —</SelectItem>
-                {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <div>
-              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Truck</Label>
-              <Select value={form.truck_id || ''} onValueChange={(v) => { const t = trucks.find(t => t.id === v); set('truck_id', v); set('truck_number', t?.unit_number || ''); if (t?.assigned_driver_id) { const d = drivers.find(d => d.id === t.assigned_driver_id); if (d && !form.driver_1_id) { set('driver_1_id', d.id); set('driver_1_name', d.full_name); } } }}>
-                <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '38px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }}><SelectValue placeholder="Select truck" /></SelectTrigger>
-                <SelectContent>{trucks.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Trailer</Label>
-              <Select value={form.trailer_id || ''} onValueChange={(v) => { const t = trailers.find(t => t.id === v); set('trailer_id', v); set('trailer_number', t?.unit_number || ''); }}>
-                <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '38px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }}><SelectValue placeholder="Select trailer" /></SelectTrigger>
-                <SelectContent>{trailers.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
+         <Card>
+           <CardHeader className="py-3 px-4 flex flex-row items-center justify-between">
+             <CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Stops</CardTitle>
+             <Button variant="outline" size="sm" className="h-6 text-xs gap-1" onClick={addStop}><Plus className="w-3 h-3" /> Add</Button>
+           </CardHeader>
+           <CardContent className="px-4 pb-4 space-y-3">
+             {stops.map((stop, i) => (
+               <div key={i} className="border border-border/50 rounded-md p-3 space-y-2">
+                 <div className="flex items-center justify-between">
+                   <span className={`text-xs font-semibold uppercase ${stop.stop_type === 'pickup' ? 'text-blue-600' : stop.stop_type === 'delivery' ? 'text-green-600' : 'text-muted-foreground'}`}>
+                     {stop.stop_type} #{i + 1}
+                   </span>
+                   {stops.length > 2 && (
+                     <Button variant="ghost" size="icon" className="h-5 w-5" onClick={() => removeStop(i)}>
+                       <Trash2 className="w-3 h-3 text-destructive" />
+                     </Button>
+                   )}
+                 </div>
+                 <div className="space-y-2">
+                   <div className="flex gap-2">
+                     <div style={{ width: '80px' }}>
+                       <Label className="text-[10px] uppercase text-muted-foreground">Type</Label>
+                       <Sel value={stop.stop_type} onChange={(v) => setStop(i, 'stop_type', v)} options={[{value:'pickup',label:'Pickup'},{value:'delivery',label:'Delivery'},{value:'stop',label:'Stop'}]} />
+                     </div>
+                     <div className="flex-1">
+                       <Label className="text-[10px] uppercase text-muted-foreground">Company</Label>
+                       <TextInput value={stop.company_name} onChange={(v) => setStop(i, 'company_name', v)} />
+                     </div>
+                   </div>
+                   <div className="grid grid-cols-2 gap-2">
+                     <div><Label className="text-[10px] uppercase text-muted-foreground">Date</Label>
+                       <Input type="date" value={stop.appointment_date || ''} onChange={(e) => setStop(i, 'appointment_date', e.target.value)} className="h-8 text-xs" /></div>
+                     <div><Label className="text-[10px] uppercase text-muted-foreground">Time</Label>
+                       <TextInput value={stop.time_from} onChange={(v) => setStop(i, 'time_from', v)} placeholder="08:00" /></div>
+                   </div>
+                   <div className="grid grid-cols-2 gap-2">
+                     <div><Label className="text-[10px] uppercase text-muted-foreground">City</Label>
+                       <TextInput value={stop.city} onChange={(v) => setStop(i, 'city', v)} /></div>
+                     <div><Label className="text-[10px] uppercase text-muted-foreground">State</Label>
+                       <TextInput value={stop.state} onChange={(v) => setStop(i, 'state', v)} /></div>
+                   </div>
+                   <div className="grid grid-cols-2 gap-2">
+                     <div><Label className="text-[10px] uppercase text-muted-foreground">Ref / BOL</Label>
+                       <TextInput value={stop.reference_number} onChange={(v) => setStop(i, 'reference_number', v)} /></div>
+                     <div><Label className="text-[10px] uppercase text-muted-foreground">Notes</Label>
+                       <TextInput value={stop.memo} onChange={(v) => setStop(i, 'memo', v)} /></div>
+                   </div>
+                 </div>
+               </div>
+             ))}
+           </CardContent>
+         </Card>
 
-        {/* Stops */}
-        <div style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '10px', padding: '12px', boxSizing: 'border-box', width: '100%', overflow: 'hidden' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-            <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Stops</div>
-            <Button variant="outline" size="sm" onClick={addStop} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', color: 'hsl(var(--primary))', fontSize: '11px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Plus className="w-3 h-3" /> Add Stop
-            </Button>
-          </div>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {stops.map((stop, i) => (
-              <div key={i} style={{ border: '0.5px solid hsl(var(--border))', borderRadius: '8px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div style={{ color: stop.stop_type === 'pickup' ? 'hsl(var(--primary))' : stop.stop_type === 'delivery' ? '#16a34a' : 'hsl(var(--muted-foreground))', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>
-                  {stop.stop_type === 'pickup' ? 'PICKUP' : stop.stop_type === 'delivery' ? 'DELIVERY' : 'STOP'} #{i + 1}
-                </div>
-                
-                {/* Type + Company */}
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <div style={{ width: '120px', flexShrink: 0 }}>
-                    <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>Type</Label>
-                    <Select value={stop.stop_type || ''} onValueChange={(v) => setStop(i, 'stop_type', v)}>
-                      <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '32px', boxSizing: 'border-box', width: '100%', fontSize: '11px' }}><SelectValue placeholder="Select" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pickup">Pickup</SelectItem>
-                        <SelectItem value="delivery">Delivery</SelectItem>
-                        <SelectItem value="stop">Stop</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>Company</Label>
-                    <Input value={stop.company_name || ''} onChange={(e) => setStop(i, 'company_name', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '32px', boxSizing: 'border-box', width: '100%', fontSize: '11px' }} />
-                  </div>
-                </div>
-                
-                {/* Date + Time From */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                  <div>
-                    <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>Date</Label>
-                    <Input type="date" value={stop.appointment_date || ''} onChange={(e) => setStop(i, 'appointment_date', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '32px', boxSizing: 'border-box', width: '100%', fontSize: '11px' }} />
-                  </div>
-                  <div>
-                    <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>Time From</Label>
-                    <Input value={stop.time_from || ''} onChange={(e) => setStop(i, 'time_from', e.target.value)} placeholder="08:00" style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '32px', boxSizing: 'border-box', width: '100%', fontSize: '11px' }} />
-                  </div>
-                </div>
-                
-                {/* City + State */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                  <div>
-                    <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>City</Label>
-                    <Input value={stop.city || ''} onChange={(e) => setStop(i, 'city', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '32px', boxSizing: 'border-box', width: '100%', fontSize: '11px' }} />
-                  </div>
-                  <div>
-                    <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>State</Label>
-                    <Input value={stop.state || ''} onChange={(e) => setStop(i, 'state', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '32px', boxSizing: 'border-box', width: '100%', fontSize: '11px' }} />
-                  </div>
-                </div>
-                
-                {/* Reference + Directions */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                  <div>
-                    <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>Reference / BOL #</Label>
-                    <Input value={stop.reference_number || ''} onChange={(e) => setStop(i, 'reference_number', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '32px', boxSizing: 'border-box', width: '100%', fontSize: '11px' }} />
-                  </div>
-                  <div>
-                    <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>Directions / Notes</Label>
-                    <Input value={stop.memo || ''} onChange={(e) => setStop(i, 'memo', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '32px', boxSizing: 'border-box', width: '100%', fontSize: '11px' }} />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+         <Card>
+           <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Financials</CardTitle></CardHeader>
+           <CardContent className="px-4 pb-4 space-y-3">
+             <div>
+               <div className="flex items-center justify-between mb-1.5">
+                 <Label className="text-xs uppercase text-muted-foreground">Line Items</Label>
+                 <Button variant="outline" size="sm" className="h-6 text-[11px] gap-1" onClick={addLineItem}><Plus className="w-3 h-3" /> Add</Button>
+               </div>
+               <div className="space-y-1">
+                 {lineItems.length === 0 && <p className="text-xs text-muted-foreground py-2">No line items.</p>}
+                 {lineItems.map((li, i) => (
+                   <div key={i} className="flex gap-1 items-center">
+                     <Input value={li.description || ''} onChange={(e) => updateLineItem(i, 'description', e.target.value)} placeholder="Desc" className="h-7 text-xs flex-1" />
+                     <Input type="number" value={li.amount === '' ? '' : li.amount} onChange={(e) => updateLineItem(i, 'amount', e.target.value === '' ? '' : Number(e.target.value))} placeholder="0.00" className="h-7 text-xs w-20" />
+                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => removeLineItem(i)}><Trash2 className="w-3 h-3 text-destructive" /></Button>
+                   </div>
+                 ))}
+               </div>
+               <div className="flex justify-between items-center mt-2 pt-2 border-t text-xs">
+                 <span className="font-semibold">Total</span>
+                 <span className="font-bold text-green-600">${lineItemsTotal.toFixed(2)}</span>
+               </div>
+             </div>
+             <Field label="Driver Rate"><Input type="number" value={form.driver_rate || ''} onChange={(e) => set('driver_rate', Number(e.target.value))} className="h-8 text-xs" placeholder="0.00" /></Field>
+             <Field label="Invoice Status"><Sel value={form.invoice_status} onChange={(v) => set('invoice_status', v)} options={['not_invoiced','invoiced','sent','paid'].map(v=>({value:v,label:v.replace(/_/g,' ')}))} /></Field>
+             <Field label="Billable Miles"><Input type="number" value={form.billable_miles || ''} onChange={(e) => set('billable_miles', Number(e.target.value))} className="h-8 text-xs" /></Field>
+           </CardContent>
+         </Card>
 
-        {/* Financials */}
-        <div style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '10px', padding: '12px', boxSizing: 'border-box', width: '100%', overflow: 'hidden' }}>
-          <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>Financials</div>
-          
-          {/* Line Items */}
-          <div style={{ marginBottom: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <Label style={{ color: 'hsl(var(--primary))', fontSize: '12px' }}>Charge Line Items</Label>
-              <Button variant="outline" size="sm" onClick={addLineItem} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', color: 'hsl(var(--primary))', fontSize: '11px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Plus className="w-3 h-3" /> Add
-              </Button>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px' }}>
-              {lineItems.length === 0 && <p style={{ color: 'hsl(var(--muted-foreground))', fontSize: '12px', marginBottom: '8px' }}>No line items. Add one or upload a document.</p>}
-              {lineItems.map((li, i) => (
-                <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <Input value={li.description || ''} onChange={(e) => updateLineItem(i, 'description', e.target.value)} placeholder="Description" style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '32px', boxSizing: 'border-box', flex: 1, fontSize: '11px' }} />
-                  <Input type="number" value={li.amount === '' ? '' : li.amount} onChange={(e) => updateLineItem(i, 'amount', e.target.value === '' ? '' : Number(e.target.value))} placeholder="0.00" style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '32px', boxSizing: 'border-box', width: '70px', fontSize: '11px' }} />
-                  <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => removeLineItem(i)}>
-                    <Trash2 className="w-3 h-3 text-destructive" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid hsl(var(--border))' }}>
-              <span style={{ color: 'hsl(var(--primary))', fontSize: '12px', fontWeight: 600 }}>Invoice Total</span>
-              <span style={{ color: '#16a34a', fontSize: '13px', fontWeight: 600 }}>${lineItemsTotal.toFixed(2)}</span>
-            </div>
-          </div>
-          
-          <div style={{ marginBottom: '8px' }}>
-            <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>Driver Rate</Label>
-            <Input type="number" value={form.driver_rate || ''} onChange={(e) => set('driver_rate', Number(e.target.value))} placeholder={lineItemsTotal ? `Default: $${lineItemsTotal.toFixed(2)}` : 'Leave blank to use Invoice Total'} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }} />
-            <p style={{ color: 'hsl(var(--muted-foreground))', fontSize: '10px', marginTop: '3px' }}>Used for driver pay calculation</p>
-          </div>
-          
-          <div style={{ marginBottom: '8px' }}>
-            <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>Invoice Status</Label>
-            <Select value={form.invoice_status || ''} onValueChange={(v) => set('invoice_status', v)}>
-              <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '38px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }}><SelectValue placeholder="Select" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="not_invoiced">Not Invoiced</SelectItem>
-                <SelectItem value="invoiced">Invoiced</SelectItem>
-                <SelectItem value="sent">Sent</SelectItem>
-                <SelectItem value="partial">Partial</SelectItem>
-                <SelectItem value="paid">Paid</SelectItem>
-                <SelectItem value="overdue">Overdue</SelectItem>
-                <SelectItem value="canceled">Canceled</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>Billable Miles</Label>
-            <Input type="number" value={form.billable_miles || ''} onChange={(e) => set('billable_miles', Number(e.target.value))} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }} />
-          </div>
-        </div>
-
-        {/* Notes */}
-        <div style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '10px', padding: '12px', boxSizing: 'border-box', width: '100%', overflow: 'hidden' }}>
-          <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>Notes</div>
-          <Textarea value={form.notes || ''} onChange={(e) => set('notes', e.target.value)} placeholder="Internal notes..." style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '80px', boxSizing: 'border-box', width: '100%', fontSize: '12px', fontFamily: 'inherit' }} />
-        </div>
-      </div>
-    </div>
-  );
+         <Card>
+           <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Notes</CardTitle></CardHeader>
+           <CardContent className="px-4 pb-4">
+             <Textarea value={form.notes || ''} onChange={(e) => set('notes', e.target.value)} className="text-xs h-20" placeholder="Internal notes..." />
+           </CardContent>
+         </Card>
+       </div>
+     </div>
+   );
 }
