@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Phone, Mail, MapPin } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import SearchInput from '../components/shared/SearchInput';
 import DataTable from '../components/shared/DataTable';
@@ -138,27 +138,136 @@ export default function Companies() {
   return (
     <div className="p-4">
       <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-bold">Companies / Brokers</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">{companies.length} total companies</p>
-        </div>
-        <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { if (!checkFeatureAccess(isInPreview)) return; setEditing(null); setDialogOpen(true); }}>
-          <Plus className="w-3.5 h-3.5" /> Add Company
-        </Button>
-      </div>
       
-      <div className="mb-3">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search companies..." className="w-72" />
+      {/* Desktop layout */}
+      <div className="hidden md:block">
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold">Companies / Brokers</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">{companies.length} total companies</p>
+          </div>
+          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { if (!checkFeatureAccess(isInPreview)) return; setEditing(null); setDialogOpen(true); }}>
+            <Plus className="w-3.5 h-3.5" /> Add Company
+          </Button>
+        </div>
+        
+        <div className="mb-3">
+          <SearchInput value={search} onChange={setSearch} placeholder="Search companies..." className="w-72" />
+        </div>
+
+        <DataTable
+          columns={columns}
+          data={filtered}
+          isLoading={isLoading}
+          onRowClick={(row) => { if (!checkFeatureAccess(isInPreview)) return; setEditing(row); setDialogOpen(true); }}
+          emptyMessage="No companies found"
+        />
       </div>
 
-      <DataTable
-        columns={columns}
-        data={filtered}
-        isLoading={isLoading}
-        onRowClick={(row) => { if (!checkFeatureAccess(isInPreview)) return; setEditing(row); setDialogOpen(true); }}
-        emptyMessage="No companies found"
-      />
+      {/* Mobile card layout */}
+      <div className="md:hidden">
+        <div className="mb-4">
+          <h2 className="text-base font-semibold text-primary mb-0.5">Companies / Brokers</h2>
+          <p className="text-xs text-muted-foreground mb-3">{companies.length} total companies</p>
+          <SearchInput value={search} onChange={setSearch} placeholder="Search companies..." className="w-full" />
+        </div>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="w-6 h-6 border-2 border-border border-t-primary rounded-full animate-spin" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-xs text-muted-foreground">No companies found</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {filtered.map((company) => (
+              <div
+                key={company.id}
+                onClick={() => { if (!checkFeatureAccess(isInPreview)) return; setEditing(company); setDialogOpen(true); }}
+                className="bg-card border border-border rounded-[10px] box-border overflow-hidden p-3 cursor-pointer active:opacity-80 transition-opacity"
+              >
+                {/* Row 1: Name + Type + Delete */}
+                <div className="flex items-start justify-between gap-2 mb-2.5">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className="text-sm font-bold text-primary truncate">{company.company_name}</span>
+                    <StatusBadge status={company.company_type} />
+                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(company); }}
+                    className="p-2.5 text-destructive hover:bg-destructive/10 rounded transition-colors flex-shrink-0 w-10 h-10 flex items-center justify-center"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Row 2: Contact & Terms Grid */}
+                <div className="grid grid-cols-2 gap-1.5 mb-2.5">
+                  <div>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.3px] mb-0.5">Contact</p>
+                    <p className="text-xs text-muted-foreground">{company.contact_name || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.3px] mb-0.5">Terms</p>
+                    <p className="text-xs text-secondary-foreground">{company.payment_terms ? company.payment_terms.replace(/_/g, ' ') : '—'}</p>
+                  </div>
+                </div>
+
+                {/* Row 3: Info Chips */}
+                <div className="flex gap-1 flex-wrap">
+                  {company.phone && (
+                    <div className="bg-secondary text-muted-foreground text-[11px] px-2 py-0.5 rounded flex items-center gap-1">
+                      <Phone className="w-3 h-3" />
+                      <span>{company.phone}</span>
+                    </div>
+                  )}
+                  {!company.phone && (
+                    <div className="bg-secondary text-muted-foreground text-[11px] px-2 py-0.5 rounded flex items-center gap-1">
+                      <Phone className="w-3 h-3" />
+                      <span>—</span>
+                    </div>
+                  )}
+
+                  {company.email && (
+                    <div className="bg-secondary text-muted-foreground text-[11px] px-2 py-0.5 rounded flex items-center gap-1">
+                      <Mail className="w-3 h-3" />
+                      <span className="truncate">{company.email}</span>
+                    </div>
+                  )}
+                  {!company.email && (
+                    <div className="bg-secondary text-muted-foreground text-[11px] px-2 py-0.5 rounded flex items-center gap-1">
+                      <Mail className="w-3 h-3" />
+                      <span>—</span>
+                    </div>
+                  )}
+
+                  {(company.city || company.state) && (
+                    <div className="bg-secondary text-muted-foreground text-[11px] px-2 py-0.5 rounded flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      <span>{company.city ? `${company.city}, ${company.state || ''}` : '—'}</span>
+                    </div>
+                  )}
+                  {!company.city && !company.state && (
+                    <div className="bg-secondary text-muted-foreground text-[11px] px-2 py-0.5 rounded flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      <span>—</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* FAB Button */}
+        <button
+          onClick={() => { if (!checkFeatureAccess(isInPreview)) return; setEditing(null); setDialogOpen(true); }}
+          className="fixed right-4 bottom-20 w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors flex-shrink-0"
+        >
+          <Plus className="w-5 h-5" />
+        </button>
+      </div>
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent>
