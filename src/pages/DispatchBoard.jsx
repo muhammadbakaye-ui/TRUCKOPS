@@ -89,40 +89,41 @@ function LoadCard({ load, drivers, trucks, onClick, noDriverWarning, selectMode,
         )}
       </div>
 
-      {/* Desktop layout */}
-      <div className="hidden md:block p-3 space-y-2">
-        <div className="flex items-center gap-1.5">
-          {selectMode && <Checkbox checked={isSelected} onCheckedChange={onSelect} onClick={e => e.stopPropagation()} className="flex-shrink-0" />}
-          <span className="font-mono font-semibold text-xs text-primary flex-1 min-w-0 truncate">{load.internal_load_number}</span>
-          {load.manual_dispatch_override && <Lock className="w-3 h-3 text-amber-500 flex-shrink-0" title="Manually overridden" />}
-          {colKey === 'available' && !selectMode && (
-            <button onClick={e => { e.stopPropagation(); onToggleVisibility(); }} className="text-muted-foreground hover:text-primary transition-colors flex-shrink-0">
-              {load.driver_visibility ? <Eye className="w-3 h-3 text-green-500" /> : <EyeOff className="w-3 h-3" />}
-            </button>
-          )}
-        </div>
-        {load.customer_name && <p className="text-xs text-muted-foreground truncate">{load.customer_name}</p>}
-        {(load.pickup_city || load.delivery_city) && (
-          <p className="text-xs text-foreground">
-            {[load.pickup_city, load.pickup_state].filter(Boolean).join(', ')}
-            {load.pickup_city && load.delivery_city ? ' → ' : ''}
-            {[load.delivery_city, load.delivery_state].filter(Boolean).join(', ')}
-          </p>
-        )}
-        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-          {driver && <span>👤 {driver.full_name}</span>}
-          {truck && <span>🚛 {truck.unit_number}</span>}
-        </div>
-        {(load.pickup_date || load.delivery_date) && (
-          <div className="flex gap-3 text-[11px] text-muted-foreground">
-            {load.pickup_date && <span>PU: {load.pickup_date}{load.pickup_time ? ' ' + load.pickup_time : ''}</span>}
-            {load.delivery_date && <span>DEL: {load.delivery_date}</span>}
+      {/* Desktop layout - matching mobile card design */}
+      <div className="hidden md:block" style={{ padding: '10px 12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '5px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0, flex: 1, overflow: 'hidden' }}>
+            {selectMode && <Checkbox checked={isSelected} onCheckedChange={onSelect} onClick={e => e.stopPropagation()} className="flex-shrink-0 mr-1" />}
+            <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '13px', color: 'hsl(var(--primary))', whiteSpace: 'nowrap', flexShrink: 0 }}>{load.internal_load_number}</span>
+            {truncBroker && <span style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '90px' }}>{truncBroker}</span>}
           </div>
-        )}
-        {load.invoice_amount > 0 && <p className="text-xs font-medium text-green-600">${load.invoice_amount.toLocaleString()}</p>}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0, marginLeft: '6px' }}>
+            {load.manual_dispatch_override && <Lock style={{ width: '11px', height: '11px', color: '#f59e0b' }} />}
+            {colKey === 'available' && !selectMode && (
+              <button onClick={e => { e.stopPropagation(); onToggleVisibility(); }} style={{ padding: '2px', background: 'none', border: 'none', cursor: 'pointer' }}>
+                {load.driver_visibility ? <Eye style={{ width: '11px', height: '11px', color: '#22c55e' }} /> : <EyeOff style={{ width: '11px', height: '11px' }} />}
+              </button>
+            )}
+            <StatusBadge status={load.status || 'draft'} />
+          </div>
+        </div>
+        <div style={{ fontSize: '13px', fontWeight: 500, color: 'hsl(var(--foreground))', marginBottom: '5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{load.customer_name || '—'}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'hsl(var(--muted-foreground))', marginBottom: '7px' }}>
+          <MapPin style={{ width: '11px', height: '11px', flexShrink: 0 }} />
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{hasRoute ? `${originParts.join(', ')} → ${destParts.join(', ')}` : 'No route assigned'}</span>
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: 'hsl(var(--secondary))', color: 'hsl(var(--muted-foreground))', fontSize: '11px', padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap' }}><Calendar style={{ width: '10px', height: '10px' }} /><span>{pickupDate || 'No date'}</span></div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: 'hsl(var(--secondary))', color: 'hsl(var(--muted-foreground))', fontSize: '11px', padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap' }}><User style={{ width: '10px', height: '10px' }} /><span>{load.driver_1_name || 'Unassigned'}</span></div>
+          {truck && <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: 'hsl(var(--secondary))', color: 'hsl(var(--muted-foreground))', fontSize: '11px', padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap' }}><Truck style={{ width: '10px', height: '10px' }} /><span>{truck.unit_number}</span></div>}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: '14px', fontWeight: 600, color: 'hsl(var(--foreground))' }}>${(load.invoice_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+          <StatusBadge status={load.invoice_status || 'not_invoiced'} />
+        </div>
         {noDriverWarning && (
-          <div className="flex items-center gap-1 text-[11px] text-amber-600 bg-amber-500/10 rounded px-1.5 py-1">
-            <AlertTriangle className="w-3 h-3 flex-shrink-0" /> No driver assigned
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#d97706', background: 'rgba(245,158,11,0.1)', borderRadius: '4px', padding: '4px 6px', marginTop: '6px' }}>
+            <AlertTriangle style={{ width: '12px', height: '12px', flexShrink: 0 }} /> No driver assigned
           </div>
         )}
       </div>
