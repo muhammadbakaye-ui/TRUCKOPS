@@ -440,7 +440,7 @@ export default function StatementBuilder() {
         <div className="w-full md:w-auto md:ml-auto flex mt-1 md:mt-0" style={{ gap: '6px' }}>
           <Button
             variant={form.published ? "default" : "outline"}
-            size="sm" className="h-10 md:h-8 text-xs gap-1 md:flex-none overflow-hidden" style={{ flex: '1 1 0', minWidth: 0, padding: '0 8px' }}
+            size="sm" className="h-10 md:h-8 gap-1 md:flex-none overflow-hidden" style={{ flex: '1 1 0', minWidth: 0, padding: '0 6px', fontSize: '11px' }}
             onClick={async () => {
               if (isSavingRef.current) return;
               isSavingRef.current = true;
@@ -466,11 +466,11 @@ export default function StatementBuilder() {
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" /> : (form.published ? <Eye className="w-3.5 h-3.5 flex-shrink-0" /> : <EyeOff className="w-3.5 h-3.5 flex-shrink-0" />)}
             <span className="truncate">{form.published ? 'Published' : 'Unpublished'}</span>
           </Button>
-          <Button size="sm" className="h-10 md:h-8 text-xs gap-1 md:flex-none overflow-hidden" style={{ flex: '1 1 0', minWidth: 0, padding: '0 8px' }} onClick={() => handleSave(false)} disabled={saving}>
+          <Button size="sm" className="h-10 md:h-8 gap-1 md:flex-none overflow-hidden" style={{ flex: '1 1 0', minWidth: 0, padding: '0 6px', fontSize: '11px' }} onClick={() => handleSave(false)} disabled={saving}>
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" /> : <Save className="w-3.5 h-3.5 flex-shrink-0" />}
             <span className="truncate">Save</span>
           </Button>
-          <Button size="sm" className="h-10 md:h-8 text-xs gap-1 bg-green-700 hover:bg-green-800 text-white md:flex-none overflow-hidden" style={{ flex: '1 1 0', minWidth: 0, padding: '0 8px' }} onClick={handlePrint}>
+          <Button size="sm" className="h-10 md:h-8 gap-1 bg-green-700 hover:bg-green-800 text-white md:flex-none overflow-hidden" style={{ flex: '1 1 0', minWidth: 0, padding: '0 6px', fontSize: '11px' }} onClick={handlePrint}>
             <Download className="w-3.5 h-3.5 flex-shrink-0" />
             <span className="truncate">Download PDF</span>
           </Button>
