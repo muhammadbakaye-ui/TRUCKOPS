@@ -151,7 +151,7 @@ export default function BottomNav({ currentPage }) {
           return (
             <button
               key={page}
-              onPointerDown={(e) => { e.preventDefault(); handleTabPress(page); }}
+              onClick={() => handleTabPress(page)}
               style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', cursor: 'pointer' }}
               className={cn(
                 'flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[11px] font-medium transition-colors select-none min-h-[56px]',
@@ -171,7 +171,7 @@ export default function BottomNav({ currentPage }) {
           if (!open) { setEditMode(false); setOverLimit(false); }
         }}>
           <button
-            onPointerDown={(e) => { e.preventDefault(); if (!navLockRef.current) { navLockRef.current = true; setTimeout(() => { navLockRef.current = false; }, 400); setMenuOpen(true); } }}
+            onClick={() => { if (!navLockRef.current) { navLockRef.current = true; setTimeout(() => { navLockRef.current = false; }, 400); setMenuOpen(true); } }}
             style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', cursor: 'pointer' }}
             className="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[11px] font-medium transition-colors select-none min-h-[56px] text-sidebar-foreground/70 hover:text-sidebar-foreground"
           >
