@@ -416,14 +416,14 @@ export default function StatementBuilder() {
       {/* Top bar */}
       <div className="space-y-3">
         <div className="flex items-center gap-3 flex-wrap md:gap-3">
-        <Button variant="ghost" size="sm" className="h-8 gap-1 hidden md:flex" onClick={() => navigate(-1)}>
-          <ArrowLeft className="w-3.5 h-3.5" /> Statements
-        </Button>
-        <h2 className="text-sm font-semibold">{(statementId || savedIdRef.current) ? `Statement — ${form.driver_name || ''}` : 'New Driver Statement'}</h2>
-        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${form.status === 'saved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-          {form.status?.toUpperCase()}
-        </span>
-        <span className="flex items-center gap-1 text-[11px] text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+          <Button variant="ghost" size="sm" className="h-8 gap-1 hidden md:flex" onClick={() => navigate(-1)}>
+            <ArrowLeft className="w-3.5 h-3.5" /> Statements
+          </Button>
+          <h2 className="text-sm font-semibold">{(statementId || savedIdRef.current) ? `Statement — ${form.driver_name || ''}` : 'New Driver Statement'}</h2>
+          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${form.status === 'saved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+            {form.status?.toUpperCase()}
+          </span>
+          <span className="flex items-center gap-1 text-[11px] text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
             {autoSaving
               ? <><Loader2 className="w-3 h-3 animate-spin" /> Auto-saving…</>
               : lastAutoSaved
@@ -457,19 +457,20 @@ export default function StatementBuilder() {
               }
             }}
             disabled={saving}
-            >
+          >
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" /> : (form.published ? <Eye className="w-3.5 h-3.5 flex-shrink-0" /> : <EyeOff className="w-3.5 h-3.5 flex-shrink-0" />)}
             <span className="truncate">{form.published ? 'Published' : 'Unpublished'}</span>
-            </Button>
-            <Button size="sm" className="h-10 md:h-8 gap-1 md:flex-none overflow-hidden" style={{ padding: '0 6px', fontSize: '11px', whiteSpace: 'nowrap' }} onClick={() => handleSave(false)} disabled={saving}>
+          </Button>
+          <Button size="sm" className="h-10 md:h-8 gap-1 md:flex-none overflow-hidden" style={{ padding: '0 6px', fontSize: '11px', whiteSpace: 'nowrap' }} onClick={() => handleSave(false)} disabled={saving}>
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" /> : <Save className="w-3.5 h-3.5 flex-shrink-0" />}
             <span className="truncate">Save</span>
-            </Button>
-            <Button size="sm" className="h-10 md:h-8 gap-1 bg-green-700 hover:bg-green-800 text-white md:flex-none overflow-hidden" style={{ padding: '0 6px', fontSize: '11px', whiteSpace: 'nowrap' }} onClick={handlePrint}>
+          </Button>
+          <Button size="sm" className="h-10 md:h-8 gap-1 bg-green-700 hover:bg-green-800 text-white md:flex-none overflow-hidden" style={{ padding: '0 6px', fontSize: '11px', whiteSpace: 'nowrap' }} onClick={handlePrint}>
             <Download className="w-3.5 h-3.5 flex-shrink-0" />
             <span className="truncate">Download PDF</span>
-            </Button>
-            </div>
+          </Button>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-2 md:gap-5">
         <div className="xl:col-span-3 space-y-5">
