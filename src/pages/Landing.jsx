@@ -8,9 +8,10 @@ import LandingCTA from '@/components/landing/LandingCTA';
 
 export default function Landing() {
   const navigate = useNavigate();
-  useEffect(() => {
-    if (window.innerWidth < 768) navigate('/Dashboard', { replace: true });
-  }, []);
+  if (window.innerWidth < 768) {
+    navigate('/Dashboard', { replace: true });
+    return null;
+  }
 
   const handleContinue = () => {
     navigate('/Dashboard');
