@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { LayoutDashboard, Container, MoreHorizontal, FileText, Users, Truck, Check, ChevronRight, Shield, Settings, BarChart2, Fuel, AlertTriangle, ClipboardList, BookOpen, Wrench, MapPin } from 'lucide-react';
@@ -122,18 +122,12 @@ export default function BottomNav({ currentPage }) {
     setMenuOpen(false);
   }, [navigate]);
 
-  const navLockRef = useRef(false);
-
   const handleTabPress = useCallback((page) => {
-    if (navLockRef.current) return;
-    navLockRef.current = true;
-    setTimeout(() => { navLockRef.current = false; }, 400);
     if (currentPage === page || (TAB_CHILD_PAGES[page] || []).includes(currentPage)) {
       document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-    const savedPath = sessionStorage.getItem(`bnav_stack_${page}`);
-    navigate(savedPath || createPageUrl(page), { replace: true });
+    navigate(createPageUrl(page));
   }, [navigate, currentPage]);
 
   return (
@@ -171,7 +165,7 @@ export default function BottomNav({ currentPage }) {
           if (!open) { setEditMode(false); setOverLimit(false); }
         }}>
           <button
-            onClick={() => { if (!navLockRef.current) { navLockRef.current = true; setTimeout(() => { navLockRef.current = false; }, 400); setMenuOpen(true); } }}
+            onClick={() => setMenuOpen(true)}
             style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', cursor: 'pointer', minHeight: '56px', paddingLeft: 0, paddingRight: 0, maxWidth: 'none', fontSize: '10px' }}
             className="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[11px] font-medium transition-colors select-none min-h-[56px] text-sidebar-foreground/70 hover:text-sidebar-foreground"
           >
