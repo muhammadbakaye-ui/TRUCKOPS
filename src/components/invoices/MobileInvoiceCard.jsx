@@ -83,8 +83,17 @@ export default function MobileInvoiceCard({ invoice, selected, onToggleSelect, o
               {invoice.invoice_number}
             </span>
           </div>
-          <div style={{ flexShrink: 0, marginLeft: '8px' }}>
-            <StatusBadge status={invoice.status || 'draft'} />
+          <div style={{ flexShrink: 0, marginLeft: '8px' }} onClick={e => e.stopPropagation()}>
+            <Select value={invoice.status || 'draft'} onValueChange={handleInvoiceStatusChange} disabled={savingStatus}>
+              <SelectTrigger className={`h-5 text-[10px] px-2 border rounded text-xs font-medium whitespace-nowrap ${INVOICE_STATUS_STYLES[invoice.status] || INVOICE_STATUS_STYLES.draft}`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(INVOICE_STATUS_LABELS).map(([val, label]) => (
+                  <SelectItem key={val} value={val}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -132,37 +141,27 @@ export default function MobileInvoiceCard({ invoice, selected, onToggleSelect, o
 
       {/* Footer strip */}
       <div
-        style={{ borderTop: '1px solid hsl(var(--border))', background: 'hsl(var(--secondary))', padding: '0 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-        onClick={(e) => e.stopPropagation()}
+      style={{ borderTop: '1px solid hsl(var(--border))', background: 'hsl(var(--secondary))', padding: '0 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+      onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          {qaEnabled && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onQuickAction && onQuickAction(invoice); }}
-              className={`px-2 py-0.5 rounded text-[10px] font-medium border transition-colors whitespace-nowrap ${INVOICE_STATUS_STYLES[qaAction] || 'bg-primary/10 text-primary border-primary/20'}`}
-              style={{ fontSize: '10px', height: '24px', display: 'inline-flex', alignItems: 'center' }}
-            >
-              {Object.entries(INVOICE_STATUS_LABELS).find(([val]) => val === qaAction)?.[1] || qaAction}
-            </button>
-          )}
-          <Select value={invoice.status || 'draft'} onValueChange={handleInvoiceStatusChange} disabled={savingStatus}>
-            <SelectTrigger className={`h-5 text-[10px] px-2 border rounded text-xs font-medium whitespace-nowrap ${INVOICE_STATUS_STYLES[invoice.status] || INVOICE_STATUS_STYLES.draft}`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(INVOICE_STATUS_LABELS).map(([val, label]) => (
-                <SelectItem key={val} value={val}>{label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {qaEnabled && (
           <button
-            onClick={(e) => { e.stopPropagation(); onDelete(invoice); }}
-            style={{ height: '44px', width: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
-            title="Delete invoice"
+            onClick={(e) => { e.stopPropagation(); onQuickAction && onQuickAction(invoice); }}
+            className={`px-2 py-0.5 rounded text-[10px] font-medium border transition-colors whitespace-nowrap ${INVOICE_STATUS_STYLES[qaAction] || 'bg-primary/10 text-primary border-primary/20'}`}
+            style={{ fontSize: '10px', height: '24px', display: 'inline-flex', alignItems: 'center' }}
           >
-            <Trash2 style={{ width: '16px', height: '16px', color: 'hsl(var(--destructive))' }} />
+            {Object.entries(INVOICE_STATUS_LABELS).find(([val]) => val === qaAction)?.[1] || qaAction}
           </button>
-        </div>
+        )}
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete(invoice); }}
+          style={{ height: '44px', width: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
+          title="Delete invoice"
+        >
+          <Trash2 style={{ width: '16px', height: '16px', color: 'hsl(var(--destructive))' }} />
+        </button>
+      </div>
       </div>
     </div>
   );
