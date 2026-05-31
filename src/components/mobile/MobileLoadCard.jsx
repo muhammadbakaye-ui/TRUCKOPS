@@ -1,10 +1,70 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MapPin, Calendar, User, Hash, Copy, Check, Download, Trash2 } from 'lucide-react';
 import StatusBadge from '@/components/shared/StatusBadge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { base44 } from '@/api/base44Client';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+
+const INVOICE_STATUS_LABELS = {
+  not_invoiced: 'Not Invoiced',
+  invoiced: 'Invoiced',
+  priority: 'Priority',
+  sent: 'Sent',
+  partial: 'Partial',
+  paid: 'Paid',
+  overdue: 'Overdue',
+  canceled: 'Canceled',
+};
 
 export default function MobileLoadCard({ load, copiedId, onCopy, onNavigate, onDelete, onPrint }) {
+  const queryClient = useQueryClient();
+  const [savingStatus, setSavingStatus] = useState(false);
   const showFooter = !!(onDelete || onPrint);
   if (!load) return null;
+
+  const handleInvoiceStatusChange = async (value) => {
+    setSavingStatus(true);
+    try {
+      await base44.entities.Load.update(load.id, { invoice_status: value });
+
+      if (value === 'not_invoiced') {
+        const existing = await base44.entities.Invoice.filter({ load_id: load.id }, '-created_date', 5);
+        for (const inv of existing) await base44.entities.Invoice.delete(inv.id);
+      } else {
+        const existing = await base44.entities.Invoice.filter({ load_id: load.id }, '-created_date', 1);
+        if (existing.length === 0) {
+          const allInvoices = load.tenant_id
+            ? await base44.entities.Invoice.filter({ tenant_id: load.tenant_id }, '-created_date', 1)
+            : await base44.entities.Invoice.list('-created_date', 1);
+          const lastNum = allInvoices.length > 0 ? parseInt(allInvoices[0].invoice_number?.replace(/\D/g, '') || '999') : 999;
+          const today = new Date().toISOString().split('T')[0];
+          await base44.entities.Invoice.create({
+            tenant_id: load.tenant_id,
+            invoice_number: `INV-${lastNum + 1}`,
+            load_id: load.id,
+            load_number: load.internal_load_number,
+            customer_id: load.customer_id,
+            customer_name: load.customer_name,
+            invoice_date: today,
+            total: load.invoice_amount || 0,
+            subtotal: load.invoice_amount || 0,
+            status: value === 'paid' ? 'paid' : value === 'sent' ? 'sent' : value === 'priority' ? 'priority' : 'draft',
+          });
+        } else {
+          const invStatus = value === 'paid' ? 'paid' : value === 'sent' ? 'sent' : value === 'priority' ? 'priority' : value === 'partial' ? 'partial' : value === 'overdue' ? 'overdue' : 'draft';
+          await base44.entities.Invoice.update(existing[0].id, { status: invStatus });
+        }
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['loads'] });
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    } catch (err) {
+      toast.error('Failed to update status: ' + err.message);
+    } finally {
+      setSavingStatus(false);
+    }
+  };
 
   const pickupDate = load.pickup_date
     ? new Date(load.pickup_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -92,11 +152,22 @@ export default function MobileLoadCard({ load, copiedId, onCopy, onNavigate, onD
           <span style={{ fontSize: '14px', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
             ${(load.invoice_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </span>
-          <StatusBadge status={load.invoice_status || 'not_invoiced'} />
+          <div onClick={e => e.stopPropagation()}>
+            <Select value={load.invoice_status || 'not_invoiced'} onValueChange={handleInvoiceStatusChange} disabled={savingStatus}>
+              <SelectTrigger className="h-6 text-[11px] px-2 border rounded-md font-medium w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(INVOICE_STATUS_LABELS).map(([val, label]) => (
+                  <SelectItem key={val} value={val}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
-      {showFooter && (
+      {(onDelete || onPrint) && (
       <div
         style={{ borderTop: '1px solid hsl(var(--border))', background: 'hsl(var(--secondary))', padding: '0 12px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '4px' }}
         onClick={(e) => e.stopPropagation()}

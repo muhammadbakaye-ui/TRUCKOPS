@@ -757,7 +757,8 @@ export default function Loads() {
                           <th className="text-left px-2 py-1 font-medium">Amount</th>
                           <th className="text-left px-2 py-1 font-medium">Status</th>
                           <th className="text-left px-2 py-1 font-medium">Invoice</th>
-                          <th className="px-2 py-1"></th>
+                           <th className="px-2 py-1"></th>
+                           <th className="px-2 py-1"></th>
                         </tr>
                       </thead>
                       <tbody className="hidden md:table-row-group text-xs">
@@ -891,6 +892,20 @@ export default function Loads() {
                                     </AlertDialogContent>
                                   </AlertDialog>
                                 </div>
+                              </td>
+                              <td className="px-2 py-1 text-right" onClick={e => e.stopPropagation()}>
+                                {qaEnabled && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-6 text-[10px] px-2"
+                                    onClick={() => handleQuickAction(l)}
+                                    disabled={savingBulk}
+                                    title={`Set to ${loadsQaOptions.find(o => o.value === qaAction)?.label || qaAction}`}
+                                  >
+                                    {loadsQaOptions.find(o => o.value === qaAction)?.label || qaAction}
+                                  </Button>
+                                )}
                               </td>
                             </tr>
                         ))}
