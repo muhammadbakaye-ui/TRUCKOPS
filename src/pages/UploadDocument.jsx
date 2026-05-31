@@ -114,13 +114,95 @@ export default function UploadDocument() {
       <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
       {/* LEFT: Upload form */}
       <div className="w-full md:flex-1 md:min-w-0 md:space-y-5 md:max-w-2xl space-y-4 md:space-y-5">
-        {/* Mobile-specific header */}
+        {/* Mobile-specific header + form */}
         <div className="md:hidden space-y-3">
-          <h1 className="text-sm font-semibold text-foreground">Upload Document</h1>
-          <p className="text-xs text-muted-foreground">Upload a rate confirmation or BOL to auto-create a load</p>
-          <Button variant="outline" size="sm" className="w-full h-10 text-[11px] gap-2 border border-border bg-secondary text-muted-foreground justify-start" onClick={() => setShowRulesSettings(true)}>
-            <Settings className="w-3.5 h-3.5" /> Line Item Rules
+          <div>
+            <h1 className="text-sm font-semibold text-foreground mb-1">Upload Document</h1>
+            <p className="text-xs text-muted-foreground mb-3">Upload a rate confirmation or BOL to auto-create a load</p>
+          </div>
+
+          {/* Line Item Rules */}
+          <Button variant="outline" size="sm" className="h-8 text-[11px] gap-1.5 justify-start border border-border bg-card w-auto" onClick={() => setShowRulesSettings(true)}>
+            <Settings className="w-3 h-3" /> Line Item Rules
           </Button>
+
+          {/* Document Type */}
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Document Type</Label>
+            <Select value={docType} onValueChange={setDocType}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rate_confirmation">Rate Confirmation</SelectItem>
+                <SelectItem value="bol">Bill of Lading</SelectItem>
+                <SelectItem value="carrier_tender">Carrier Tender</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Driver & Truck - side by side */}
+          <div className="flex gap-3">
+            <div className="flex-1 flex flex-col gap-1.5">
+              <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                Driver <span className="font-normal text-[10px]">(optional)</span>
+              </Label>
+              <Select
+                value={selectedDriverId || 'none'}
+                onValueChange={(val) => {
+                  if (val === 'none') {
+                    setSelectedDriverId('');
+                    setSelectedTruckId('');
+                  } else {
+                    setSelectedDriverId(val);
+                    const driver = drivers.find(d => d.id === val);
+                    if (driver?.assigned_truck_id) setSelectedTruckId(driver.assigned_truck_id);
+                  }
+                }}
+              >
+                <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Not assigned" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Not assigned</SelectItem>
+                  {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex-1 flex flex-col gap-1.5">
+              <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                Truck <span className="font-normal text-[10px]">(optional)</span>
+              </Label>
+              <Select
+                value={selectedTruckId || 'none'}
+                onValueChange={(val) => {
+                  if (val === 'none') {
+                    setSelectedTruckId('');
+                    setSelectedDriverId('');
+                  } else {
+                    setSelectedTruckId(val);
+                    const truck = trucks.find(t => t.id === val);
+                    if (truck?.assigned_driver_id) setSelectedDriverId(truck.assigned_driver_id);
+                  }
+                }}
+              >
+                <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Not assigned" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Not assigned</SelectItem>
+                  {trucks.map(t => <SelectItem key={t.id} value={t.id}>#{t.unit_number}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Overrides button */}
+          <button
+            type="button"
+            onClick={() => setShowOverrides(v => !v)}
+            className="flex items-center gap-2 h-9 px-3 rounded-md border border-border bg-card text-[11px] text-muted-foreground hover:text-foreground transition-colors justify-between w-full"
+          >
+            <span className="flex items-center gap-1.5">
+              <SlidersHorizontal className="w-3.5 h-3.5" /> Overrides
+            </span>
+            {showOverrides ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
         </div>
         {/* Desktop header */}
         <div className="hidden md:block">
@@ -209,86 +291,7 @@ export default function UploadDocument() {
           </button>
         </div>
 
-        {/* Mobile form layout */}
-        <div className="md:hidden space-y-3">
-          {/* Document Type */}
-          <div className="flex flex-col gap-1">
-            <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Document Type</Label>
-            <Select value={docType} onValueChange={setDocType}>
-              <SelectTrigger className="h-10 text-sm"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="rate_confirmation">Rate Confirmation</SelectItem>
-                <SelectItem value="bol">Bill of Lading</SelectItem>
-                <SelectItem value="carrier_tender">Carrier Tender</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
 
-          {/* Driver & Truck side by side */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-1">
-              <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
-                Driver <span className="font-normal text-[10px]">(optional)</span>
-              </Label>
-              <Select
-                value={selectedDriverId || 'none'}
-                onValueChange={(val) => {
-                  if (val === 'none') {
-                    setSelectedDriverId('');
-                    setSelectedTruckId('');
-                  } else {
-                    setSelectedDriverId(val);
-                    const driver = drivers.find(d => d.id === val);
-                    if (driver?.assigned_truck_id) setSelectedTruckId(driver.assigned_truck_id);
-                  }
-                }}
-              >
-                <SelectTrigger className="h-10 text-xs"><SelectValue placeholder="Not assigned" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Not assigned</SelectItem>
-                  {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
-                Truck <span className="font-normal text-[10px]">(optional)</span>
-              </Label>
-              <Select
-                value={selectedTruckId || 'none'}
-                onValueChange={(val) => {
-                  if (val === 'none') {
-                    setSelectedTruckId('');
-                    setSelectedDriverId('');
-                  } else {
-                    setSelectedTruckId(val);
-                    const truck = trucks.find(t => t.id === val);
-                    if (truck?.assigned_driver_id) setSelectedDriverId(truck.assigned_driver_id);
-                  }
-                }}
-              >
-                <SelectTrigger className="h-10 text-xs"><SelectValue placeholder="Not assigned" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Not assigned</SelectItem>
-                  {trucks.map(t => <SelectItem key={t.id} value={t.id}>#{t.unit_number}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Overrides button */}
-          <button
-            type="button"
-            onClick={() => setShowOverrides(v => !v)}
-            className="w-full flex items-center gap-2 h-10 px-3 rounded-lg border border-border bg-secondary text-[11px] text-muted-foreground hover:text-foreground transition-colors justify-between"
-          >
-            <span className="flex items-center gap-1.5">
-              <SlidersHorizontal className="w-3.5 h-3.5" /> Overrides
-            </span>
-            {showOverrides ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
-        </div>
 
         {/* Override fields */}
         {showOverrides && (
