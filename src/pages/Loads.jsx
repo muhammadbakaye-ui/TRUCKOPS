@@ -147,17 +147,16 @@ export default function Loads() {
   const [selected, setSelected] = useState(() => {
     try { const s = sessionStorage.getItem('loads_selected'); return s ? new Set(JSON.parse(s)) : new Set(); } catch { return new Set(); }
   });
-  const [bulkEditMode, setBulkEditMode] = useState(null); // 'amount' | 'driver' | 'truck'
-  const [bulkEdits, setBulkEdits] = useState({}); // { [loadId]: { field: value } }
+  const [bulkEditMode, setBulkEditMode] = useState(null);
+  const [bulkEdits, setBulkEdits] = useState({});
   const [savingBulk, setSavingBulk] = useState(false);
   const [expandedDates, setExpandedDates] = useState(() => {
     const saved = localStorage.getItem('loads_expanded_dates');
-    return saved ? new Set(JSON.parse(saved)) : null; // null = all open by default
+    return saved ? new Set(JSON.parse(saved)) : null;
   });
 
   const toggleDate = (dateKey, currentSortedKeys) => {
     setExpandedDates(prev => {
-      // If null (all open), initialize with all keys except this one (collapsed)
       const allKeys = currentSortedKeys || [];
       const current = prev === null ? new Set(allKeys) : new Set(prev);
       if (current.has(dateKey)) { current.delete(dateKey); } else { current.add(dateKey); }
@@ -185,7 +184,6 @@ export default function Loads() {
     refetchInterval: 60000,
   });
   
-  // Show loading only on first load (no cached data), not when refetching in background
   const showLoading = isLoading && loads.length === 0;
 
   const { data: drivers = [] } = useQuery({
@@ -203,7 +201,6 @@ export default function Loads() {
     queryFn: async () => { const r = session?.tenant_id ? await base44.entities.Company.filter({ tenant_id: session.tenant_id, company_type: 'carrier' }, '-created_date', 1) : []; return r[0] || {}; },
   });
 
-  // Live updates: invalidate cache when loads change on the server
   useEntitySubscription('Load', ['loads', session?.tenant_id], !!session?.tenant_id);
 
   const handlePrintLoad = async (e, load) => {
@@ -214,7 +211,7 @@ export default function Loads() {
 
   const [savingAllDrafts, setSavingAllDrafts] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
-  const [undoToast, setUndoToast] = useState(null); // { message, onUndo }
+  const [undoToast, setUndoToast] = useState(null);
   const [qaEnabled, setQaEnabled] = useState(() => localStorage.getItem('loads_qa_enabled') === 'true');
   const [qaAction, setQaAction] = useState(() => localStorage.getItem('loads_qa_action') || 'paid');
   const [poppedLoad, setPoppedLoad] = useState(null);
@@ -235,7 +232,6 @@ export default function Loads() {
   ];
 
   const handleQuickAction = async (load) => {
-    // Optimistic: update the cache immediately before server responds
     queryClient.setQueriesData({ queryKey: ['loads'] }, (old) => {
       if (!Array.isArray(old)) return old;
       return old.map(l => l.id === load.id ? { ...l, invoice_status: qaAction } : l);
@@ -333,7 +329,6 @@ export default function Loads() {
 
   const handleOpenBulkEdit = (field) => {
     setBulkEditMode(field);
-    // Seed current values for selected loads
     const initial = {};
     loads.filter(l => selected.has(l.id)).forEach(l => {
       if (field === 'amount') initial[l.id] = l.invoice_amount ?? '';
@@ -400,7 +395,6 @@ export default function Loads() {
     }
   };
 
-  // Build driver/truck filter options from actual DB records (not stale load text fields)
   const uniqueDrivers = drivers.map(d => d.full_name).sort();
   const uniqueTrucks = trucks.map(t => t.unit_number).sort();
   const uniqueTrips = [...new Set(loads
@@ -429,7 +423,6 @@ export default function Loads() {
     return matchesSearch && matchesStatus && matchesInvoice && matchesDriver && matchesTruck && matchesTrip && matchesDateFrom && matchesDateTo;
   });
 
-  // Group by pickup_date
   const groupedByDate = filtered.reduce((acc, l) => {
     const key = l.pickup_date || 'No Pickup Date';
     if (!acc[key]) acc[key] = [];
@@ -440,12 +433,11 @@ export default function Loads() {
   const sortedDateKeys = Object.keys(groupedByDate).sort((a, b) => {
     if (a === 'No Pickup Date') return 1;
     if (b === 'No Pickup Date') return -1;
-    return b.localeCompare(a); // most recent first
+    return b.localeCompare(a);
   });
 
   const hasActiveFilters = search || statusFilter.length > 0 || invoiceFilter.length > 0 || driverFilter.length > 0 || truckFilter.length > 0 || tripFilter.length > 0 || dateFrom || dateTo;
 
-  // Auto-expand any date keys that aren't in the saved set (e.g. new loads with new dates)
   useEffect(() => {
     if (expandedDates === null || sortedDateKeys.length === 0) return;
     const missing = sortedDateKeys.filter(k => !expandedDates.has(k));
@@ -487,10 +479,8 @@ export default function Loads() {
           onToggleFilters={() => setShowFilters(!showFilters)}
         />
         
-        {/* Collapsible filters */}
         {showFilters && (
           <div className="mobile-filters-expanded space-y-2 mt-3">
-            {/* Date range */}
             <div className="pickup-date-row">
               <div className="flex items-center gap-2 border border-input rounded-md px-3 h-10 flex-1 bg-background">
                 <span className="text-xs text-muted-foreground whitespace-nowrap">Pickup:</span>
@@ -510,7 +500,6 @@ export default function Loads() {
               </div>
             </div>
             
-            {/* Status & Invoice */}
             <div className="flex gap-2 flex-wrap">
               <MultiSelectFilter
                 label="Status"
@@ -541,7 +530,6 @@ export default function Loads() {
               />
             </div>
             
-            {/* Quick actions + Save All Drafts */}
             <div className="quick-actions-row flex-wrap gap-2">
               <QuickActionSettings
                 enabled={qaEnabled}
@@ -566,26 +554,21 @@ export default function Loads() {
         )}
       </div>
 
-      {/* Desktop Header */}
-      <div className="hidden md:block">
-        <PageHeader
-          title="Loads"
-          description={`${filtered.length} of ${loads.length}${loads.length >= 1000 ? '+' : ''} loads`}
-          actions={
-            <Button size="sm" className="h-8 text-xs gap-1" onClick={() => navigate(createPageUrl('LoadDetail?new=1'))}>
-              <Plus className="w-3.5 h-3.5" /> New Load
-            </Button>
-          }
-        />
-
-        {/* Desktop filter row */}
-        <div className="flex gap-2 mb-3 flex-wrap md:flex-nowrap">
-          <SearchInput value={search} onChange={setSearch} placeholder="Search loads..." className="w-full md:w-64" />
+      {/* Desktop Header - Single compact toolbar row */}
+      <div className="hidden md:block mb-3">
+        <div className="flex items-center gap-2 h-9">
+          <div className="flex items-center gap-2 min-w-fit">
+            <h1 className="text-sm font-semibold">Loads</h1>
+            <span className="text-xs text-muted-foreground">({filtered.length} of {loads.length}{loads.length >= 1000 ? '+' : ''})</span>
+          </div>
+          
+          <SearchInput value={search} onChange={setSearch} placeholder="Search..." className="w-40 h-8" />
+          
           <MultiSelectFilter
             label="Status"
             selected={statusFilter}
             onChange={setStatusFilter}
-            width="w-32"
+            width="w-28"
             options={[
               { value: 'draft', label: 'Draft' },
               { value: 'saved', label: 'Saved' },
@@ -597,7 +580,7 @@ export default function Loads() {
             label="Invoice"
             selected={invoiceFilter}
             onChange={setInvoiceFilter}
-            width="w-32"
+            width="w-28"
             options={[
               { value: 'not_invoiced', label: 'Not Invoiced' },
               { value: 'invoiced', label: 'Invoiced' },
@@ -612,7 +595,7 @@ export default function Loads() {
             label="Driver"
             selected={driverFilter}
             onChange={setDriverFilter}
-            width="w-36"
+            width="w-28"
             options={[
               { value: '__unselected__', label: '(Unassigned)' },
               ...uniqueDrivers.map(d => ({ value: d, label: d })),
@@ -622,7 +605,7 @@ export default function Loads() {
             label="Truck"
             selected={truckFilter}
             onChange={setTruckFilter}
-            width="w-32"
+            width="w-24"
             options={[
               { value: '__unselected__', label: '(Unassigned)' },
               ...uniqueTrucks.map(t => ({ value: t, label: t })),
@@ -632,72 +615,30 @@ export default function Loads() {
             label="Trip #"
             selected={tripFilter}
             onChange={setTripFilter}
-            width="w-32"
+            width="w-24"
             options={[
               { value: '__unselected__', label: '(Unassigned)' },
               ...uniqueTrips.map(t => ({ value: t, label: t })),
             ]}
           />
-          <div className="flex items-center gap-1 border border-input rounded-md px-2 h-8 bg-background">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">Pickup:</span>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={e => setDateFrom(e.target.value)}
-              className="text-xs bg-transparent outline-none w-28 text-foreground"
-              placeholder="From"
-            />
-            <span className="text-xs text-muted-foreground">–</span>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={e => setDateTo(e.target.value)}
-              className="text-xs bg-transparent outline-none w-28 text-foreground"
-              placeholder="To"
-            />
-            {(dateFrom || dateTo) && (
-              <button onClick={() => { setDateFrom(''); setDateTo(''); }} className="text-muted-foreground hover:text-foreground ml-1">
-                <X className="w-3 h-3" />
-              </button>
-            )}
-          </div>
-          {(search || statusFilter.length > 0 || invoiceFilter.length > 0 || driverFilter.length > 0 || truckFilter.length > 0 || tripFilter.length > 0 || dateFrom || dateTo) && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 text-xs gap-1"
-              onClick={() => {
-                setSearch('');
-                setStatusFilter([]);
-                setInvoiceFilter([]);
-                setDriverFilter([]);
-                setTruckFilter([]);
-                setTripFilter([]);
-                setDateFrom('');
-                setDateTo('');
-              }}
-            >
-              <X className="w-3.5 h-3.5" /> Clear Filters
-            </Button>
-          )}
-          <QuickActionSettings
-            enabled={qaEnabled}
-            onToggle={handleQaToggle}
-            action={qaAction}
-            onActionChange={handleQaAction}
-            options={loadsQaOptions}
-          />
+          
+          <div className="flex-1" />
+          
           {loads.some(l => l.status === 'draft') && (
             <Button
               size="sm"
-              className="h-8 text-xs gap-1"
+              className="h-8 text-xs gap-1 px-3"
               onClick={handleSaveAllDrafts}
               disabled={savingAllDrafts}
+              variant="outline"
             >
               {savingAllDrafts ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-              Save All Drafts
+              Save Drafts
             </Button>
           )}
+          <Button size="sm" className="h-8 text-xs gap-1 px-3" onClick={() => navigate(createPageUrl('LoadDetail?new=1'))}>
+            <Plus className="w-3.5 h-3.5" /> New Load
+          </Button>
         </div>
       </div>
 
@@ -755,7 +696,6 @@ export default function Loads() {
                   Total: ${totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </span>
               </div>
-              {/* Mobile: load cards */}
               {isExpanded && (
                 <div className="md:hidden space-y-2" style={{ marginBottom: '8px' }}>
                   {dateLoads.map(l => (
@@ -774,17 +714,19 @@ export default function Loads() {
               {/* Desktop: Card with table */}
               <Card className="hidden md:block">
               <CardHeader
-                className="py-3 px-2 cursor-pointer hover:bg-muted/50 transition-colors"
+                className="py-2 px-3 cursor-pointer hover:bg-muted/50 transition-colors border-b border-border/50 bg-muted/30"
                 onClick={() => toggleDate(dateKey, sortedDateKeys)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                    <CardTitle className="text-sm font-semibold">{label}</CardTitle>
-                    <span className="text-xs text-muted-foreground">({dateLoads.length} load{dateLoads.length === 1 ? '' : 's'})</span>
+                    {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
+                    <CardTitle className="text-xs font-semibold">{label}</CardTitle>
+                    <span className="inline-flex items-center gap-1 bg-muted/50 px-2 py-0.5 rounded-full text-xs text-muted-foreground border border-border/30">
+                      {dateLoads.length} load{dateLoads.length === 1 ? '' : 's'}
+                    </span>
                   </div>
-                  <div className="text-xs">
-                    Total: <span className="font-semibold">${totalAmount.toLocaleString()}</span>
+                  <div className="text-xs text-muted-foreground">
+                    Total: <span className="font-semibold text-foreground">${totalAmount.toLocaleString()}</span>
                   </div>
                 </div>
               </CardHeader>
@@ -793,9 +735,9 @@ export default function Loads() {
                   <div className="md:overflow-x-auto">
                     <div>
                       <table className="w-full text-xs mobile-card-table md:table">
-                      <thead className="bg-muted/50 border-y">
+                      <thead className="bg-muted/50 border-y text-xs">
                         <tr>
-                          <th className="text-left p-2 font-medium">
+                          <th className="text-left px-2 py-1 font-medium">
                             <Checkbox
                               checked={dateLoads.every(l => selected.has(l.id))}
                               onCheckedChange={(checked) => {
@@ -805,27 +747,27 @@ export default function Loads() {
                               }}
                             />
                           </th>
-                          <th className="text-left p-2 font-medium">Load #</th>
-                          <th className="text-left p-2 font-medium">Customer</th>
-                          <th className="text-left p-2 font-medium">Broker Load #</th>
-                          <th className="text-left p-2 font-medium">Route</th>
-                          <th className="text-left p-2 font-medium">Pickup → Delivery</th>
-                          <th className="text-left p-2 font-medium">Driver(s)</th>
-                          <th className="text-left p-2 font-medium">Truck</th>
-                          <th className="text-left p-2 font-medium">Amount</th>
-                          <th className="text-left p-2 font-medium">Status</th>
-                          <th className="text-left p-2 font-medium">Invoice</th>
-                          <th className="p-2"></th>
+                          <th className="text-left px-2 py-1 font-medium">Load #</th>
+                          <th className="text-left px-2 py-1 font-medium">Customer</th>
+                          <th className="text-left px-2 py-1 font-medium">Broker Load #</th>
+                          <th className="text-left px-2 py-1 font-medium">Route</th>
+                          <th className="text-left px-2 py-1 font-medium">Pickup → Delivery</th>
+                          <th className="text-left px-2 py-1 font-medium">Driver(s)</th>
+                          <th className="text-left px-2 py-1 font-medium">Truck</th>
+                          <th className="text-left px-2 py-1 font-medium">Amount</th>
+                          <th className="text-left px-2 py-1 font-medium">Status</th>
+                          <th className="text-left px-2 py-1 font-medium">Invoice</th>
+                          <th className="px-2 py-1"></th>
                         </tr>
                       </thead>
-                      <tbody className="hidden md:table-row-group">
+                      <tbody className="hidden md:table-row-group text-xs">
                         {dateLoads.map(l => (
                           <tr
                             key={l.id}
-                            className={`border-b hover:bg-muted/30 transition-colors ${bulkEditMode && selected.has(l.id) ? 'bg-primary/5 cursor-default' : 'cursor-pointer'}`}
+                            className={`border-b border-border/50 hover:bg-muted/50 transition-colors ${bulkEditMode && selected.has(l.id) ? 'bg-primary/5 cursor-default' : 'cursor-pointer'} h-8`}
                             onClick={() => !bulkEditMode && navigate(createPageUrl(`LoadDetail?id=${l.id}`))}
                           >
-                              <td className="p-2">
+                              <td className="px-2 py-1">
                                 <Checkbox
                                   checked={selected.has(l.id)}
                                   onCheckedChange={(checked) => {
@@ -836,7 +778,7 @@ export default function Loads() {
                                   onClick={e => e.stopPropagation()}
                                 />
                               </td>
-                              <td className="p-2" onClick={e => e.stopPropagation()}>
+                              <td className="px-2 py-1" onClick={e => e.stopPropagation()}>
                                 <span className="font-mono font-semibold text-primary">{l.internal_load_number}</span>
                                 {bulkEditMode === 'trip' && selected.has(l.id) ? (
                                   <input
@@ -844,105 +786,97 @@ export default function Loads() {
                                     value={bulkEdits[l.id] ?? ''}
                                     onChange={e => setBulkEdits(prev => ({ ...prev, [l.id]: e.target.value }))}
                                     placeholder="Trip #"
-                                    className="mt-1 h-7 w-24 rounded border border-primary bg-background px-2 text-xs text-foreground block"
+                                    className="mt-1 h-6 w-24 rounded border border-primary bg-background px-1.5 text-xs text-foreground block"
                                   />
                                 ) : (
-                                  l.trip_number && <div className="text-muted-foreground">Trip: {l.trip_number}</div>
+                                  l.trip_number && <div className="text-muted-foreground text-[11px]">Trip: {l.trip_number}</div>
                                 )}
                               </td>
-                              <td className="p-2 font-medium">{l.customer_name || '—'}</td>
-                              <td className="p-2" onClick={e => e.stopPropagation()}>
+                              <td className="px-2 py-1 font-medium">{l.customer_name || '—'}</td>
+                              <td className="px-2 py-1" onClick={e => e.stopPropagation()}>
                                 <div className="flex items-center gap-1">
                                   {l.external_load_number ? (
                                     <>
-                                      <span className="font-mono text-primary">{l.external_load_number}</span>
+                                      <span className="font-mono text-primary text-xs">{l.external_load_number}</span>
                                       <button
                                         onClick={(e) => handleCopyLoadNumber(e, l.external_load_number)}
-                                        className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                                        className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground flex-shrink-0"
                                         title="Copy broker load #"
                                       >
                                         {copiedId === l.external_load_number
-                                          ? <Check className="w-3 h-3 text-green-600" />
-                                          : <Copy className="w-3 h-3" />}
+                                          ? <Check className="w-2.5 h-2.5 text-green-600" />
+                                          : <Copy className="w-2.5 h-2.5" />}
                                       </button>
                                     </>
                                   ) : <span className="text-muted-foreground">—</span>}
-                                  {qaEnabled && (
-                                    <button
-                                      onClick={(e) => { e.stopPropagation(); handleQuickAction(l); }}
-                                      className={`px-2 py-0.5 rounded text-[10px] font-medium border transition-colors whitespace-nowrap ${INVOICE_STATUS_STYLES[qaAction] || 'bg-primary/10 text-primary border-primary/20'}`}
-                                    >
-                                      {loadsQaOptions.find(o => o.value === qaAction)?.label || qaAction}
-                                    </button>
-                                  )}
                                 </div>
                               </td>
-                              <td className="p-2">
+                              <td className="px-2 py-1">
                                 {l.pickup_city || l.delivery_city
                                   ? `${l.pickup_city || ''}${l.pickup_state ? ', ' + l.pickup_state : ''} → ${l.delivery_city || ''}${l.delivery_state ? ', ' + l.delivery_state : ''}`
                                   : '—'}
                               </td>
-                              <td className="p-2 whitespace-nowrap">
+                              <td className="px-2 py-1 whitespace-nowrap">
                                 {l.pickup_date || l.delivery_date
-                                  ? <>{l.pickup_date || '—'}<span className="text-muted-foreground mx-1">→</span>{l.delivery_date || '—'}</>
+                                  ? <>{l.pickup_date || '—'}<span className="text-muted-foreground mx-0.5 text-[11px]">→</span>{l.delivery_date || '—'}</>
                                   : '—'}
                               </td>
-                              <td className="p-2" onClick={e => e.stopPropagation()}>
+                              <td className="px-2 py-1" onClick={e => e.stopPropagation()}>
                                 {bulkEditMode === 'driver' && selected.has(l.id) ? (
                                   <select
                                     value={bulkEdits[l.id] ?? ''}
                                     onChange={e => setBulkEdits(prev => ({ ...prev, [l.id]: e.target.value }))}
-                                    className="h-7 rounded border border-primary bg-background px-1 text-xs text-foreground w-32"
+                                    className="h-6 rounded border border-primary bg-background px-1 text-xs text-foreground w-32"
                                   >
                                     <option value="">— Unassigned —</option>
                                     {drivers.map(d => <option key={d.id} value={d.id}>{d.full_name}</option>)}
                                   </select>
                                 ) : (
                                   <>
-                                    {l.driver_1_name || '—'}
-                                    {l.driver_2_name && <div>{l.driver_2_name}</div>}
+                                    <div className="text-xs">{l.driver_1_name || '—'}</div>
+                                    {l.driver_2_name && <div className="text-muted-foreground text-[11px]">{l.driver_2_name}</div>}
                                   </>
                                 )}
                               </td>
-                              <td className="p-2 font-mono" onClick={e => e.stopPropagation()}>
+                              <td className="px-2 py-1 font-mono" onClick={e => e.stopPropagation()}>
                                 {bulkEditMode === 'truck' && selected.has(l.id) ? (
                                   <select
                                     value={bulkEdits[l.id] ?? ''}
                                     onChange={e => setBulkEdits(prev => ({ ...prev, [l.id]: e.target.value }))}
-                                    className="h-7 rounded border border-primary bg-background px-1 text-xs text-foreground w-24"
+                                    className="h-6 rounded border border-primary bg-background px-1 text-xs text-foreground w-24"
                                   >
                                     <option value="">— Unassigned —</option>
                                     {trucks.map(t => <option key={t.id} value={t.id}>{t.unit_number}</option>)}
                                   </select>
                                 ) : (
-                                  l.truck_number || '—'
+                                  <span className="text-xs">{l.truck_number || '—'}</span>
                                 )}
                               </td>
-                              <td className="p-2" onClick={e => e.stopPropagation()}>
+                              <td className="px-2 py-1" onClick={e => e.stopPropagation()}>
                                 {bulkEditMode === 'amount' && selected.has(l.id) ? (
                                   <input
                                     type="number"
                                     value={bulkEdits[l.id] ?? ''}
                                     onChange={e => setBulkEdits(prev => ({ ...prev, [l.id]: e.target.value }))}
-                                    className="h-7 w-24 rounded border border-primary bg-background px-2 text-xs text-foreground"
+                                    className="h-6 w-20 rounded border border-primary bg-background px-1.5 text-xs text-foreground"
                                   />
                                 ) : (
-                                  l.invoice_amount ? `$${l.invoice_amount.toLocaleString()}` : '—'
+                                  <span className="text-xs">{l.invoice_amount ? `$${l.invoice_amount.toLocaleString()}` : '—'}</span>
                                 )}
                               </td>
-                              <td className="p-2"><StatusBadge status={l.status} /></td>
-                              <td className="p-2" onClick={e => e.stopPropagation()}>
+                              <td className="px-2 py-1"><StatusBadge status={l.status} /></td>
+                              <td className="px-2 py-1" onClick={e => e.stopPropagation()}>
                                  <InvoiceStatusSelect load={l} queryClient={queryClient} />
                                </td>
-                              <td className="p-2" onClick={e => e.stopPropagation()}>
-                                <div className="flex items-center gap-0.5">
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={(e) => handlePrintLoad(e, l)} title="Download PDF">
-                                    <Download className="w-3.5 h-3.5" />
+                              <td className="px-2 py-1 text-right" onClick={e => e.stopPropagation()}>
+                                <div className="flex items-center justify-end gap-0.5">
+                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground" onClick={(e) => handlePrintLoad(e, l)} title="Download PDF">
+                                    <Download className="w-3 h-3" />
                                   </Button>
                                   <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive">
-                                        <Trash2 className="w-3.5 h-3.5" />
+                                      <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive">
+                                        <Trash2 className="w-3 h-3" />
                                       </Button>
                                     </AlertDialogTrigger>
                                     <AlertDialogContent>
@@ -961,12 +895,12 @@ export default function Loads() {
                             </tr>
                         ))}
                       </tbody>
-                    </table>
+                     </table>
+                   </div>
                   </div>
-                  </div>
-                  </CardContent>
-                  )}
-            </Card>
+                 </CardContent>
+                )}
+             </Card>
             </div>
           );
         })}
