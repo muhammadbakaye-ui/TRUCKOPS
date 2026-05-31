@@ -707,6 +707,9 @@ export default function Loads() {
                       onNavigate={() => navigate(createPageUrl(`LoadDetail?id=${l.id}`))}
                       onDelete={(e) => { e.stopPropagation(); deleteMutation.mutate(l); }}
                       onPrint={(e) => handlePrintLoad(e, l)}
+                      qaEnabled={qaEnabled}
+                      qaAction={qaAction}
+                      onQuickAction={handleQuickAction}
                     />
                   ))}
                 </div>
@@ -757,7 +760,6 @@ export default function Loads() {
                           <th className="text-left px-2 py-1 font-medium">Amount</th>
                           <th className="text-left px-2 py-1 font-medium">Status</th>
                           <th className="text-left px-2 py-1 font-medium">Invoice</th>
-                          <th className="text-left px-2 py-1 font-medium">Quick Action</th>
                           <th className="px-2 py-1"></th>
                            <th className="px-2 py-1"></th>
                         </tr>
@@ -870,16 +872,6 @@ export default function Loads() {
                               <td className="px-2 py-1" onClick={e => e.stopPropagation()}>
                                  <InvoiceStatusSelect load={l} queryClient={queryClient} />
                                </td>
-                              <td className="px-2 py-1" onClick={e => e.stopPropagation()}>
-                                {qaEnabled && (
-                                  <button
-                                    onClick={() => handleQuickAction(l)}
-                                    className={`px-2 py-0.5 rounded text-[10px] font-medium border transition-colors whitespace-nowrap ${INVOICE_STATUS_STYLES[qaAction] || 'bg-primary/10 text-primary border-primary/20'}`}
-                                  >
-                                    {loadsQaOptions.find(o => o.value === qaAction)?.label || qaAction}
-                                  </button>
-                                )}
-                              </td>
                               <td className="px-2 py-1 text-right" onClick={e => e.stopPropagation()}>
                                 <div className="flex items-center justify-end gap-0.5">
                                   <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground" onClick={(e) => handlePrintLoad(e, l)} title="Download PDF">
@@ -903,20 +895,6 @@ export default function Loads() {
                                     </AlertDialogContent>
                                   </AlertDialog>
                                 </div>
-                              </td>
-                              <td className="px-2 py-1 text-right" onClick={e => e.stopPropagation()}>
-                                {qaEnabled && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-6 text-[10px] px-2"
-                                    onClick={() => handleQuickAction(l)}
-                                    disabled={savingBulk}
-                                    title={`Set to ${loadsQaOptions.find(o => o.value === qaAction)?.label || qaAction}`}
-                                  >
-                                    {loadsQaOptions.find(o => o.value === qaAction)?.label || qaAction}
-                                  </Button>
-                                )}
                               </td>
                             </tr>
                         ))}

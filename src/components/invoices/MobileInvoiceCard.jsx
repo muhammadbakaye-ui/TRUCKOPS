@@ -10,7 +10,7 @@ function fmtDate(dateStr) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export default function MobileInvoiceCard({ invoice, selected, onToggleSelect, onNavigate, onDelete, loadsMap, copiedId, onCopy }) {
+export default function MobileInvoiceCard({ invoice, selected, onToggleSelect, onNavigate, onDelete, loadsMap, copiedId, onCopy, qaEnabled, qaAction, onQuickAction }) {
   if (!invoice) return null;
 
   const load = loadsMap?.[invoice.load_id];
@@ -91,16 +91,24 @@ export default function MobileInvoiceCard({ invoice, selected, onToggleSelect, o
         style={{ borderTop: '1px solid hsl(var(--border))', background: 'hsl(var(--secondary))', padding: '0 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <span style={{ fontSize: '14px', fontWeight: 600, color: 'hsl(var(--primary))' }}>
-          {invoice.total ? `$${invoice.total.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : '—'}
-        </span>
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete(invoice); }}
-          style={{ height: '44px', width: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
-          title="Delete invoice"
-        >
-          <Trash2 style={{ width: '16px', height: '16px', color: 'hsl(var(--destructive))' }} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {qaEnabled && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onQuickAction && onQuickAction(invoice); }}
+              className={`px-2 py-0.5 rounded text-[10px] font-medium border transition-colors whitespace-nowrap ${invoice.status === 'paid' ? 'bg-green-50 text-green-700 border-green-300' : invoice.status === 'overdue' ? 'bg-red-50 text-red-700 border-red-300' : 'bg-primary/10 text-primary border-primary/20'}`}
+              style={{ fontSize: '10px', height: '24px', display: 'inline-flex', alignItems: 'center' }}
+            >
+              {qaAction?.charAt(0).toUpperCase() + qaAction?.slice(1)}
+            </button>
+          )}
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(invoice); }}
+            style={{ height: '44px', width: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
+            title="Delete invoice"
+          >
+            <Trash2 style={{ width: '16px', height: '16px', color: 'hsl(var(--destructive))' }} />
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -420,6 +420,9 @@ export default function Invoices() {
               loadsMap={loadsMap}
               copiedId={copiedId}
               onCopy={handleCopyLoadNumber}
+              qaEnabled={qaEnabled}
+              qaAction={qaAction}
+              onQuickAction={handleQuickAction}
             />
           ))
         )}

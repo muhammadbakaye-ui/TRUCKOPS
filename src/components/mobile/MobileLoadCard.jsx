@@ -1,6 +1,17 @@
 import React, { useState } from 'react';
 import { MapPin, Calendar, User, Hash, Copy, Check, Download, Trash2 } from 'lucide-react';
 import StatusBadge from '@/components/shared/StatusBadge';
+
+const INVOICE_STATUS_STYLES = {
+  not_invoiced: 'bg-muted text-muted-foreground border-border',
+  invoiced: 'bg-blue-500/10 text-blue-600 border-blue-500/30',
+  priority: 'bg-orange-500/10 text-orange-600 border-orange-500/30',
+  sent: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/30',
+  partial: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30',
+  paid: 'bg-green-500/10 text-green-600 border-green-500/30',
+  overdue: 'bg-red-500/10 text-red-600 border-red-500/30',
+  canceled: 'bg-muted text-muted-foreground border-border',
+};
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
@@ -17,7 +28,7 @@ const INVOICE_STATUS_LABELS = {
   canceled: 'Canceled',
 };
 
-export default function MobileLoadCard({ load, copiedId, onCopy, onNavigate, onDelete, onPrint }) {
+export default function MobileLoadCard({ load, copiedId, onCopy, onNavigate, onDelete, onPrint, qaEnabled, qaAction, onQuickAction }) {
   const queryClient = useQueryClient();
   const [savingStatus, setSavingStatus] = useState(false);
   const showFooter = !!(onDelete || onPrint);
@@ -147,22 +158,33 @@ export default function MobileLoadCard({ load, copiedId, onCopy, onNavigate, onD
           </div>
         </div>
 
-        {/* Row 5: Amount | invoice status */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* Row 5: Amount | quick action | invoice status dropdown */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '4px' }}>
           <span style={{ fontSize: '14px', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
             ${(load.invoice_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </span>
-          <div onClick={e => e.stopPropagation()}>
-            <Select value={load.invoice_status || 'not_invoiced'} onValueChange={handleInvoiceStatusChange} disabled={savingStatus}>
-              <SelectTrigger className="h-6 text-[11px] px-2 border rounded-md font-medium w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(INVOICE_STATUS_LABELS).map(([val, label]) => (
-                  <SelectItem key={val} value={val}>{label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            {qaEnabled && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onQuickAction && onQuickAction(load); }}
+                className={`px-2 py-0.5 rounded text-[10px] font-medium border transition-colors whitespace-nowrap ${INVOICE_STATUS_STYLES[qaAction] || 'bg-primary/10 text-primary border-primary/20'}`}
+                style={{ fontSize: '10px', height: '24px', display: 'inline-flex', alignItems: 'center' }}
+              >
+                {qaAction?.charAt(0).toUpperCase() + qaAction?.slice(1)}
+              </button>
+            )}
+            <div onClick={e => e.stopPropagation()}>
+              <Select value={load.invoice_status || 'not_invoiced'} onValueChange={handleInvoiceStatusChange} disabled={savingStatus}>
+                <SelectTrigger className="h-6 text-[11px] px-2 border rounded-md font-medium w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(INVOICE_STATUS_LABELS).map(([val, label]) => (
+                    <SelectItem key={val} value={val}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>
