@@ -311,7 +311,7 @@ export default function UploadDocument() {
         {/* Drop zone */}
         <Card
           data-tour="upload-dropzone"
-          className={`border-2 border-dashed transition-colors cursor-pointer md:rounded-lg rounded-2xl ${dragging ? 'border-primary bg-primary/5' : 'border-border'} ${(primaryFile || separateFiles.length > 0) ? 'border-green-500 bg-green-500/5' : ''}`}
+          className={`border-2 border-dashed transition-colors cursor-pointer md:rounded-lg rounded-2xl min-h-[160px] md:min-h-0 ${dragging ? 'border-primary bg-primary/5' : 'border-border'} ${(primaryFile || separateFiles.length > 0) ? 'border-green-500 bg-green-500/5' : ''}`}
           onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
           onDragLeave={() => setDragging(false)}
           onDrop={(e) => {
@@ -323,7 +323,7 @@ export default function UploadDocument() {
           }}
           onClick={() => !primaryFile && separateFiles.length === 0 && handleDropZoneClick()}
         >
-          <CardContent className="flex flex-col items-center justify-center py-8 gap-3">
+          <CardContent className="flex flex-col items-center justify-center py-8 md:py-6 gap-3">
             {separateFiles.length > 0 ? (
               // Mode 2: separate loads
               <div className="w-full space-y-2" onClick={e => e.stopPropagation()}>
