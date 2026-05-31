@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { LayoutDashboard, Container, MoreHorizontal, FileText, Users, Truck, Check, ChevronRight, Shield, Settings, BarChart2, Fuel, AlertTriangle, ClipboardList, BookOpen, Wrench, MapPin } from 'lucide-react';
@@ -122,9 +122,28 @@ export default function BottomNav({ currentPage }) {
     setMenuOpen(false);
   }, [navigate]);
 
+  const navLockRef = useRef(false);
+
+  const handleTabPress = useCallback((page, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (navLockRef.current) return;
+    navLockRef.current = true;
+    setTimeout(() => { navLockRef.current = false; }, 400);
+    if (currentPage === page || (TAB_CHILD_PAGES[page] || []).includes(currentPage)) {
+      document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    const savedPath = sessionStorage.getItem(`bnav_stack_${page}`);
+    navigate(savedPath || createPageUrl(page), { replace: true });
+  }, [navigate, currentPage]);
+
   return (
     <>
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar border-t border-sidebar-border flex z-50 shadow-lg" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar border-t border-sidebar-border flex z-50 shadow-lg"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)', touchAction: 'manipulation', userSelect: 'none', WebkitUserSelect: 'none', WebkitTapHighlightColor: 'transparent' }}
+      >
         {visiblePages.slice(0, 4).map((page) => {
           const item = ALL_PAGES_WITH_DASH.find(p => p.page === page);
           if (!item) return null;
@@ -135,15 +154,8 @@ export default function BottomNav({ currentPage }) {
             <button
               key={page}
               onTouchStart={(e) => e.preventDefault()}
-              onClick={() => {
-                if (isActive) {
-                  document.querySelector('main')?.scrollTo({ top: 0, behavior: 'smooth' });
-                  return;
-                }
-                const savedPath = sessionStorage.getItem(`bnav_stack_${page}`);
-                navigate(savedPath || createPageUrl(page), { replace: true });
-              }}
-              style={{ touchAction: 'manipulation' }}
+              onTouchEnd={(e) => handleTabPress(page, e)}
+              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
               className={cn(
                 'flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[11px] font-medium transition-colors select-none min-h-[56px]',
                 isActive ? 'text-sidebar-primary bg-sidebar-accent/20' : 'text-sidebar-foreground/70 hover:text-sidebar-foreground'
@@ -163,8 +175,8 @@ export default function BottomNav({ currentPage }) {
         }}>
           <button
             onTouchStart={(e) => e.preventDefault()}
-            onClick={() => setMenuOpen(true)}
-            style={{ touchAction: 'manipulation' }}
+            onTouchEnd={(e) => { e.preventDefault(); if (!navLockRef.current) { navLockRef.current = true; setTimeout(() => { navLockRef.current = false; }, 400); setMenuOpen(true); } }}
+            style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
             className="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[11px] font-medium transition-colors select-none min-h-[56px] text-sidebar-foreground/70 hover:text-sidebar-foreground"
           >
             <MoreHorizontal className="w-5 h-5" />
