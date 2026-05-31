@@ -417,6 +417,9 @@ export default function Invoices() {
               }}
               onNavigate={(id) => navigate(createPageUrl(`InvoiceDetail?id=${id}`))}
               onDelete={deleteMutation.mutate}
+              loadsMap={loadsMap}
+              copiedId={copiedId}
+              onCopy={handleCopyLoadNumber}
             />
           ))
         )}
