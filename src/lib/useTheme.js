@@ -15,7 +15,7 @@ export function applyTheme(theme) {
 export function getTheme() {
   const saved = localStorage.getItem(THEME_KEY);
   if (saved) return saved;
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return 'very-dark'; // Default to very-dark theme
 }
 
 export function initTheme() {
@@ -23,9 +23,8 @@ export function initTheme() {
   if (saved) {
     applyTheme(saved);
   } else {
-    // Auto-detect system color scheme on first visit
-    const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
-    applyTheme(prefersDark ? 'dark' : 'light');
+    // Default to very-dark theme
+    applyTheme('very-dark');
   }
 }
 
