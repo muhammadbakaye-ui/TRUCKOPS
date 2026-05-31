@@ -3,6 +3,7 @@ import { MapPin, Calendar, User, Hash, Copy, Check, Download, Trash2 } from 'luc
 import StatusBadge from '@/components/shared/StatusBadge';
 
 export default function MobileLoadCard({ load, copiedId, onCopy, onNavigate, onDelete, onPrint }) {
+  const showFooter = !!(onDelete || onPrint);
   if (!load) return null;
 
   const pickupDate = load.pickup_date
@@ -95,11 +96,12 @@ export default function MobileLoadCard({ load, copiedId, onCopy, onNavigate, onD
         </div>
       </div>
 
-      {/* Footer strip */}
+      {showFooter && (
       <div
         style={{ borderTop: '1px solid hsl(var(--border))', background: 'hsl(var(--secondary))', padding: '0 12px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '4px' }}
         onClick={(e) => e.stopPropagation()}
       >
+        {onPrint && (
         <button
           onClick={onPrint}
           style={{ height: '44px', width: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
@@ -107,6 +109,8 @@ export default function MobileLoadCard({ load, copiedId, onCopy, onNavigate, onD
         >
           <Download style={{ width: '16px', height: '16px', color: 'hsl(var(--muted-foreground))' }} />
         </button>
+        )}
+        {onDelete && (
         <button
           onClick={onDelete}
           style={{ height: '44px', width: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
@@ -114,7 +118,9 @@ export default function MobileLoadCard({ load, copiedId, onCopy, onNavigate, onD
         >
           <Trash2 style={{ width: '16px', height: '16px', color: 'hsl(var(--destructive))' }} />
         </button>
+        )}
       </div>
+      )}
     </div>
   );
 }
