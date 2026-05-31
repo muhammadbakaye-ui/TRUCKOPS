@@ -10,7 +10,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Loader2, Plus, RefreshCw, QrCode, Copy, Check } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter as AlertDialogFooterComponent, AlertDialogHeader as AlertDialogHeaderComponent, AlertDialogTitle as AlertDialogTitleComponent } from '@/components/ui/alert-dialog';
+const AlertDialogFooter = AlertDialogFooterComponent;
+const AlertDialogHeader = AlertDialogHeaderComponent;
+const AlertDialogTitle = AlertDialogTitleComponent;
+import { Loader2, Plus, RefreshCw, QrCode, Copy, Check, Trash2, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import SearchInput from '../components/shared/SearchInput';
 import DataTable from '../components/shared/DataTable';
@@ -190,6 +194,7 @@ export default function Drivers() {
   const [editing, setEditing] = useState(null);
   const [generatingToken, setGeneratingToken] = useState(null);
   const [qrDriver, setQrDriver] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const queryClient = useQueryClient();
   const { session } = useSession();
   const { showDialog, setShowDialog, checkFeatureAccess, handleDismiss, navigate } = usePreviewGate();
@@ -289,6 +294,30 @@ export default function Drivers() {
 
   const pagination = usePagination(filtered, 56, 'drivers_page');
 
+  const deleteMutation = useMutation({
+    mutationFn: async (driver) => {
+      await base44.entities.Driver.delete(driver.id);
+      await logAudit({ action_type: 'delete', entity_type: 'Driver', entity_id: driver.id, entity_label: driver.full_name });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['drivers'] });
+      setDeleteTarget(null);
+      toast.success('Driver deleted');
+    }
+  });
+
+  const getPayRateDisplay = (driver) => {
+    if (!driver.pay_rate) return '—';
+    const typeMap = { percentage: 'pct', per_mile: 'mi', flat_rate: 'flat', custom: 'custom' };
+    return `${driver.pay_rate} · ${typeMap[driver.pay_type] || driver.pay_type}`;
+  };
+
+  const getInitials = (fullName) => {
+    if (!fullName) return '';
+    const parts = fullName.trim().split(' ');
+    return (parts[0]?.[0] || '') + (parts[parts.length - 1]?.[0] || '');
+  };
+
   const columns = [
     { header: 'Name', render: (r) => <span className="font-medium">{r.full_name}</span> },
     { header: 'Phone', accessor: 'phone' },
@@ -330,20 +359,126 @@ export default function Drivers() {
   return (
     <div className="p-4">
       <PreviewFeatureDialog open={showDialog} onSubscribe={() => navigate('/pricing')} onDismiss={handleDismiss} />
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-bold">Drivers</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">{drivers.length} total drivers</p>
+      
+      {/* Desktop layout */}
+      <div className="hidden md:block">
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold">Drivers</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">{drivers.length} total drivers</p>
+          </div>
+          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { setEditing(null); setDialogOpen(true); }}>
+            <Plus className="w-3.5 h-3.5" /> Add Driver
+          </Button>
         </div>
-        <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { setEditing(null); setDialogOpen(true); }}>
-          <Plus className="w-3.5 h-3.5" /> Add Driver
-        </Button>
+        <div className="mb-3">
+          <SearchInput value={search} onChange={setSearch} placeholder="Search drivers..." className="w-72" />
+        </div>
+        <DataTable columns={columns} data={pagination.paginatedItems} isLoading={isLoading} onRowClick={(row) => { setEditing(row); setDialogOpen(true); }} emptyMessage="No drivers found" />
+        <Paginator {...pagination} itemLabel="drivers" />
       </div>
-      <div className="mb-3">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search drivers..." className="w-72" />
+
+      {/* Mobile card layout */}
+      <div className="md:hidden">
+        <div className="mb-4">
+          <h2 className="text-base font-semibold text-primary mb-0.5">Drivers</h2>
+          <p className="text-xs text-muted-foreground mb-3">{drivers.length} total driver{drivers.length !== 1 ? 's' : ''}</p>
+          <SearchInput value={search} onChange={setSearch} placeholder="Search drivers..." className="w-full" />
+        </div>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="w-6 h-6 border-2 border-border border-t-primary rounded-full animate-spin" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-xs text-muted-foreground">No drivers found</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {filtered.map((driver) => {
+              const truck = trucks.find(t => t.id === driver.assigned_truck_id);
+              return (
+                <div
+                  key={driver.id}
+                  onClick={() => { setEditing(driver); setDialogOpen(true); }}
+                  className="bg-card border border-border rounded-[10px] overflow-hidden box-border cursor-pointer active:opacity-80 transition-opacity"
+                >
+                  {/* Row 1: Avatar + Name + Phone + Status */}
+                  <div className="flex items-start gap-3 px-3 py-2.5">
+                    <div className="flex-shrink-0 w-8.5 h-8.5 rounded-full bg-secondary flex items-center justify-center">
+                      <span className="text-xs font-bold text-primary">{getInitials(driver.full_name)}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-primary">{driver.full_name}</p>
+                      <p className="text-xs text-muted-foreground">{driver.phone || '—'}</p>
+                    </div>
+                    <StatusBadge status={driver.status} />
+                  </div>
+
+                  {/* Row 2: 3-column info grid */}
+                  <div className="grid grid-cols-3 gap-1.5 px-3 py-2.5 border-t border-border/40">
+                    <div>
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.3px] mb-0.5">CDL</p>
+                      <p className="text-xs text-secondary-foreground">{driver.cdl_number || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.3px] mb-0.5">Truck</p>
+                      <p className="text-xs text-secondary-foreground">{truck ? truck.unit_number : '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.3px] mb-0.5">Pay</p>
+                      <p className="text-xs text-secondary-foreground">{getPayRateDisplay(driver)}</p>
+                    </div>
+                  </div>
+
+                  {/* Footer: Buttons + Delete */}
+                  <div className="flex items-center justify-between px-3 py-2 border-t border-border/40">
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 px-2.5 text-[11px] gap-1 border-border bg-transparent text-primary rounded-[6px]"
+                        onClick={(e) => { e.stopPropagation(); handleShowPortalQR(driver, e); }}
+                        disabled={generatingToken === driver.id}
+                      >
+                        {generatingToken === driver.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Share2 className="w-3 h-3" />}
+                        {driver.portal_token ? 'Share' : 'Portal'}
+                      </Button>
+                      {driver.portal_token && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2.5 text-[11px] gap-1 border-border bg-transparent text-muted-foreground rounded-[6px]"
+                          onClick={(e) => { e.stopPropagation(); handleRegenerateToken(driver, e); }}
+                          disabled={generatingToken === driver.id}
+                        >
+                          {generatingToken === driver.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                          Regen
+                        </Button>
+                      )}
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setDeleteTarget(driver); }}
+                      className="p-2.5 text-destructive hover:bg-destructive/10 rounded transition-colors w-10 h-10 flex items-center justify-center flex-shrink-0"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* FAB Button */}
+        <button
+          onClick={() => { setEditing(null); setDialogOpen(true); }}
+          className="fixed right-4 bottom-20 w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors flex-shrink-0"
+        >
+          <Plus className="w-5 h-5" />
+        </button>
       </div>
-      <DataTable columns={columns} data={pagination.paginatedItems} isLoading={isLoading} onRowClick={(row) => { setEditing(row); setDialogOpen(true); }} emptyMessage="No drivers found" />
-      <Paginator {...pagination} itemLabel="drivers" />
       {qrDriver && (
         <DriverQRModal
           driver={qrDriver.driver}
@@ -351,6 +486,30 @@ export default function Drivers() {
           onClose={() => setQrDriver(null)}
         />
       )}
+      
+      {/* Delete confirmation */}
+      {deleteTarget && (
+        <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Driver</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete <strong>{deleteTarget.full_name}</strong>? This cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive hover:bg-destructive/90"
+                onClick={() => deleteMutation.mutate(deleteTarget)}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
       <DriverFormDialog
         open={dialogOpen}
         onClose={() => { setDialogOpen(false); setEditing(null); }}
