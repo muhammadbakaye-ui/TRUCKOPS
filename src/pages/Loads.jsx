@@ -806,7 +806,6 @@ export default function Loads() {
                           <th className="text-left px-2 py-1 font-medium">Truck</th>
                           <th className="text-left px-2 py-1 font-medium">Amount</th>
                           <th className="text-left px-2 py-1 font-medium">Status</th>
-                          <th className="text-left px-2 py-1 font-medium">Invoice</th>
                           <th className="px-2 py-1"></th>
                         </tr>
                       </thead>
@@ -869,6 +868,11 @@ export default function Loads() {
                                   )}
                                 </div>
                               </td>
+                              <td className="px-2 py-1" onClick={e => e.stopPropagation()}>
+                                {l.pickup_city || l.delivery_city
+                                  ? `${l.pickup_city || ''}${l.pickup_state ? ', ' + l.pickup_state : ''} → ${l.delivery_city || ''}${l.delivery_state ? ', ' + l.delivery_state : ''}`
+                                  : '—'}
+                              </td>
                               <td className="px-2 py-1 whitespace-nowrap">
                                 {l.pickup_date || l.delivery_date
                                   ? <>{l.pickup_date || '—'}<span className="text-muted-foreground mx-0.5 text-[11px]">→</span>{l.delivery_date || '—'}</>
@@ -918,18 +922,15 @@ export default function Loads() {
                                 )}
                               </td>
                               <td className="px-2 py-1"><StatusBadge status={l.status} /></td>
-                              <td className="px-2 py-1" onClick={e => e.stopPropagation()}>
-                                <InvoiceStatusSelect load={l} queryClient={queryClient} />
-                              </td>
                             </tr>
                         ))}
                       </tbody>
-                     </table>
-                   </div>
+                      </table>
+                    </div>
                   </div>
-                 </CardContent>
-                )}
-             </Card>
+                </CardContent>
+              )}
+              </Card>
             </div>
           );
         })}
