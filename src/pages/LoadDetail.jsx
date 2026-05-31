@@ -311,7 +311,7 @@ export default function LoadDetail() {
   if (!form) return null;
 
   return (
-    <div className="p-4 space-y-4 max-w-5xl">
+    <div className="p-4 max-w-5xl">
       {showDialog && <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />}
       <AlertDialog open={confirmClearDriver} onOpenChange={(open) => !open && setConfirmClearDriver(false)}>
         <AlertDialogContent>
@@ -331,7 +331,9 @@ export default function LoadDetail() {
           </div>
         </AlertDialogContent>
       </AlertDialog>
-      <div className="flex items-center gap-2 flex-wrap">
+      
+      {/* Desktop header */}
+      <div className="hidden md:flex items-center gap-2 flex-wrap mb-4">
         <Button variant="ghost" size="sm" className="h-8 gap-1 flex-shrink-0" onClick={() => navigate(-1)}>
           <ArrowLeft className="w-3.5 h-3.5" /> Loads
         </Button>
@@ -362,7 +364,35 @@ export default function LoadDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* Mobile header */}
+      <div className="md:hidden flex justify-between items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 flex-wrap min-w-0">
+          <Button variant="ghost" size="sm" className="h-8 gap-1 flex-shrink-0 px-2" onClick={() => navigate(-1)}>
+            <ArrowLeft className="w-3.5 h-3.5" /> Loads
+          </Button>
+          <h2 className="text-xs font-semibold truncate min-w-0">
+            {(isNew && !savedLoadIdRef.current) ? 'New Load' : `Load ${form.internal_load_number}`}
+          </h2>
+          <StatusBadge status={form.status} />
+          {form.status === 'draft' && (
+            <span className="flex items-center gap-1 text-[10px] text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full flex-shrink-0">
+              {autoSaving
+                ? <><Loader2 className="w-2 h-2 animate-spin" /> Saving</>
+                : lastAutoSaved
+                ? <><Cloud className="w-2 h-2" /> Saved</>
+                : <><CloudOff className="w-2 h-2" /> Unsaved</>
+              }
+            </span>
+          )}
+        </div>
+        <Button size="sm" className="h-8 px-3 gap-1 flex-shrink-0" onClick={handleSave} disabled={saving}>
+          {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+          Save
+        </Button>
+      </div>
+
+      {/* Desktop 2-column layout */}
+      <div className="hidden md:grid grid-cols-1 lg:grid-cols-3 gap-4 space-y-4">
         {/* Left column */}
         <div className="lg:col-span-2 space-y-4">
           {/* Load Info */}
@@ -664,6 +694,278 @@ export default function LoadDetail() {
             </Card>
           )}
         </div>
+      </div>
+
+      {/* Mobile single-column layout */}
+      <div className="md:hidden space-y-2">
+        {/* Load Information */}
+        <Card>
+          <CardHeader className="py-3 px-3"><CardTitle className="text-[10px] font-semibold uppercase tracking-[0.5px] text-muted-foreground">Load Information</CardTitle></CardHeader>
+          <CardContent className="px-3 pb-3 space-y-2">
+            {/* Row 1: 3 columns */}
+            <div className="grid grid-cols-3 gap-2">
+              <Field label="Internal Load #"><TextInput value={form.internal_load_number} onChange={(v) => set('internal_load_number', v)} /></Field>
+              <Field label="External / Broker #"><TextInput value={form.external_load_number} onChange={(v) => set('external_load_number', v)} /></Field>
+              <Field label="Trip #"><TextInput value={form.trip_number} onChange={(v) => set('trip_number', v)} /></Field>
+            </div>
+            {/* Row 2: 3 columns */}
+            <div className="grid grid-cols-3 gap-2">
+              <Field label="Customer Ref #"><TextInput value={form.customer_reference_number} onChange={(v) => set('customer_reference_number', v)} /></Field>
+              <Field label="Customer">
+                <Select value={form.customer_id || ''} onValueChange={(v) => {
+                  const c = companies.find(c => c.id === v);
+                  set('customer_id', v); set('customer_name', c?.company_name || '');
+                }}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>{companies.map(c => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}</SelectContent>
+                </Select>
+              </Field>
+              <Field label="Status"><Sel value={form.status} onChange={(v) => set('status', v)} options={[{value:'draft',label:'Draft'},{value:'saved',label:'Saved'},{value:'completed',label:'Completed'},{value:'canceled',label:'Canceled'}]} /></Field>
+            </div>
+            {/* Row 3: 3 columns */}
+            <div className="grid grid-cols-3 gap-2">
+              <Field label="Dispatch Status">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex-1 min-w-0">
+                      <Sel
+                        value={form.dispatch_status}
+                        onChange={(v) => {
+                          if (v === 'available' && (form.driver_1_id || form.driver_2_id)) {
+                            setConfirmClearDriver(true);
+                            return;
+                          }
+                          set('dispatch_status', v);
+                          set('manual_dispatch_override', true);
+                          setDispatchManuallyChanged(true);
+                        }}
+                        options={[{value:'available',label:'Available'},{value:'assigned',label:'Assigned'},{value:'in_transit',label:'In Transit'},{value:'delivered',label:'Delivered'}]}
+                      />
+                    </div>
+                    {form.manual_dispatch_override && (
+                      <button
+                        onClick={() => {
+                          const computed = computeDispatchStatus({ ...form, manual_dispatch_override: false }, getTimezone());
+                          setForm(prev => ({ ...prev, dispatch_status: computed, manual_dispatch_override: false }));
+                          setDispatchManuallyChanged(false);
+                        }}
+                        className="flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-primary transition-colors whitespace-nowrap"
+                        title="Return to automation control"
+                      >
+                        <RotateCcw className="w-3 h-3" /> Auto
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </Field>
+              <Field label="Load Type"><Sel value={form.load_type} onChange={(v) => set('load_type', v)} options={['FTL','LTL','partial','other'].map(v=>({value:v,label:v.toUpperCase()}))} /></Field>
+              <Field label="Equipment"><Sel value={form.equipment_type} onChange={(v) => set('equipment_type', v)} options={['dry_van','reefer','flatbed','step_deck','lowboy','tanker','intermodal','other'].map(v=>({value:v,label:v.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}))} /></Field>
+            </div>
+            {/* Row 4: 2 columns */}
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="Commodity"><TextInput value={form.commodity} onChange={(v) => set('commodity', v)} /></Field>
+              <Field label="Weight (lbs)"><Input type="number" value={form.weight || ''} onChange={(e) => set('weight', Number(e.target.value))} className="h-8 text-xs" /></Field>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Assignment */}
+        <Card>
+          <CardHeader className="py-3 px-3"><CardTitle className="text-[10px] font-semibold uppercase tracking-[0.5px] text-muted-foreground">Assignment</CardTitle></CardHeader>
+          <CardContent className="px-3 pb-3 space-y-2">
+            <Field label="Driver 1">
+              <Select value={form.driver_1_id || ''} onValueChange={(v) => {
+                const d = drivers.find(d => d.id === v);
+                set('driver_1_id', v); set('driver_1_name', d?.full_name || '');
+                if (v && !form.driver_1_id) {
+                  set('driver_visibility', false);
+                }
+                if (d?.assigned_truck_id) {
+                  const t = trucks.find(t => t.id === d.assigned_truck_id);
+                  if (t) {
+                    set('truck_id', t.id);
+                    set('truck_number', t.unit_number);
+                  }
+                }
+              }}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select driver" /></SelectTrigger>
+                <SelectContent>{drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}</SelectContent>
+              </Select>
+            </Field>
+            <Field label="Driver 2">
+              <Select value={form.driver_2_id || ''} onValueChange={(v) => {
+                if (v === '__none__') { set('driver_2_id', null); set('driver_2_name', ''); return; }
+                const d = drivers.find(d => d.id === v);
+                set('driver_2_id', v); set('driver_2_name', d?.full_name || '');
+              }}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Optional" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">— None —</SelectItem>
+                  {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </Field>
+            <div className="grid grid-cols-2 gap-2">
+              <Field label="Truck">
+                <Select value={form.truck_id || ''} onValueChange={(v) => {
+                  const t = trucks.find(t => t.id === v);
+                  set('truck_id', v); set('truck_number', t?.unit_number || '');
+                  if (t?.assigned_driver_id) {
+                    const d = drivers.find(d => d.id === t.assigned_driver_id);
+                    if (d && !form.driver_1_id) {
+                      set('driver_1_id', d.id);
+                      set('driver_1_name', d.full_name);
+                    }
+                  }
+                }}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>{trucks.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number}</SelectItem>)}</SelectContent>
+                </Select>
+              </Field>
+              <Field label="Trailer">
+                <Select value={form.trailer_id || ''} onValueChange={(v) => {
+                  const t = trailers.find(t => t.id === v);
+                  set('trailer_id', v); set('trailer_number', t?.unit_number || '');
+                }}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>{trailers.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number}</SelectItem>)}</SelectContent>
+                </Select>
+              </Field>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Stops */}
+        <Card>
+          <CardHeader className="py-3 px-3 flex flex-row items-center justify-between">
+            <CardTitle className="text-[10px] font-semibold uppercase tracking-[0.5px] text-muted-foreground">Stops</CardTitle>
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addStop}><Plus className="w-3 h-3" /> Add Stop</Button>
+          </CardHeader>
+          <CardContent className="px-3 pb-3 space-y-2">
+            {stops.map((stop, i) => (
+              <div key={i} className="border rounded-[8px] p-2.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className={`text-[11px] font-semibold uppercase ${stop.stop_type === 'pickup' ? 'text-blue-600' : stop.stop_type === 'delivery' ? 'text-green-600' : 'text-muted-foreground'}`}>
+                    {stop.stop_type} #{i + 1}
+                  </span>
+                  {stops.length > 2 && (
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeStop(i)}>
+                      <Trash2 className="w-3 h-3 text-destructive" />
+                    </Button>
+                  )}
+                </div>
+                {/* Type + Company */}
+                <div className="flex gap-2">
+                  <div style={{ width: '120px', flexShrink: 0 }}>
+                    <Label className="text-[10px]">Type</Label>
+                    <Sel value={stop.stop_type} onChange={(v) => setStop(i, 'stop_type', v)} options={[{value:'pickup',label:'Pickup'},{value:'delivery',label:'Delivery'},{value:'stop',label:'Stop'}]} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <Label className="text-[10px]">Company</Label>
+                    <TextInput value={stop.company_name} onChange={(v) => setStop(i, 'company_name', v)} />
+                  </div>
+                </div>
+                {/* Date + Time From */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-[10px]">Date</Label>
+                    <Input type="date" value={stop.appointment_date || ''} onChange={(e) => setStop(i, 'appointment_date', e.target.value)} className="h-8 text-xs w-full" />
+                  </div>
+                  <div>
+                    <Label className="text-[10px]">Time From</Label>
+                    <TextInput value={stop.time_from} onChange={(v) => setStop(i, 'time_from', v)} placeholder="08:00" />
+                  </div>
+                </div>
+                {/* City + State */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-[10px]">City</Label>
+                    <TextInput value={stop.city} onChange={(v) => setStop(i, 'city', v)} />
+                  </div>
+                  <div>
+                    <Label className="text-[10px]">State</Label>
+                    <TextInput value={stop.state} onChange={(v) => setStop(i, 'state', v)} />
+                  </div>
+                </div>
+                {/* Reference + Notes */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="text-[10px]">Reference / BOL #</Label>
+                    <TextInput value={stop.reference_number} onChange={(v) => setStop(i, 'reference_number', v)} />
+                  </div>
+                  <div>
+                    <Label className="text-[10px]">Directions / Notes</Label>
+                    <TextInput value={stop.memo} onChange={(v) => setStop(i, 'memo', v)} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Financials */}
+        <Card>
+          <CardHeader className="py-3 px-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-[10px] font-semibold uppercase tracking-[0.5px] text-muted-foreground">Financials</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="px-3 pb-3 space-y-2">
+            {/* Line Items */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <Label className="text-[10px]">Charge Line Items</Label>
+                <Button variant="outline" size="sm" className="h-6 text-[11px] gap-1 px-2" onClick={addLineItem}>
+                  <Plus className="w-3 h-3" /> Add
+                </Button>
+              </div>
+              <div className="space-y-1">
+                {lineItems.length === 0 && (
+                  <p className="text-[11px] text-muted-foreground py-2 text-center border border-dashed rounded-md">No line items</p>
+                )}
+                {lineItems.map((li, i) => (
+                  <div key={i} className="flex gap-1 items-center">
+                    <Input
+                      value={li.description || ''}
+                      onChange={(e) => updateLineItem(i, 'description', e.target.value)}
+                      placeholder="Description"
+                      className="h-7 text-xs flex-1"
+                    />
+                    <Input
+                      type="number"
+                      value={li.amount === '' ? '' : li.amount}
+                      onChange={(e) => updateLineItem(i, 'amount', e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder="0.00"
+                      className="h-7 text-xs w-20"
+                    />
+                    <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => removeLineItem(i)}>
+                      <Trash2 className="w-3 h-3 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between items-center mt-1.5 pt-1.5 border-t">
+                <span className="text-[10px] font-semibold">Invoice Total</span>
+                <span className="text-xs font-bold text-primary">${lineItemsTotal.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <Field label="Driver Rate">
+              <Input type="number" value={form.driver_rate || ''} onChange={(e) => set('driver_rate', Number(e.target.value))} className="h-8 text-xs" placeholder={lineItemsTotal ? `Default: $${lineItemsTotal.toFixed(2)}` : 'Default'} />
+              <p className="text-[10px] text-muted-foreground mt-0.5">Used for driver pay</p>
+            </Field>
+            <Field label="Invoice Status"><Sel value={form.invoice_status} onChange={(v) => set('invoice_status', v)} options={['not_invoiced','invoiced','sent','partial','paid','overdue','canceled'].map(v=>({value:v,label:v.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}))} /></Field>
+            <Field label="Billable Miles"><Input type="number" value={form.billable_miles || ''} onChange={(e) => set('billable_miles', Number(e.target.value))} className="h-8 text-xs" /></Field>
+          </CardContent>
+        </Card>
+
+        {/* Notes */}
+        <Card>
+          <CardHeader className="py-3 px-3"><CardTitle className="text-[10px] font-semibold uppercase tracking-[0.5px] text-muted-foreground">Notes</CardTitle></CardHeader>
+          <CardContent className="px-3 pb-3">
+            <Textarea value={form.notes || ''} onChange={(e) => set('notes', e.target.value)} className="text-xs h-20" placeholder="Internal notes..." />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
