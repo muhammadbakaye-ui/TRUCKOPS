@@ -23,24 +23,24 @@ import { getPeriodByDueDate, getAllDueDates, DAY_NAMES } from '@/components/shar
 import { useStatementSettings } from '@/hooks/useStatementSettings';
 
 const LineRow = React.memo(({ line, onChange, onRemove }) => (
-  <div className="grid grid-cols-12 gap-2 items-center py-2 border-b last:border-0">
+  <div className="grid grid-cols-12 gap-1 md:gap-2 items-center py-1.5 md:py-2 border-b last:border-0">
     <div className="col-span-2">
-      <Input type="date" value={line.date || ''} onChange={(e) => onChange('date', e.target.value)} className="h-8 text-xs" />
+      <Input type="date" value={line.date || ''} onChange={(e) => onChange('date', e.target.value)} className="h-7 md:h-8 text-[10px] md:text-xs px-1 md:px-2" />
     </div>
-    <div className="col-span-4 flex items-center gap-1">
-      <Input value={line.description || ''} onChange={(e) => onChange('description', e.target.value)} className="h-8 text-xs flex-1" placeholder="Description / Load #" />
+    <div className="col-span-4 flex items-center gap-0.5 md:gap-1 min-w-0">
+      <Input value={line.description || ''} onChange={(e) => onChange('description', e.target.value)} className="h-7 md:h-8 text-[10px] md:text-xs flex-1 min-w-0" placeholder="Desc / Load #" />
       {line.internal_load_number && (
-        <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded whitespace-nowrap">{line.internal_load_number}</span>
+        <span className="hidden md:inline text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded whitespace-nowrap">{line.internal_load_number}</span>
       )}
     </div>
     <div className="col-span-3">
-      <Input value={line.route || ''} onChange={(e) => onChange('route', e.target.value)} className="h-8 text-xs" placeholder="Origin → Dest" />
+      <Input value={line.route || ''} onChange={(e) => onChange('route', e.target.value)} className="h-7 md:h-8 text-[10px] md:text-xs px-1 md:px-2" placeholder="Origin → Dest" />
     </div>
     <div className="col-span-2">
-      <Input type="number" value={line.amount || ''} onChange={(e) => onChange('amount', Number(e.target.value))} className="h-8 text-xs text-right font-mono font-semibold" placeholder="0.00" />
+      <Input type="number" value={line.amount || ''} onChange={(e) => onChange('amount', Number(e.target.value))} className="h-7 md:h-8 text-[10px] md:text-xs text-right font-mono font-semibold px-1 md:px-2" placeholder="0.00" />
     </div>
     <div className="col-span-1 flex justify-center">
-      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onRemove}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
+      <Button variant="ghost" size="icon" className="h-6 w-6 md:h-7 md:w-7" onClick={onRemove}><Trash2 className="w-3 h-3 md:w-3.5 md:h-3.5 text-destructive" /></Button>
     </div>
   </div>
 ));
@@ -399,17 +399,26 @@ export default function StatementBuilder() {
   const addCustomFuel = () => setFuelLines(prev => [...prev, { _key: `fuel_${Date.now()}`, line_type: 'fuel', date: form.statement_date || new Date().toISOString().split('T')[0], description: '', card_number: '', location_name: '', city_state: '', amount: 0 }]);
 
   const colHeaders = (
-    <div className="grid grid-cols-12 gap-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-0 mb-1 pb-2 border-b">
-      <div className="col-span-2">Date</div>
-      <div className="col-span-4">Description / Load #</div>
-      <div className="col-span-3">Route</div>
-      <div className="col-span-2 text-right">Amount ($)</div>
-      <div className="col-span-1"></div>
-    </div>
+    <>
+      <div className="md:hidden grid grid-cols-12 gap-1 text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 pb-1.5 border-b">
+        <div className="col-span-2">Date</div>
+        <div className="col-span-4">Desc / Load #</div>
+        <div className="col-span-3">Route</div>
+        <div className="col-span-2 text-right">Amt</div>
+        <div className="col-span-1"></div>
+      </div>
+      <div className="hidden md:grid grid-cols-12 gap-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-0 mb-1 pb-2 border-b">
+        <div className="col-span-2">Date</div>
+        <div className="col-span-4">Description / Load #</div>
+        <div className="col-span-3">Route</div>
+        <div className="col-span-2 text-right">Amount ($)</div>
+        <div className="col-span-1"></div>
+      </div>
+    </>
   );
 
   return (
-    <div className="p-6 space-y-5 max-w-screen-2xl">
+    <div className="p-3 space-y-3 md:p-6 md:space-y-5 max-w-screen-2xl">
       {showDialog && <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />}
       {/* Top bar */}
       <div className="flex items-center gap-3 flex-wrap">
@@ -428,10 +437,10 @@ export default function StatementBuilder() {
             : <><CloudOff className="w-3 h-3" /> Unsaved</>
           }
         </span>
-        <div className="ml-auto flex gap-2">
+        <div className="w-full md:w-auto md:ml-auto flex gap-1.5 md:gap-2 mt-1 md:mt-0">
           <Button
             variant={form.published ? "default" : "outline"}
-            size="sm" className="h-8 gap-1"
+            size="sm" className="h-10 md:h-8 text-xs gap-1 flex-1 md:flex-none px-2 md:px-3"
             onClick={async () => {
               if (isSavingRef.current) return;
               isSavingRef.current = true;
@@ -457,11 +466,11 @@ export default function StatementBuilder() {
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : (form.published ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />)}
             {form.published ? 'Published' : 'Unpublished'}
           </Button>
-          <Button size="sm" className="h-8 gap-1" onClick={() => handleSave(false)} disabled={saving}>
+          <Button size="sm" className="h-10 md:h-8 text-xs gap-1 flex-1 md:flex-none" onClick={() => handleSave(false)} disabled={saving}>
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             Save
           </Button>
-          <Button size="sm" className="h-8 gap-1 bg-green-700 hover:bg-green-800 text-white" onClick={handlePrint}>
+          <Button size="sm" className="h-10 md:h-8 text-xs gap-1 bg-green-700 hover:bg-green-800 text-white flex-1 md:flex-none" onClick={handlePrint}>
             <Download className="w-3.5 h-3.5" /> Download PDF
           </Button>
         </div>
@@ -472,8 +481,8 @@ export default function StatementBuilder() {
 
           {/* Header */}
           <Card>
-            <CardHeader className="py-3.5 px-5 border-b"><CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Statement Header</CardTitle></CardHeader>
-            <CardContent className="px-5 pb-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 border-b"><CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Statement Header</CardTitle></CardHeader>
+            <CardContent className="px-3 pb-3 md:px-5 md:pb-5 grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
               <div>
                 <Label className="text-xs">Driver</Label>
                 <Select value={form.driver_id || ''} onValueChange={(v) => {
@@ -534,7 +543,7 @@ export default function StatementBuilder() {
 
           {/* Settlement Items */}
           <Card>
-            <CardHeader className="py-3.5 px-5 flex flex-row items-center justify-between border-b">
+            <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 flex flex-wrap md:flex-nowrap items-center justify-between border-b gap-1.5 md:gap-0">
               <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Settlement Items ({tripLines.length})</CardTitle>
               <div className="flex gap-2 flex-nowrap">
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1 flex-1" onClick={handleAutoLoadWeek} disabled={!form.driver_id || !form.period_start || autoLoading} title="Auto-add all loads due this week">
@@ -545,7 +554,7 @@ export default function StatementBuilder() {
                  </Button>
               </div>
             </CardHeader>
-            <CardContent className="px-5 pb-5">
+            <CardContent className="px-3 pb-3 md:px-5 md:pb-5">
               {colHeaders}
               {tripLines.map((line, i) => <LineRow key={line._key || i} line={line} onChange={(k, v) => updateTripLine(i, k, v)} onRemove={() => setTripLines(prev => prev.filter((_, idx) => idx !== i))} />)}
               {tripLines.length === 0 && <p className="text-xs text-muted-foreground text-center py-5">No trips. Select a driver and click "Pick Loads" to add from existing loads.</p>}
@@ -555,7 +564,7 @@ export default function StatementBuilder() {
 
           {/* Deductions */}
           <Card>
-            <CardHeader className="py-3.5 px-5 flex flex-row items-center justify-between border-b">
+            <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 flex flex-wrap md:flex-nowrap items-center justify-between border-b gap-1.5 md:gap-0">
               <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Deductions ({deductionLines.length})</CardTitle>
               <div className="flex gap-1.5 flex-wrap justify-end">
                 {defaultDeductions
@@ -572,7 +581,7 @@ export default function StatementBuilder() {
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addCustomDeduction}><Plus className="w-3 h-3" /> Custom</Button>
               </div>
             </CardHeader>
-            <CardContent className="px-5 pb-5">
+            <CardContent className="px-3 pb-3 md:px-5 md:pb-5">
               {colHeaders}
               {deductionLines.map((line, i) => <LineRow key={line._key || i} line={line} onChange={(k, v) => updateDeductionLine(i, k, v)} onRemove={() => setDeductionLines(prev => prev.filter((_, idx) => idx !== i))} />)}
               {deductionLines.length === 0 && <p className="text-xs text-muted-foreground text-center py-5">No deductions. Use the quick-add buttons above.</p>}
@@ -582,7 +591,7 @@ export default function StatementBuilder() {
 
           {/* Fuel */}
           <Card>
-            <CardHeader className="py-3.5 px-5 flex flex-row items-center justify-between border-b">
+            <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 flex flex-wrap md:flex-nowrap items-center justify-between border-b gap-1.5 md:gap-0">
               <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Fuel ({fuelLines.length})</CardTitle>
               <div className="flex gap-1">
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={loadDriverFuel} disabled={loadingFuel || !form.driver_id}>
@@ -591,7 +600,7 @@ export default function StatementBuilder() {
                 <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addCustomFuel}><Plus className="w-3 h-3" /> Add</Button>
               </div>
             </CardHeader>
-            <CardContent className="px-5 pb-5">
+            <CardContent className="px-3 pb-3 md:px-5 md:pb-5">
               {colHeaders}
               {fuelLines.map((line, i) => <LineRow key={line._key || i} line={line} onChange={(k, v) => updateFuelLine(i, k, v)} onRemove={() => setFuelLines(prev => prev.filter((_, idx) => idx !== i))} />)}
               {fuelLines.length === 0 && <p className="text-xs text-muted-foreground text-center py-5">No fuel. Select a driver and click "Load Fuel".</p>}
@@ -602,9 +611,9 @@ export default function StatementBuilder() {
 
         {/* Summary */}
         <div>
-          <Card className="sticky top-4">
-            <CardHeader className="py-3.5 px-5 border-b"><CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Summary</CardTitle></CardHeader>
-            <CardContent className="px-5 pb-5 space-y-3">
+          <Card className="md:sticky md:top-4">
+            <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 border-b"><CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Summary</CardTitle></CardHeader>
+            <CardContent className="px-3 pb-3 md:px-5 md:pb-5 space-y-3">
               <div className="flex justify-between text-xs"><span className="text-muted-foreground">Driver</span><span className="font-medium">{form.driver_name || '—'}</span></div>
               <div className="flex justify-between text-xs"><span className="text-muted-foreground">Truck #</span><span className="font-medium font-mono">{form.truck_number || '—'}</span></div>
               <div className="flex justify-between text-xs"><span className="text-muted-foreground">Period</span><span>{form.period_start && form.period_end ? `${form.period_start} – ${form.period_end}` : '—'}</span></div>
