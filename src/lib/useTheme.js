@@ -1,13 +1,11 @@
-// Theme values: 'light' | 'dark' | 'very-dark'
+// Theme values: 'light' | 'dark'
 const THEME_KEY = 'app-theme';
 
 export function applyTheme(theme) {
   const root = document.documentElement;
-  root.classList.remove('dark', 'very-dark');
-  if (theme === 'dark') root.classList.add('dark');
-  if (theme === 'very-dark') {
-    // also add 'dark' so Tailwind dark: variants apply
-    root.classList.add('dark', 'very-dark');
+  root.classList.remove('dark');
+  if (theme === 'dark') {
+    root.classList.add('dark');
   }
   localStorage.setItem(THEME_KEY, theme);
 }
@@ -15,7 +13,7 @@ export function applyTheme(theme) {
 export function getTheme() {
   const saved = localStorage.getItem(THEME_KEY);
   if (saved) return saved;
-  return 'very-dark'; // Default to very-dark theme
+  return 'dark'; // Default to dark theme
 }
 
 export function initTheme() {
@@ -23,8 +21,8 @@ export function initTheme() {
   if (saved) {
     applyTheme(saved);
   } else {
-    // Default to very-dark theme
-    applyTheme('very-dark');
+    // Default to dark theme
+    applyTheme('dark');
   }
 }
 

@@ -20,12 +20,6 @@ export default function GeneralSettings() {
     {
       value: 'dark',
       label: 'Dark',
-      icon: Moon,
-      preview: { bg: 'bg-slate-700', card: 'bg-slate-600', text: 'text-gray-200', sidebar: 'bg-slate-900' },
-    },
-    {
-      value: 'very-dark',
-      label: 'Very Dark',
       icon: MoonStar,
       preview: { bg: 'bg-slate-900', card: 'bg-slate-800', text: 'text-blue-400', sidebar: 'bg-slate-950' },
     },
