@@ -189,7 +189,7 @@ function AppShell({ children, currentPageName }) {
   return (
     <>
       <GlobalBroadcastListener />
-      <div className="flex h-screen overflow-hidden bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <div className="flex overflow-hidden bg-background" style={{ height: '100dvh', paddingTop: 'env(safe-area-inset-top)' }}>
         {/* Sidebar: hidden on mobile, visible on md+ */}
         <div className="hidden md:flex" ref={sidebarRef}>
           <Sidebar

@@ -4,6 +4,13 @@ import { useLocation } from 'react-router-dom';
 
 export default function PageTransition({ children }) {
   const location = useLocation();
+
+  // On mobile, skip animation entirely — the motion.div creates a stacking context
+  // that traps position:fixed children (BottomNav), causing it to flash on each navigation.
+  if (typeof window !== 'undefined' && window.innerWidth < 768) {
+    return <>{children}</>;
+  }
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
