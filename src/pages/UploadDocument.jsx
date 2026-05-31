@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { Upload, Loader2, FileText, CheckCircle, X, XCircle, Truck, User, Hash, DollarSign, Tag, SlidersHorizontal, ChevronDown, ChevronUp, Plus, Settings } from 'lucide-react';
+import { Upload, Loader2, FileText, CheckCircle, X, XCircle, Truck, User, Hash, DollarSign, Tag, SlidersHorizontal, ChevronDown, ChevronUp, Plus, Settings, Camera } from 'lucide-react';
 import LineItemRulesSettings from '../components/upload/LineItemRulesSettings';
 import PageHeader from '../components/shared/PageHeader';
 import { useUploadContext } from '../context/UploadContext';
@@ -110,23 +110,34 @@ export default function UploadDocument() {
   const totalDocCount = 1 + extraSlots.filter(s => s.file).length;
 
   return (
-    <div className="p-4 space-y-4 flex gap-5 items-start">
+    <div className="p-4 space-y-4 md:flex md:gap-5 md:items-start">
       <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
       {/* LEFT: Upload form */}
-      <div className="flex-1 min-w-0 space-y-5 max-w-2xl">
-        <PageHeader
-          title="Upload Document"
-          description="Upload a rate confirmation or BOL to auto-create a load"
-          actions={
-            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowRulesSettings(true)}>
-              <Settings className="w-3.5 h-3.5" /> Line Item Rules
-            </Button>
-          }
-        />
+      <div className="w-full md:flex-1 md:min-w-0 md:space-y-5 md:max-w-2xl space-y-4 md:space-y-5">
+        {/* Mobile-specific header */}
+        <div className="md:hidden space-y-2.5">
+          <h1 className="text-xl font-semibold text-foreground">Upload Document</h1>
+          <p className="text-sm text-muted-foreground">Upload a rate confirmation or BOL to auto-create a load</p>
+          <Button variant="outline" size="sm" className="w-full h-10 text-xs gap-1.5 justify-start" onClick={() => setShowRulesSettings(true)}>
+            <Settings className="w-3.5 h-3.5" /> Line Item Rules
+          </Button>
+        </div>
+        {/* Desktop header */}
+        <div className="hidden md:block">
+          <PageHeader
+            title="Upload Document"
+            description="Upload a rate confirmation or BOL to auto-create a load"
+            actions={
+              <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowRulesSettings(true)}>
+                <Settings className="w-3.5 h-3.5" /> Line Item Rules
+              </Button>
+            }
+          />
+        </div>
         <LineItemRulesSettings open={showRulesSettings} onClose={() => setShowRulesSettings(false)} tenantId={session?.tenant_id} />
 
         {/* Primary options */}
-        <div className="flex flex-wrap gap-4 items-end">
+        <div className="hidden md:flex md:flex-wrap gap-4 items-end">
           <div className="flex flex-col gap-1.5">
             <Label className="text-xs text-muted-foreground">Document Type</Label>
             <Select value={docType} onValueChange={setDocType}>
@@ -198,9 +209,90 @@ export default function UploadDocument() {
           </button>
         </div>
 
+        {/* Mobile form layout */}
+        <div className="md:hidden space-y-3">
+          {/* Document Type */}
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs font-semibold text-muted-foreground uppercase">Document Type</Label>
+            <Select value={docType} onValueChange={setDocType}>
+              <SelectTrigger className="h-10 text-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rate_confirmation">Rate Confirmation</SelectItem>
+                <SelectItem value="bol">Bill of Lading</SelectItem>
+                <SelectItem value="carrier_tender">Carrier Tender</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Driver & Truck side by side */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase">
+                Driver <span className="font-normal text-[10px]">(optional)</span>
+              </Label>
+              <Select
+                value={selectedDriverId || 'none'}
+                onValueChange={(val) => {
+                  if (val === 'none') {
+                    setSelectedDriverId('');
+                    setSelectedTruckId('');
+                  } else {
+                    setSelectedDriverId(val);
+                    const driver = drivers.find(d => d.id === val);
+                    if (driver?.assigned_truck_id) setSelectedTruckId(driver.assigned_truck_id);
+                  }
+                }}
+              >
+                <SelectTrigger className="h-10 text-xs"><SelectValue placeholder="Not assigned" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Not assigned</SelectItem>
+                  {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs font-semibold text-muted-foreground uppercase">
+                Truck <span className="font-normal text-[10px]">(optional)</span>
+              </Label>
+              <Select
+                value={selectedTruckId || 'none'}
+                onValueChange={(val) => {
+                  if (val === 'none') {
+                    setSelectedTruckId('');
+                    setSelectedDriverId('');
+                  } else {
+                    setSelectedTruckId(val);
+                    const truck = trucks.find(t => t.id === val);
+                    if (truck?.assigned_driver_id) setSelectedDriverId(truck.assigned_driver_id);
+                  }
+                }}
+              >
+                <SelectTrigger className="h-10 text-xs"><SelectValue placeholder="Not assigned" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Not assigned</SelectItem>
+                  {trucks.map(t => <SelectItem key={t.id} value={t.id}>#{t.unit_number}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Overrides button */}
+          <button
+            type="button"
+            onClick={() => setShowOverrides(v => !v)}
+            className="w-full flex items-center gap-2 h-10 px-3 rounded-lg border border-border bg-secondary text-xs text-muted-foreground hover:text-foreground transition-colors justify-between"
+          >
+            <span className="flex items-center gap-1.5">
+              <SlidersHorizontal className="w-3.5 h-3.5" /> Overrides
+            </span>
+            {showOverrides ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+        </div>
+
         {/* Override fields */}
         {showOverrides && (
-          <div className="flex flex-wrap gap-4 items-end p-4 bg-muted/40 rounded-lg border border-border">
+          <div className="hidden md:flex md:flex-wrap gap-4 items-end p-4 bg-muted/40 rounded-lg border border-border">
             <div className="flex flex-col gap-1.5">
               <Label className="text-xs text-muted-foreground">Invoice Amount Override</Label>
               <Input value={manualAmount} onChange={e => setManualAmount(e.target.value)} placeholder="Auto from document" type="number" className="h-9 text-sm w-44" />
@@ -219,7 +311,7 @@ export default function UploadDocument() {
         {/* Drop zone */}
         <Card
           data-tour="upload-dropzone"
-          className={`border-2 border-dashed transition-colors cursor-pointer ${dragging ? 'border-primary bg-primary/5' : 'border-border'} ${(primaryFile || separateFiles.length > 0) ? 'border-green-500 bg-green-500/5' : ''}`}
+          className={`border-2 border-dashed transition-colors cursor-pointer md:rounded-lg rounded-2xl ${dragging ? 'border-primary bg-primary/5' : 'border-border'} ${(primaryFile || separateFiles.length > 0) ? 'border-green-500 bg-green-500/5' : ''}`}
           onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
           onDragLeave={() => setDragging(false)}
           onDrop={(e) => {
@@ -325,8 +417,10 @@ export default function UploadDocument() {
             ) : (
               <>
                 <Upload className="w-10 h-10 text-muted-foreground" />
-                <p className="text-sm font-medium">Drop the primary document here or click to browse</p>
-                <p className="text-xs text-muted-foreground">Drop one file for bundle mode · Drop multiple files for separate loads · Ctrl+V to paste</p>
+                <p className="text-sm font-medium hidden md:block">Drop the primary document here or click to browse</p>
+                <p className="text-sm font-medium md:hidden text-primary">Tap to browse or use camera</p>
+                <p className="text-xs text-muted-foreground hidden md:block">Drop one file for bundle mode · Drop multiple files for separate loads · Ctrl+V to paste</p>
+                <p className="text-xs text-muted-foreground md:hidden">PDF, image, or document formats supported</p>
               </>
             )}
             <input ref={fileInputRef} type="file" className="hidden" multiple accept=".pdf,.png,.jpg,.jpeg,.tiff,.doc,.docx" onChange={(e) => {
@@ -346,8 +440,27 @@ export default function UploadDocument() {
           </CardContent>
         </Card>
 
+        {/* Divider and Take Photo (mobile only) */}
+        {!primaryFile && separateFiles.length === 0 && (
+          <div className="md:hidden space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-xs text-muted-foreground">or</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+            <Button
+              onClick={() => handleDropZoneClick()}
+              variant="outline"
+              className="w-full h-12 gap-2 rounded-lg border border-border bg-secondary text-sm text-muted-foreground"
+            >
+              <Camera className="w-5 h-5" />
+              Take Photo
+            </Button>
+          </div>
+        )}
+
         {(primaryFile || separateFiles.length > 0) && (
-          <Button onClick={handleProcess} className="gap-2">
+          <Button onClick={handleProcess} className="gap-2 w-full md:w-auto">
             <Upload className="w-4 h-4" />
             {separateFiles.length > 0
               ? `Analyze ${separateFiles.length} files → Create ${separateFiles.length} Loads`
@@ -359,7 +472,7 @@ export default function UploadDocument() {
 
       {/* RIGHT: Upload queue */}
       {activeJobs.length > 0 && (
-        <div className="w-80 flex-shrink-0 space-y-3">
+        <div className="w-full md:w-80 md:flex-shrink-0 space-y-3">
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">Upload Queue</h3>
           {activeJobs.map(job => {
             const pct = job.total > 0 ? Math.round((job.current / job.total) * 100) : 0;
