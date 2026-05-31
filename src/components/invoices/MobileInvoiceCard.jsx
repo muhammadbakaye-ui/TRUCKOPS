@@ -8,13 +8,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 const INVOICE_STATUS_STYLES = {
-  draft: 'bg-gray-100 text-gray-600 border-gray-200',
-  priority: 'bg-orange-50 text-orange-700 border-orange-300',
-  sent: 'bg-cyan-50 text-cyan-700 border-cyan-200',
-  partial: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-  paid: 'bg-green-50 text-green-700 border-green-200',
-  overdue: 'bg-red-50 text-red-700 border-red-200',
-  canceled: 'bg-gray-100 text-gray-400 border-gray-200',
+  draft: 'bg-muted text-muted-foreground border-border',
+  priority: 'bg-orange-500/10 text-orange-600 border-orange-500/30',
+  sent: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/30',
+  partial: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30',
+  paid: 'bg-green-500/10 text-green-600 border-green-500/30',
+  overdue: 'bg-red-500/10 text-red-600 border-red-500/30',
+  canceled: 'bg-muted text-muted-foreground border-border',
 };
 
 const INVOICE_STATUS_LABELS = {
