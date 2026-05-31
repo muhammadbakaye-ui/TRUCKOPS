@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import MobileSelect from '@/components/ui/MobileSelect';
 import MobilePullRefresh from '../components/mobile/MobilePullRefresh';
-import { Plus, Search, Trash2, X, ChevronDown, ChevronRight, Eye, EyeOff, Printer, Loader2, FileText, Settings } from 'lucide-react';
+import { Plus, Search, Trash2, X, ChevronDown, ChevronRight, Eye, EyeOff, Printer, Loader2, FileText, Settings, Download } from 'lucide-react';
 import MobileFAB from '../components/mobile/MobileFAB';
 import DefaultDeductionsSettings from '../components/statements/DefaultDeductionsSettings';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
@@ -171,96 +171,98 @@ export default function DriverStatements() {
 
   return (
     <MobilePullRefresh onRefresh={() => queryClient.invalidateQueries({ queryKey: ['statements'] })}>
-    <div className="p-4 space-y-3">
+    <div className="p-4">
       <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
       <DefaultDeductionsSettings open={showDeductionSettings} onClose={() => setShowDeductionSettings(false)} tenantId={session?.tenant_id} />
-      <PageHeader
-        title="Driver Statements"
-        description={`${statements.length} total statements`}
-        actions={
-          <div className="flex gap-2 items-center">
-            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setShowDeductionSettings(true)} title="Statement Settings">
-              <Settings className="w-4 h-4" />
-            </Button>
-            <Button size="sm" className="h-8 text-xs gap-1 hidden sm:flex" onClick={() => navigate(createPageUrl('StatementBuilder'))}>
-              <Plus className="w-3.5 h-3.5" /> New Statement
-            </Button>
-          </div>
-        }
-      />
-      <MobileFAB onClick={() => navigate(createPageUrl('StatementBuilder'))} title="New Statement" />
+      
+      {/* Desktop layout */}
+      <div className="hidden md:block space-y-3">
+        <PageHeader
+          title="Driver Statements"
+          description={`${statements.length} total statements`}
+          actions={
+            <div className="flex gap-2 items-center">
+              <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setShowDeductionSettings(true)} title="Statement Settings">
+                <Settings className="w-4 h-4" />
+              </Button>
+              <Button size="sm" className="h-8 text-xs gap-1 hidden sm:flex" onClick={() => navigate(createPageUrl('StatementBuilder'))}>
+                <Plus className="w-3.5 h-3.5" /> New Statement
+              </Button>
+            </div>
+          }
+        />
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2 items-center">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-          <Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 pl-8 text-xs w-full sm:w-48" />
+        {/* Desktop Filters */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-8 pl-8 text-xs w-full sm:w-48" />
+          </div>
+
+          <MobileSelect
+            value={periodFilter}
+            onValueChange={setPeriodFilter}
+            triggerClassName="h-8 text-xs w-full sm:w-52 border border-input rounded-md px-2 bg-background"
+            options={[
+              { value: 'all', label: 'All Periods' },
+              ...usedPeriods.map(p => ({ value: p.start, label: periodLabel(p.start, p.end) }))
+            ]}
+          />
+
+          <MobileSelect
+            value={driverFilter}
+            onValueChange={setDriverFilter}
+            triggerClassName="h-8 text-xs w-full sm:w-44 border border-input rounded-md px-2 bg-background"
+            options={[
+              { value: 'all', label: 'All Drivers' },
+              ...uniqueDrivers.map(d => ({ value: d, label: d }))
+            ]}
+          />
+
+          <MobileSelect
+            value={truckFilter}
+            onValueChange={setTruckFilter}
+            triggerClassName="h-8 text-xs w-full sm:w-36 border border-input rounded-md px-2 bg-background"
+            options={[
+              { value: 'all', label: 'All Trucks' },
+              ...uniqueTrucks.map(t => ({ value: t, label: t }))
+            ]}
+          />
+
+          <MobileSelect
+            value={statusFilter}
+            onValueChange={setStatusFilter}
+            triggerClassName="h-8 text-xs w-full sm:w-36 border border-input rounded-md px-2 bg-background"
+            options={[
+              { value: 'all', label: 'All Statuses' },
+              { value: 'draft', label: 'Draft' },
+              { value: 'saved', label: 'Saved' },
+            ]}
+          />
+
+          {hasFilters && (
+            <Button variant="ghost" size="sm" className="h-8 text-xs gap-1" onClick={() => {
+              setSearch(''); setStatusFilter('all'); setPeriodFilter('all'); setDriverFilter('all'); setTruckFilter('all');
+            }}>
+              <X className="w-3.5 h-3.5" /> Clear
+            </Button>
+          )}
         </div>
 
-        <MobileSelect
-          value={periodFilter}
-          onValueChange={setPeriodFilter}
-          triggerClassName="h-8 text-xs w-full sm:w-52 border border-input rounded-md px-2 bg-background"
-          options={[
-            { value: 'all', label: 'All Periods' },
-            ...usedPeriods.map(p => ({ value: p.start, label: periodLabel(p.start, p.end) }))
-          ]}
-        />
-
-        <MobileSelect
-          value={driverFilter}
-          onValueChange={setDriverFilter}
-          triggerClassName="h-8 text-xs w-full sm:w-44 border border-input rounded-md px-2 bg-background"
-          options={[
-            { value: 'all', label: 'All Drivers' },
-            ...uniqueDrivers.map(d => ({ value: d, label: d }))
-          ]}
-        />
-
-        <MobileSelect
-          value={truckFilter}
-          onValueChange={setTruckFilter}
-          triggerClassName="h-8 text-xs w-full sm:w-36 border border-input rounded-md px-2 bg-background"
-          options={[
-            { value: 'all', label: 'All Trucks' },
-            ...uniqueTrucks.map(t => ({ value: t, label: t }))
-          ]}
-        />
-
-        <MobileSelect
-          value={statusFilter}
-          onValueChange={setStatusFilter}
-          triggerClassName="h-8 text-xs w-full sm:w-36 border border-input rounded-md px-2 bg-background"
-          options={[
-            { value: 'all', label: 'All Statuses' },
-            { value: 'draft', label: 'Draft' },
-            { value: 'saved', label: 'Saved' },
-          ]}
-        />
-
-        {hasFilters && (
-          <Button variant="ghost" size="sm" className="h-8 text-xs gap-1" onClick={() => {
-            setSearch(''); setStatusFilter('all'); setPeriodFilter('all'); setDriverFilter('all'); setTruckFilter('all');
-          }}>
-            <X className="w-3.5 h-3.5" /> Clear
-          </Button>
+        {selected.size > 0 && (
+          <BulkDeleteBar
+            selectedCount={selected.size}
+            allCount={filtered.length}
+            onSelectAll={() => setSelected(new Set(filtered.map(s => s.id)))}
+            onClearSelection={() => setSelected(new Set())}
+            onConfirmDelete={() => deleteMutation.mutate(filtered.filter(s => selected.has(s.id)))}
+            isDeleting={deleteMutation.isPending}
+            isAllSelected={selected.size === filtered.length}
+          />
         )}
-      </div>
 
-      {selected.size > 0 && (
-        <BulkDeleteBar
-          selectedCount={selected.size}
-          allCount={filtered.length}
-          onSelectAll={() => setSelected(new Set(filtered.map(s => s.id)))}
-          onClearSelection={() => setSelected(new Set())}
-          onConfirmDelete={() => deleteMutation.mutate(filtered.filter(s => selected.has(s.id)))}
-          isDeleting={deleteMutation.isPending}
-          isAllSelected={selected.size === filtered.length}
-        />
-      )}
-
-      {/* Grouped by period */}
-      <div className="space-y-3">
+        {/* Desktop Grouped by period */}
+        <div className="space-y-3">
         {grouped.map(([periodKey, stmts]) => {
           const isCollapsed = collapsedPeriods.has(periodKey);
           const periodInfo = STATEMENT_PERIODS_2026.find(p => p.start === periodKey);
@@ -399,11 +401,167 @@ export default function DriverStatements() {
           );
         })}
 
-        {grouped.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground text-sm">
-            No statements found.
+          {grouped.length === 0 && (
+            <div className="text-center py-12 text-muted-foreground text-sm">
+              No statements found.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile card layout */}
+      <div className="md:hidden">
+        {/* Mobile Header */}
+        <div className="flex justify-between items-start mb-3">
+          <div>
+            <h2 className="text-sm font-semibold text-primary">Driver Statements</h2>
+            <p className="text-[11px] text-muted-foreground">{statements.length} total statement{statements.length !== 1 ? 's' : ''}</p>
+          </div>
+          <button
+            onClick={() => setShowDeductionSettings(true)}
+            className="p-2.5 text-muted-foreground hover:bg-secondary rounded transition-colors w-9 h-9 flex items-center justify-center"
+            title="Settings"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Mobile Search */}
+        <div className="relative mb-3">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+          <Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-10 pl-9 text-xs" />
+        </div>
+
+        {/* Mobile 2x2 Filter Grid */}
+        <div className="grid grid-cols-2 gap-1.5 mb-3">
+          <MobileSelect
+            value={periodFilter}
+            onValueChange={setPeriodFilter}
+            triggerClassName="h-10 text-xs border border-input rounded-md px-3 bg-background w-full"
+            options={[
+              { value: 'all', label: 'All Periods' },
+              ...usedPeriods.map(p => ({ value: p.start, label: periodLabel(p.start, p.end) }))
+            ]}
+          />
+          <MobileSelect
+            value={driverFilter}
+            onValueChange={setDriverFilter}
+            triggerClassName="h-10 text-xs border border-input rounded-md px-3 bg-background w-full"
+            options={[
+              { value: 'all', label: 'All Drivers' },
+              ...uniqueDrivers.map(d => ({ value: d, label: d }))
+            ]}
+          />
+          <MobileSelect
+            value={truckFilter}
+            onValueChange={setTruckFilter}
+            triggerClassName="h-10 text-xs border border-input rounded-md px-3 bg-background w-full"
+            options={[
+              { value: 'all', label: 'All Trucks' },
+              ...uniqueTrucks.map(t => ({ value: t, label: t }))
+            ]}
+          />
+          <MobileSelect
+            value={statusFilter}
+            onValueChange={setStatusFilter}
+            triggerClassName="h-10 text-xs border border-input rounded-md px-3 bg-background w-full"
+            options={[
+              { value: 'all', label: 'All Statuses' },
+              { value: 'draft', label: 'Draft' },
+              { value: 'saved', label: 'Saved' },
+            ]}
+          />
+        </div>
+
+        {/* Mobile Statement Cards */}
+        {filtered.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-[13px] text-muted-foreground">No statements found.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {filtered.map(stmt => {
+              const periodInfo = STATEMENT_PERIODS_2026.find(p => p.start === stmt.period_start);
+              const periodText = periodInfo
+                ? `${fmt(periodInfo.start)} – ${fmtFull(periodInfo.end)}`
+                : stmt.period_start || 'Unknown';
+              return (
+                <div
+                  key={stmt.id}
+                  onClick={() => { if (!checkFeatureAccess(isInPreview)) return; navigate(createPageUrl(`StatementBuilder?id=${stmt.id}`)); }}
+                  className="bg-card border border-border rounded-[10px] box-border overflow-hidden cursor-pointer active:opacity-80 transition-opacity"
+                >
+                  {/* Row 1: Title + Status Badge */}
+                  <div className="flex justify-between items-start px-3 py-2.5">
+                    <div>
+                      <p className="text-xs font-semibold text-foreground">Period: {periodText}</p>
+                    </div>
+                    <div className={`text-[10px] font-semibold px-2 py-1 rounded whitespace-nowrap ${
+                      stmt.status === 'draft' ? 'bg-yellow-500/10 text-yellow-600' :
+                      stmt.status === 'saved' ? 'bg-green-500/10 text-green-600' :
+                      'bg-muted text-muted-foreground'
+                    }`}>
+                      {stmt.status === 'draft' ? 'Draft' : 'Saved'}
+                    </div>
+                  </div>
+
+                  {/* Row 2: Driver + Truck chips */}
+                  <div className="flex gap-2 px-3 py-2.5 border-t border-border/40 flex-wrap">
+                    <span className="text-[11px] px-2 py-1 rounded bg-secondary text-secondary-foreground">{stmt.driver_name || '—'}</span>
+                    <span className="text-[11px] px-2 py-1 rounded bg-secondary text-secondary-foreground">{stmt.truck_number || '—'}</span>
+                  </div>
+
+                  {/* Row 3: Period + Net Pay */}
+                  <div className="flex justify-between items-center px-3 py-2.5 border-t border-border/40">
+                    <span className="text-[11px] px-2 py-1 rounded bg-secondary text-secondary-foreground">{periodText}</span>
+                    <span className="text-xs font-bold text-primary">${(stmt.final_check_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                  </div>
+
+                  {/* Footer: Download + Delete */}
+                  <div className="flex justify-between items-center px-3 py-2 border-t border-border/40">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDownload(stmt, e); }}
+                      className="p-2.5 text-primary hover:bg-primary/10 rounded transition-colors w-10 h-10 flex items-center justify-center"
+                      disabled={downloadingId === stmt.id}
+                      title="Download PDF"
+                    >
+                      {downloadingId === stmt.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                    </button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button
+                          onClick={(e) => e.stopPropagation()}
+                          className="p-2.5 text-destructive hover:bg-destructive/10 rounded transition-colors w-10 h-10 flex items-center justify-center"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Statement?</AlertDialogTitle>
+                          <AlertDialogDescription>{stmt.driver_name}'s statement will be moved to Deleted Items.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(stmt); }}>Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
+
+        {/* FAB Button */}
+        <button
+          onClick={() => navigate(createPageUrl('StatementBuilder'))}
+          className="fixed right-4 bottom-20 w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors flex-shrink-0"
+        >
+          <Plus className="w-5 h-5" />
+        </button>
       </div>
     </div>
     </MobilePullRefresh>
