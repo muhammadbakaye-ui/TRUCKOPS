@@ -869,6 +869,11 @@ export default function Loads() {
                                   ) : <span className="text-muted-foreground">—</span>}
                                 </div>
                               </td>
+                              <td className="px-2 py-1">
+                                {l.pickup_city || l.delivery_city
+                                  ? `${l.pickup_city || ''}${l.pickup_state ? ', ' + l.pickup_state : ''} → ${l.delivery_city || ''}${l.delivery_state ? ', ' + l.delivery_state : ''}`
+                                  : '—'}
+                              </td>
                               <td className="px-2 py-1 whitespace-nowrap">
                                 {l.pickup_date || l.delivery_date
                                   ? <>{l.pickup_date || '—'}<span className="text-muted-foreground mx-0.5 text-[11px]">→</span>{l.delivery_date || '—'}</>
