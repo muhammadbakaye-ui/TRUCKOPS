@@ -365,17 +365,17 @@ export default function LoadDetail() {
       </div>
 
       {/* Mobile header */}
-      <div className="md:hidden flex justify-between items-center gap-2 mb-4">
-        <div className="flex items-center gap-2 flex-wrap min-w-0">
-          <Button variant="ghost" size="sm" className="h-8 gap-1 flex-shrink-0 px-2" onClick={() => navigate(-1)}>
+      <div className="md:hidden" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <Button variant="ghost" size="sm" className="gap-1" style={{ height: '32px', padding: '4px 8px', fontSize: '12px' }} onClick={() => navigate(-1)}>
             <ArrowLeft className="w-3.5 h-3.5" /> Loads
           </Button>
-          <h2 className="text-xs font-semibold truncate min-w-0">
+          <h2 style={{ fontSize: '13px', fontWeight: 500, color: 'hsl(var(--primary))' }}>
             {(isNew && !savedLoadIdRef.current) ? 'New Load' : `Load ${form.internal_load_number}`}
           </h2>
           <StatusBadge status={form.status} />
           {form.status === 'draft' && (
-            <span className="flex items-center gap-1 text-[10px] text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full flex-shrink-0">
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', color: '#b45309', backgroundColor: '#fef3c7', border: '1px solid #fde68a', padding: '3px 8px', borderRadius: '999px', flexShrink: 0 }}>
               {autoSaving
                 ? <><Loader2 className="w-2 h-2 animate-spin" /> Saving</>
                 : lastAutoSaved
@@ -385,7 +385,7 @@ export default function LoadDetail() {
             </span>
           )}
         </div>
-        <Button size="sm" className="h-8 px-3 gap-1 flex-shrink-0" onClick={handleSave} disabled={saving}>
+        <Button size="sm" onClick={handleSave} disabled={saving} style={{ backgroundColor: 'hsl(var(--primary))', color: 'white', height: '32px', padding: '9px 20px', fontSize: '12px', fontWeight: 600, borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
           {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
           Save
         </Button>
@@ -697,275 +697,290 @@ export default function LoadDetail() {
       </div>
 
       {/* Mobile single-column layout */}
-      <div className="md:hidden space-y-2">
+      <div className="md:hidden" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {/* Load Information */}
-        <Card>
-          <CardHeader className="py-3 px-3"><CardTitle className="text-[10px] font-semibold uppercase tracking-[0.5px] text-muted-foreground">Load Information</CardTitle></CardHeader>
-          <CardContent className="px-3 pb-3 space-y-2">
-            {/* Row 1: 3 columns */}
-            <div className="grid grid-cols-3 gap-2">
-              <Field label="Internal Load #"><TextInput value={form.internal_load_number} onChange={(v) => set('internal_load_number', v)} /></Field>
-              <Field label="External / Broker #"><TextInput value={form.external_load_number} onChange={(v) => set('external_load_number', v)} /></Field>
-              <Field label="Trip #"><TextInput value={form.trip_number} onChange={(v) => set('trip_number', v)} /></Field>
+        <div style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '10px', padding: '12px', boxSizing: 'border-box', width: '100%', overflow: 'hidden' }}>
+          <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>Load Information</div>
+          
+          {/* Row 1: 3 columns */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+            <div>
+              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Internal Load #</Label>
+              <Input value={form.internal_load_number || ''} onChange={(e) => set('internal_load_number', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }} />
             </div>
-            {/* Row 2: 3 columns */}
-            <div className="grid grid-cols-3 gap-2">
-              <Field label="Customer Ref #"><TextInput value={form.customer_reference_number} onChange={(v) => set('customer_reference_number', v)} /></Field>
-              <Field label="Customer">
-                <Select value={form.customer_id || ''} onValueChange={(v) => {
-                  const c = companies.find(c => c.id === v);
-                  set('customer_id', v); set('customer_name', c?.company_name || '');
-                }}>
-                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
-                  <SelectContent>{companies.map(c => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}</SelectContent>
-                </Select>
-              </Field>
-              <Field label="Status"><Sel value={form.status} onChange={(v) => set('status', v)} options={[{value:'draft',label:'Draft'},{value:'saved',label:'Saved'},{value:'completed',label:'Completed'},{value:'canceled',label:'Canceled'}]} /></Field>
+            <div>
+              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>External / Broker #</Label>
+              <Input value={form.external_load_number || ''} onChange={(e) => set('external_load_number', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }} />
             </div>
-            {/* Row 3: 3 columns */}
-            <div className="grid grid-cols-3 gap-2">
-              <Field label="Dispatch Status">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-1.5">
-                    <div className="flex-1 min-w-0">
-                      <Sel
-                        value={form.dispatch_status}
-                        onChange={(v) => {
-                          if (v === 'available' && (form.driver_1_id || form.driver_2_id)) {
-                            setConfirmClearDriver(true);
-                            return;
-                          }
-                          set('dispatch_status', v);
-                          set('manual_dispatch_override', true);
-                          setDispatchManuallyChanged(true);
-                        }}
-                        options={[{value:'available',label:'Available'},{value:'assigned',label:'Assigned'},{value:'in_transit',label:'In Transit'},{value:'delivered',label:'Delivered'}]}
-                      />
-                    </div>
-                    {form.manual_dispatch_override && (
-                      <button
-                        onClick={() => {
-                          const computed = computeDispatchStatus({ ...form, manual_dispatch_override: false }, getTimezone());
-                          setForm(prev => ({ ...prev, dispatch_status: computed, manual_dispatch_override: false }));
-                          setDispatchManuallyChanged(false);
-                        }}
-                        className="flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-primary transition-colors whitespace-nowrap"
-                        title="Return to automation control"
-                      >
-                        <RotateCcw className="w-3 h-3" /> Auto
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </Field>
-              <Field label="Load Type"><Sel value={form.load_type} onChange={(v) => set('load_type', v)} options={['FTL','LTL','partial','other'].map(v=>({value:v,label:v.toUpperCase()}))} /></Field>
-              <Field label="Equipment"><Sel value={form.equipment_type} onChange={(v) => set('equipment_type', v)} options={['dry_van','reefer','flatbed','step_deck','lowboy','tanker','intermodal','other'].map(v=>({value:v,label:v.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}))} /></Field>
+            <div>
+              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Trip #</Label>
+              <Input value={form.trip_number || ''} onChange={(e) => set('trip_number', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }} />
             </div>
-            {/* Row 4: 2 columns */}
-            <div className="grid grid-cols-2 gap-2">
-              <Field label="Commodity"><TextInput value={form.commodity} onChange={(v) => set('commodity', v)} /></Field>
-              <Field label="Weight (lbs)"><Input type="number" value={form.weight || ''} onChange={(e) => set('weight', Number(e.target.value))} className="h-8 text-xs" /></Field>
+          </div>
+          
+          {/* Row 2: 3 columns */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+            <div>
+              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Customer Ref #</Label>
+              <Input value={form.customer_reference_number || ''} onChange={(e) => set('customer_reference_number', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }} />
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Assignment */}
-        <Card>
-          <CardHeader className="py-3 px-3"><CardTitle className="text-[10px] font-semibold uppercase tracking-[0.5px] text-muted-foreground">Assignment</CardTitle></CardHeader>
-          <CardContent className="px-3 pb-3 space-y-2">
-            <Field label="Driver 1">
-              <Select value={form.driver_1_id || ''} onValueChange={(v) => {
-                const d = drivers.find(d => d.id === v);
-                set('driver_1_id', v); set('driver_1_name', d?.full_name || '');
-                if (v && !form.driver_1_id) {
-                  set('driver_visibility', false);
-                }
-                if (d?.assigned_truck_id) {
-                  const t = trucks.find(t => t.id === d.assigned_truck_id);
-                  if (t) {
-                    set('truck_id', t.id);
-                    set('truck_number', t.unit_number);
-                  }
-                }
-              }}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select driver" /></SelectTrigger>
-                <SelectContent>{drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}</SelectContent>
+            <div>
+              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Customer</Label>
+              <Select value={form.customer_id || ''} onValueChange={(v) => { const c = companies.find(c => c.id === v); set('customer_id', v); set('customer_name', c?.company_name || ''); }}>
+                <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }}><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>{companies.map(c => <SelectItem key={c.id} value={c.id}>{c.company_name}</SelectItem>)}</SelectContent>
               </Select>
-            </Field>
-            <Field label="Driver 2">
-              <Select value={form.driver_2_id || ''} onValueChange={(v) => {
-                if (v === '__none__') { set('driver_2_id', null); set('driver_2_name', ''); return; }
-                const d = drivers.find(d => d.id === v);
-                set('driver_2_id', v); set('driver_2_name', d?.full_name || '');
-              }}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Optional" /></SelectTrigger>
+            </div>
+            <div>
+              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Status</Label>
+              <Select value={form.status || ''} onValueChange={(v) => set('status', v)}>
+                <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }}><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__none__">— None —</SelectItem>
-                  {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="saved">Saved</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="canceled">Canceled</SelectItem>
                 </SelectContent>
               </Select>
-            </Field>
-            <div className="grid grid-cols-2 gap-2">
-              <Field label="Truck">
-                <Select value={form.truck_id || ''} onValueChange={(v) => {
-                  const t = trucks.find(t => t.id === v);
-                  set('truck_id', v); set('truck_number', t?.unit_number || '');
-                  if (t?.assigned_driver_id) {
-                    const d = drivers.find(d => d.id === t.assigned_driver_id);
-                    if (d && !form.driver_1_id) {
-                      set('driver_1_id', d.id);
-                      set('driver_1_name', d.full_name);
-                    }
-                  }
-                }}>
-                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
-                  <SelectContent>{trucks.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number}</SelectItem>)}</SelectContent>
-                </Select>
-              </Field>
-              <Field label="Trailer">
-                <Select value={form.trailer_id || ''} onValueChange={(v) => {
-                  const t = trailers.find(t => t.id === v);
-                  set('trailer_id', v); set('trailer_number', t?.unit_number || '');
-                }}>
-                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
-                  <SelectContent>{trailers.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number}</SelectItem>)}</SelectContent>
-                </Select>
-              </Field>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+          
+          {/* Row 3: 3 columns */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+            <div>
+              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Dispatch Status</Label>
+              <Select value={form.dispatch_status || ''} onValueChange={(v) => { if (v === 'available' && (form.driver_1_id || form.driver_2_id)) { setConfirmClearDriver(true); return; } set('dispatch_status', v); set('manual_dispatch_override', true); setDispatchManuallyChanged(true); }}>
+                <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }}><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="available">Available</SelectItem>
+                  <SelectItem value="assigned">Assigned</SelectItem>
+                  <SelectItem value="in_transit">In Transit</SelectItem>
+                  <SelectItem value="delivered">Delivered</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Load Type</Label>
+              <Select value={form.load_type || ''} onValueChange={(v) => set('load_type', v)}>
+                <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }}><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="FTL">FTL</SelectItem>
+                  <SelectItem value="LTL">LTL</SelectItem>
+                  <SelectItem value="partial">Partial</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Equipment</Label>
+              <Select value={form.equipment_type || ''} onValueChange={(v) => set('equipment_type', v)}>
+                <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }}><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="dry_van">Dry Van</SelectItem>
+                  <SelectItem value="reefer">Reefer</SelectItem>
+                  <SelectItem value="flatbed">Flatbed</SelectItem>
+                  <SelectItem value="step_deck">Step Deck</SelectItem>
+                  <SelectItem value="lowboy">Lowboy</SelectItem>
+                  <SelectItem value="tanker">Tanker</SelectItem>
+                  <SelectItem value="intermodal">Intermodal</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          {/* Row 4: 2 columns */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <div>
+              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Commodity</Label>
+              <Input value={form.commodity || ''} onChange={(e) => set('commodity', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }} />
+            </div>
+            <div>
+              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Weight (lbs)</Label>
+              <Input type="number" value={form.weight || ''} onChange={(e) => set('weight', Number(e.target.value))} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Assignment */}
+        <div style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '10px', padding: '12px', boxSizing: 'border-box', width: '100%', overflow: 'hidden' }}>
+          <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>Assignment</div>
+          
+          <div style={{ marginBottom: '8px' }}>
+            <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Driver 1</Label>
+            <Select value={form.driver_1_id || ''} onValueChange={(v) => { const d = drivers.find(d => d.id === v); set('driver_1_id', v); set('driver_1_name', d?.full_name || ''); if (v && !form.driver_1_id) { set('driver_visibility', false); } if (d?.assigned_truck_id) { const t = trucks.find(t => t.id === d.assigned_truck_id); if (t) { set('truck_id', t.id); set('truck_number', t.unit_number); } } }}>
+              <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '38px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }}><SelectValue placeholder="Select driver" /></SelectTrigger>
+              <SelectContent>{drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          
+          <div style={{ marginBottom: '8px' }}>
+            <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Driver 2</Label>
+            <Select value={form.driver_2_id || ''} onValueChange={(v) => { if (v === '__none__') { set('driver_2_id', null); set('driver_2_name', ''); return; } const d = drivers.find(d => d.id === v); set('driver_2_id', v); set('driver_2_name', d?.full_name || ''); }}>
+              <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '38px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }}><SelectValue placeholder="Select driver (optional)" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">— None —</SelectItem>
+                {drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <div>
+              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Truck</Label>
+              <Select value={form.truck_id || ''} onValueChange={(v) => { const t = trucks.find(t => t.id === v); set('truck_id', v); set('truck_number', t?.unit_number || ''); if (t?.assigned_driver_id) { const d = drivers.find(d => d.id === t.assigned_driver_id); if (d && !form.driver_1_id) { set('driver_1_id', d.id); set('driver_1_name', d.full_name); } } }}>
+                <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '38px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }}><SelectValue placeholder="Select truck" /></SelectTrigger>
+                <SelectContent>{trucks.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label style={{ color: 'hsl(var(--primary))', fontSize: '11px', marginBottom: '3px' }}>Trailer</Label>
+              <Select value={form.trailer_id || ''} onValueChange={(v) => { const t = trailers.find(t => t.id === v); set('trailer_id', v); set('trailer_number', t?.unit_number || ''); }}>
+                <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '38px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }}><SelectValue placeholder="Select trailer" /></SelectTrigger>
+                <SelectContent>{trailers.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
 
         {/* Stops */}
-        <Card>
-          <CardHeader className="py-3 px-3 flex flex-row items-center justify-between">
-            <CardTitle className="text-[10px] font-semibold uppercase tracking-[0.5px] text-muted-foreground">Stops</CardTitle>
-            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addStop}><Plus className="w-3 h-3" /> Add Stop</Button>
-          </CardHeader>
-          <CardContent className="px-3 pb-3 space-y-2">
+        <div style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '10px', padding: '12px', boxSizing: 'border-box', width: '100%', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Stops</div>
+            <Button variant="outline" size="sm" onClick={addStop} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', color: 'hsl(var(--primary))', fontSize: '11px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Plus className="w-3 h-3" /> Add Stop
+            </Button>
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {stops.map((stop, i) => (
-              <div key={i} className="border rounded-[8px] p-2.5 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className={`text-[11px] font-semibold uppercase ${stop.stop_type === 'pickup' ? 'text-blue-600' : stop.stop_type === 'delivery' ? 'text-green-600' : 'text-muted-foreground'}`}>
-                    {stop.stop_type} #{i + 1}
-                  </span>
-                  {stops.length > 2 && (
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeStop(i)}>
-                      <Trash2 className="w-3 h-3 text-destructive" />
-                    </Button>
-                  )}
+              <div key={i} style={{ border: '0.5px solid hsl(var(--border))', borderRadius: '8px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ color: stop.stop_type === 'pickup' ? 'hsl(var(--primary))' : stop.stop_type === 'delivery' ? '#16a34a' : 'hsl(var(--muted-foreground))', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase' }}>
+                  {stop.stop_type === 'pickup' ? 'PICKUP' : stop.stop_type === 'delivery' ? 'DELIVERY' : 'STOP'} #{i + 1}
                 </div>
+                
                 {/* Type + Company */}
-                <div className="flex gap-2">
+                <div style={{ display: 'flex', gap: '8px' }}>
                   <div style={{ width: '120px', flexShrink: 0 }}>
-                    <Label className="text-[10px]">Type</Label>
-                    <Sel value={stop.stop_type} onChange={(v) => setStop(i, 'stop_type', v)} options={[{value:'pickup',label:'Pickup'},{value:'delivery',label:'Delivery'},{value:'stop',label:'Stop'}]} />
+                    <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>Type</Label>
+                    <Select value={stop.stop_type || ''} onValueChange={(v) => setStop(i, 'stop_type', v)}>
+                      <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '32px', boxSizing: 'border-box', width: '100%', fontSize: '11px' }}><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pickup">Pickup</SelectItem>
+                        <SelectItem value="delivery">Delivery</SelectItem>
+                        <SelectItem value="stop">Stop</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <Label className="text-[10px]">Company</Label>
-                    <TextInput value={stop.company_name} onChange={(v) => setStop(i, 'company_name', v)} />
+                  <div style={{ flex: 1 }}>
+                    <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>Company</Label>
+                    <Input value={stop.company_name || ''} onChange={(e) => setStop(i, 'company_name', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '32px', boxSizing: 'border-box', width: '100%', fontSize: '11px' }} />
                   </div>
                 </div>
+                
                 {/* Date + Time From */}
-                <div className="grid grid-cols-2 gap-2">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                   <div>
-                    <Label className="text-[10px]">Date</Label>
-                    <Input type="date" value={stop.appointment_date || ''} onChange={(e) => setStop(i, 'appointment_date', e.target.value)} className="h-8 text-xs w-full" />
+                    <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>Date</Label>
+                    <Input type="date" value={stop.appointment_date || ''} onChange={(e) => setStop(i, 'appointment_date', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '32px', boxSizing: 'border-box', width: '100%', fontSize: '11px' }} />
                   </div>
                   <div>
-                    <Label className="text-[10px]">Time From</Label>
-                    <TextInput value={stop.time_from} onChange={(v) => setStop(i, 'time_from', v)} placeholder="08:00" />
+                    <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>Time From</Label>
+                    <Input value={stop.time_from || ''} onChange={(e) => setStop(i, 'time_from', e.target.value)} placeholder="08:00" style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '32px', boxSizing: 'border-box', width: '100%', fontSize: '11px' }} />
                   </div>
                 </div>
+                
                 {/* City + State */}
-                <div className="grid grid-cols-2 gap-2">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                   <div>
-                    <Label className="text-[10px]">City</Label>
-                    <TextInput value={stop.city} onChange={(v) => setStop(i, 'city', v)} />
+                    <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>City</Label>
+                    <Input value={stop.city || ''} onChange={(e) => setStop(i, 'city', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '32px', boxSizing: 'border-box', width: '100%', fontSize: '11px' }} />
                   </div>
                   <div>
-                    <Label className="text-[10px]">State</Label>
-                    <TextInput value={stop.state} onChange={(v) => setStop(i, 'state', v)} />
+                    <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>State</Label>
+                    <Input value={stop.state || ''} onChange={(e) => setStop(i, 'state', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '32px', boxSizing: 'border-box', width: '100%', fontSize: '11px' }} />
                   </div>
                 </div>
-                {/* Reference + Notes */}
-                <div className="grid grid-cols-2 gap-2">
+                
+                {/* Reference + Directions */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                   <div>
-                    <Label className="text-[10px]">Reference / BOL #</Label>
-                    <TextInput value={stop.reference_number} onChange={(v) => setStop(i, 'reference_number', v)} />
+                    <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>Reference / BOL #</Label>
+                    <Input value={stop.reference_number || ''} onChange={(e) => setStop(i, 'reference_number', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '32px', boxSizing: 'border-box', width: '100%', fontSize: '11px' }} />
                   </div>
                   <div>
-                    <Label className="text-[10px]">Directions / Notes</Label>
-                    <TextInput value={stop.memo} onChange={(v) => setStop(i, 'memo', v)} />
+                    <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>Directions / Notes</Label>
+                    <Input value={stop.memo || ''} onChange={(e) => setStop(i, 'memo', e.target.value)} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '32px', boxSizing: 'border-box', width: '100%', fontSize: '11px' }} />
                   </div>
                 </div>
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Financials */}
-        <Card>
-          <CardHeader className="py-3 px-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-[10px] font-semibold uppercase tracking-[0.5px] text-muted-foreground">Financials</CardTitle>
+        <div style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '10px', padding: '12px', boxSizing: 'border-box', width: '100%', overflow: 'hidden' }}>
+          <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>Financials</div>
+          
+          {/* Line Items */}
+          <div style={{ marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <Label style={{ color: 'hsl(var(--primary))', fontSize: '12px' }}>Charge Line Items</Label>
+              <Button variant="outline" size="sm" onClick={addLineItem} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', color: 'hsl(var(--primary))', fontSize: '11px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Plus className="w-3 h-3" /> Add
+              </Button>
             </div>
-          </CardHeader>
-          <CardContent className="px-3 pb-3 space-y-2">
-            {/* Line Items */}
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <Label className="text-[10px]">Charge Line Items</Label>
-                <Button variant="outline" size="sm" className="h-6 text-[11px] gap-1 px-2" onClick={addLineItem}>
-                  <Plus className="w-3 h-3" /> Add
-                </Button>
-              </div>
-              <div className="space-y-1">
-                {lineItems.length === 0 && (
-                  <p className="text-[11px] text-muted-foreground py-2 text-center border border-dashed rounded-md">No line items</p>
-                )}
-                {lineItems.map((li, i) => (
-                  <div key={i} className="flex gap-1 items-center">
-                    <Input
-                      value={li.description || ''}
-                      onChange={(e) => updateLineItem(i, 'description', e.target.value)}
-                      placeholder="Description"
-                      className="h-7 text-xs flex-1"
-                    />
-                    <Input
-                      type="number"
-                      value={li.amount === '' ? '' : li.amount}
-                      onChange={(e) => updateLineItem(i, 'amount', e.target.value === '' ? '' : Number(e.target.value))}
-                      placeholder="0.00"
-                      className="h-7 text-xs w-20"
-                    />
-                    <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => removeLineItem(i)}>
-                      <Trash2 className="w-3 h-3 text-destructive" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-              <div className="flex justify-between items-center mt-1.5 pt-1.5 border-t">
-                <span className="text-[10px] font-semibold">Invoice Total</span>
-                <span className="text-xs font-bold text-primary">${lineItemsTotal.toFixed(2)}</span>
-              </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px' }}>
+              {lineItems.length === 0 && <p style={{ color: 'hsl(var(--muted-foreground))', fontSize: '12px', marginBottom: '8px' }}>No line items. Add one or upload a document.</p>}
+              {lineItems.map((li, i) => (
+                <div key={i} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <Input value={li.description || ''} onChange={(e) => updateLineItem(i, 'description', e.target.value)} placeholder="Description" style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '32px', boxSizing: 'border-box', flex: 1, fontSize: '11px' }} />
+                  <Input type="number" value={li.amount === '' ? '' : li.amount} onChange={(e) => updateLineItem(i, 'amount', e.target.value === '' ? '' : Number(e.target.value))} placeholder="0.00" style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '32px', boxSizing: 'border-box', width: '70px', fontSize: '11px' }} />
+                  <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => removeLineItem(i)}>
+                    <Trash2 className="w-3 h-3 text-destructive" />
+                  </Button>
+                </div>
+              ))}
             </div>
-
-            <Field label="Driver Rate">
-              <Input type="number" value={form.driver_rate || ''} onChange={(e) => set('driver_rate', Number(e.target.value))} className="h-8 text-xs" placeholder={lineItemsTotal ? `Default: $${lineItemsTotal.toFixed(2)}` : 'Default'} />
-              <p className="text-[10px] text-muted-foreground mt-0.5">Used for driver pay</p>
-            </Field>
-            <Field label="Invoice Status"><Sel value={form.invoice_status} onChange={(v) => set('invoice_status', v)} options={['not_invoiced','invoiced','sent','partial','paid','overdue','canceled'].map(v=>({value:v,label:v.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}))} /></Field>
-            <Field label="Billable Miles"><Input type="number" value={form.billable_miles || ''} onChange={(e) => set('billable_miles', Number(e.target.value))} className="h-8 text-xs" /></Field>
-          </CardContent>
-        </Card>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px', borderTop: '1px solid hsl(var(--border))' }}>
+              <span style={{ color: 'hsl(var(--primary))', fontSize: '12px', fontWeight: 600 }}>Invoice Total</span>
+              <span style={{ color: '#16a34a', fontSize: '13px', fontWeight: 600 }}>${lineItemsTotal.toFixed(2)}</span>
+            </div>
+          </div>
+          
+          <div style={{ marginBottom: '8px' }}>
+            <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>Driver Rate</Label>
+            <Input type="number" value={form.driver_rate || ''} onChange={(e) => set('driver_rate', Number(e.target.value))} placeholder={lineItemsTotal ? `Default: $${lineItemsTotal.toFixed(2)}` : 'Leave blank to use Invoice Total'} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }} />
+            <p style={{ color: 'hsl(var(--muted-foreground))', fontSize: '10px', marginTop: '3px' }}>Used for driver pay calculation</p>
+          </div>
+          
+          <div style={{ marginBottom: '8px' }}>
+            <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>Invoice Status</Label>
+            <Select value={form.invoice_status || ''} onValueChange={(v) => set('invoice_status', v)}>
+              <SelectTrigger style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '38px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }}><SelectValue placeholder="Select" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="not_invoiced">Not Invoiced</SelectItem>
+                <SelectItem value="invoiced">Invoiced</SelectItem>
+                <SelectItem value="sent">Sent</SelectItem>
+                <SelectItem value="partial">Partial</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+                <SelectItem value="overdue">Overdue</SelectItem>
+                <SelectItem value="canceled">Canceled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label style={{ color: 'hsl(var(--primary))', fontSize: '10px', marginBottom: '3px' }}>Billable Miles</Label>
+            <Input type="number" value={form.billable_miles || ''} onChange={(e) => set('billable_miles', Number(e.target.value))} style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '34px', boxSizing: 'border-box', width: '100%', fontSize: '12px' }} />
+          </div>
+        </div>
 
         {/* Notes */}
-        <Card>
-          <CardHeader className="py-3 px-3"><CardTitle className="text-[10px] font-semibold uppercase tracking-[0.5px] text-muted-foreground">Notes</CardTitle></CardHeader>
-          <CardContent className="px-3 pb-3">
-            <Textarea value={form.notes || ''} onChange={(e) => set('notes', e.target.value)} className="text-xs h-20" placeholder="Internal notes..." />
-          </CardContent>
-        </Card>
+        <div style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '10px', padding: '12px', boxSizing: 'border-box', width: '100%', overflow: 'hidden' }}>
+          <div style={{ color: 'hsl(var(--muted-foreground))', fontSize: '10px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>Notes</div>
+          <Textarea value={form.notes || ''} onChange={(e) => set('notes', e.target.value)} placeholder="Internal notes..." style={{ backgroundColor: 'hsl(var(--secondary))', border: '1px solid hsl(var(--border))', borderRadius: '6px', padding: '8px', minHeight: '80px', boxSizing: 'border-box', width: '100%', fontSize: '12px', fontFamily: 'inherit' }} />
+        </div>
       </div>
     </div>
   );
