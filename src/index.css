@@ -5,104 +5,121 @@
 @tailwind utilities;
 
 @layer base {
-  /* ── LIGHT MODE (original app look) ── */
+  /* ── NEW DARK THEME ── */
   :root {
     --font-inter: 'Inter', sans-serif;
-    --background: 220 20% 97%;
-    --foreground: 220 25% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 220 25% 10%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 10%;
-    --primary: 217 91% 50%;
+    /* Backgrounds */
+    --background: 226 23% 7%;
+    --card: 226 25% 12%;
+    --popover: 226 25% 12%;
+    --secondary: 226 23% 14%;
+    --muted: 226 20% 17%;
+    --accent: 226 23% 17%;
+    /* Text Colors */
+    --foreground: 215 20% 90%;
+    --card-foreground: 215 20% 90%;
+    --popover-foreground: 215 20% 90%;
+    --secondary-foreground: 215 20% 90%;
+    --muted-foreground: 215 15% 63%;
+    --accent-foreground: 215 15% 63%;
+    /* Primary/Accent */
+    --primary: 215 84% 64%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 92%;
-    --secondary-foreground: 220 25% 20%;
-    --muted: 220 14% 94%;
-    --muted-foreground: 220 10% 46%;
-    --accent: 220 14% 92%;
-    --accent-foreground: 220 25% 20%;
+    /* Destructive */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 14% 88%;
-    --input: 220 14% 88%;
-    --ring: 217 91% 50%;
-    --radius: 0.375rem;
-    --chart-1: 217 91% 50%;
+    /* Borders & Inputs */
+    --border: 226 22% 21%;
+    --input: 226 22% 21%;
+    --ring: 215 84% 64%;
+    /* Charts */
+    --chart-1: 215 84% 64%;
     --chart-2: 160 60% 45%;
     --chart-3: 38 92% 50%;
     --chart-4: 280 65% 60%;
     --chart-5: 0 84% 60%;
-    --sidebar-background: 222 30% 14%;
-    --sidebar-foreground: 220 14% 80%;
-    --sidebar-primary: 217 91% 60%;
+    /* Sidebar */
+    --sidebar-background: 226 23% 7%;
+    --sidebar-foreground: 215 15% 63%;
+    --sidebar-primary: 215 84% 64%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 25% 20%;
-    --sidebar-accent-foreground: 220 14% 90%;
-    --sidebar-border: 222 25% 22%;
-    --sidebar-ring: 217 91% 50%;
+    --sidebar-accent: 226 23% 17%;
+    --sidebar-accent-foreground: 215 15% 63%;
+    --sidebar-border: 226 22% 21%;
+    --sidebar-ring: 215 84% 64%;
+    --radius: 0.375rem;
   }
 
-  /* ── DARK MODE ── */
+  /* ── DARK MODE (alias to root) ── */
   .dark {
-    --background: 222 20% 16%;
-    --foreground: 220 14% 92%;
-    --card: 222 20% 21%;
-    --card-foreground: 220 14% 92%;
-    --popover: 222 20% 21%;
-    --popover-foreground: 220 14% 92%;
-    --primary: 217 91% 55%;
+    --background: 226 23% 7%;
+    --card: 226 25% 12%;
+    --popover: 226 25% 12%;
+    --secondary: 226 23% 14%;
+    --muted: 226 20% 17%;
+    --accent: 226 23% 17%;
+    --foreground: 215 20% 90%;
+    --card-foreground: 215 20% 90%;
+    --popover-foreground: 215 20% 90%;
+    --secondary-foreground: 215 20% 90%;
+    --muted-foreground: 215 15% 63%;
+    --accent-foreground: 215 15% 63%;
+    --primary: 215 84% 64%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 222 18% 26%;
-    --secondary-foreground: 220 14% 90%;
-    --muted: 222 18% 24%;
-    --muted-foreground: 220 10% 58%;
-    --accent: 222 18% 26%;
-    --accent-foreground: 220 14% 90%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 222 18% 28%;
-    --input: 222 18% 28%;
-    --ring: 217 91% 55%;
-    --sidebar-background: 222 30% 14%;
-    --sidebar-foreground: 220 14% 75%;
-    --sidebar-primary: 217 91% 60%;
+    --border: 226 22% 21%;
+    --input: 226 22% 21%;
+    --ring: 215 84% 64%;
+    --chart-1: 215 84% 64%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 0 84% 60%;
+    --sidebar-background: 226 23% 7%;
+    --sidebar-foreground: 215 15% 63%;
+    --sidebar-primary: 215 84% 64%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 25% 20%;
-    --sidebar-accent-foreground: 220 14% 90%;
-    --sidebar-border: 222 25% 20%;
-    --sidebar-ring: 217 91% 55%;
+    --sidebar-accent: 226 23% 17%;
+    --sidebar-accent-foreground: 215 15% 63%;
+    --sidebar-border: 226 22% 21%;
+    --sidebar-ring: 215 84% 64%;
   }
 
-  /* ── VERY DARK MODE (darkest, blue-tinted text) ── */
+  /* ── VERY DARK MODE (alias to root) ── */
   .very-dark {
-    --background: 222 30% 12%;
-    --foreground: 217 91% 65%;
-    --card: 222 28% 17%;
-    --card-foreground: 217 91% 65%;
-    --popover: 222 28% 17%;
-    --popover-foreground: 217 91% 65%;
-    --primary: 217 91% 55%;
+    --background: 226 23% 7%;
+    --card: 226 25% 12%;
+    --popover: 226 25% 12%;
+    --secondary: 226 23% 14%;
+    --muted: 226 20% 17%;
+    --accent: 226 23% 17%;
+    --foreground: 215 20% 90%;
+    --card-foreground: 215 20% 90%;
+    --popover-foreground: 215 20% 90%;
+    --secondary-foreground: 215 20% 90%;
+    --muted-foreground: 215 15% 63%;
+    --accent-foreground: 215 15% 63%;
+    --primary: 215 84% 64%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 222 25% 22%;
-    --secondary-foreground: 217 91% 65%;
-    --muted: 222 25% 20%;
-    --muted-foreground: 220 14% 60%;
-    --accent: 222 25% 22%;
-    --accent-foreground: 217 91% 65%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 222 25% 24%;
-    --input: 222 25% 24%;
-    --ring: 217 91% 55%;
-    --sidebar-background: 222 30% 11%;
-    --sidebar-foreground: 220 14% 75%;
-    --sidebar-primary: 217 91% 60%;
+    --border: 226 22% 21%;
+    --input: 226 22% 21%;
+    --ring: 215 84% 64%;
+    --chart-1: 215 84% 64%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 0 84% 60%;
+    --sidebar-background: 226 23% 7%;
+    --sidebar-foreground: 215 15% 63%;
+    --sidebar-primary: 215 84% 64%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 25% 18%;
-    --sidebar-accent-foreground: 220 14% 90%;
-    --sidebar-border: 222 25% 20%;
-    --sidebar-ring: 217 91% 55%;
+    --sidebar-accent: 226 23% 17%;
+    --sidebar-accent-foreground: 215 15% 63%;
+    --sidebar-border: 226 22% 21%;
+    --sidebar-ring: 215 84% 64%;
   }
 }
 
@@ -702,3 +719,51 @@
   .print-only { display: block !important; }
   body { background: white; }
 }
+
+/* ─── CUSTOM STATUS BADGE COLORS ─── */
+.badge-draft { background-color: #3d2b00; color: #f59e0b; }
+.badge-saved { background-color: #1a3a1a; color: #4ade80; }
+.badge-sent { background-color: #1a3a1a; color: #4ade80; }
+.badge-delivered { background-color: #1a2a3a; color: #4a9eff; }
+.badge-active { background-color: #1a3a1a; color: #4ade80; }
+.badge-inactive { background-color: #3a1a1a; color: #ef4444; }
+.badge-not-invoiced { background-color: #1e2a3a; color: #6b7280; }
+.badge-available { background-color: #1e2a3a; color: #8b9db5; }
+.badge-assigned { background-color: #1a2a3a; color: #4a9eff; }
+.badge-in-transit { background-color: #2a1a3a; color: #a78bfa; }
+.badge-unsaved { background-color: #2a2010; border: 1px solid #3d2b00; color: #f59e0b; }
+
+/* ─── CUSTOM BUTTON COLORS ─── */
+.btn-primary-action { background-color: #1d4ed8; color: #ffffff; border: none; }
+.btn-success-action { background-color: #15803d; color: #ffffff; border: none; }
+.btn-secondary-action { background-color: #1a1f2e; border: 1px solid #2a3044; color: #8b9db5; }
+.btn-danger { background-color: #7f1d1d; color: #ffffff; border: none; }
+.btn-blue-outline { background-color: #1e2a3a; border: 1px solid #2a3044; color: #4a9eff; }
+
+/* ─── CUSTOM ICON COLORS ─── */
+.icon-default { color: #4a5568; }
+.icon-accent { color: #4a9eff; }
+.icon-danger { color: #ef4444; }
+.icon-success { color: #4ade80; }
+.icon-warning { color: #f59e0b; }
+
+/* ─── FINANCIAL VALUE COLORS ─── */
+.text-positive { color: #4ade80; }
+.text-negative { color: #ef4444; }
+.text-net-pay { color: #4a9eff; }
+
+/* ─── CHIP/TAG COLORS ─── */
+.chip-info { background-color: #1e2a3a; color: #8b9db5; border: none; }
+
+/* ─── AVATAR INITIALS ─── */
+.avatar-initials { background-color: #1e2a3a; color: #4a9eff; }
+
+/* ─── DISPATCH BOARD COLUMN ACCENTS ─── */
+.column-available { accent-color: #4a9eff; }
+.column-assigned { accent-color: #a78bfa; }
+.column-in-transit { accent-color: #f59e0b; }
+.column-delivered { accent-color: #4ade80; }
+
+/* ─── SECTION LABEL COLORS ─── */
+.text-section-label { color: #4a5568; }
+.text-field-label { color: #4a9eff; }
