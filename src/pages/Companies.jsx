@@ -186,20 +186,19 @@ export default function Companies() {
               <div
                 key={company.id}
                 onClick={() => { if (!checkFeatureAccess(isInPreview)) return; setEditing(company); setDialogOpen(true); }}
-                className="bg-card border border-border rounded-[10px] box-border overflow-hidden p-3 cursor-pointer active:opacity-80 transition-opacity"
+                className="bg-card border border-border rounded-[10px] box-border overflow-hidden p-3 cursor-pointer active:opacity-80 transition-opacity relative"
               >
-                {/* Row 1: Name + Type + Delete */}
-                <div className="flex items-start justify-between gap-2 mb-2.5">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <span className="text-sm font-bold text-primary truncate">{company.company_name}</span>
-                    <StatusBadge status={company.company_type} />
-                  </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(company); }}
-                    className="p-2.5 text-destructive hover:bg-destructive/10 rounded transition-colors flex-shrink-0 w-10 h-10 flex items-center justify-center"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                {/* Delete button - top right */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); setDeleteTarget(company); }}
+                  className="absolute top-2 right-2 p-2.5 text-destructive hover:bg-destructive/10 rounded transition-colors w-10 h-10 flex items-center justify-center"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+                {/* Row 1: Name + Type */}
+                <div className="flex items-center gap-2 mb-2.5">
+                  <span className="text-sm font-bold text-primary">{company.company_name}</span>
+                  <StatusBadge status={company.company_type} />
                 </div>
 
                 {/* Row 2: Contact & Terms Grid */}
