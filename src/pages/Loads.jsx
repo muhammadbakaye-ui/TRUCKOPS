@@ -144,6 +144,7 @@ export default function Loads() {
   const [tripFilter, setTripFilter] = useState(() => { try { return JSON.parse(localStorage.getItem('loads_trip2')) || []; } catch { return []; } });
   const [dateFrom, setDateFrom] = useState(() => localStorage.getItem('loads_date_from') || '');
   const [dateTo, setDateTo] = useState(() => localStorage.getItem('loads_date_to') || '');
+  const [dateFilterType, setDateFilterType] = useState(() => localStorage.getItem('loads_date_filter_type') || 'pickup');
   const [selected, setSelected] = useState(() => {
     try { const s = sessionStorage.getItem('loads_selected'); return s ? new Set(JSON.parse(s)) : new Set(); } catch { return new Set(); }
   });
@@ -176,6 +177,7 @@ export default function Loads() {
   useEffect(() => { localStorage.setItem('loads_trip2', JSON.stringify(tripFilter)); }, [tripFilter]);
   useEffect(() => { localStorage.setItem('loads_date_from', dateFrom); }, [dateFrom]);
   useEffect(() => { localStorage.setItem('loads_date_to', dateTo); }, [dateTo]);
+  useEffect(() => { localStorage.setItem('loads_date_filter_type', dateFilterType); }, [dateFilterType]);
   useEffect(() => { sessionStorage.setItem('loads_selected', JSON.stringify([...selected])); }, [selected]);
 
   const { data: loads = [], isLoading, isFetching } = useQuery({
@@ -418,13 +420,15 @@ export default function Loads() {
     const matchesTrip = tripFilter.length === 0 ||
       (tripFilter.includes('__unselected__') ? !l.trip_number : false) ||
       tripFilter.includes(l.trip_number);
-    const matchesDateFrom = !dateFrom || (l.pickup_date && l.pickup_date >= dateFrom);
-    const matchesDateTo = !dateTo || (l.pickup_date && l.pickup_date <= dateTo);
+    const dateField = dateFilterType === 'delivery' ? l.delivery_date : l.pickup_date;
+    const matchesDateFrom = !dateFrom || (dateField && dateField >= dateFrom);
+    const matchesDateTo = !dateTo || (dateField && dateField <= dateTo);
     return matchesSearch && matchesStatus && matchesInvoice && matchesDriver && matchesTruck && matchesTrip && matchesDateFrom && matchesDateTo;
   });
 
   const groupedByDate = filtered.reduce((acc, l) => {
-    const key = l.pickup_date || 'No Pickup Date';
+    const dateField = dateFilterType === 'delivery' ? l.delivery_date : l.pickup_date;
+    const key = dateField || `No ${dateFilterType === 'delivery' ? 'Delivery' : 'Pickup'} Date`;
     if (!acc[key]) acc[key] = [];
     acc[key].push(l);
     return acc;
@@ -436,7 +440,7 @@ export default function Loads() {
     return b.localeCompare(a);
   });
 
-  const hasActiveFilters = search || statusFilter.length > 0 || invoiceFilter.length > 0 || driverFilter.length > 0 || truckFilter.length > 0 || tripFilter.length > 0 || dateFrom || dateTo;
+  const hasActiveFilters = search || statusFilter.length > 0 || invoiceFilter.length > 0 || driverFilter.length > 0 || truckFilter.length > 0 || tripFilter.length > 0 || dateFrom || dateTo || dateFilterType !== 'pickup';
 
   useEffect(() => {
     if (expandedDates === null || sortedDateKeys.length === 0) return;
@@ -474,6 +478,7 @@ export default function Loads() {
             setTripFilter([]);
             setDateFrom('');
             setDateTo('');
+            setDateFilterType('pickup');
           }}
           showFilters={showFilters}
           onToggleFilters={() => setShowFilters(!showFilters)}
@@ -481,9 +486,17 @@ export default function Loads() {
         
         {showFilters && (
           <div className="mobile-filters-expanded space-y-2 mt-3">
-            <div className="pickup-date-row">
+            <div className="pickup-date-row flex items-center gap-2">
+              <Select value={dateFilterType || 'pickup'} onValueChange={setDateFilterType}>
+                <SelectTrigger className="h-10 w-32 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pickup">Pickup Date</SelectItem>
+                  <SelectItem value="delivery">Delivery Date</SelectItem>
+                </SelectContent>
+              </Select>
               <div className="flex items-center gap-2 border border-input rounded-md px-3 h-10 flex-1 bg-background">
-                <span className="text-xs text-muted-foreground whitespace-nowrap">Pickup:</span>
                 <input
                   type="date"
                   value={dateFrom}
@@ -622,6 +635,39 @@ export default function Loads() {
             ]}
           />
           
+          <div className="flex items-center gap-2 border border-input rounded-md px-3 h-8">
+            <Select value={dateFilterType || 'pickup'} onValueChange={setDateFilterType}>
+              <SelectTrigger className="h-full text-xs border-none bg-transparent w-20 focus:ring-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pickup">Pickup</SelectItem>
+                <SelectItem value="delivery">Delivery</SelectItem>
+              </SelectContent>
+            </Select>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={e => setDateFrom(e.target.value)}
+              className="text-xs bg-transparent outline-none w-24 text-foreground"
+            />
+            <span className="text-xs text-muted-foreground">–</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={e => setDateTo(e.target.value)}
+              className="text-xs bg-transparent outline-none w-24 text-foreground"
+            />
+          </div>
+          
+          <QuickActionSettings
+            enabled={qaEnabled}
+            onToggle={handleQaToggle}
+            action={qaAction}
+            onActionChange={handleQaAction}
+            options={loadsQaOptions}
+          />
+          
           <div className="flex-1" />
           
           {loads.some(l => l.status === 'draft') && (
@@ -679,7 +725,8 @@ export default function Loads() {
           const dateLoads = groupedByDate[dateKey];
           const isExpanded = expandedDates === null || expandedDates.has(dateKey);
           const totalAmount = dateLoads.reduce((sum, l) => sum + (l.invoice_amount || 0), 0);
-          const label = dateKey === 'No Pickup Date' ? 'No Pickup Date' : formatInUserTimezone(dateKey, 'date', getUserTimezone());
+          const noDateLabel = dateFilterType === 'delivery' ? 'No Delivery Date' : 'No Pickup Date';
+          const label = dateKey === noDateLabel ? noDateLabel : formatInUserTimezone(dateKey, 'date', getUserTimezone());
 
           return (
             <div key={dateKey}>
@@ -761,7 +808,6 @@ export default function Loads() {
                           <th className="text-left px-2 py-1 font-medium">Status</th>
                           <th className="text-left px-2 py-1 font-medium">Invoice</th>
                           <th className="px-2 py-1"></th>
-                           <th className="px-2 py-1"></th>
                         </tr>
                       </thead>
                       <tbody className="hidden md:table-row-group text-xs">
