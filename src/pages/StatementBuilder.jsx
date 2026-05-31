@@ -45,8 +45,6 @@ const LineRow = React.memo(({ line, onChange, onRemove }) => (
   </div>
 ));
 
-// Default deductions are now loaded from the database (configured in Statement Settings)
-
 export default function StatementBuilder() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -55,7 +53,7 @@ export default function StatementBuilder() {
   const { session } = useSession();
   const { showDialog, checkFeatureAccess, handleSubscribe, handleDismiss } = usePreviewGate();
   const statementSettings = useStatementSettings();
-  const isInPreview = false; // Subscription wall disabled — all users have full access
+  const isInPreview = false;
   const [form, setForm] = useState({ status: 'draft', gross_total: 0, deductions_total: 0, fuel_total: 0, final_check_amount: 0 });
   const [tripLines, setTripLines] = useState([]);
   const [deductionLines, setDeductionLines] = useState([]);
@@ -70,7 +68,6 @@ export default function StatementBuilder() {
   const initialLoadRef = useRef(true);
   const isSavingRef = useRef(false);
 
-  // Reset everything when navigating to a new blank statement
   useEffect(() => {
     if (!statementId) {
       setForm({ status: 'draft', gross_total: 0, deductions_total: 0, fuel_total: 0, final_check_amount: 0 });
@@ -81,7 +78,7 @@ export default function StatementBuilder() {
       initialLoadRef.current = true;
     }
   }, [statementId]);
-  // Keep refs in sync with latest state to avoid stale closure in auto-save
+
   const formRef = useRef(form);
   const tripLinesRef = useRef(tripLines);
   const deductionLinesRef = useRef(deductionLines);
@@ -132,14 +129,12 @@ export default function StatementBuilder() {
     printStatement({ company, statement: statementWithGross, allLines });
   };
 
-  // Load existing statement
   useQuery({
     queryKey: ['statement', statementId],
     queryFn: async () => {
       if (!statementId) return null;
       const s = await base44.entities.DriverStatement.get(statementId);
       if (!s) return null;
-      // Tenant isolation: deny access to statements from other companies
       if (s.tenant_id && tenantId && s.tenant_id !== tenantId) {
         return null;
       }
@@ -155,7 +150,6 @@ export default function StatementBuilder() {
     enabled: !!statementId,
   });
 
-  // Auto-calculate totals
   useEffect(() => {
     const driver = drivers.find(d => d.id === form.driver_id);
     const legacyGross = driver?.ytd_gross_legacy || 0;
@@ -202,18 +196,17 @@ export default function StatementBuilder() {
     return savedId;
   }, [drivers, trucks]);
 
-  // Auto-save: debounce 2.5s, uses refs to avoid stale closures
   const scheduleAutoSave = useCallback(() => {
-    if (isInPreview) return; // disable auto-save in preview mode
+    if (isInPreview) return;
     if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     autoSaveTimerRef.current = setTimeout(async () => {
-      if (isSavingRef.current) return; // skip if a save is already in progress
+      if (isSavingRef.current) return;
       isSavingRef.current = true;
       setAutoSaving(true);
       try {
         await persistStatement(formRef.current, tripLinesRef.current, deductionLinesRef.current, fuelLinesRef.current);
         setLastAutoSaved(new Date());
-      } catch (e) { /* silent */ } finally {
+      } catch (e) { } finally {
         setAutoSaving(false);
         isSavingRef.current = false;
       }
@@ -290,13 +283,11 @@ export default function StatementBuilder() {
 
   const [autoLoading, setAutoLoading] = useState(false);
 
-  // Returns a map of loadId -> statement_date for loads already on OTHER statements for this driver
   const fetchTakenLoadIds = async () => {
     const currentId = savedIdRef.current;
     const driverId = formRef.current?.driver_id;
     if (!driverId) return {};
 
-    // Only look at statements for this specific driver — avoids pulling all 2000 lines
     const driverStatements = await base44.entities.DriverStatement.filter({ driver_id: driverId }, '-created_date', 100);
     const otherStatements = driverStatements.filter(s => s.id !== currentId);
     if (otherStatements.length === 0) return {};
@@ -351,7 +342,6 @@ export default function StatementBuilder() {
         l.pickup_date && l.pickup_date >= form.period_start && l.pickup_date <= form.period_end
       );
       const existingIds = new Set(tripLines.map(l => l.source_id).filter(Boolean));
-      // Auto load silently skips loads already on another statement
       const skipped = weekLoads.filter(l => !existingIds.has(l.id) && takenMap[l.id]);
       const newLines = weekLoads
         .filter(l => !existingIds.has(l.id) && !takenMap[l.id])
@@ -371,12 +361,11 @@ export default function StatementBuilder() {
     }
   };
 
-  // Auto-add recurring deductions when driver changes (new statements only)
   const prevDriverIdRef = useRef(null);
   useEffect(() => {
     if (!form.driver_id || form.driver_id === prevDriverIdRef.current) return;
     prevDriverIdRef.current = form.driver_id;
-    if (statementId) return; // don't auto-add on existing statements
+    if (statementId) return;
     const recurring = defaultDeductions.filter(d =>
       d.recurring && (d.applies_to === 'all' || d.applies_to_driver_id === form.driver_id)
     );
@@ -650,69 +639,48 @@ export default function StatementBuilder() {
       </div>
 
       {/* DESKTOP VIEW */}
-      <div className="hidden md:block p-6 space-y-5 max-w-screen-2xl">
-        {/* Top bar */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 flex-wrap">
-            <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => navigate(-1)}>
+      <div className="hidden md:block bg-background">
+        {/* Compact header - single row */}
+        <div className="flex items-center justify-between gap-4 px-4 py-3 border-b border-border/50">
+          <div className="flex items-center gap-3 min-w-0">
+            <Button variant="ghost" size="sm" className="h-8 gap-1 flex-shrink-0" onClick={() => navigate(-1)}>
               <ArrowLeft className="w-3.5 h-3.5" /> Statements
             </Button>
-            <h2 className="text-sm font-semibold">{(statementId || savedIdRef.current) ? `Statement — ${form.driver_name || ''}` : 'New Driver Statement'}</h2>
-            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${form.status === 'saved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+            <div className="w-px h-5 bg-border/30 flex-shrink-0" />
+            <h2 className="text-sm font-semibold truncate">New Driver Statement</h2>
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${form.status === 'saved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
               {form.status?.toUpperCase()}
             </span>
-            <span className="flex items-center gap-1 text-[11px] text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+            <span className="flex items-center gap-1 text-[11px] text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full flex-shrink-0">
               {autoSaving
-                ? <><Loader2 className="w-3 h-3 animate-spin" /> Auto-saving…</>
+                ? <><Loader2 className="w-3 h-3 animate-spin" /> Saving…</>
                 : lastAutoSaved
-                ? <><Cloud className="w-3 h-3" /> Auto-saved</>
+                ? <><Cloud className="w-3 h-3" /> Saved</>
                 : <><CloudOff className="w-3 h-3" /> Unsaved</>
               }
             </span>
+            {!form.published && (
+              <span className="flex items-center gap-1 text-[11px] text-slate-600 bg-slate-100 border border-slate-300 px-2 py-0.5 rounded-full flex-shrink-0">
+                Unpublished
+              </span>
+            )}
           </div>
-          <div className="w-full grid grid-cols-3" style={{ gap: '6px' }}>
-            <Button
-              variant={form.published ? "default" : "outline"}
-              size="sm" className="h-8 gap-1" style={{ padding: '0 6px', fontSize: '11px', whiteSpace: 'nowrap' }}
-              onClick={async () => {
-                if (isSavingRef.current) return;
-                isSavingRef.current = true;
-                const newPublished = !form.published;
-                setForm(prev => ({ ...prev, published: newPublished }));
-                setSaving(true);
-                if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-                try {
-                  const updatedForm = { ...formRef.current, published: newPublished };
-                  await persistStatement(updatedForm, tripLinesRef.current, deductionLinesRef.current, fuelLinesRef.current);
-                  queryClient.invalidateQueries({ queryKey: ['statements'] });
-                  toast.success(newPublished ? 'Statement published' : 'Statement unpublished');
-                  setLastAutoSaved(new Date());
-                } catch (err) {
-                  toast.error('Error: ' + err.message);
-                } finally {
-                  setSaving(false);
-                  isSavingRef.current = false;
-                }
-              }}
-              disabled={saving}
-            >
-              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" /> : (form.published ? <Eye className="w-3.5 h-3.5 flex-shrink-0" /> : <EyeOff className="w-3.5 h-3.5 flex-shrink-0" />)}
-              <span className="truncate">{form.published ? 'Published' : 'Unpublished'}</span>
+          <div className="flex gap-2 flex-shrink-0">
+            <Button size="sm" className="h-8 gap-1" onClick={() => handleSave(false)} disabled={saving}>
+              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              Save
             </Button>
-            <Button size="sm" className="h-8 gap-1" style={{ padding: '0 6px', fontSize: '11px', whiteSpace: 'nowrap' }} onClick={() => handleSave(false)} disabled={saving}>
-              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" /> : <Save className="w-3.5 h-3.5 flex-shrink-0" />}
-              <span className="truncate">Save</span>
-            </Button>
-            <Button size="sm" className="h-8 gap-1 bg-green-700 hover:bg-green-800 text-white" style={{ padding: '0 6px', fontSize: '11px', whiteSpace: 'nowrap' }} onClick={handlePrint}>
-              <Download className="w-3.5 h-3.5 flex-shrink-0" />
-              <span className="truncate">Download PDF</span>
+            <Button size="sm" className="h-8 gap-1 bg-green-700 hover:bg-green-800 text-white" onClick={handlePrint}>
+              <Download className="w-3.5 h-3.5" />
+              Download PDF
             </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-2 md:gap-5">
-          <div className="xl:col-span-3 space-y-5">
-
+        {/* Main content - two columns (75/25) */}
+        <div className="p-4 grid grid-cols-4 gap-4">
+          {/* Left column (75%) */}
+          <div className="col-span-3 space-y-4">
             {/* Header */}
             <Card>
               <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 border-b"><CardTitle className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Statement Header</CardTitle></CardHeader>
@@ -720,7 +688,7 @@ export default function StatementBuilder() {
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <div style={{ flex: '1 1 0' }}>
-                      <Label className="text-xs">Driver</Label>
+                      <Label className="text-xs uppercase text-muted-foreground">Driver</Label>
                       <Select value={form.driver_id || ''} onValueChange={(v) => {
                         const d = drivers.find(dr => dr.id === v);
                         setForm(prev => {
@@ -737,7 +705,7 @@ export default function StatementBuilder() {
                       </Select>
                     </div>
                     <div style={{ flex: '1 1 0' }}>
-                      <Label className="text-xs">Truck</Label>
+                      <Label className="text-xs uppercase text-muted-foreground">Truck</Label>
                       <Select value={form.truck_id || ''} onValueChange={(v) => { const t = trucks.find(t => t.id === v); set('truck_id', v); set('truck_number', t?.unit_number || ''); }}>
                         <SelectTrigger className="h-10 text-xs mt-1"><SelectValue placeholder="Select truck" /></SelectTrigger>
                         <SelectContent>{trucks.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number}</SelectItem>)}</SelectContent>
@@ -745,7 +713,7 @@ export default function StatementBuilder() {
                     </div>
                   </div>
                   <div>
-                    <Label className="text-xs">Due Date ({DAY_NAMES[statementSettings.dueDay]})</Label>
+                    <Label className="text-xs uppercase text-muted-foreground">Due Date ({DAY_NAMES[statementSettings.dueDay]})</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button variant="outline" className="h-10 text-xs mt-1 w-full justify-start font-normal">
@@ -769,11 +737,11 @@ export default function StatementBuilder() {
                   </div>
                   <div className="flex gap-2">
                     <div style={{ flex: '1 1 0' }}>
-                      <Label className="text-xs">Period Start ({DAY_NAMES[statementSettings.weekStart]})</Label>
+                      <Label className="text-xs uppercase text-muted-foreground">Period Start ({DAY_NAMES[statementSettings.weekStart]})</Label>
                       <Input type="text" value={form.period_start ? `${format(parse(form.period_start, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy')} (${DAY_NAMES[statementSettings.weekStart].slice(0,3)})` : ''} readOnly className="h-10 text-xs mt-1 bg-muted" />
                     </div>
                     <div style={{ flex: '1 1 0' }}>
-                      <Label className="text-xs">Period End ({DAY_NAMES[(statementSettings.weekStart + 6) % 7]})</Label>
+                      <Label className="text-xs uppercase text-muted-foreground">Period End ({DAY_NAMES[(statementSettings.weekStart + 6) % 7]})</Label>
                       <Input type="text" value={form.period_end ? `${format(parse(form.period_end, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy')} (${DAY_NAMES[(statementSettings.weekStart + 6) % 7].slice(0,3)})` : ''} readOnly className="h-10 text-xs mt-1 bg-muted" />
                     </div>
                   </div>
@@ -855,9 +823,9 @@ export default function StatementBuilder() {
             </Card>
           </div>
 
-          {/* Summary */}
-          <div className="col-span-1 xl:col-span-1">
-            <Card className="md:sticky md:top-4">
+          {/* Right column (25%) - Summary */}
+          <div className="col-span-1">
+            <Card className="sticky top-4">
               <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 border-b"><CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Summary</CardTitle></CardHeader>
               <CardContent className="px-3 pb-3 md:px-5 md:pb-5 space-y-3">
                 <div className="flex justify-between text-xs"><span className="text-muted-foreground">Driver</span><span className="font-medium">{form.driver_name || '—'}</span></div>
