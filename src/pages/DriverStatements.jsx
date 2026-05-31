@@ -417,13 +417,22 @@ export default function DriverStatements() {
             <h2 className="text-sm font-semibold text-primary">Driver Statements</h2>
             <p className="text-[11px] text-muted-foreground">{statements.length} total statement{statements.length !== 1 ? 's' : ''}</p>
           </div>
-          <button
-            onClick={() => setShowDeductionSettings(true)}
-            className="p-2.5 text-muted-foreground hover:bg-secondary rounded transition-colors w-9 h-9 flex items-center justify-center"
-            title="Settings"
-          >
-            <Settings className="w-4 h-4" />
-          </button>
+          <div className="flex gap-2 items-center">
+            <button
+              onClick={() => navigate(createPageUrl('StatementBuilder'))}
+              className="p-2 bg-primary text-white rounded-full transition-colors w-9 h-9 flex items-center justify-center"
+              title="New Statement"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setShowDeductionSettings(true)}
+              className="p-2.5 text-muted-foreground hover:bg-secondary rounded transition-colors w-9 h-9 flex items-center justify-center"
+              title="Settings"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Mobile Search */}
@@ -555,13 +564,7 @@ export default function DriverStatements() {
           </div>
         )}
 
-        {/* FAB Button */}
-        <button
-          onClick={() => navigate(createPageUrl('StatementBuilder'))}
-          className="fixed right-4 bottom-24 w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors flex-shrink-0"
-        >
-          <Plus className="w-5 h-5" />
-        </button>
+
       </div>
     </div>
     </MobilePullRefresh>
