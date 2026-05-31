@@ -23,13 +23,23 @@ import MobilePullRefresh from '../components/mobile/MobilePullRefresh';
 import MobileSelect from '@/components/ui/MobileSelect';
 
 const INV_STATUS_STYLES = {
-  draft: 'bg-gray-100 text-gray-600 border-gray-200',
-  priority: 'bg-orange-50 text-orange-700 border-orange-300',
-  sent: 'bg-cyan-50 text-cyan-700 border-cyan-200',
-  partial: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-  paid: 'bg-green-50 text-green-700 border-green-200',
-  overdue: 'bg-red-50 text-red-700 border-red-200',
-  canceled: 'bg-gray-100 text-gray-400 border-gray-200',
+  draft:    'bg-muted text-muted-foreground border-border',
+  priority: 'bg-orange-500/10 text-orange-400 border-orange-500/30',
+  sent:     'bg-blue-500/10 text-blue-400 border-blue-500/30',
+  partial:  'bg-yellow-500/10 text-yellow-400 border-yellow-500/30',
+  paid:     'bg-green-500/10 text-green-400 border-green-500/30',
+  overdue:  'bg-red-500/10 text-red-400 border-red-500/30',
+  canceled: 'bg-muted text-muted-foreground border-border',
+};
+
+const INV_STATUS_CHEVRON = {
+  draft:    'border-border/60 bg-muted/50',
+  priority: 'border-orange-500/20 bg-orange-500/5',
+  sent:     'border-blue-500/20 bg-blue-500/5',
+  partial:  'border-yellow-500/20 bg-yellow-500/5',
+  paid:     'border-green-500/20 bg-green-500/5',
+  overdue:  'border-red-500/20 bg-red-500/5',
+  canceled: 'border-border/60 bg-muted/50',
 };
 
 function InvoiceStatusSelect({ invoice, queryClient }) {
@@ -68,14 +78,41 @@ function InvoiceStatusSelect({ invoice, queryClient }) {
     { value: 'canceled', label: 'Canceled' },
   ];
 
+  const label = options.find(o => o.value === current)?.label || current;
+  const badgeCls = INV_STATUS_STYLES[current] || INV_STATUS_STYLES.draft;
+  const chevronCls = INV_STATUS_CHEVRON[current] || INV_STATUS_CHEVRON.draft;
+
   return (
-    <MobileSelect
-      value={current}
-      onValueChange={handleChange}
-      disabled={saving}
-      options={options}
-      triggerClassName={`h-6 text-xs px-2 border rounded-md font-medium w-28 ${INV_STATUS_STYLES[current] || ''}`}
-    />
+    <>
+      {/* Desktop: custom split-badge Radix Select */}
+      <div className="hidden md:block">
+        <Select value={current} onValueChange={handleChange} disabled={saving}>
+          <SelectTrigger className={`h-6 px-0 border rounded-md font-medium w-28 text-xs overflow-hidden flex items-stretch [&>svg]:hidden ${badgeCls}`}>
+            <span className="flex-1 flex items-center justify-center px-2 truncate">
+              <SelectValue>{label}</SelectValue>
+            </span>
+            <span className={`flex items-center justify-center px-1.5 border-l ${chevronCls}`}>
+              <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 3L4.5 6L7.5 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </span>
+          </SelectTrigger>
+          <SelectContent>
+            {options.map(opt => (
+              <SelectItem key={opt.value} value={opt.value} className="text-xs">{opt.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      {/* Mobile: sheet-based select */}
+      <div className="md:hidden">
+        <MobileSelect
+          value={current}
+          onValueChange={handleChange}
+          disabled={saving}
+          options={options}
+          triggerClassName={`h-6 text-xs px-2 border rounded-md font-medium w-28 ${badgeCls}`}
+        />
+      </div>
+    </>
   );
 }
 
@@ -232,7 +269,7 @@ export default function Invoices() {
         />
       )
     },
-    { header: 'Invoice #', render: (r) => <span className="font-mono font-semibold">{r.invoice_number}</span> },
+    { header: 'Invoice #', render: (r) => <span className="font-mono font-semibold text-foreground">{r.invoice_number}</span> },
     {
       header: 'Broker Load #',
       render: (r) => {
@@ -240,17 +277,17 @@ export default function Invoices() {
         const loadNum = load?.external_load_number;
         const copied = copiedId === loadNum;
         return (
-          <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+          <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
             {loadNum ? (
               <>
-                <span className="font-mono text-primary">{loadNum}</span>
+                <span className="font-mono text-blue-400 text-xs">{loadNum}</span>
                 <button
                   onClick={(e) => handleCopyLoadNumber(e, loadNum)}
-                  className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                  className="p-0.5 rounded hover:bg-muted transition-colors text-muted-foreground/50 hover:text-muted-foreground"
                   title="Copy load number"
                 >
                   {copied
-                    ? <Check className="w-3 h-3 text-green-600" />
+                    ? <Check className="w-3 h-3 text-green-400" />
                     : <Copy className="w-3 h-3" />}
                 </button>
               </>
@@ -269,14 +306,14 @@ export default function Invoices() {
         );
       }
     },
-    { header: 'Customer', render: (r) => <span className="font-medium">{r.customer_name || '—'}</span> },
+    { header: 'Customer', render: (r) => <span className="font-medium text-foreground">{r.customer_name || '—'}</span> },
     {
       header: 'Invoice Date',
       render: (r) => {
         const date = r.invoice_date;
-        if (!date) return '—';
+        if (!date) return <span className="text-muted-foreground">—</span>;
         const d = new Date(date + 'T12:00:00');
-        return isNaN(d.getTime()) ? '—' : format(d, 'MMM d, yyyy');
+        return isNaN(d.getTime()) ? '—' : <span className="text-muted-foreground">{format(d, 'MMM d, yyyy')}</span>;
       }
     },
     {
@@ -284,19 +321,19 @@ export default function Invoices() {
       render: (r) => {
         const load = loadsMap[r.load_id];
         const date = load?.delivery_date;
-        if (!date) return '—';
+        if (!date) return <span className="text-muted-foreground">—</span>;
         const d = new Date(date + 'T12:00:00');
-        return isNaN(d.getTime()) ? '—' : format(d, 'MMM d, yyyy');
+        return isNaN(d.getTime()) ? '—' : <span className="text-muted-foreground">{format(d, 'MMM d, yyyy')}</span>;
       }
     },
-    { header: 'Amount', render: (r) => r.total ? <span className="font-medium">${r.total.toLocaleString()}</span> : '—' },
+    { header: 'Amount', render: (r) => r.total ? <span className="font-semibold text-foreground">${r.total.toLocaleString()}</span> : '—' },
     { header: 'Status', width: '110px', render: (r) => <div onClick={e => e.stopPropagation()}><InvoiceStatusSelect invoice={r} queryClient={queryClient} /></div> },
     {
       header: '', render: (r) => (
-        <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-1 group" onClick={e => e.stopPropagation()}>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={e => e.stopPropagation()}>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/30 group-hover:text-destructive transition-colors" onClick={e => e.stopPropagation()}>
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
             </AlertDialogTrigger>
@@ -318,8 +355,38 @@ export default function Invoices() {
 
   return (
     <MobilePullRefresh onRefresh={() => queryClient.invalidateQueries({ queryKey: ['invoices'] })}>
-    <div className="p-4">
-      <div className="flex gap-2 mb-3">
+    <div className="p-3">
+      {/* Toolbar — desktop: single compact row */}
+      <div className="hidden md:flex items-center gap-2 mb-3">
+        <h1 className="text-sm font-semibold text-foreground whitespace-nowrap mr-1">Invoices</h1>
+        <SearchInput value={search} onChange={setSearch} placeholder="Search invoices..." className="w-52 h-7 text-xs" />
+        <MobileSelect
+          value={statusFilter}
+          onValueChange={setStatusFilter}
+          triggerClassName="h-7 text-xs w-32 border border-input rounded-md px-2 bg-background"
+          options={[
+            { value: 'all', label: 'All Statuses' },
+            { value: 'draft', label: 'Draft' },
+            { value: 'priority', label: 'Priority' },
+            { value: 'sent', label: 'Sent' },
+            { value: 'partial', label: 'Partial' },
+            { value: 'paid', label: 'Paid' },
+            { value: 'overdue', label: 'Overdue' },
+            { value: 'canceled', label: 'Canceled' },
+          ]}
+        />
+        <div className="flex-1" />
+        <QuickActionSettings
+          enabled={qaEnabled}
+          onToggle={handleQaToggle}
+          action={qaAction}
+          onActionChange={handleQaAction}
+          options={qaOptions}
+        />
+      </div>
+
+      {/* Toolbar — mobile: original layout */}
+      <div className="flex md:hidden gap-2 mb-3">
          <SearchInput value={search} onChange={setSearch} placeholder="Search invoices..." className="w-64" />
          <MobileSelect
            value={statusFilter}
@@ -385,6 +452,15 @@ export default function Invoices() {
        )}
       {/* Desktop table */}
       <div className="hidden md:block">
+        <style>{`
+          .invoices-desktop-table table { border-collapse: collapse; width: 100%; }
+          .invoices-desktop-table thead tr { border-bottom: 1px solid hsl(var(--border)); }
+          .invoices-desktop-table thead th { padding: 6px 10px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: hsl(var(--muted-foreground)); }
+          .invoices-desktop-table tbody td { padding: 7px 10px; font-size: 12.5px; border-bottom: 1px solid hsl(var(--border) / 0.4); }
+          .invoices-desktop-table tbody tr:last-child td { border-bottom: none; }
+          .invoices-desktop-table tbody tr:hover td { background: hsl(var(--muted) / 0.4); }
+        `}</style>
+        <div className="invoices-desktop-table">
         <DataTable
           columns={columns}
           data={filtered}
@@ -392,6 +468,7 @@ export default function Invoices() {
           onRowClick={(row) => navigate(createPageUrl(`InvoiceDetail?id=${row.id}`))}
           emptyMessage="No invoices found"
         />
+        </div>
       </div>
       
       {/* Mobile cards */}
