@@ -411,31 +411,35 @@ export default function StatementBuilder() {
   );
 
   return (
-    <div className="p-3 space-y-3 md:p-6 md:space-y-5 max-w-screen-2xl">
+    <>
       {showDialog && <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />}
-      {/* Top bar */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-3 flex-wrap md:gap-3">
-          <Button variant="ghost" size="sm" className="h-8 gap-1 hidden md:flex" onClick={() => navigate(-1)}>
+      
+      {/* MOBILE VIEW */}
+      <div className="md:hidden p-3 space-y-2" style={{ boxSizing: 'border-box' }}>
+        {/* Top row: back + title + badges + unsaved */}
+        <div className="flex items-center gap-2 flex-wrap mb-2">
+          <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => navigate(-1)} style={{ padding: '4px 8px' }}>
             <ArrowLeft className="w-3.5 h-3.5" /> Statements
           </Button>
-          <h2 className="text-sm font-semibold">{(statementId || savedIdRef.current) ? `Statement — ${form.driver_name || ''}` : 'New Driver Statement'}</h2>
-          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${form.status === 'saved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+          <h2 className="text-xs font-semibold">{(statementId || savedIdRef.current) ? `${form.driver_name || 'Statement'}` : 'New Driver Statement'}</h2>
+          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded flex-shrink-0 ${form.status === 'saved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
             {form.status?.toUpperCase()}
           </span>
-          <span className="flex items-center gap-1 text-[11px] text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+          <span className="flex items-center gap-1 text-[10px] text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded flex-shrink-0">
             {autoSaving
-              ? <><Loader2 className="w-3 h-3 animate-spin" /> Auto-saving…</>
+              ? <><Loader2 className="w-2 h-2 animate-spin" /> Saving</>
               : lastAutoSaved
-              ? <><Cloud className="w-3 h-3" /> Auto-saved</>
-              : <><CloudOff className="w-3 h-3" /> Unsaved</>
+              ? <><Cloud className="w-2 h-2" /> Saved</>
+              : <><CloudOff className="w-2 h-2" /> Unsaved</>
             }
           </span>
         </div>
-        <div className="w-full grid grid-cols-3" style={{ gap: '6px' }}>
+        
+        {/* Button row: three equal columns */}
+        <div className="w-full" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', marginBottom: '8px' }}>
           <Button
             variant={form.published ? "default" : "outline"}
-            size="sm" className="h-10 md:h-8 gap-1 md:flex-none overflow-hidden" style={{ padding: '0 6px', fontSize: '11px', whiteSpace: 'nowrap' }}
+            size="sm"
             onClick={async () => {
               if (isSavingRef.current) return;
               isSavingRef.current = true;
@@ -457,198 +461,433 @@ export default function StatementBuilder() {
               }
             }}
             disabled={saving}
+            style={{ height: '40px', fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', flexShrink: 0 }}
           >
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" /> : (form.published ? <Eye className="w-3.5 h-3.5 flex-shrink-0" /> : <EyeOff className="w-3.5 h-3.5 flex-shrink-0" />)}
-            <span className="truncate">{form.published ? 'Published' : 'Unpublished'}</span>
+            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{form.published ? 'Published' : 'Unpublished'}</span>
           </Button>
-          <Button size="sm" className="h-10 md:h-8 gap-1 md:flex-none overflow-hidden" style={{ padding: '0 6px', fontSize: '11px', whiteSpace: 'nowrap' }} onClick={() => handleSave(false)} disabled={saving}>
+          <Button
+            size="sm"
+            onClick={() => handleSave(false)}
+            disabled={saving}
+            style={{ height: '40px', fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', flexShrink: 0 }}
+          >
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" /> : <Save className="w-3.5 h-3.5 flex-shrink-0" />}
-            <span className="truncate">Save</span>
+            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Save</span>
           </Button>
-          <Button size="sm" className="h-10 md:h-8 gap-1 bg-green-700 hover:bg-green-800 text-white md:flex-none overflow-hidden" style={{ padding: '0 6px', fontSize: '11px', whiteSpace: 'nowrap' }} onClick={handlePrint}>
+          <Button
+            size="sm"
+            className="bg-green-700 hover:bg-green-800 text-white"
+            onClick={handlePrint}
+            style={{ height: '40px', fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', flexShrink: 0 }}
+          >
             <Download className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className="truncate">Download PDF</span>
+            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Download PDF</span>
           </Button>
         </div>
+
+        {/* Statement Header Card */}
+        <Card style={{ borderRadius: '10px', padding: '12px', boxSizing: 'border-box', width: '100%', overflow: 'hidden' }}>
+          <CardTitle className="text-[10px] font-semibold uppercase tracking-[0.5px] text-muted-foreground mb-3" style={{ letterSpacing: '0.5px' }}>Statement Header</CardTitle>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
+            <div>
+              <Label className="text-[11px] text-primary">Driver</Label>
+              <Select value={form.driver_id || ''} onValueChange={(v) => {
+                const d = drivers.find(dr => dr.id === v);
+                setForm(prev => {
+                  const updates = { ...prev, driver_id: v, driver_name: d?.full_name || '' };
+                  if (d?.assigned_truck_id) {
+                    const t = trucks.find(tr => tr.id === d.assigned_truck_id);
+                    if (t) { updates.truck_id = t.id; updates.truck_number = t.unit_number; }
+                  }
+                  return updates;
+                });
+              }}>
+                <SelectTrigger style={{ height: '38px', fontSize: '12px' }}><SelectValue placeholder="Select driver" /></SelectTrigger>
+                <SelectContent>{drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-[11px] text-primary">Truck</Label>
+              <Select value={form.truck_id || ''} onValueChange={(v) => { const t = trucks.find(t => t.id === v); set('truck_id', v); set('truck_number', t?.unit_number || ''); }}>
+                <SelectTrigger style={{ height: '38px', fontSize: '12px' }}><SelectValue placeholder="Select truck" /></SelectTrigger>
+                <SelectContent>{trucks.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div style={{ marginBottom: '8px' }}>
+            <Label className="text-[11px] text-primary">Due Date ({DAY_NAMES[statementSettings.dueDay]})</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" style={{ height: '38px', fontSize: '12px', width: '100%', justifyContent: 'flex-start', marginTop: '4px' }}>
+                  <CalendarIcon className="w-3.5 h-3.5 mr-2" />
+                  {form.statement_date ? format(parse(form.statement_date, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy') : 'Select Due Date'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent style={{ width: 'auto', padding: 0 }} align="start">
+                <Calendar
+                  mode="single"
+                  selected={form.statement_date ? parse(form.statement_date, 'yyyy-MM-dd', new Date()) : undefined}
+                  onSelect={handleDateSelect}
+                  modifiers={{ validDueDay: (date) => {
+                    const yr = date.getFullYear();
+                    return getAllDueDates(yr, statementSettings).includes(format(date, 'yyyy-MM-dd'));
+                  } }}
+                  modifiersClassNames={{ validDueDay: 'bg-primary/10 font-bold text-primary' }}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <div>
+              <Label className="text-[11px] text-primary">Period Start ({DAY_NAMES[statementSettings.weekStart]})</Label>
+              <Input type="text" value={form.period_start ? `${format(parse(form.period_start, 'yyyy-MM-dd', new Date()), 'MMM d')}` : ''} readOnly style={{ height: '38px', fontSize: '12px', marginTop: '4px' }} />
+            </div>
+            <div>
+              <Label className="text-[11px] text-primary">Period End ({DAY_NAMES[(statementSettings.weekStart + 6) % 7]})</Label>
+              <Input type="text" value={form.period_end ? `${format(parse(form.period_end, 'yyyy-MM-dd', new Date()), 'MMM d')}` : ''} readOnly style={{ height: '38px', fontSize: '12px', marginTop: '4px' }} />
+            </div>
+          </div>
+        </Card>
+
+        {/* Settlement Items Card */}
+        <Card style={{ borderRadius: '10px', padding: '12px', boxSizing: 'border-box', width: '100%', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <CardTitle className="text-[10px] font-semibold uppercase tracking-[0.5px] text-muted-foreground" style={{ letterSpacing: '0.5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '8px' }}>Settlement Items ({tripLines.length})</CardTitle>
+            <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+              <Button variant="outline" size="sm" onClick={handleAutoLoadWeek} disabled={!form.driver_id || !form.period_start || autoLoading} style={{ height: '28px', fontSize: '11px', padding: '4px 7px', borderRadius: '6px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                {autoLoading ? <Loader2 className="w-3 h-3 animate-spin flex-shrink-0" /> : <Zap className="w-3 h-3 flex-shrink-0" />}
+                <span style={{ whiteSpace: 'nowrap' }}>Auto Week</span>
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => { if (!form.driver_id) { toast.error('Select a driver first'); return; } setLoadPickerOpen(true); }} disabled={!form.driver_id} style={{ height: '28px', fontSize: '11px', padding: '4px 7px', borderRadius: '6px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                <Truck className="w-3 h-3 flex-shrink-0" />
+                <span style={{ whiteSpace: 'nowrap' }}>Pick Loads</span>
+              </Button>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 60px 55px', gap: '4px', paddingBottom: '6px', borderBottom: '0.5px solid', marginBottom: '8px' }}>
+            <div className="text-[10px] font-semibold text-muted-foreground uppercase">Date</div>
+            <div className="text-[10px] font-semibold text-muted-foreground uppercase">Desc / Load #</div>
+            <div className="text-[10px] font-semibold text-muted-foreground uppercase">Route</div>
+            <div className="text-[10px] font-semibold text-muted-foreground uppercase text-right">Amt ($)</div>
+          </div>
+          {tripLines.map((line, i) => <LineRow key={line._key || i} line={line} onChange={(k, v) => updateTripLine(i, k, v)} onRemove={() => setTripLines(prev => prev.filter((_, idx) => idx !== i))} />)}
+          {tripLines.length === 0 && <p className="text-xs text-muted-foreground text-left py-2">No trips. Select a driver and click "Pick Loads" to add.</p>}
+        </Card>
+
+        {/* Deductions Card */}
+        <Card style={{ borderRadius: '10px', padding: '12px', boxSizing: 'border-box', width: '100%', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <CardTitle className="text-[10px] font-semibold uppercase tracking-[0.5px] text-muted-foreground" style={{ letterSpacing: '0.5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '8px' }}>Deductions ({deductionLines.length})</CardTitle>
+            <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+              {defaultDeductions
+                .filter(d => d.applies_to === 'all' || d.applies_to_driver_id === form.driver_id)
+                .map(def => (
+                  <Button key={def.id} variant="outline" size="sm" onClick={() => addDefaultDeduction(def)} style={{ height: '28px', fontSize: '11px', padding: '4px 7px', borderRadius: '6px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                    <Plus className="w-3 h-3 flex-shrink-0" />
+                    <span style={{ whiteSpace: 'nowrap' }}>IFTA ${Number(def.default_amount || 0).toLocaleString()}</span>
+                  </Button>
+                ))
+              }
+              <Button variant="outline" size="sm" onClick={addCustomDeduction} style={{ height: '28px', fontSize: '11px', padding: '4px 7px', borderRadius: '6px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                <Plus className="w-3 h-3" />
+                <span style={{ whiteSpace: 'nowrap' }}>Custom</span>
+              </Button>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 60px 55px', gap: '4px', paddingBottom: '6px', borderBottom: '0.5px solid', marginBottom: '8px' }}>
+            <div className="text-[10px] font-semibold text-muted-foreground uppercase">Date</div>
+            <div className="text-[10px] font-semibold text-muted-foreground uppercase">Desc / Load #</div>
+            <div className="text-[10px] font-semibold text-muted-foreground uppercase">Route</div>
+            <div className="text-[10px] font-semibold text-muted-foreground uppercase text-right">Amt ($)</div>
+          </div>
+          {deductionLines.map((line, i) => <LineRow key={line._key || i} line={line} onChange={(k, v) => updateDeductionLine(i, k, v)} onRemove={() => setDeductionLines(prev => prev.filter((_, idx) => idx !== i))} />)}
+          {deductionLines.length === 0 && <p className="text-xs text-muted-foreground text-left py-2">No deductions. Use the quick-add buttons above.</p>}
+        </Card>
+
+        {/* Fuel Card */}
+        <Card style={{ borderRadius: '10px', padding: '12px', boxSizing: 'border-box', width: '100%', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <CardTitle className="text-[10px] font-semibold uppercase tracking-[0.5px] text-muted-foreground" style={{ letterSpacing: '0.5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: '8px' }}>Fuel ({fuelLines.length})</CardTitle>
+            <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+              <Button variant="outline" size="sm" onClick={loadDriverFuel} disabled={loadingFuel || !form.driver_id} style={{ height: '28px', fontSize: '11px', padding: '4px 7px', borderRadius: '6px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                {loadingFuel ? <Loader2 className="w-3 h-3 animate-spin flex-shrink-0" /> : <Fuel className="w-3 h-3 flex-shrink-0" />}
+                <span style={{ whiteSpace: 'nowrap' }}>Load Fuel</span>
+              </Button>
+              <Button variant="outline" size="sm" onClick={addCustomFuel} style={{ height: '28px', fontSize: '11px', padding: '4px 7px', borderRadius: '6px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                <Plus className="w-3 h-3" />
+                <span style={{ whiteSpace: 'nowrap' }}>Add</span>
+              </Button>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 60px 55px', gap: '4px', paddingBottom: '6px', borderBottom: '0.5px solid', marginBottom: '8px' }}>
+            <div className="text-[10px] font-semibold text-muted-foreground uppercase">Date</div>
+            <div className="text-[10px] font-semibold text-muted-foreground uppercase">Desc / Load #</div>
+            <div className="text-[10px] font-semibold text-muted-foreground uppercase">Route</div>
+            <div className="text-[10px] font-semibold text-muted-foreground uppercase text-right">Amt ($)</div>
+          </div>
+          {fuelLines.map((line, i) => <LineRow key={line._key || i} line={line} onChange={(k, v) => updateFuelLine(i, k, v)} onRemove={() => setFuelLines(prev => prev.filter((_, idx) => idx !== i))} />)}
+          {fuelLines.length === 0 && <p className="text-xs text-muted-foreground text-left py-2">No fuel. Select a driver and click "Load Fuel".</p>}
+        </Card>
+
+        {/* Summary Card */}
+        <Card style={{ borderRadius: '10px', padding: '12px', boxSizing: 'border-box', width: '100%', overflow: 'hidden' }}>
+          <CardTitle className="text-[10px] font-semibold uppercase tracking-[0.5px] text-muted-foreground mb-2" style={{ letterSpacing: '0.5px' }}>Summary</CardTitle>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}><span className="text-[12px] text-muted-foreground">Driver</span><span className="text-[12px]">{form.driver_name || '—'}</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}><span className="text-[12px] text-muted-foreground">Truck #</span><span className="text-[12px]">{form.truck_number || '—'}</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}><span className="text-[12px] text-muted-foreground">Period</span><span className="text-[12px]">{form.period_start && form.period_end ? `${form.period_start} – ${form.period_end}` : '—'}</span></div>
+          <div style={{ borderTop: '0.5px solid', paddingTop: '10px', marginBottom: '10px' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}><span className="text-[12px] text-muted-foreground">Gross ({tripLines.length} trips)</span><span className="text-[12px] text-green-600">${tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}><span className="text-[12px] text-muted-foreground">Deductions</span><span className="text-[12px] text-red-600">-${(form.deductions_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}><span className="text-[12px] text-muted-foreground">Fuel</span><span className="text-[12px] text-red-600">-${(form.fuel_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+          <div style={{ borderTop: '0.5px solid', paddingTop: '10px', marginBottom: '8px' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}><span className="text-primary font-semibold" style={{ fontSize: '14px' }}>Net Pay</span><span className="text-primary font-bold" style={{ fontSize: '20px' }}>${(form.final_check_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            {form.published ? <Eye className="w-3 h-3 text-green-600" /> : <EyeOff className="w-3 h-3 text-muted-foreground" />}
+            <span className="text-[11px] text-muted-foreground">{form.published ? 'Visible to driver' : 'Hidden from driver'}</span>
+          </div>
+        </Card>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-2 md:gap-5">
-        <div className="xl:col-span-3 space-y-5">
+      {/* DESKTOP VIEW */}
+      <div className="hidden md:block p-6 space-y-5 max-w-screen-2xl">
+        {/* Top bar */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => navigate(-1)}>
+              <ArrowLeft className="w-3.5 h-3.5" /> Statements
+            </Button>
+            <h2 className="text-sm font-semibold">{(statementId || savedIdRef.current) ? `Statement — ${form.driver_name || ''}` : 'New Driver Statement'}</h2>
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${form.status === 'saved' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+              {form.status?.toUpperCase()}
+            </span>
+            <span className="flex items-center gap-1 text-[11px] text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+              {autoSaving
+                ? <><Loader2 className="w-3 h-3 animate-spin" /> Auto-saving…</>
+                : lastAutoSaved
+                ? <><Cloud className="w-3 h-3" /> Auto-saved</>
+                : <><CloudOff className="w-3 h-3" /> Unsaved</>
+              }
+            </span>
+          </div>
+          <div className="w-full grid grid-cols-3" style={{ gap: '6px' }}>
+            <Button
+              variant={form.published ? "default" : "outline"}
+              size="sm" className="h-8 gap-1" style={{ padding: '0 6px', fontSize: '11px', whiteSpace: 'nowrap' }}
+              onClick={async () => {
+                if (isSavingRef.current) return;
+                isSavingRef.current = true;
+                const newPublished = !form.published;
+                setForm(prev => ({ ...prev, published: newPublished }));
+                setSaving(true);
+                if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+                try {
+                  const updatedForm = { ...formRef.current, published: newPublished };
+                  await persistStatement(updatedForm, tripLinesRef.current, deductionLinesRef.current, fuelLinesRef.current);
+                  queryClient.invalidateQueries({ queryKey: ['statements'] });
+                  toast.success(newPublished ? 'Statement published' : 'Statement unpublished');
+                  setLastAutoSaved(new Date());
+                } catch (err) {
+                  toast.error('Error: ' + err.message);
+                } finally {
+                  setSaving(false);
+                  isSavingRef.current = false;
+                }
+              }}
+              disabled={saving}
+            >
+              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" /> : (form.published ? <Eye className="w-3.5 h-3.5 flex-shrink-0" /> : <EyeOff className="w-3.5 h-3.5 flex-shrink-0" />)}
+              <span className="truncate">{form.published ? 'Published' : 'Unpublished'}</span>
+            </Button>
+            <Button size="sm" className="h-8 gap-1" style={{ padding: '0 6px', fontSize: '11px', whiteSpace: 'nowrap' }} onClick={() => handleSave(false)} disabled={saving}>
+              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" /> : <Save className="w-3.5 h-3.5 flex-shrink-0" />}
+              <span className="truncate">Save</span>
+            </Button>
+            <Button size="sm" className="h-8 gap-1 bg-green-700 hover:bg-green-800 text-white" style={{ padding: '0 6px', fontSize: '11px', whiteSpace: 'nowrap' }} onClick={handlePrint}>
+              <Download className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="truncate">Download PDF</span>
+            </Button>
+          </div>
+        </div>
 
-          {/* Header */}
-          <Card>
-            <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 border-b"><CardTitle className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Statement Header</CardTitle></CardHeader>
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-2 md:gap-5">
+          <div className="xl:col-span-3 space-y-5">
+
+            {/* Header */}
+            <Card>
+              <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 border-b"><CardTitle className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Statement Header</CardTitle></CardHeader>
               <CardContent className="px-3 pb-3 md:px-5 md:pb-5">
                 <div className="space-y-2">
                   <div className="flex gap-2">
-              <div style={{ flex: '1 1 0' }}>
-                <Label className="text-xs">Driver</Label>
-                <Select value={form.driver_id || ''} onValueChange={(v) => {
-                  const d = drivers.find(dr => dr.id === v);
-                  setForm(prev => {
-                    const updates = { ...prev, driver_id: v, driver_name: d?.full_name || '' };
-                    if (d?.assigned_truck_id) {
-                      const t = trucks.find(tr => tr.id === d.assigned_truck_id);
-                      if (t) { updates.truck_id = t.id; updates.truck_number = t.unit_number; }
-                    }
-                    return updates;
-                  });
-                }}>
-                  <SelectTrigger className="h-10 text-xs mt-1"><SelectValue placeholder="Select driver" /></SelectTrigger>
-                  <SelectContent>{drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div style={{ flex: '1 1 0' }}>
-                <Label className="text-xs">Truck</Label>
-                <Select value={form.truck_id || ''} onValueChange={(v) => { const t = trucks.find(t => t.id === v); set('truck_id', v); set('truck_number', t?.unit_number || ''); }}>
-                  <SelectTrigger className="h-10 text-xs mt-1"><SelectValue placeholder="Select truck" /></SelectTrigger>
-                  <SelectContent>{trucks.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              </div>
-              <div>
-                <Label className="text-xs">Due Date ({DAY_NAMES[statementSettings.dueDay]})</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="h-10 text-xs mt-1 w-full justify-start font-normal">
-                      <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                      {form.statement_date ? format(parse(form.statement_date, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy') : 'Select Tuesday Due Date'}
-                      </Button>
+                    <div style={{ flex: '1 1 0' }}>
+                      <Label className="text-xs">Driver</Label>
+                      <Select value={form.driver_id || ''} onValueChange={(v) => {
+                        const d = drivers.find(dr => dr.id === v);
+                        setForm(prev => {
+                          const updates = { ...prev, driver_id: v, driver_name: d?.full_name || '' };
+                          if (d?.assigned_truck_id) {
+                            const t = trucks.find(tr => tr.id === d.assigned_truck_id);
+                            if (t) { updates.truck_id = t.id; updates.truck_number = t.unit_number; }
+                          }
+                          return updates;
+                        });
+                      }}>
+                        <SelectTrigger className="h-10 text-xs mt-1"><SelectValue placeholder="Select driver" /></SelectTrigger>
+                        <SelectContent>{drivers.map(d => <SelectItem key={d.id} value={d.id}>{d.full_name}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div style={{ flex: '1 1 0' }}>
+                      <Label className="text-xs">Truck</Label>
+                      <Select value={form.truck_id || ''} onValueChange={(v) => { const t = trucks.find(t => t.id === v); set('truck_id', v); set('truck_number', t?.unit_number || ''); }}>
+                        <SelectTrigger className="h-10 text-xs mt-1"><SelectValue placeholder="Select truck" /></SelectTrigger>
+                        <SelectContent>{trucks.map(t => <SelectItem key={t.id} value={t.id}>{t.unit_number}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Due Date ({DAY_NAMES[statementSettings.dueDay]})</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="h-10 text-xs mt-1 w-full justify-start font-normal">
+                          <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                          {form.statement_date ? format(parse(form.statement_date, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy') : 'Select Tuesday Due Date'}
+                        </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                      mode="single"
-                      selected={form.statement_date ? parse(form.statement_date, 'yyyy-MM-dd', new Date()) : undefined}
-                      onSelect={handleDateSelect}
-                      modifiers={{ validDueDay: (date) => {
-                      const yr = date.getFullYear();
-                      return getAllDueDates(yr, statementSettings).includes(format(date, 'yyyy-MM-dd'));
-                      } }}
-                      modifiersClassNames={{ validDueDay: 'bg-primary/10 font-bold text-primary' }}
-                      />
+                        <Calendar
+                          mode="single"
+                          selected={form.statement_date ? parse(form.statement_date, 'yyyy-MM-dd', new Date()) : undefined}
+                          onSelect={handleDateSelect}
+                          modifiers={{ validDueDay: (date) => {
+                            const yr = date.getFullYear();
+                            return getAllDueDates(yr, statementSettings).includes(format(date, 'yyyy-MM-dd'));
+                          } }}
+                          modifiersClassNames={{ validDueDay: 'bg-primary/10 font-bold text-primary' }}
+                        />
                       </PopoverContent>
-                      </Popover>
-                      </div>
-                      <div className="flex gap-2">
-                      <div style={{ flex: '1 1 0' }}>
+                    </Popover>
+                  </div>
+                  <div className="flex gap-2">
+                    <div style={{ flex: '1 1 0' }}>
                       <Label className="text-xs">Period Start ({DAY_NAMES[statementSettings.weekStart]})</Label>
                       <Input type="text" value={form.period_start ? `${format(parse(form.period_start, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy')} (${DAY_NAMES[statementSettings.weekStart].slice(0,3)})` : ''} readOnly className="h-10 text-xs mt-1 bg-muted" />
-                      </div>
-                      <div style={{ flex: '1 1 0' }}>
+                    </div>
+                    <div style={{ flex: '1 1 0' }}>
                       <Label className="text-xs">Period End ({DAY_NAMES[(statementSettings.weekStart + 6) % 7]})</Label>
                       <Input type="text" value={form.period_end ? `${format(parse(form.period_end, 'yyyy-MM-dd', new Date()), 'MMM d, yyyy')} (${DAY_NAMES[(statementSettings.weekStart + 6) % 7].slice(0,3)})` : ''} readOnly className="h-10 text-xs mt-1 bg-muted" />
-                      </div>
-                      </div>
-                      </div>
-                      </CardContent>
-          </Card>
-
-          {/* Settlement Items */}
-          <Card>
-            <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 border-b">
-              <div className="flex items-center justify-between" style={{ gap: '6px' }}>
-                <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground shrink-0">Settlement Items ({tripLines.length})</CardTitle>
-                <div className="flex flex-nowrap shrink-0" style={{ gap: '6px' }}>
-                <Button variant="outline" size="sm" className="h-7 gap-1 shrink" style={{ fontSize: '11px', padding: '0 8px', minWidth: 0 }} onClick={handleAutoLoadWeek} disabled={!form.driver_id || !form.period_start || autoLoading} title="Auto-add all loads due this week">
-                  {autoLoading ? <Loader2 className="w-3 h-3 animate-spin flex-shrink-0" /> : <Zap className="w-3 h-3 flex-shrink-0" />} <span className="truncate">Auto Week</span>
-                </Button>
-                <Button variant="outline" size="sm" className="h-7 gap-1 shrink" style={{ fontSize: '11px', padding: '0 8px', minWidth: 0 }} onClick={() => { if (!form.driver_id) { toast.error('Select a driver first'); return; } setLoadPickerOpen(true); }} disabled={!form.driver_id}>
-                  <Truck className="w-3 h-3 flex-shrink-0" /> <span className="truncate">Pick Loads</span>
-                </Button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="px-3 pb-3 md:px-5 md:pb-5">
-              {colHeaders}
-              {tripLines.map((line, i) => <LineRow key={line._key || i} line={line} onChange={(k, v) => updateTripLine(i, k, v)} onRemove={() => setTripLines(prev => prev.filter((_, idx) => idx !== i))} />)}
-              {tripLines.length === 0 && <p className="text-xs text-muted-foreground text-left py-5">No trips. Select a driver and click "Pick Loads" to add from existing loads.</p>}
-              {tripLines.length > 0 && <div className="flex justify-end mt-3 pt-2 border-t"><span className="text-sm font-bold text-green-700">Gross: ${tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Deductions */}
-          <Card>
-            <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 border-b">
-              <div className="flex items-center justify-between" style={{ gap: '6px' }}>
-                <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground shrink-0">Deductions ({deductionLines.length})</CardTitle>
-                <div className="flex flex-nowrap shrink-0" style={{ gap: '6px' }}>
-                {defaultDeductions
-                  .filter(d => d.applies_to === 'all' || d.applies_to_driver_id === form.driver_id)
-                  .map(def => (
-                    <Button key={def.id} variant="outline" size="sm" className="h-7 gap-1 shrink" style={{ fontSize: '11px', padding: '0 8px', minWidth: 0 }} onClick={() => addDefaultDeduction(def)}>
-                      <Plus className="w-3 h-3 flex-shrink-0" /> <span className="truncate">{def.deduction_name}{def.default_amount ? ` $${Number(def.default_amount).toLocaleString()}` : ''}</span>
+            {/* Settlement Items */}
+            <Card>
+              <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 border-b">
+                <div className="flex items-center justify-between" style={{ gap: '6px' }}>
+                  <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground shrink-0">Settlement Items ({tripLines.length})</CardTitle>
+                  <div className="flex flex-nowrap shrink-0" style={{ gap: '6px' }}>
+                    <Button variant="outline" size="sm" className="h-7 gap-1 shrink" style={{ fontSize: '11px', padding: '0 8px', minWidth: 0 }} onClick={handleAutoLoadWeek} disabled={!form.driver_id || !form.period_start || autoLoading} title="Auto-add all loads due this week">
+                      {autoLoading ? <Loader2 className="w-3 h-3 animate-spin flex-shrink-0" /> : <Zap className="w-3 h-3 flex-shrink-0" />} <span className="truncate">Auto Week</span>
                     </Button>
-                  ))
-                }
-                {defaultDeductions.length === 0 && (
-                  <span className="text-[10px] text-muted-foreground self-center hidden md:inline">No defaults configured — go to Statement Settings on the Statements page</span>
-                )}
-                <Button variant="outline" size="sm" className="h-7 gap-1 shrink-0" style={{ fontSize: '11px', padding: '0 8px' }} onClick={addCustomDeduction}><Plus className="w-3 h-3" /> Custom</Button>
+                    <Button variant="outline" size="sm" className="h-7 gap-1 shrink" style={{ fontSize: '11px', padding: '0 8px', minWidth: 0 }} onClick={() => { if (!form.driver_id) { toast.error('Select a driver first'); return; } setLoadPickerOpen(true); }} disabled={!form.driver_id}>
+                      <Truck className="w-3 h-3 flex-shrink-0" /> <span className="truncate">Pick Loads</span>
+                    </Button>
+                  </div>
                 </div>
-                </div>
-                </CardHeader>
-            <CardContent className="px-3 pb-3 md:px-5 md:pb-5">
-              {colHeaders}
-              {deductionLines.map((line, i) => <LineRow key={line._key || i} line={line} onChange={(k, v) => updateDeductionLine(i, k, v)} onRemove={() => setDeductionLines(prev => prev.filter((_, idx) => idx !== i))} />)}
-              {deductionLines.length === 0 && <p className="text-xs text-muted-foreground text-left py-5">No deductions. Use the quick-add buttons above.</p>}
-              {deductionLines.length > 0 && <div className="flex justify-end mt-3 pt-2 border-t"><span className="text-sm font-bold text-red-600">Deductions: -${deductionLines.reduce((s, l) => s + Math.abs(Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>}
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent className="px-3 pb-3 md:px-5 md:pb-5">
+                {colHeaders}
+                {tripLines.map((line, i) => <LineRow key={line._key || i} line={line} onChange={(k, v) => updateTripLine(i, k, v)} onRemove={() => setTripLines(prev => prev.filter((_, idx) => idx !== i))} />)}
+                {tripLines.length === 0 && <p className="text-xs text-muted-foreground text-left py-5">No trips. Select a driver and click "Pick Loads" to add from existing loads.</p>}
+                {tripLines.length > 0 && <div className="flex justify-end mt-3 pt-2 border-t"><span className="text-sm font-bold text-green-700">Gross: ${tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>}
+              </CardContent>
+            </Card>
 
-          {/* Fuel */}
-          <Card>
-            <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 border-b">
-              <div className="flex items-center justify-between" style={{ gap: '6px' }}>
-                <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground shrink-0">Fuel ({fuelLines.length})</CardTitle>
-                <div className="flex flex-nowrap shrink-0" style={{ gap: '6px' }}>
-                <Button variant="outline" size="sm" className="h-7 gap-1 shrink" style={{ fontSize: '11px', padding: '0 8px', minWidth: 0 }} onClick={loadDriverFuel} disabled={loadingFuel || !form.driver_id}>
-                  {loadingFuel ? <Loader2 className="w-3 h-3 animate-spin flex-shrink-0" /> : <Fuel className="w-3 h-3 flex-shrink-0" />} <span className="truncate">Load Fuel</span>
-                </Button>
-                <Button variant="outline" size="sm" className="h-7 gap-1 shrink-0" style={{ fontSize: '11px', padding: '0 8px' }} onClick={addCustomFuel}><Plus className="w-3 h-3" /> Add</Button>
+            {/* Deductions */}
+            <Card>
+              <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 border-b">
+                <div className="flex items-center justify-between" style={{ gap: '6px' }}>
+                  <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground shrink-0">Deductions ({deductionLines.length})</CardTitle>
+                  <div className="flex flex-nowrap shrink-0" style={{ gap: '6px' }}>
+                    {defaultDeductions
+                      .filter(d => d.applies_to === 'all' || d.applies_to_driver_id === form.driver_id)
+                      .map(def => (
+                        <Button key={def.id} variant="outline" size="sm" className="h-7 gap-1 shrink" style={{ fontSize: '11px', padding: '0 8px', minWidth: 0 }} onClick={() => addDefaultDeduction(def)}>
+                          <Plus className="w-3 h-3 flex-shrink-0" /> <span className="truncate">{def.deduction_name}{def.default_amount ? ` $${Number(def.default_amount).toLocaleString()}` : ''}</span>
+                        </Button>
+                      ))
+                    }
+                    {defaultDeductions.length === 0 && (
+                      <span className="text-[10px] text-muted-foreground self-center hidden md:inline">No defaults configured — go to Statement Settings on the Statements page</span>
+                    )}
+                    <Button variant="outline" size="sm" className="h-7 gap-1 shrink-0" style={{ fontSize: '11px', padding: '0 8px' }} onClick={addCustomDeduction}><Plus className="w-3 h-3" /> Custom</Button>
+                  </div>
                 </div>
-                </div>
-                </CardHeader>
-            <CardContent className="px-3 pb-3 md:px-5 md:pb-5">
-              {colHeaders}
-              {fuelLines.map((line, i) => <LineRow key={line._key || i} line={line} onChange={(k, v) => updateFuelLine(i, k, v)} onRemove={() => setFuelLines(prev => prev.filter((_, idx) => idx !== i))} />)}
-              {fuelLines.length === 0 && <p className="text-xs text-muted-foreground text-left py-5">No fuel. Select a driver and click "Load Fuel".</p>}
-              {fuelLines.length > 0 && <div className="flex justify-end mt-3 pt-2 border-t"><span className="text-sm font-bold text-orange-600">Fuel: -${fuelLines.reduce((s, l) => s + Math.abs(Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>}
-            </CardContent>
-          </Card>
-        </div>
+              </CardHeader>
+              <CardContent className="px-3 pb-3 md:px-5 md:pb-5">
+                {colHeaders}
+                {deductionLines.map((line, i) => <LineRow key={line._key || i} line={line} onChange={(k, v) => updateDeductionLine(i, k, v)} onRemove={() => setDeductionLines(prev => prev.filter((_, idx) => idx !== i))} />)}
+                {deductionLines.length === 0 && <p className="text-xs text-muted-foreground text-left py-5">No deductions. Use the quick-add buttons above.</p>}
+                {deductionLines.length > 0 && <div className="flex justify-end mt-3 pt-2 border-t"><span className="text-sm font-bold text-red-600">Deductions: -${deductionLines.reduce((s, l) => s + Math.abs(Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>}
+              </CardContent>
+            </Card>
 
-        {/* Summary */}
-        <div className="col-span-1 xl:col-span-1">
-          <Card className="md:sticky md:top-4">
-            <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 border-b"><CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Summary</CardTitle></CardHeader>
-            <CardContent className="px-3 pb-3 md:px-5 md:pb-5 space-y-3">
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Driver</span><span className="font-medium">{form.driver_name || '—'}</span></div>
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Truck #</span><span className="font-medium font-mono">{form.truck_number || '—'}</span></div>
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Period</span><span>{form.period_start && form.period_end ? `${form.period_start} – ${form.period_end}` : '—'}</span></div>
-              <div className="border-t my-2" />
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">Gross ({tripLines.length} trips)</span>
-                <div className="text-right">
-                  <span className="font-medium text-green-600">${tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                  {drivers.find(d => d.id === form.driver_id)?.ytd_gross_legacy > 0 && (
-                    <div className="text-[10px] text-muted-foreground">Legacy: ${(drivers.find(d => d.id === form.driver_id).ytd_gross_legacy || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} + New: ${tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-                  )}
+            {/* Fuel */}
+            <Card>
+              <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 border-b">
+                <div className="flex items-center justify-between" style={{ gap: '6px' }}>
+                  <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground shrink-0">Fuel ({fuelLines.length})</CardTitle>
+                  <div className="flex flex-nowrap shrink-0" style={{ gap: '6px' }}>
+                    <Button variant="outline" size="sm" className="h-7 gap-1 shrink" style={{ fontSize: '11px', padding: '0 8px', minWidth: 0 }} onClick={loadDriverFuel} disabled={loadingFuel || !form.driver_id}>
+                      {loadingFuel ? <Loader2 className="w-3 h-3 animate-spin flex-shrink-0" /> : <Fuel className="w-3 h-3 flex-shrink-0" />} <span className="truncate">Load Fuel</span>
+                    </Button>
+                    <Button variant="outline" size="sm" className="h-7 gap-1 shrink-0" style={{ fontSize: '11px', padding: '0 8px' }} onClick={addCustomFuel}><Plus className="w-3 h-3" /> Add</Button>
+                  </div>
                 </div>
-              </div>
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Deductions</span><span className="font-medium text-red-600">-${(form.deductions_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
-              <div className="flex justify-between text-xs"><span className="text-muted-foreground">Fuel</span><span className="font-medium text-orange-600">-${(form.fuel_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
-              <div className="border-t pt-2 flex justify-between items-center">
-                <span className="font-bold text-primary" style={{ fontSize: '14px' }}>Net Pay</span>
-                <span className="font-bold text-primary" style={{ fontSize: '20px' }}>${(form.final_check_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-              </div>
-              <div className="pt-1 space-y-2">
-                {form.published
-                  ? <div className="flex items-center gap-1 text-xs text-green-600"><Eye className="w-3 h-3" /> Visible to driver</div>
-                  : <div className="flex items-center gap-1 text-xs text-muted-foreground"><EyeOff className="w-3 h-3" /> Hidden from driver</div>
-                }
-              </div>
-            </CardContent>
-          </Card>
+              </CardHeader>
+              <CardContent className="px-3 pb-3 md:px-5 md:pb-5">
+                {colHeaders}
+                {fuelLines.map((line, i) => <LineRow key={line._key || i} line={line} onChange={(k, v) => updateFuelLine(i, k, v)} onRemove={() => setFuelLines(prev => prev.filter((_, idx) => idx !== i))} />)}
+                {fuelLines.length === 0 && <p className="text-xs text-muted-foreground text-left py-5">No fuel. Select a driver and click "Load Fuel".</p>}
+                {fuelLines.length > 0 && <div className="flex justify-end mt-3 pt-2 border-t"><span className="text-sm font-bold text-orange-600">Fuel: -${fuelLines.reduce((s, l) => s + Math.abs(Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Summary */}
+          <div className="col-span-1 xl:col-span-1">
+            <Card className="md:sticky md:top-4">
+              <CardHeader className="py-2.5 px-3 md:py-3.5 md:px-5 border-b"><CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Summary</CardTitle></CardHeader>
+              <CardContent className="px-3 pb-3 md:px-5 md:pb-5 space-y-3">
+                <div className="flex justify-between text-xs"><span className="text-muted-foreground">Driver</span><span className="font-medium">{form.driver_name || '—'}</span></div>
+                <div className="flex justify-between text-xs"><span className="text-muted-foreground">Truck #</span><span className="font-medium font-mono">{form.truck_number || '—'}</span></div>
+                <div className="flex justify-between text-xs"><span className="text-muted-foreground">Period</span><span>{form.period_start && form.period_end ? `${form.period_start} – ${form.period_end}` : '—'}</span></div>
+                <div className="border-t my-2" />
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Gross ({tripLines.length} trips)</span>
+                  <div className="text-right">
+                    <span className="font-medium text-green-600">${tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                    {drivers.find(d => d.id === form.driver_id)?.ytd_gross_legacy > 0 && (
+                      <div className="text-[10px] text-muted-foreground">Legacy: ${(drivers.find(d => d.id === form.driver_id).ytd_gross_legacy || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })} + New: ${tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex justify-between text-xs"><span className="text-muted-foreground">Deductions</span><span className="font-medium text-red-600">-${(form.deductions_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                <div className="flex justify-between text-xs"><span className="text-muted-foreground">Fuel</span><span className="font-medium text-orange-600">-${(form.fuel_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                <div className="border-t pt-2 flex justify-between items-center">
+                  <span className="font-bold text-primary" style={{ fontSize: '14px' }}>Net Pay</span>
+                  <span className="font-bold text-primary" style={{ fontSize: '20px' }}>${(form.final_check_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="pt-1 space-y-2">
+                  {form.published
+                    ? <div className="flex items-center gap-1 text-xs text-green-600"><Eye className="w-3 h-3" /> Visible to driver</div>
+                    : <div className="flex items-center gap-1 text-xs text-muted-foreground"><EyeOff className="w-3 h-3" /> Hidden from driver</div>
+                  }
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
       <LoadPickerModal
@@ -662,6 +901,6 @@ export default function StatementBuilder() {
         fetchTakenLoadIds={fetchTakenLoadIds}
         buildTripLineFromLoad={buildTripLineFromLoad}
       />
-    </div>
+    </>
   );
 }
