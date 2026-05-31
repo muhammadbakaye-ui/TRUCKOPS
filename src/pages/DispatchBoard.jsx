@@ -13,6 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { toast } from 'sonner';
 import { computeDispatchStatus, normalizeDispatchStatus } from '../lib/dispatchStatus';
+import MobileLoadCard from '../components/mobile/MobileLoadCard';
 
 import { getTimezone } from '../lib/useTimezone';
 import UndoToast from '../components/shared/UndoToast';
@@ -628,82 +629,118 @@ export default function DispatchBoard() {
           <p className="text-xs mt-1">Loads will appear here once they are created.</p>
         </div>
       ) : (
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <>
+          {/* Mobile: stacked status sections matching Loads page style */}
+          <div className="md:hidden space-y-3">
             {COLUMNS.map(col => {
               const colLoads = getColumnLoads(col.key);
-              const isSelectMode = selectModeColumn === col.key;
-
+              const borderColor = { available: '#3b82f6', assigned: '#eab308', in_transit: '#f97316', delivered: '#22c55e' }[col.key] || '#6b7280';
               return (
-                <div key={col.key} className={`border-t-2 ${col.color} rounded-lg bg-muted/20 flex flex-col`}>
-                  <div className={`flex items-center justify-between px-3 py-2 rounded-t-lg ${col.headerColor}`}>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold uppercase tracking-wider">{col.label}</span>
-                      <span className="text-xs font-bold">{colLoads.length}</span>
-                    </div>
-                    {/* Feature 6: Select mode toggle per column */}
-                    <button
-                      onClick={() => {
-                        if (isSelectMode) { setSelectModeColumn(null); setSelectedIds(new Set()); }
-                        else { setSelectModeColumn(col.key); setSelectedIds(new Set()); }
-                      }}
-                      className="text-[10px] px-1.5 py-0.5 rounded border border-current opacity-60 hover:opacity-100 transition-opacity"
-                    >
-                      {isSelectMode ? 'Done' : 'Select'}
-                    </button>
+                <div key={col.key}>
+                  <div
+                    style={{ borderLeft: `3px solid ${borderColor}`, background: 'hsl(var(--secondary))', borderRadius: '6px', padding: '8px 10px', marginBottom: '4px', cursor: 'default' }}
+                  >
+                    <span style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      {col.label}&nbsp;&nbsp;{colLoads.length} load{colLoads.length !== 1 ? 's' : ''}
+                    </span>
                   </div>
-
-                  <Droppable droppableId={col.key}>
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className={`p-2 space-y-2 flex-1 min-h-[200px] rounded-b-lg transition-colors ${snapshot.isDraggingOver ? 'bg-primary/10 ring-1 ring-inset ring-primary/30' : ''}`}
-                      >
-                        {colLoads.length === 0 && !snapshot.isDraggingOver && (
-                          <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
-                            {isSelectMode ? 'No loads' : 'Drop loads here'}
-                          </div>
-                        )}
-                        {colLoads.map((load, idx) => (
-                          <Draggable key={load.id} draggableId={load.id} index={idx} isDragDisabled={isSelectMode}>
-                            {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className={`select-none cursor-grab active:cursor-grabbing transition-transform ${snapshot.isDragging ? 'rotate-1 scale-105 shadow-xl opacity-90' : ''}`}
-                              >
-                                <LoadCard
-                                  load={load}
-                                  drivers={drivers}
-                                  trucks={trucks}
-                                  onClick={() => !snapshot.isDragging && navigate(createPageUrl(`LoadDetail?id=${load.id}`))}
-                                  noDriverWarning={noDriverWarnings.has(load.id)}
-                                  selectMode={isSelectMode}
-                                  isSelected={selectedIds.has(load.id)}
-                                  onSelect={() => {
-                                    setSelectedIds(prev => {
-                                      const n = new Set(prev);
-                                      n.has(load.id) ? n.delete(load.id) : n.add(load.id);
-                                      return n;
-                                    });
-                                  }}
-                                  onToggleVisibility={() => handleToggleVisibility(load.id, !!load.driver_visibility)}
-                                />
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </div>
+                  <div className="space-y-2" style={{ marginBottom: '8px' }}>
+                    {colLoads.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-3">No loads</p>
+                    ) : (
+                      colLoads.map(load => (
+                        <MobileLoadCard
+                          key={load.id}
+                          load={load}
+                          onNavigate={() => navigate(createPageUrl(`LoadDetail?id=${load.id}`))}
+                        />
+                      ))
                     )}
-                  </Droppable>
+                  </div>
                 </div>
               );
             })}
           </div>
-        </DragDropContext>
+
+          {/* Desktop: DnD kanban board */}
+          <div className="hidden md:block">
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                {COLUMNS.map(col => {
+                  const colLoads = getColumnLoads(col.key);
+                  const isSelectMode = selectModeColumn === col.key;
+
+                  return (
+                    <div key={col.key} className={`border-t-2 ${col.color} rounded-lg bg-muted/20 flex flex-col`}>
+                      <div className={`flex items-center justify-between px-3 py-2 rounded-t-lg ${col.headerColor}`}>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold uppercase tracking-wider">{col.label}</span>
+                          <span className="text-xs font-bold">{colLoads.length}</span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (isSelectMode) { setSelectModeColumn(null); setSelectedIds(new Set()); }
+                            else { setSelectModeColumn(col.key); setSelectedIds(new Set()); }
+                          }}
+                          className="text-[10px] px-1.5 py-0.5 rounded border border-current opacity-60 hover:opacity-100 transition-opacity"
+                        >
+                          {isSelectMode ? 'Done' : 'Select'}
+                        </button>
+                      </div>
+
+                      <Droppable droppableId={col.key}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                            className={`p-2 space-y-2 flex-1 min-h-[200px] rounded-b-lg transition-colors ${snapshot.isDraggingOver ? 'bg-primary/10 ring-1 ring-inset ring-primary/30' : ''}`}
+                          >
+                            {colLoads.length === 0 && !snapshot.isDraggingOver && (
+                              <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
+                                {isSelectMode ? 'No loads' : 'Drop loads here'}
+                              </div>
+                            )}
+                            {colLoads.map((load, idx) => (
+                              <Draggable key={load.id} draggableId={load.id} index={idx} isDragDisabled={isSelectMode}>
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    className={`select-none cursor-grab active:cursor-grabbing transition-transform ${snapshot.isDragging ? 'rotate-1 scale-105 shadow-xl opacity-90' : ''}`}
+                                  >
+                                    <LoadCard
+                                      load={load}
+                                      drivers={drivers}
+                                      trucks={trucks}
+                                      onClick={() => !snapshot.isDragging && navigate(createPageUrl(`LoadDetail?id=${load.id}`))}
+                                      noDriverWarning={noDriverWarnings.has(load.id)}
+                                      selectMode={isSelectMode}
+                                      isSelected={selectedIds.has(load.id)}
+                                      onSelect={() => {
+                                        setSelectedIds(prev => {
+                                          const n = new Set(prev);
+                                          n.has(load.id) ? n.delete(load.id) : n.add(load.id);
+                                          return n;
+                                        });
+                                      }}
+                                      onToggleVisibility={() => handleToggleVisibility(load.id, !!load.driver_visibility)}
+                                    />
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
+                    </div>
+                  );
+                })}
+              </div>
+            </DragDropContext>
+          </div>
+        </>
       )}
 
       {/* Feature 6: Floating bulk action bar */}
