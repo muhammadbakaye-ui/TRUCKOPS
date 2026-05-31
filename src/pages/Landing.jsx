@@ -1,16 +1,14 @@
-import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useNavigate, Navigate } from 'react-router-dom';
 import LandingNav from '@/components/landing/LandingNav';
 import LandingHero from '@/components/landing/LandingHero';
 import LandingFeatures from '@/components/landing/LandingFeatures';
 import LandingCTA from '@/components/landing/LandingCTA';
 
-
 export default function Landing() {
   const navigate = useNavigate();
+
   if (window.innerWidth < 768) {
-    navigate('/Dashboard', { replace: true });
-    return null;
+    return <Navigate to="/Dashboard" replace />;
   }
 
   const handleContinue = () => {

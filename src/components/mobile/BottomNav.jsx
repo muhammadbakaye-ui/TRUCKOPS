@@ -152,7 +152,7 @@ export default function BottomNav({ currentPage }) {
             <button
               key={page}
               onClick={() => handleTabPress(page)}
-              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', cursor: 'pointer' }}
+              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', cursor: 'pointer', minHeight: '56px', paddingLeft: 0, paddingRight: 0, maxWidth: 'none', fontSize: '10px' }}
               className={cn(
                 'flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[11px] font-medium transition-colors select-none min-h-[56px]',
                 isActive ? 'text-sidebar-primary bg-sidebar-accent/20' : 'text-sidebar-foreground/70 hover:text-sidebar-foreground'
@@ -172,7 +172,7 @@ export default function BottomNav({ currentPage }) {
         }}>
           <button
             onClick={() => { if (!navLockRef.current) { navLockRef.current = true; setTimeout(() => { navLockRef.current = false; }, 400); setMenuOpen(true); } }}
-            style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', cursor: 'pointer' }}
+            style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', cursor: 'pointer', minHeight: '56px', paddingLeft: 0, paddingRight: 0, maxWidth: 'none', fontSize: '10px' }}
             className="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[11px] font-medium transition-colors select-none min-h-[56px] text-sidebar-foreground/70 hover:text-sidebar-foreground"
           >
             <MoreHorizontal className="w-5 h-5" />
