@@ -807,7 +807,6 @@ export default function Loads() {
                           <th className="text-left px-2 py-1 font-medium">Amount</th>
                           <th className="text-left px-2 py-1 font-medium">Status</th>
                           <th className="text-left px-2 py-1 font-medium">Invoice</th>
-                          <th className="text-left px-2 py-1 font-medium">Quick Action</th>
                           <th className="px-2 py-1"></th>
                         </tr>
                       </thead>
@@ -917,17 +916,17 @@ export default function Loads() {
                               </td>
                               <td className="px-2 py-1"><StatusBadge status={l.status} /></td>
                               <td className="px-2 py-1" onClick={e => e.stopPropagation()}>
-                                 <InvoiceStatusSelect load={l} queryClient={queryClient} />
-                               </td>
-                              <td className="px-2 py-1" onClick={e => e.stopPropagation()}>
-                                {qaEnabled && (
-                                  <button
-                                    onClick={() => handleQuickAction(l)}
-                                    className={`px-2 py-0.5 rounded text-[10px] font-medium border transition-colors whitespace-nowrap ${INVOICE_STATUS_STYLES[qaAction] || 'bg-primary/10 text-primary border-primary/20'}`}
-                                  >
-                                    {loadsQaOptions.find(o => o.value === qaAction)?.label || qaAction}
-                                  </button>
-                                )}
+                                <div className="flex items-center gap-1">
+                                  <InvoiceStatusSelect load={l} queryClient={queryClient} />
+                                  {qaEnabled && (
+                                    <button
+                                      onClick={() => handleQuickAction(l)}
+                                      className={`px-2 py-0.5 rounded text-[10px] font-medium border transition-colors whitespace-nowrap ${INVOICE_STATUS_STYLES[qaAction] || 'bg-primary/10 text-primary border-primary/20'}`}
+                                    >
+                                      {loadsQaOptions.find(o => o.value === qaAction)?.label || qaAction}
+                                    </button>
+                                  )}
+                                </div>
                               </td>
                               <td className="px-2 py-1 text-right" onClick={e => e.stopPropagation()}>
                                 <div className="flex items-center justify-end gap-0.5">
