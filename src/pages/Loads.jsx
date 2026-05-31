@@ -741,7 +741,38 @@ export default function Loads() {
           const label = dateKey === 'No Pickup Date' ? 'No Pickup Date' : formatInUserTimezone(dateKey, 'date', getUserTimezone());
 
           return (
-            <Card key={dateKey}>
+            <div key={dateKey}>
+              {/* Mobile: date group header */}
+              <div
+                className="md:hidden flex items-center justify-between"
+                style={{ borderLeft: '3px solid hsl(var(--primary))', background: 'hsl(var(--secondary))', borderRadius: '6px', padding: '8px 10px', cursor: 'pointer', marginBottom: '4px' }}
+                onClick={() => toggleDate(dateKey, sortedDateKeys)}
+              >
+                <span style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  {label}&nbsp;&nbsp;{dateLoads.length} load{dateLoads.length !== 1 ? 's' : ''}
+                </span>
+                <span style={{ fontSize: '11px', color: 'hsl(var(--primary))', fontWeight: 500 }}>
+                  Total: ${totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              {/* Mobile: load cards */}
+              {isExpanded && (
+                <div className="md:hidden space-y-2" style={{ marginBottom: '8px' }}>
+                  {dateLoads.map(l => (
+                    <MobileLoadCard
+                      key={l.id}
+                      load={l}
+                      copiedId={copiedId}
+                      onCopy={handleCopyLoadNumber}
+                      onNavigate={() => navigate(createPageUrl(`LoadDetail?id=${l.id}`))}
+                      onDelete={(e) => { e.stopPropagation(); deleteMutation.mutate(l); }}
+                      onPrint={(e) => handlePrintLoad(e, l)}
+                    />
+                  ))}
+                </div>
+              )}
+              {/* Desktop: Card with table */}
+              <Card className="hidden md:block">
               <CardHeader
                 className="py-3 px-2 cursor-pointer hover:bg-muted/50 transition-colors"
                 onClick={() => toggleDate(dateKey, sortedDateKeys)}
@@ -931,22 +962,12 @@ export default function Loads() {
                         ))}
                       </tbody>
                     </table>
-                    {/* Mobile cards - separate from desktop table */}
-                    <div className="md:hidden mobile-loads-list space-y-2">
-                      {dateLoads.map(l => (
-                        <MobileLoadCard
-                          key={l.id}
-                          load={l}
-                          isPopped={poppedLoad === l.id}
-                          onCardClick={() => setPoppedLoad(poppedLoad === l.id ? null : l.id)}
-                        />
-                      ))}
-                    </div>
-                    </div>
                   </div>
-                </CardContent>
-              )}
+                  </div>
+                  </CardContent>
+                  )}
             </Card>
+            </div>
           );
         })}
         {sortedDateKeys.length === 0 && !isLoading && (
