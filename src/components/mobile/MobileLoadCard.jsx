@@ -175,7 +175,7 @@ export default function MobileLoadCard({ load, copiedId, onCopy, onNavigate, onD
             )}
             <div onClick={e => e.stopPropagation()}>
               <Select value={load.invoice_status || 'not_invoiced'} onValueChange={handleInvoiceStatusChange} disabled={savingStatus}>
-                <SelectTrigger className={`h-6 text-[11px] px-2 border rounded-md font-medium w-32 ${INVOICE_STATUS_STYLES[load.invoice_status] || INVOICE_STATUS_STYLES.not_invoiced}`}>
+                <SelectTrigger className={`h-5 text-[10px] px-2 border rounded text-xs font-medium whitespace-nowrap ${INVOICE_STATUS_STYLES[load.invoice_status] || INVOICE_STATUS_STYLES.not_invoiced}`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

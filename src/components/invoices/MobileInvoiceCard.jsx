@@ -1,7 +1,31 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FileText, Truck, Copy, Check, Trash2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import StatusBadge from '@/components/shared/StatusBadge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { base44 } from '@/api/base44Client';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+
+const INVOICE_STATUS_STYLES = {
+  draft: 'bg-gray-100 text-gray-600 border-gray-200',
+  priority: 'bg-orange-50 text-orange-700 border-orange-300',
+  sent: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+  partial: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+  paid: 'bg-green-50 text-green-700 border-green-200',
+  overdue: 'bg-red-50 text-red-700 border-red-200',
+  canceled: 'bg-gray-100 text-gray-400 border-gray-200',
+};
+
+const INVOICE_STATUS_LABELS = {
+  draft: 'Draft',
+  priority: 'Priority',
+  sent: 'Sent',
+  partial: 'Partial',
+  paid: 'Paid',
+  overdue: 'Overdue',
+  canceled: 'Canceled',
+};
 
 function fmtDate(dateStr) {
   if (!dateStr) return 'No date';
@@ -11,6 +35,26 @@ function fmtDate(dateStr) {
 }
 
 export default function MobileInvoiceCard({ invoice, selected, onToggleSelect, onNavigate, onDelete, loadsMap, copiedId, onCopy, qaEnabled, qaAction, onQuickAction }) {
+  const queryClient = useQueryClient();
+  const [savingStatus, setSavingStatus] = useState(false);
+
+  const handleInvoiceStatusChange = async (value) => {
+    setSavingStatus(true);
+    try {
+      await base44.entities.Invoice.update(invoice.id, { status: value });
+      if (invoice.load_id) {
+        const statusMap = { draft: 'invoiced', priority: 'priority', sent: 'sent', partial: 'partial', paid: 'paid', overdue: 'overdue', canceled: 'canceled' };
+        await base44.entities.Load.update(invoice.load_id, { invoice_status: statusMap[value] || 'invoiced' });
+        queryClient.invalidateQueries({ queryKey: ['loads'] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    } catch (err) {
+      toast.error('Failed to update status: ' + err.message);
+    } finally {
+      setSavingStatus(false);
+    }
+  };
+
   if (!invoice) return null;
 
   const load = loadsMap?.[invoice.load_id];
@@ -95,12 +139,22 @@ export default function MobileInvoiceCard({ invoice, selected, onToggleSelect, o
           {qaEnabled && (
             <button
               onClick={(e) => { e.stopPropagation(); onQuickAction && onQuickAction(invoice); }}
-              className={`px-2 py-0.5 rounded text-[10px] font-medium border transition-colors whitespace-nowrap ${invoice.status === 'paid' ? 'bg-green-50 text-green-700 border-green-300' : invoice.status === 'overdue' ? 'bg-red-50 text-red-700 border-red-300' : 'bg-primary/10 text-primary border-primary/20'}`}
+              className={`px-2 py-0.5 rounded text-[10px] font-medium border transition-colors whitespace-nowrap ${INVOICE_STATUS_STYLES[qaAction] || 'bg-primary/10 text-primary border-primary/20'}`}
               style={{ fontSize: '10px', height: '24px', display: 'inline-flex', alignItems: 'center' }}
             >
-              {qaAction?.charAt(0).toUpperCase() + qaAction?.slice(1)}
+              {Object.entries(INVOICE_STATUS_LABELS).find(([val]) => val === qaAction)?.[1] || qaAction}
             </button>
           )}
+          <Select value={invoice.status || 'draft'} onValueChange={handleInvoiceStatusChange} disabled={savingStatus}>
+            <SelectTrigger className={`h-5 text-[10px] px-2 border rounded text-xs font-medium whitespace-nowrap ${INVOICE_STATUS_STYLES[invoice.status] || INVOICE_STATUS_STYLES.draft}`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(INVOICE_STATUS_LABELS).map(([val, label]) => (
+                <SelectItem key={val} value={val}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(invoice); }}
             style={{ height: '44px', width: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
