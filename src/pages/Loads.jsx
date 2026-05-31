@@ -928,6 +928,30 @@ export default function Loads() {
                                   )}
                                 </div>
                               </td>
+                              <td className="px-2 py-1 text-right" onClick={e => e.stopPropagation()}>
+                                <div className="flex items-center justify-end gap-0.5">
+                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground" onClick={(e) => handlePrintLoad(e, l)} title="Download PDF">
+                                    <Download className="w-3 h-3" />
+                                  </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive">
+                                        <Trash2 className="w-3 h-3" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Delete Load?</AlertDialogTitle>
+                                        <AlertDialogDescription>Load #{l.internal_load_number} will be moved to Deleted Items.</AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteMutation.mutate(l)}>Delete</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
+                              </td>
                             </tr>
                         ))}
                       </tbody>
