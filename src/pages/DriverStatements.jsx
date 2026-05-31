@@ -558,7 +558,7 @@ export default function DriverStatements() {
         {/* FAB Button */}
         <button
           onClick={() => navigate(createPageUrl('StatementBuilder'))}
-          className="fixed right-4 bottom-20 w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors flex-shrink-0"
+          className="fixed right-4 bottom-24 w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors flex-shrink-0"
         >
           <Plus className="w-5 h-5" />
         </button>
