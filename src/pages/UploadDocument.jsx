@@ -115,10 +115,10 @@ export default function UploadDocument() {
       {/* LEFT: Upload form */}
       <div className="w-full md:flex-1 md:min-w-0 md:space-y-5 md:max-w-2xl space-y-4 md:space-y-5">
         {/* Mobile-specific header */}
-        <div className="md:hidden space-y-2.5">
-          <h1 className="text-xl font-semibold text-foreground">Upload Document</h1>
-          <p className="text-sm text-muted-foreground">Upload a rate confirmation or BOL to auto-create a load</p>
-          <Button variant="outline" size="sm" className="w-full h-10 text-xs gap-1.5 justify-start" onClick={() => setShowRulesSettings(true)}>
+        <div className="md:hidden space-y-3">
+          <h1 className="text-sm font-semibold text-foreground">Upload Document</h1>
+          <p className="text-xs text-muted-foreground">Upload a rate confirmation or BOL to auto-create a load</p>
+          <Button variant="outline" size="sm" className="w-full h-10 text-[11px] gap-2 border border-border bg-secondary text-muted-foreground justify-start" onClick={() => setShowRulesSettings(true)}>
             <Settings className="w-3.5 h-3.5" /> Line Item Rules
           </Button>
         </div>
@@ -213,7 +213,7 @@ export default function UploadDocument() {
         <div className="md:hidden space-y-3">
           {/* Document Type */}
           <div className="flex flex-col gap-1">
-            <Label className="text-xs font-semibold text-muted-foreground uppercase">Document Type</Label>
+            <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Document Type</Label>
             <Select value={docType} onValueChange={setDocType}>
               <SelectTrigger className="h-10 text-sm"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -227,7 +227,7 @@ export default function UploadDocument() {
           {/* Driver & Truck side by side */}
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase">
+              <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
                 Driver <span className="font-normal text-[10px]">(optional)</span>
               </Label>
               <Select
@@ -252,7 +252,7 @@ export default function UploadDocument() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <Label className="text-xs font-semibold text-muted-foreground uppercase">
+              <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
                 Truck <span className="font-normal text-[10px]">(optional)</span>
               </Label>
               <Select
@@ -281,7 +281,7 @@ export default function UploadDocument() {
           <button
             type="button"
             onClick={() => setShowOverrides(v => !v)}
-            className="w-full flex items-center gap-2 h-10 px-3 rounded-lg border border-border bg-secondary text-xs text-muted-foreground hover:text-foreground transition-colors justify-between"
+            className="w-full flex items-center gap-2 h-10 px-3 rounded-lg border border-border bg-secondary text-[11px] text-muted-foreground hover:text-foreground transition-colors justify-between"
           >
             <span className="flex items-center gap-1.5">
               <SlidersHorizontal className="w-3.5 h-3.5" /> Overrides
@@ -323,7 +323,7 @@ export default function UploadDocument() {
           }}
           onClick={() => !primaryFile && separateFiles.length === 0 && handleDropZoneClick()}
         >
-          <CardContent className="flex flex-col items-center justify-center py-8 md:py-6 gap-3">
+          <CardContent className="flex flex-col items-center justify-center py-10 md:py-8 gap-3 md:min-h-auto min-h-40">
             {separateFiles.length > 0 ? (
               // Mode 2: separate loads
               <div className="w-full space-y-2" onClick={e => e.stopPropagation()}>
@@ -449,12 +449,12 @@ export default function UploadDocument() {
               <div className="flex-1 h-px bg-border" />
             </div>
             <Button
-              onClick={() => handleDropZoneClick()}
-              variant="outline"
-              className="w-full h-12 gap-2 rounded-lg border border-border bg-secondary text-sm text-muted-foreground"
+             onClick={() => handleDropZoneClick()}
+             variant="outline"
+             className="w-full h-12 gap-2 rounded-lg border border-border bg-secondary text-[13px] text-muted-foreground hover:text-foreground"
             >
-              <Camera className="w-5 h-5" />
-              Take Photo
+             <Camera className="w-4 h-4" />
+             Take Photo
             </Button>
           </div>
         )}
