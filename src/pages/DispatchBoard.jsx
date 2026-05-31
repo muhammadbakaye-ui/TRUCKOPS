@@ -8,12 +8,12 @@ import PageHeader from '@/components/shared/PageHeader';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, LayoutGrid, AlertTriangle, Lock, Eye, EyeOff, Bell, Truck, CheckCircle2, XCircle } from 'lucide-react';
+import { Loader2, LayoutGrid, AlertTriangle, Lock, Eye, EyeOff, Bell, Truck, CheckCircle2, XCircle, MapPin, Calendar, User } from 'lucide-react';
+import StatusBadge from '@/components/shared/StatusBadge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { toast } from 'sonner';
 import { computeDispatchStatus, normalizeDispatchStatus } from '../lib/dispatchStatus';
-import MobileLoadCard from '../components/mobile/MobileLoadCard';
 
 import { getTimezone } from '../lib/useTimezone';
 import UndoToast from '../components/shared/UndoToast';
@@ -36,72 +36,96 @@ function LoadCard({ load, drivers, trucks, onClick, noDriverWarning, selectMode,
   const driver = drivers.find(d => d.id === load.driver_1_id);
   const truck = trucks.find(t => t.id === load.truck_id);
   const colKey = normalizeDispatchStatus(load.dispatch_status);
+  const pickupDate = load.pickup_date
+    ? new Date(load.pickup_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    : null;
+  const hasRoute = load.pickup_city || load.delivery_city;
+  const originParts = [load.pickup_city, load.pickup_state].filter(Boolean);
+  const destParts = [load.delivery_city, load.delivery_state].filter(Boolean);
+  const brokerNum = load.external_load_number || null;
+  const truncBroker = brokerNum && brokerNum.length > 12 ? '/' + brokerNum.slice(0, 12) + '...' : brokerNum ? '/' + brokerNum : null;
 
   return (
     <div
       onClick={selectMode ? onSelect : onClick}
-      className="bg-card border border-border rounded-lg p-3 cursor-pointer hover:border-primary/50 hover:bg-muted/40 transition-all space-y-2"
+      style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '10px', boxSizing: 'border-box', width: '100%', overflow: 'hidden', cursor: 'pointer' }}
     >
-      <div className="flex items-center gap-1.5">
-        {selectMode && (
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={onSelect}
-            onClick={e => e.stopPropagation()}
-            className="flex-shrink-0"
-          />
-        )}
-        <span className="font-mono font-semibold text-xs text-primary flex-1 min-w-0 truncate">
-          {load.internal_load_number}
-        </span>
-        {/* Feature 1: Lock icon for manually overridden loads */}
-        {load.manual_dispatch_override && (
-          <Lock className="w-3 h-3 text-amber-500 flex-shrink-0" title="Manually overridden — automation won't change this" />
-        )}
-        {/* Feature 3 partial: Eye toggle in Available column */}
-        {colKey === 'available' && !selectMode && (
-          <button
-            onClick={e => { e.stopPropagation(); onToggleVisibility(); }}
-            className="text-muted-foreground hover:text-primary transition-colors flex-shrink-0"
-            title={load.driver_visibility ? 'Visible to drivers — click to hide' : 'Hidden from drivers — click to show'}
-          >
-            {load.driver_visibility
-              ? <Eye className="w-3 h-3 text-green-500" />
-              : <EyeOff className="w-3 h-3" />}
-          </button>
+      {/* Mobile layout */}
+      <div className="block md:hidden" style={{ padding: '10px 12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '5px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: 0, flex: 1, overflow: 'hidden' }}>
+            {selectMode && <Checkbox checked={isSelected} onCheckedChange={onSelect} onClick={e => e.stopPropagation()} className="flex-shrink-0 mr-1" />}
+            <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '13px', color: 'hsl(var(--primary))', whiteSpace: 'nowrap', flexShrink: 0 }}>{load.internal_load_number}</span>
+            {truncBroker && <span style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '90px' }}>{truncBroker}</span>}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0, marginLeft: '6px' }}>
+            {load.manual_dispatch_override && <Lock style={{ width: '11px', height: '11px', color: '#f59e0b' }} />}
+            {colKey === 'available' && !selectMode && (
+              <button onClick={e => { e.stopPropagation(); onToggleVisibility(); }} style={{ padding: '2px', background: 'none', border: 'none', cursor: 'pointer' }}>
+                {load.driver_visibility ? <Eye style={{ width: '11px', height: '11px', color: '#22c55e' }} /> : <EyeOff style={{ width: '11px', height: '11px' }} />}
+              </button>
+            )}
+            <StatusBadge status={load.status || 'draft'} />
+          </div>
+        </div>
+        <div style={{ fontSize: '13px', fontWeight: 500, color: 'hsl(var(--foreground))', marginBottom: '5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{load.customer_name || '—'}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'hsl(var(--muted-foreground))', marginBottom: '7px' }}>
+          <MapPin style={{ width: '11px', height: '11px', flexShrink: 0 }} />
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{hasRoute ? `${originParts.join(', ')} → ${destParts.join(', ')}` : 'No route assigned'}</span>
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: 'hsl(var(--secondary))', color: 'hsl(var(--muted-foreground))', fontSize: '11px', padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap' }}><Calendar style={{ width: '10px', height: '10px' }} /><span>{pickupDate || 'No date'}</span></div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: 'hsl(var(--secondary))', color: 'hsl(var(--muted-foreground))', fontSize: '11px', padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap' }}><User style={{ width: '10px', height: '10px' }} /><span>{load.driver_1_name || 'Unassigned'}</span></div>
+          {truck && <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: 'hsl(var(--secondary))', color: 'hsl(var(--muted-foreground))', fontSize: '11px', padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap' }}><Truck style={{ width: '10px', height: '10px' }} /><span>{truck.unit_number}</span></div>}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: '14px', fontWeight: 600, color: 'hsl(var(--foreground))' }}>${(load.invoice_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+          <StatusBadge status={load.invoice_status || 'not_invoiced'} />
+        </div>
+        {noDriverWarning && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#d97706', background: 'rgba(245,158,11,0.1)', borderRadius: '4px', padding: '4px 6px', marginTop: '6px' }}>
+            <AlertTriangle style={{ width: '12px', height: '12px', flexShrink: 0 }} /> No driver assigned
+          </div>
         )}
       </div>
 
-      {load.customer_name && (
-        <p className="text-xs text-muted-foreground truncate">{load.customer_name}</p>
-      )}
-      {(load.pickup_city || load.delivery_city) && (
-        <p className="text-xs text-foreground">
-          {[load.pickup_city, load.pickup_state].filter(Boolean).join(', ')}
-          {load.pickup_city && load.delivery_city ? ' → ' : ''}
-          {[load.delivery_city, load.delivery_state].filter(Boolean).join(', ')}
-        </p>
-      )}
-      <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-        {driver && <span>👤 {driver.full_name}</span>}
-        {truck && <span>🚛 {truck.unit_number}</span>}
-      </div>
-      {(load.pickup_date || load.delivery_date) && (
-        <div className="flex gap-3 text-[11px] text-muted-foreground">
-          {load.pickup_date && (
-            <span>PU: {load.pickup_date}{load.pickup_time ? ' ' + load.pickup_time : ''}</span>
+      {/* Desktop layout */}
+      <div className="hidden md:block p-3 space-y-2">
+        <div className="flex items-center gap-1.5">
+          {selectMode && <Checkbox checked={isSelected} onCheckedChange={onSelect} onClick={e => e.stopPropagation()} className="flex-shrink-0" />}
+          <span className="font-mono font-semibold text-xs text-primary flex-1 min-w-0 truncate">{load.internal_load_number}</span>
+          {load.manual_dispatch_override && <Lock className="w-3 h-3 text-amber-500 flex-shrink-0" title="Manually overridden" />}
+          {colKey === 'available' && !selectMode && (
+            <button onClick={e => { e.stopPropagation(); onToggleVisibility(); }} className="text-muted-foreground hover:text-primary transition-colors flex-shrink-0">
+              {load.driver_visibility ? <Eye className="w-3 h-3 text-green-500" /> : <EyeOff className="w-3 h-3" />}
+            </button>
           )}
-          {load.delivery_date && <span>DEL: {load.delivery_date}</span>}
         </div>
-      )}
-      {load.invoice_amount > 0 && (
-        <p className="text-xs font-medium text-green-600">${load.invoice_amount.toLocaleString()}</p>
-      )}
-      {noDriverWarning && (
-        <div className="flex items-center gap-1 text-[11px] text-amber-600 bg-amber-500/10 rounded px-1.5 py-1">
-          <AlertTriangle className="w-3 h-3 flex-shrink-0" /> No driver assigned
+        {load.customer_name && <p className="text-xs text-muted-foreground truncate">{load.customer_name}</p>}
+        {(load.pickup_city || load.delivery_city) && (
+          <p className="text-xs text-foreground">
+            {[load.pickup_city, load.pickup_state].filter(Boolean).join(', ')}
+            {load.pickup_city && load.delivery_city ? ' → ' : ''}
+            {[load.delivery_city, load.delivery_state].filter(Boolean).join(', ')}
+          </p>
+        )}
+        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+          {driver && <span>👤 {driver.full_name}</span>}
+          {truck && <span>🚛 {truck.unit_number}</span>}
         </div>
-      )}
+        {(load.pickup_date || load.delivery_date) && (
+          <div className="flex gap-3 text-[11px] text-muted-foreground">
+            {load.pickup_date && <span>PU: {load.pickup_date}{load.pickup_time ? ' ' + load.pickup_time : ''}</span>}
+            {load.delivery_date && <span>DEL: {load.delivery_date}</span>}
+          </div>
+        )}
+        {load.invoice_amount > 0 && <p className="text-xs font-medium text-green-600">${load.invoice_amount.toLocaleString()}</p>}
+        {noDriverWarning && (
+          <div className="flex items-center gap-1 text-[11px] text-amber-600 bg-amber-500/10 rounded px-1.5 py-1">
+            <AlertTriangle className="w-3 h-3 flex-shrink-0" /> No driver assigned
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -629,118 +653,79 @@ export default function DispatchBoard() {
           <p className="text-xs mt-1">Loads will appear here once they are created.</p>
         </div>
       ) : (
-        <>
-          {/* Mobile: stacked status sections matching Loads page style */}
-          <div className="md:hidden space-y-3">
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             {COLUMNS.map(col => {
               const colLoads = getColumnLoads(col.key);
-              const borderColor = { available: '#3b82f6', assigned: '#eab308', in_transit: '#f97316', delivered: '#22c55e' }[col.key] || '#6b7280';
+              const isSelectMode = selectModeColumn === col.key;
               return (
-                <div key={col.key}>
-                  <div
-                    style={{ borderLeft: `3px solid ${borderColor}`, background: 'hsl(var(--secondary))', borderRadius: '6px', padding: '8px 10px', marginBottom: '4px', cursor: 'default' }}
-                  >
-                    <span style={{ fontSize: '11px', color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      {col.label}&nbsp;&nbsp;{colLoads.length} load{colLoads.length !== 1 ? 's' : ''}
-                    </span>
+                <div key={col.key} className={`border-t-2 ${col.color} rounded-lg bg-muted/20 flex flex-col`}>
+                  <div className={`flex items-center justify-between px-3 py-2 rounded-t-lg ${col.headerColor}`}>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold uppercase tracking-wider">{col.label}</span>
+                      <span className="text-xs font-bold">{colLoads.length}</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (isSelectMode) { setSelectModeColumn(null); setSelectedIds(new Set()); }
+                        else { setSelectModeColumn(col.key); setSelectedIds(new Set()); }
+                      }}
+                      className="text-[10px] px-1.5 py-0.5 rounded border border-current opacity-60 hover:opacity-100 transition-opacity"
+                    >
+                      {isSelectMode ? 'Done' : 'Select'}
+                    </button>
                   </div>
-                  <div className="space-y-2" style={{ marginBottom: '8px' }}>
-                    {colLoads.length === 0 ? (
-                      <p className="text-xs text-muted-foreground text-center py-3">No loads</p>
-                    ) : (
-                      colLoads.map(load => (
-                        <MobileLoadCard
-                          key={load.id}
-                          load={load}
-                          onNavigate={() => navigate(createPageUrl(`LoadDetail?id=${load.id}`))}
-                        />
-                      ))
+                  <Droppable droppableId={col.key}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={`p-2 space-y-2 flex-1 min-h-[200px] rounded-b-lg transition-colors ${snapshot.isDraggingOver ? 'bg-primary/10 ring-1 ring-inset ring-primary/30' : ''}`}
+                      >
+                        {colLoads.length === 0 && !snapshot.isDraggingOver && (
+                          <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
+                            {isSelectMode ? 'No loads' : 'Drop loads here'}
+                          </div>
+                        )}
+                        {colLoads.map((load, idx) => (
+                          <Draggable key={load.id} draggableId={load.id} index={idx} isDragDisabled={isSelectMode}>
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className={`select-none cursor-grab active:cursor-grabbing transition-transform ${snapshot.isDragging ? 'rotate-1 scale-105 shadow-xl opacity-90' : ''}`}
+                              >
+                                <LoadCard
+                                  load={load}
+                                  drivers={drivers}
+                                  trucks={trucks}
+                                  onClick={() => !snapshot.isDragging && navigate(createPageUrl(`LoadDetail?id=${load.id}`))}
+                                  noDriverWarning={noDriverWarnings.has(load.id)}
+                                  selectMode={isSelectMode}
+                                  isSelected={selectedIds.has(load.id)}
+                                  onSelect={() => {
+                                    setSelectedIds(prev => {
+                                      const n = new Set(prev);
+                                      n.has(load.id) ? n.delete(load.id) : n.add(load.id);
+                                      return n;
+                                    });
+                                  }}
+                                  onToggleVisibility={() => handleToggleVisibility(load.id, !!load.driver_visibility)}
+                                />
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </div>
                     )}
-                  </div>
+                  </Droppable>
                 </div>
               );
             })}
           </div>
-
-          {/* Desktop: DnD kanban board */}
-          <div className="hidden md:block">
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                {COLUMNS.map(col => {
-                  const colLoads = getColumnLoads(col.key);
-                  const isSelectMode = selectModeColumn === col.key;
-
-                  return (
-                    <div key={col.key} className={`border-t-2 ${col.color} rounded-lg bg-muted/20 flex flex-col`}>
-                      <div className={`flex items-center justify-between px-3 py-2 rounded-t-lg ${col.headerColor}`}>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold uppercase tracking-wider">{col.label}</span>
-                          <span className="text-xs font-bold">{colLoads.length}</span>
-                        </div>
-                        <button
-                          onClick={() => {
-                            if (isSelectMode) { setSelectModeColumn(null); setSelectedIds(new Set()); }
-                            else { setSelectModeColumn(col.key); setSelectedIds(new Set()); }
-                          }}
-                          className="text-[10px] px-1.5 py-0.5 rounded border border-current opacity-60 hover:opacity-100 transition-opacity"
-                        >
-                          {isSelectMode ? 'Done' : 'Select'}
-                        </button>
-                      </div>
-
-                      <Droppable droppableId={col.key}>
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.droppableProps}
-                            className={`p-2 space-y-2 flex-1 min-h-[200px] rounded-b-lg transition-colors ${snapshot.isDraggingOver ? 'bg-primary/10 ring-1 ring-inset ring-primary/30' : ''}`}
-                          >
-                            {colLoads.length === 0 && !snapshot.isDraggingOver && (
-                              <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
-                                {isSelectMode ? 'No loads' : 'Drop loads here'}
-                              </div>
-                            )}
-                            {colLoads.map((load, idx) => (
-                              <Draggable key={load.id} draggableId={load.id} index={idx} isDragDisabled={isSelectMode}>
-                                {(provided, snapshot) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    {...provided.dragHandleProps}
-                                    className={`select-none cursor-grab active:cursor-grabbing transition-transform ${snapshot.isDragging ? 'rotate-1 scale-105 shadow-xl opacity-90' : ''}`}
-                                  >
-                                    <LoadCard
-                                      load={load}
-                                      drivers={drivers}
-                                      trucks={trucks}
-                                      onClick={() => !snapshot.isDragging && navigate(createPageUrl(`LoadDetail?id=${load.id}`))}
-                                      noDriverWarning={noDriverWarnings.has(load.id)}
-                                      selectMode={isSelectMode}
-                                      isSelected={selectedIds.has(load.id)}
-                                      onSelect={() => {
-                                        setSelectedIds(prev => {
-                                          const n = new Set(prev);
-                                          n.has(load.id) ? n.delete(load.id) : n.add(load.id);
-                                          return n;
-                                        });
-                                      }}
-                                      onToggleVisibility={() => handleToggleVisibility(load.id, !!load.driver_visibility)}
-                                    />
-                                  </div>
-                                )}
-                              </Draggable>
-                            ))}
-                            {provided.placeholder}
-                          </div>
-                        )}
-                      </Droppable>
-                    </div>
-                  );
-                })}
-              </div>
-            </DragDropContext>
-          </div>
-        </>
+        </DragDropContext>
       )}
 
       {/* Feature 6: Floating bulk action bar */}
