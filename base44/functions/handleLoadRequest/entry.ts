@@ -15,6 +15,9 @@ Deno.serve(async (req) => {
 
       const load = await base44.asServiceRole.entities.Load.get(load_id);
       if (!load) return Response.json({ success: false, error: 'Load not found' });
+      if (load.tenant_id !== tenant_id) {
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 403 });
+      }
       if (load.dispatch_status !== 'available') return Response.json({ success: false, error: 'Load not available' });
 
       const requestedIds   = load.requested_by_driver_ids   || [];
@@ -52,6 +55,9 @@ Deno.serve(async (req) => {
 
       const load = await base44.asServiceRole.entities.Load.get(load_id);
       if (!load) return Response.json({ success: false, error: 'Load not found' });
+      if (load.tenant_id !== tenant_id) {
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 403 });
+      }
 
       const driverDisplayName = driver_name || driver_id;
 
@@ -84,6 +90,9 @@ Deno.serve(async (req) => {
 
       const load = await base44.asServiceRole.entities.Load.get(load_id);
       if (!load) return Response.json({ success: false, error: 'Load not found' });
+      if (load.tenant_id !== tenant_id) {
+        return Response.json({ success: false, error: 'Unauthorized' }, { status: 403 });
+      }
 
       const ids   = load.requested_by_driver_ids   || [];
       const names = load.requested_by_driver_names || [];

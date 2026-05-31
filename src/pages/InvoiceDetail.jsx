@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Save, ArrowLeft, Plus, Trash2, Download, Check } from 'lucide-react';
+import { useSession } from '../components/shared/AppSession';
 import StatusBadge from '../components/shared/StatusBadge';
 import { logAudit } from '../components/shared/AuditLogger';
 import { toast } from 'sonner';
@@ -19,6 +20,7 @@ export default function InvoiceDetail() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const invoiceId = searchParams.get('id');
+  const { session } = useSession();
   const queryClient = useQueryClient();
   const [form, setForm] = useState(null);
   const [lineItems, setLineItems] = useState([]);
@@ -32,6 +34,10 @@ export default function InvoiceDetail() {
       if (!invoiceId) return null;
       const inv = await base44.entities.Invoice.get(invoiceId);
       if (inv) {
+        // Tenant isolation: deny access to invoices from other companies
+        if (inv.tenant_id && session?.tenant_id && inv.tenant_id !== session.tenant_id) {
+          return null;
+        }
         setForm(inv);
         setLineItems(inv.line_items || []);
       }

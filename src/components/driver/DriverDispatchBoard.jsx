@@ -90,17 +90,17 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, d
   const queryClient = useQueryClient();
 
   const { data: loads1 = [], isLoading: l1 } = useQuery({
-    queryKey: ['driver-loads1', driverId],
-    queryFn:  () => base44.entities.Load.filter({ driver_1_id: driverId }, '-pickup_date', 100),
-    enabled:  !!driverId,
+    queryKey: ['driver-loads1', driverId, tenantId],
+    queryFn:  () => (driverId && tenantId) ? base44.entities.Load.filter({ driver_1_id: driverId, tenant_id: tenantId }, '-pickup_date', 100) : Promise.resolve([]),
+    enabled:  !!driverId && !!tenantId,
     staleTime: 120000,
     refetchInterval: 120000,
   });
 
   const { data: loads2 = [], isLoading: l2 } = useQuery({
-    queryKey: ['driver-loads2', driverId],
-    queryFn:  () => base44.entities.Load.filter({ driver_2_id: driverId }, '-pickup_date', 100),
-    enabled:  !!driverId,
+    queryKey: ['driver-loads2', driverId, tenantId],
+    queryFn:  () => (driverId && tenantId) ? base44.entities.Load.filter({ driver_2_id: driverId, tenant_id: tenantId }, '-pickup_date', 100) : Promise.resolve([]),
+    enabled:  !!driverId && !!tenantId,
     staleTime: 120000,
     refetchInterval: 120000,
   });

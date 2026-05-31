@@ -138,6 +138,11 @@ export default function StatementBuilder() {
     queryFn: async () => {
       if (!statementId) return null;
       const s = await base44.entities.DriverStatement.get(statementId);
+      if (!s) return null;
+      // Tenant isolation: deny access to statements from other companies
+      if (s.tenant_id && tenantId && s.tenant_id !== tenantId) {
+        return null;
+      }
       setForm(s);
       savedIdRef.current = s.id;
       initialLoadRef.current = true;

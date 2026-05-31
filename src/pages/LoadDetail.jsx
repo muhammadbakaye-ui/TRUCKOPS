@@ -82,6 +82,10 @@ export default function LoadDetail() {
     queryFn: async () => {
       if (isNew || !loadId) return null;
       const l = await base44.entities.Load.get(loadId);
+      // Tenant isolation: deny access to loads from other companies
+      if (l && l.tenant_id && tenantId && l.tenant_id !== tenantId) {
+        return null;
+      }
       // Migrate old freight_rate/fuel_surcharge/extra_charges to charge_line_items
       if (!l.charge_line_items?.length) {
         const items = [];
