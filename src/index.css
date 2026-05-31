@@ -590,7 +590,19 @@
   button[class*="h-8"],
   button[class*="h-9"],
   .button-group button {
+    height: 32px !important;
+    min-height: 32px !important;
+    font-size: 13px !important;
+    border-radius: 8px !important;
+  }
+
+  /* Primary action buttons (Save, Download) — slightly more prominent */
+  button[class*="btn-primary"], button[class*="btn-success"] {
     height: 36px !important;
+    min-height: 36px !important;
+    font-size: 14px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
   }
   
   /* Compact filter row - match desktop height */
@@ -670,6 +682,29 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    height: 32px !important;
+    font-size: 12px !important;
+  }
+
+  /* ── HEADER/TOOLBAR BUTTONS (compact, pill-shaped) ── */
+  header button, [class*="header"] button, .page-header button {
+    height: 32px !important;
+    min-height: 32px !important;
+    font-size: 13px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    border-radius: 8px !important;
+  }
+
+  /* ── IN-CARD ACTION BUTTONS (secondary, lightweight) ── */
+  [class*="card"] button:not([role="switch"]):not([role="checkbox"]),
+  .card button:not([role="switch"]):not([role="checkbox"]) {
+    height: 32px !important;
+    min-height: 32px !important;
+    font-size: 12px !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    border-radius: 6px !important;
   }
 
   /* ── PAGE HEADER: title truncates, button stays visible ── */
@@ -690,20 +725,31 @@
     flex-shrink: 0;
   }
 
-  /* ── GENERAL BUTTON OVERRIDES (height 44px) ── */
+  /* ── GENERAL BUTTON OVERRIDES (compact, sleek) ── */
   button:not([role="switch"]):not([role="checkbox"]):not([role="radio"]):not([role="tab"]) {
-    min-height: 44px !important;
-    font-size: 13px;
-    padding-left: 12px;
-    padding-right: 12px;
+    min-height: 36px !important;
+    height: auto !important;
+    font-size: 13px !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
     box-sizing: border-box;
     max-width: 100%;
+    border-radius: 8px !important;
   }
-  /* Icon-only buttons — keep square, no extra padding */
+  /* Icon-only buttons — keep square, compact */
   button.h-6, button.h-7, button[class*="size-icon"], button[class*="w-6"], button[class*="w-7"],
   button[class*="w-8"][class*="h-8"] {
     padding-left: 0 !important;
     padding-right: 0 !important;
+    min-height: 32px !important;
+  }
+  /* Icon + label buttons — tight spacing */
+  button[class*="gap-"] {
+    gap: 4px !important;
+  }
+  button[class*="gap-"] svg {
+    width: 14px !important;
+    height: 14px !important;
   }
 }
 
