@@ -124,9 +124,7 @@ export default function BottomNav({ currentPage }) {
 
   const navLockRef = useRef(false);
 
-  const handleTabPress = useCallback((page, e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleTabPress = useCallback((page) => {
     if (navLockRef.current) return;
     navLockRef.current = true;
     setTimeout(() => { navLockRef.current = false; }, 400);
@@ -153,9 +151,8 @@ export default function BottomNav({ currentPage }) {
           return (
             <button
               key={page}
-              onTouchStart={(e) => e.preventDefault()}
-              onTouchEnd={(e) => handleTabPress(page, e)}
-              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+              onPointerDown={(e) => { e.preventDefault(); handleTabPress(page); }}
+              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', cursor: 'pointer' }}
               className={cn(
                 'flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[11px] font-medium transition-colors select-none min-h-[56px]',
                 isActive ? 'text-sidebar-primary bg-sidebar-accent/20' : 'text-sidebar-foreground/70 hover:text-sidebar-foreground'
@@ -174,9 +171,8 @@ export default function BottomNav({ currentPage }) {
           if (!open) { setEditMode(false); setOverLimit(false); }
         }}>
           <button
-            onTouchStart={(e) => e.preventDefault()}
-            onTouchEnd={(e) => { e.preventDefault(); if (!navLockRef.current) { navLockRef.current = true; setTimeout(() => { navLockRef.current = false; }, 400); setMenuOpen(true); } }}
-            style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+            onPointerDown={(e) => { e.preventDefault(); if (!navLockRef.current) { navLockRef.current = true; setTimeout(() => { navLockRef.current = false; }, 400); setMenuOpen(true); } }}
+            style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', cursor: 'pointer' }}
             className="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-[11px] font-medium transition-colors select-none min-h-[56px] text-sidebar-foreground/70 hover:text-sidebar-foreground"
           >
             <MoreHorizontal className="w-5 h-5" />
