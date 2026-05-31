@@ -859,15 +859,12 @@ export default function Loads() {
                                       </button>
                                     </>
                                   ) : <span className="text-muted-foreground">—</span>}
-                                  {qaEnabled && (
-                                    <button
-                                      onClick={() => handleQuickAction(l)}
-                                      className={`px-2 py-0.5 rounded text-[10px] font-medium border transition-colors whitespace-nowrap ${INVOICE_STATUS_STYLES[qaAction] || 'bg-primary/10 text-primary border-primary/20'}`}
-                                    >
-                                      {loadsQaOptions.find(o => o.value === qaAction)?.label || qaAction}
-                                    </button>
-                                  )}
                                 </div>
+                              </td>
+                              <td className="px-2 py-1">
+                                {l.pickup_city || l.delivery_city
+                                  ? `${l.pickup_city || ''}${l.pickup_state ? ', ' + l.pickup_state : ''} → ${l.delivery_city || ''}${l.delivery_state ? ', ' + l.delivery_state : ''}`
+                                  : '—'}
                               </td>
                               <td className="px-2 py-1 whitespace-nowrap">
                                 {l.pickup_date || l.delivery_date
@@ -919,7 +916,17 @@ export default function Loads() {
                               </td>
                               <td className="px-2 py-1"><StatusBadge status={l.status} /></td>
                               <td className="px-2 py-1" onClick={e => e.stopPropagation()}>
-                                <InvoiceStatusSelect load={l} queryClient={queryClient} />
+                                <div className="flex items-center gap-1">
+                                  <InvoiceStatusSelect load={l} queryClient={queryClient} />
+                                  {qaEnabled && (
+                                    <button
+                                      onClick={() => handleQuickAction(l)}
+                                      className={`px-2 py-0.5 rounded text-[10px] font-medium border transition-colors whitespace-nowrap ${INVOICE_STATUS_STYLES[qaAction] || 'bg-primary/10 text-primary border-primary/20'}`}
+                                    >
+                                      {loadsQaOptions.find(o => o.value === qaAction)?.label || qaAction}
+                                    </button>
+                                  )}
+                                </div>
                               </td>
                             </tr>
                         ))}
