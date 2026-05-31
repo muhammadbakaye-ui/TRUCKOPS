@@ -117,21 +117,46 @@ export default function Companies() {
       .some(v => v && v.toLowerCase().includes(q));
   });
 
+  const TYPE_BADGE = {
+    owner_operator: 'bg-purple-500/10 text-purple-400 border border-purple-500/25',
+    broker:         'bg-blue-500/10 text-blue-400 border border-blue-500/25',
+    customer:       'bg-cyan-500/10 text-cyan-400 border border-cyan-500/25',
+    carrier:        'bg-amber-500/10 text-amber-400 border border-amber-500/25',
+    other:          'bg-muted text-muted-foreground border border-border',
+  };
+  const TYPE_LABEL = {
+    owner_operator: 'Owner Operator',
+    broker: 'Broker',
+    customer: 'Customer',
+    carrier: 'Carrier',
+    other: 'Other',
+  };
+
+  const dim = <span className="text-muted-foreground/40">—</span>;
+
   const columns = [
-    { header: 'Company', render: (r) => <span className="font-medium">{r.company_name}</span> },
-    { header: 'Type', render: (r) => <StatusBadge status={r.company_type} /> },
-    { header: 'Contact', accessor: 'contact_name' },
-    { header: 'Phone', accessor: 'phone' },
-    { header: 'Email', accessor: 'email' },
-    { header: 'City', render: (r) => r.city ? `${r.city}, ${r.state || ''}` : '—' },
-    { header: 'Terms', render: (r) => r.payment_terms ? r.payment_terms.replace(/_/g, ' ') : '—' },
+    { header: 'Company', render: (r) => <span className="font-semibold text-foreground">{r.company_name}</span> },
+    { header: 'Type', render: (r) => r.company_type ? (
+      <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${TYPE_BADGE[r.company_type] || TYPE_BADGE.other}`}>
+        {TYPE_LABEL[r.company_type] || r.company_type}
+      </span>
+    ) : dim },
+    { header: 'Contact', render: (r) => r.contact_name ? <span className="text-foreground/80">{r.contact_name}</span> : dim },
+    { header: 'Phone', render: (r) => r.phone ? <span className="text-foreground/80">{r.phone}</span> : dim },
+    { header: 'Email', render: (r) => r.email ? (
+      <a href={`mailto:${r.email}`} onClick={e => e.stopPropagation()} className="text-blue-400 hover:text-blue-300 transition-colors">{r.email}</a>
+    ) : dim },
+    { header: 'City', render: (r) => r.city ? <span className="text-foreground/80">{r.city}{r.state ? `, ${r.state}` : ''}</span> : dim },
+    { header: 'Terms', render: (r) => r.payment_terms ? <span className="text-foreground/80">{r.payment_terms.replace(/_/g, ' ')}</span> : dim },
     { header: '', render: (r) => (
-      <button
-        onClick={(e) => { e.stopPropagation(); setDeleteTarget(r); }}
-        className="p-1 text-muted-foreground hover:text-destructive transition-colors rounded"
-      >
-        <Trash2 className="w-3.5 h-3.5" />
-      </button>
+      <div className="group">
+        <button
+          onClick={(e) => { e.stopPropagation(); setDeleteTarget(r); }}
+          className="p-1 text-muted-foreground/30 group-hover:text-destructive transition-colors rounded"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      </div>
     ), width: '40px' },
   ];
 
@@ -141,27 +166,36 @@ export default function Companies() {
       
       {/* Desktop layout */}
       <div className="hidden md:block">
-        <div className="mb-3 flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold">Companies / Brokers</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">{companies.length} total companies</p>
+        {/* Compact single-row toolbar */}
+        <div className="flex items-center gap-3 mb-3">
+          <div className="flex-shrink-0">
+            <h2 className="text-sm font-semibold text-foreground leading-tight">Companies / Brokers</h2>
+            <p className="text-[10px] text-muted-foreground leading-tight">{companies.length} total companies</p>
           </div>
-          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { if (!checkFeatureAccess(isInPreview)) return; setEditing(null); setDialogOpen(true); }}>
+          <SearchInput value={search} onChange={setSearch} placeholder="Search companies..." className="h-7 text-xs w-52" />
+          <div className="flex-1" />
+          <Button size="sm" className="h-7 text-xs gap-1 flex-shrink-0" onClick={() => { if (!checkFeatureAccess(isInPreview)) return; setEditing(null); setDialogOpen(true); }}>
             <Plus className="w-3.5 h-3.5" /> Add Company
           </Button>
         </div>
-        
-        <div className="mb-3">
-          <SearchInput value={search} onChange={setSearch} placeholder="Search companies..." className="w-72" />
-        </div>
 
-        <DataTable
-          columns={columns}
-          data={filtered}
-          isLoading={isLoading}
-          onRowClick={(row) => { if (!checkFeatureAccess(isInPreview)) return; setEditing(row); setDialogOpen(true); }}
-          emptyMessage="No companies found"
-        />
+        <style>{`
+          .companies-table table { border-collapse: collapse; width: 100%; }
+          .companies-table thead tr { border-bottom: 1px solid hsl(var(--border)); }
+          .companies-table thead th { padding: 5px 10px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: hsl(var(--muted-foreground)); }
+          .companies-table tbody td { padding: 7px 10px; font-size: 12.5px; border-bottom: 1px solid hsl(var(--border) / 0.35); }
+          .companies-table tbody tr:last-child td { border-bottom: none; }
+          .companies-table tbody tr:hover td { background: hsl(var(--muted) / 0.4); }
+        `}</style>
+        <div className="companies-table">
+          <DataTable
+            columns={columns}
+            data={filtered}
+            isLoading={isLoading}
+            onRowClick={(row) => { if (!checkFeatureAccess(isInPreview)) return; setEditing(row); setDialogOpen(true); }}
+            emptyMessage="No companies found"
+          />
+        </div>
       </div>
 
       {/* Mobile card layout */}
