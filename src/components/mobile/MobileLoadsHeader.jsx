@@ -23,11 +23,12 @@ export default function MobileLoadsHeader({
         </span>
         <Button
           size="sm"
-          className="h-9 text-xs gap-1 px-3"
+          className="h-9 gap-1 px-3"
           onClick={onNewLoad}
+          title="New Load"
         >
-          <Plus className="w-3.5 h-3.5" />
-          New Load
+          <Plus className="w-4 h-4" />
+          <span className="hidden md:inline text-xs">New Load</span>
         </Button>
       </div>
 

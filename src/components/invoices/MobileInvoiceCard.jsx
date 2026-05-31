@@ -35,6 +35,13 @@ export default function MobileInvoiceCard({ invoice, selected, onToggleSelect, o
         {invoice.customer_name || '—'}
       </div>
 
+      {/* Load # */}
+      {invoice.load_number && (
+        <div className="text-xs text-muted-foreground mb-1">
+          Load: <span className="font-mono">{invoice.load_number}</span>
+        </div>
+      )}
+
       {/* Due Date */}
       <div className="text-xs text-muted-foreground mb-2">
         Due: {invoice.due_date || '—'}

@@ -102,10 +102,12 @@ export default function InvoiceDetail() {
         <StatusBadge status={form.status} />
         <div className="ml-auto flex gap-2">
           <Button size="sm" className="h-8 gap-1" onClick={handleSave} disabled={saving}>
-            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Save
+            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+            <span className="hidden md:inline">Save</span>
           </Button>
           <Button size="sm" className="h-8 gap-1 bg-green-700 hover:bg-green-800 text-white" onClick={handlePrint}>
-            <Download className="w-3.5 h-3.5" /> Download PDF
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Download PDF</span>
           </Button>
         </div>
       </div>
@@ -123,10 +125,10 @@ export default function InvoiceDetail() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
          <Card className="col-span-2">
            <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Invoice Details</CardTitle></CardHeader>
-          <CardContent className="px-4 pb-4 grid grid-cols-3 gap-3">
+          <CardContent className="px-4 pb-4 grid grid-cols-2 md:grid-cols-3 gap-3">
             <div>
               <Label className="text-xs">Invoice #</Label>
               <Input value={form.invoice_number || ''} onChange={(e) => set('invoice_number', e.target.value)} className="h-8 text-xs mt-1" />

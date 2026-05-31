@@ -21,7 +21,11 @@ export default function QuickActionSettings({ enabled, onToggle, action, onActio
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     };
     document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    document.addEventListener('touchstart', handler, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('touchstart', handler);
+    };
   }, []);
 
   const currentLabel = options.find(o => o.value === action)?.label || action;
