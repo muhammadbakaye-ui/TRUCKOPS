@@ -84,16 +84,11 @@ function InvoiceStatusSelect({ invoice, queryClient }) {
 
   return (
     <>
-      {/* Desktop: custom split-badge Radix Select */}
+      {/* Desktop: styled badge Select */}
       <div className="hidden md:block">
         <Select value={current} onValueChange={handleChange} disabled={saving}>
-          <SelectTrigger className={`h-6 px-0 border rounded-md font-medium w-28 text-xs overflow-hidden flex items-stretch [&>svg]:hidden ${badgeCls}`}>
-            <span className="flex-1 flex items-center justify-center px-2 truncate">
-              <SelectValue>{label}</SelectValue>
-            </span>
-            <span className={`flex items-center justify-center px-1.5 border-l ${chevronCls}`}>
-              <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 3L4.5 6L7.5 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </span>
+          <SelectTrigger className={`h-6 px-2 border rounded text-[11px] font-medium w-28 ${badgeCls}`}>
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {options.map(opt => (
