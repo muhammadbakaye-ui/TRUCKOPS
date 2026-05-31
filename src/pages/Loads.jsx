@@ -857,14 +857,17 @@ export default function Loads() {
                                           ? <Check className="w-2.5 h-2.5 text-green-600" />
                                           : <Copy className="w-2.5 h-2.5" />}
                                       </button>
+                                      {qaEnabled && (
+                                        <button
+                                          onClick={() => handleQuickAction(l)}
+                                          className={`px-2 py-0.5 rounded text-[10px] font-medium border transition-colors whitespace-nowrap ${INVOICE_STATUS_STYLES[qaAction] || 'bg-primary/10 text-primary border-primary/20'}`}
+                                        >
+                                          {loadsQaOptions.find(o => o.value === qaAction)?.label || qaAction}
+                                        </button>
+                                      )}
                                     </>
                                   ) : <span className="text-muted-foreground">—</span>}
                                 </div>
-                              </td>
-                              <td className="px-2 py-1">
-                                {l.pickup_city || l.delivery_city
-                                  ? `${l.pickup_city || ''}${l.pickup_state ? ', ' + l.pickup_state : ''} → ${l.delivery_city || ''}${l.delivery_state ? ', ' + l.delivery_state : ''}`
-                                  : '—'}
                               </td>
                               <td className="px-2 py-1 whitespace-nowrap">
                                 {l.pickup_date || l.delivery_date
@@ -916,41 +919,7 @@ export default function Loads() {
                               </td>
                               <td className="px-2 py-1"><StatusBadge status={l.status} /></td>
                               <td className="px-2 py-1" onClick={e => e.stopPropagation()}>
-                                <div className="flex items-center gap-1">
-                                  <InvoiceStatusSelect load={l} queryClient={queryClient} />
-                                  {qaEnabled && (
-                                    <button
-                                      onClick={() => handleQuickAction(l)}
-                                      className={`px-2 py-0.5 rounded text-[10px] font-medium border transition-colors whitespace-nowrap ${INVOICE_STATUS_STYLES[qaAction] || 'bg-primary/10 text-primary border-primary/20'}`}
-                                    >
-                                      {loadsQaOptions.find(o => o.value === qaAction)?.label || qaAction}
-                                    </button>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="px-2 py-1 text-right" onClick={e => e.stopPropagation()}>
-                                <div className="flex items-center justify-end gap-0.5">
-                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground" onClick={(e) => handlePrintLoad(e, l)} title="Download PDF">
-                                    <Download className="w-3 h-3" />
-                                  </Button>
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive">
-                                        <Trash2 className="w-3 h-3" />
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>Delete Load?</AlertDialogTitle>
-                                        <AlertDialogDescription>Load #{l.internal_load_number} will be moved to Deleted Items.</AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => deleteMutation.mutate(l)}>Delete</AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </div>
+                                <InvoiceStatusSelect load={l} queryClient={queryClient} />
                               </td>
                             </tr>
                         ))}
