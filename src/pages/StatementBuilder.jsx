@@ -170,6 +170,7 @@ export default function StatementBuilder() {
     const truck = trucks.find(t => t.id === currentForm.truck_id);
     const payload = {
       ...currentForm,
+      tenant_id: tenantId,
       status: overrideStatus || currentForm.status,
       driver_name: driver?.full_name || currentForm.driver_name,
       truck_number: truck?.unit_number || currentForm.truck_number,
