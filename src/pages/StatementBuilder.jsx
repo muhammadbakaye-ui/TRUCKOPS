@@ -400,18 +400,11 @@ export default function StatementBuilder() {
 
   const colHeaders = (
     <>
-      <div className="md:hidden grid grid-cols-12 gap-1 text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 pb-1.5 border-b">
+      <div className="grid grid-cols-12 gap-1 md:gap-2 text-[9px] md:text-[10px] font-semibold text-muted-foreground uppercase tracking-wide md:tracking-widest pb-1.5 md:pb-2 border-b mb-2" style={{ borderBottomWidth: '0.5px' }}>
         <div className="col-span-2">Date</div>
         <div className="col-span-4">Desc / Load #</div>
         <div className="col-span-3">Route</div>
         <div className="col-span-2 text-right">Amt</div>
-        <div className="col-span-1"></div>
-      </div>
-      <div className="hidden md:grid grid-cols-12 gap-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-0 mb-1 pb-2 border-b">
-        <div className="col-span-2">Date</div>
-        <div className="col-span-4">Description / Load #</div>
-        <div className="col-span-3">Route</div>
-        <div className="col-span-2 text-right">Amount ($)</div>
         <div className="col-span-1"></div>
       </div>
     </>
@@ -421,8 +414,9 @@ export default function StatementBuilder() {
     <div className="p-3 space-y-3 md:p-6 md:space-y-5 max-w-screen-2xl">
       {showDialog && <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />}
       {/* Top bar */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => navigate(-1)}>
+      <div className="space-y-3">
+        <div className="flex items-center gap-3 flex-wrap md:gap-3">
+        <Button variant="ghost" size="sm" className="h-8 gap-1 hidden md:flex" onClick={() => navigate(-1)}>
           <ArrowLeft className="w-3.5 h-3.5" /> Statements
         </Button>
         <h2 className="text-sm font-semibold">{(statementId || savedIdRef.current) ? `Statement — ${form.driver_name || ''}` : 'New Driver Statement'}</h2>
@@ -430,17 +424,18 @@ export default function StatementBuilder() {
           {form.status?.toUpperCase()}
         </span>
         <span className="flex items-center gap-1 text-[11px] text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-          {autoSaving
-            ? <><Loader2 className="w-3 h-3 animate-spin" /> Auto-saving…</>
-            : lastAutoSaved
-            ? <><Cloud className="w-3 h-3" /> Auto-saved</>
-            : <><CloudOff className="w-3 h-3" /> Unsaved</>
-          }
-        </span>
-        <div className="w-full md:w-auto md:ml-auto grid grid-cols-3 mt-1 md:mt-0" style={{ gap: '6px' }}>
+            {autoSaving
+              ? <><Loader2 className="w-3 h-3 animate-spin" /> Auto-saving…</>
+              : lastAutoSaved
+              ? <><Cloud className="w-3 h-3" /> Auto-saved</>
+              : <><CloudOff className="w-3 h-3" /> Unsaved</>
+            }
+          </span>
+        </div>
+        <div className="w-full grid grid-cols-3" style={{ gap: '6px' }}>
           <Button
-             variant={form.published ? "default" : "outline"}
-             size="sm" className="h-10 md:h-8 gap-1 md:flex-none overflow-hidden" style={{ padding: '0 6px', fontSize: '11px' }}
+            variant={form.published ? "default" : "outline"}
+            size="sm" className="h-10 md:h-8 gap-1 md:flex-none overflow-hidden" style={{ padding: '0 6px', fontSize: '11px', whiteSpace: 'nowrap' }}
             onClick={async () => {
               if (isSavingRef.current) return;
               isSavingRef.current = true;
@@ -462,20 +457,19 @@ export default function StatementBuilder() {
               }
             }}
             disabled={saving}
-          >
+            >
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" /> : (form.published ? <Eye className="w-3.5 h-3.5 flex-shrink-0" /> : <EyeOff className="w-3.5 h-3.5 flex-shrink-0" />)}
             <span className="truncate">{form.published ? 'Published' : 'Unpublished'}</span>
-          </Button>
-          <Button size="sm" className="h-10 md:h-8 gap-1 md:flex-none overflow-hidden" style={{ padding: '0 6px', fontSize: '11px' }} onClick={() => handleSave(false)} disabled={saving}>
+            </Button>
+            <Button size="sm" className="h-10 md:h-8 gap-1 md:flex-none overflow-hidden" style={{ padding: '0 6px', fontSize: '11px', whiteSpace: 'nowrap' }} onClick={() => handleSave(false)} disabled={saving}>
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" /> : <Save className="w-3.5 h-3.5 flex-shrink-0" />}
             <span className="truncate">Save</span>
-          </Button>
-          <Button size="sm" className="h-10 md:h-8 gap-1 bg-green-700 hover:bg-green-800 text-white md:flex-none overflow-hidden" style={{ padding: '0 6px', fontSize: '11px' }} onClick={handlePrint}>
+            </Button>
+            <Button size="sm" className="h-10 md:h-8 gap-1 bg-green-700 hover:bg-green-800 text-white md:flex-none overflow-hidden" style={{ padding: '0 6px', fontSize: '11px', whiteSpace: 'nowrap' }} onClick={handlePrint}>
             <Download className="w-3.5 h-3.5 flex-shrink-0" />
             <span className="truncate">Download PDF</span>
-          </Button>
-          </div>
-          </div>
+            </Button>
+            </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-2 md:gap-5">
         <div className="xl:col-span-3 space-y-5">
@@ -566,7 +560,7 @@ export default function StatementBuilder() {
             <CardContent className="px-3 pb-3 md:px-5 md:pb-5">
               {colHeaders}
               {tripLines.map((line, i) => <LineRow key={line._key || i} line={line} onChange={(k, v) => updateTripLine(i, k, v)} onRemove={() => setTripLines(prev => prev.filter((_, idx) => idx !== i))} />)}
-              {tripLines.length === 0 && <p className="text-xs text-muted-foreground text-center py-5">No trips. Select a driver and click "Pick Loads" to add from existing loads.</p>}
+              {tripLines.length === 0 && <p className="text-xs text-muted-foreground text-left py-5">No trips. Select a driver and click "Pick Loads" to add from existing loads.</p>}
               {tripLines.length > 0 && <div className="flex justify-end mt-3 pt-2 border-t"><span className="text-sm font-bold text-green-700">Gross: ${tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>}
             </CardContent>
           </Card>
@@ -595,7 +589,7 @@ export default function StatementBuilder() {
             <CardContent className="px-3 pb-3 md:px-5 md:pb-5">
               {colHeaders}
               {deductionLines.map((line, i) => <LineRow key={line._key || i} line={line} onChange={(k, v) => updateDeductionLine(i, k, v)} onRemove={() => setDeductionLines(prev => prev.filter((_, idx) => idx !== i))} />)}
-              {deductionLines.length === 0 && <p className="text-xs text-muted-foreground text-center py-5">No deductions. Use the quick-add buttons above.</p>}
+              {deductionLines.length === 0 && <p className="text-xs text-muted-foreground text-left py-5">No deductions. Use the quick-add buttons above.</p>}
               {deductionLines.length > 0 && <div className="flex justify-end mt-3 pt-2 border-t"><span className="text-sm font-bold text-red-600">Deductions: -${deductionLines.reduce((s, l) => s + Math.abs(Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>}
             </CardContent>
           </Card>
@@ -616,7 +610,7 @@ export default function StatementBuilder() {
             <CardContent className="px-3 pb-3 md:px-5 md:pb-5">
               {colHeaders}
               {fuelLines.map((line, i) => <LineRow key={line._key || i} line={line} onChange={(k, v) => updateFuelLine(i, k, v)} onRemove={() => setFuelLines(prev => prev.filter((_, idx) => idx !== i))} />)}
-              {fuelLines.length === 0 && <p className="text-xs text-muted-foreground text-center py-5">No fuel. Select a driver and click "Load Fuel".</p>}
+              {fuelLines.length === 0 && <p className="text-xs text-muted-foreground text-left py-5">No fuel. Select a driver and click "Load Fuel".</p>}
               {fuelLines.length > 0 && <div className="flex justify-end mt-3 pt-2 border-t"><span className="text-sm font-bold text-orange-600">Fuel: -${fuelLines.reduce((s, l) => s + Math.abs(Number(l.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>}
             </CardContent>
           </Card>
