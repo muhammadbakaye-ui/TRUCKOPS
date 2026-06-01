@@ -129,8 +129,21 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, d
   const [pdfHtml, setPdfHtml] = useState(null);
   const queryClient = useQueryClient();
 
+  const { data: ownerCompany } = useQuery({
+    queryKey: ['owner-company-dispatch', tenantId],
+    queryFn: () => base44.entities.Company.filter({ tenant_id: tenantId }, '-created_date', 20).then(cos => {
+      return cos.find(c => c.is_owner_profile) || cos.find(c => c.company_type === 'owner_operator') || cos.find(c => c.company_type === 'carrier') || cos[0] || null;
+    }),
+    enabled: !!tenantId,
+    staleTime: 300000,
+  });
+
   const handleDownload = (load) => {
-    const html = getLoadHTML({ company: { company_name: session?.company_name || '' }, load, stops: [] });
+    if (!ownerCompany?.company_name) {
+      toast.error('Company information not loaded yet. Please try again in a moment.');
+      return;
+    }
+    const html = getLoadHTML({ company: ownerCompany, load, stops: [] });
     setPdfHtml(html);
   };
 
