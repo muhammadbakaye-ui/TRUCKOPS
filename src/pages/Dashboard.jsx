@@ -13,10 +13,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
-import StatCard from '../components/dashboard/StatCard';
-import RevenueCharts from '../components/dashboard/RevenueCharts';
 import MobilePullRefresh from '../components/mobile/MobilePullRefresh';
-import MobileLoadCard from '../components/mobile/MobileLoadCard';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { useEntitySubscription } from '../hooks/useEntitySubscription';
 
@@ -177,12 +174,6 @@ export default function Dashboard() {
     enabled: !!tenantId,
   });
 
-  const { data: fuelBatches = [] } = useQuery({
-    queryKey: ['fuel-dash', tenantId],
-    queryFn: () => tenantId ? base44.entities.FuelBatch.filter({ tenant_id: tenantId }, '-created_date', 10) : Promise.resolve([]),
-    enabled: !!tenantId,
-  });
-
   const { data: statements = [] } = useQuery({
     queryKey: ['statements-dash', tenantId],
     queryFn: () => tenantId ? base44.entities.DriverStatement.filter({ tenant_id: tenantId }, '-created_date', 10) : Promise.resolve([]),
@@ -207,6 +198,7 @@ export default function Dashboard() {
   const invoices = allInvoices;
   const unpaidInvoices = unpaidInvoicesData;
   const displayLoads = recentLoads.slice(0, 8);
+  const mobileDisplayLoads = recentLoads.slice(0, 3);
   const draftStatements = statements.filter(s => s.status === 'draft');
   const activeDrivers = drivers.filter(d => d.status === 'active');
   const activeTrucks = trucks.filter(t => t.status === 'active');
@@ -372,6 +364,43 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Top Drivers */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-semibold text-foreground">Top Drivers</span>
+            <span className="text-[10px] text-muted-foreground">Last 2 months</span>
+          </div>
+          <div className="bg-card border border-border/60 rounded-lg p-3">
+            {topDriversData.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-4">No data yet</p>
+            ) : (
+              <div className="space-y-3">
+                {topDriversData.slice(0, 3).map((d) => {
+                  const max = topDriversData[0].revenue;
+                  const pct = max > 0 ? (d.revenue / max) * 100 : 0;
+                  const initials = d.name.split(' ').map(p => p[0] || '').join('').toUpperCase().slice(0, 2);
+                  return (
+                    <div key={d.name} className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+                        {initials}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-medium truncate">{d.name}</span>
+                          <span className="text-xs font-semibold text-foreground ml-2 shrink-0">{fmtShort(d.revenue)}</span>
+                        </div>
+                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Recent Loads */}
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -380,13 +409,13 @@ export default function Dashboard() {
               View all <ArrowRight className="w-3 h-3" />
             </button>
           </div>
-          {displayLoads.length === 0 ? (
+          {mobileDisplayLoads.length === 0 ? (
             <div className="bg-card border border-border/60 rounded-lg p-6 text-center">
               <p className="text-sm text-muted-foreground">No loads yet.</p>
             </div>
           ) : (
             <div className="space-y-2">
-              {displayLoads.map(load => (
+              {mobileDisplayLoads.map(load => (
                 <LoadCard key={load.id} load={load} onClick={() => navigate(createPageUrl(`LoadDetail?id=${load.id}`))} />
               ))}
             </div>
