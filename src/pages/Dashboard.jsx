@@ -321,6 +321,38 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Invoice Status */}
+        <div className="bg-card border border-border/60 rounded-lg p-3">
+          <p className="text-sm font-semibold text-foreground mb-3">Invoice Status</p>
+          {invoiceStatusData.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-4">No invoice data yet</p>
+          ) : (
+            <div className="flex items-center gap-4">
+              <ResponsiveContainer width={110} height={110}>
+                <PieChart>
+                  <Pie data={invoiceStatusData} cx="50%" cy="50%" innerRadius={32} outerRadius={50} dataKey="value" paddingAngle={2}>
+                    {invoiceStatusData.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(v) => v} contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '6px', fontSize: 11 }} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="space-y-2 flex-1 min-w-0">
+                {invoiceStatusData.map(entry => (
+                  <div key={entry.name} className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-2 h-2 rounded-full shrink-0" style={{ background: entry.color }} />
+                      <span className="text-xs text-muted-foreground truncate">{entry.name}</span>
+                    </div>
+                    <span className="text-xs font-semibold text-foreground shrink-0">{entry.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Quick Actions */}
         <div className="bg-card border border-border/60 rounded-lg p-3">
           <p className="text-sm font-semibold text-foreground mb-2">Quick Actions</p>
