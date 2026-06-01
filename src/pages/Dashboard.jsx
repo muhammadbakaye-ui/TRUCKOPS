@@ -73,11 +73,11 @@ function DesktopLoadCard({ load, onClick }) {
 
   return (
     <div
-      className="bg-card border border-border/60 rounded-lg p-2.5 cursor-pointer hover:bg-muted/20 hover:border-border transition-colors"
+      className="bg-card border border-border/60 rounded-lg p-3.5 cursor-pointer hover:bg-muted/20 hover:border-border transition-colors"
       onClick={onClick}
     >
-      {/* Row 1 */}
-      <div className="flex items-center justify-between mb-1">
+      {/* Row 1: Load # / Broker # + Status badge */}
+      <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-1.5 text-xs min-w-0">
           <span className="font-mono font-semibold text-primary shrink-0">{load.internal_load_number}</span>
           {load.external_load_number && (
@@ -90,36 +90,39 @@ function DesktopLoadCard({ load, onClick }) {
         <LoadStatusBadge status={load.status} />
       </div>
 
-      {/* Row 2 */}
-      <p className="font-semibold text-xs text-foreground mb-1 leading-tight">
+      {/* Row 2: Customer name */}
+      <p className="font-bold text-sm text-foreground mb-1.5 leading-tight">
         {load.customer_name || 'No customer'}
       </p>
 
-      {/* Row 3 */}
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+      {/* Row 3: Route */}
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
         <MapPin className="w-3 h-3 shrink-0" />
         <span className="truncate">{route || 'No route assigned'}</span>
       </div>
 
-      {/* Row 4 */}
-      <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
+      {/* Row 4: Date + Driver + Truck */}
+      <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
         {pickupDate && (
           <span className="flex items-center gap-1 shrink-0">
-            <Calendar className="w-3 h-3" />{pickupDate}
+            <Calendar className="w-3 h-3" />
+            {pickupDate}
           </span>
         )}
         <span className="flex items-center gap-1 truncate">
-          <User className="w-3 h-3 shrink-0" />{load.driver_1_name || 'Unassigned'}
+          <User className="w-3 h-3 shrink-0" />
+          {load.driver_1_name || 'Unassigned'}
         </span>
         {load.truck_number && (
           <span className="flex items-center gap-1 shrink-0">
-            <Truck className="w-3 h-3" />{load.truck_number}
+            <Truck className="w-3 h-3" />
+            {load.truck_number}
           </span>
         )}
       </div>
 
       {/* Divider + Amount + Invoice status */}
-      <div className="border-t border-border/40 pt-1.5 flex items-center justify-between">
+      <div className="border-t border-border/40 pt-2.5 flex items-center justify-between">
         <span className="font-bold text-sm text-foreground">{fmtDollar(load.invoice_amount || 0)}</span>
         <InvoiceStatusBadge status={load.invoice_status || 'not_invoiced'} />
       </div>
@@ -524,9 +527,10 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* ── Top Drivers ── */}
-          <div className="h-full">
-            <div className="bg-card border border-border/60 rounded-lg p-4 h-full">
+          {/* ── Top Drivers + Quick Actions ── */}
+          <div className="space-y-4">
+            {/* Top Drivers */}
+            <div className="bg-card border border-border/60 rounded-lg p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-semibold text-foreground">Top Drivers</span>
                 <span className="text-[10px] text-muted-foreground">Last 2 months</span>
@@ -559,47 +563,6 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
-          </div>
-
-          {/* ── Recent Activity + Quick Actions ── */}
-          <div className="space-y-4">
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-semibold text-foreground">Recent Activity</span>
-                <button
-                  onClick={() => navigate(createPageUrl('AuditLogPage'))}
-                  className="text-primary text-xs hover:text-primary/80 flex items-center gap-1 transition-colors"
-                >
-                  View all <ArrowRight className="w-3 h-3" />
-                </button>
-              </div>
-              <div className="bg-card border border-border/60 rounded-lg p-4">
-                {auditLogs.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-8">No activity recorded yet</p>
-                ) : (
-                  <div className="space-y-3">
-                    {auditLogs.slice(0, 8).map(log => (
-                      <div key={log.id} className="flex items-start gap-2.5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                        <div className="min-w-0">
-                          <p className="text-xs text-foreground leading-snug">
-                            <span className="font-semibold capitalize">{log.action_type}</span>
-                            {' '}{log.entity_type}
-                            {log.entity_label && (
-                              <span className="text-muted-foreground"> ({log.entity_label})</span>
-                            )}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">
-                            {log.user_name && `${log.user_name} · `}
-                            {log.created_date ? format(new Date(log.created_date), 'MMM d, h:mm a') : ''}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
 
             {/* Quick Actions */}
             <div className="bg-card border border-border/60 rounded-lg p-4">
@@ -618,6 +581,45 @@ export default function Dashboard() {
                   </button>
                 ))}
               </div>
+            </div>
+          </div>
+
+          {/* ── Recent Activity ── */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-semibold text-foreground">Recent Activity</span>
+              <button
+                onClick={() => navigate(createPageUrl('AuditLogPage'))}
+                className="text-primary text-xs hover:text-primary/80 flex items-center gap-1 transition-colors"
+              >
+                View all <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+            <div className="bg-card border border-border/60 rounded-lg p-4">
+              {auditLogs.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-8">No activity recorded yet</p>
+              ) : (
+                <div className="space-y-3">
+                  {auditLogs.slice(0, 8).map(log => (
+                    <div key={log.id} className="flex items-start gap-2.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-foreground leading-snug">
+                          <span className="font-semibold capitalize">{log.action_type}</span>
+                          {' '}{log.entity_type}
+                          {log.entity_label && (
+                            <span className="text-muted-foreground"> ({log.entity_label})</span>
+                          )}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          {log.user_name && `${log.user_name} · `}
+                          {log.created_date ? format(new Date(log.created_date), 'MMM d, h:mm a') : ''}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
