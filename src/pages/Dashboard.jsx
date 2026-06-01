@@ -278,32 +278,137 @@ export default function Dashboard() {
     <MobilePullRefresh onRefresh={handleRefresh}>
 
       {/* ══════════════ MOBILE LAYOUT ══════════════ */}
-      <div className="md:hidden p-4 space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <StatCard label="Loads" value={loads.length} icon={Container} color="text-blue-600" onClick={() => navigate(createPageUrl('Loads'))} />
-          <StatCard label="Unpaid Invoices" value={unpaidInvoices.length} icon={Receipt} color="text-orange-600" onClick={() => navigate(createPageUrl('Invoices'))} />
-          <StatCard label="Active Drivers" value={activeDrivers.length} icon={Users} color="text-green-600" onClick={() => navigate(createPageUrl('Drivers'))} />
-          <StatCard label="Active Trucks" value={activeTrucks.length} icon={Truck} color="text-purple-600" onClick={() => navigate(createPageUrl('Trucks'))} />
-          <StatCard label="Companies" value={companies.length} icon={Building2} color="text-cyan-600" onClick={() => navigate(createPageUrl('Companies'))} />
-          <StatCard label="Draft Statements" value={draftStatements.length} icon={ClipboardList} color="text-yellow-600" onClick={() => navigate(createPageUrl('DriverStatements'))} />
+      <div className="md:hidden p-3 space-y-3">
+
+        {/* Stat cards 2×3 */}
+        <div className="grid grid-cols-2 gap-2">
+          {statCards.map(({ label, value, icon: Icon, color, path }) => (
+            <div
+              key={label}
+              className="bg-card border border-border/60 rounded-lg p-3 flex items-center justify-between cursor-pointer active:bg-muted/30 transition-colors"
+              onClick={() => navigate(createPageUrl(path))}
+            >
+              <div>
+                <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">{label}</p>
+                <p className="text-2xl font-bold text-foreground leading-none">{value}</p>
+              </div>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${color}`}>
+                <Icon className="w-4 h-4" />
+              </div>
+            </div>
+          ))}
         </div>
-        <RevenueCharts loads={loads} drivers={drivers} invoices={invoices} />
+
+        {/* Monthly Gross Revenue */}
+        <div className="bg-card border border-border/60 rounded-lg p-3">
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Monthly Gross Revenue</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Last 6 months</p>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-bold text-foreground">{fmtShort(curMonthRevenue)}</p>
+              {pctChange !== null && (
+                <div className={`flex items-center justify-end gap-1 text-[11px] font-medium mt-0.5 ${pctChange > 0 ? 'text-green-500' : pctChange < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                  {pctChange > 0 ? <TrendingUp className="w-3 h-3" /> : pctChange < 0 ? <TrendingDown className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
+                  {pctChange > 0 ? '+' : ''}{pctChange.toFixed(1)}% vs last month
+                </div>
+              )}
+            </div>
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <div style={{ minWidth: 280 }}>
+              <ResponsiveContainer width="100%" height={150}>
+                <BarChart data={monthlyData} margin={{ top: 2, right: 4, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                  <YAxis tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={36} />
+                  <Tooltip content={<BarTooltip />} cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} />
+                  <Bar dataKey="revenue" fill="#3B82F6" radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-card border border-border/60 rounded-lg p-3">
+          <p className="text-sm font-semibold text-foreground mb-2">Quick Actions</p>
+          <div className="space-y-0.5">
+            {quickActions.map(({ label, icon: Icon, color, path }) => (
+              <button
+                key={label}
+                onClick={() => navigate(createPageUrl(path))}
+                className="w-full flex items-center gap-2.5 px-2 py-2.5 rounded-md active:bg-muted/50 transition-colors text-left"
+              >
+                <div className={`w-7 h-7 rounded flex items-center justify-center shrink-0 ${color}`}>
+                  <Icon className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-sm text-foreground">{label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent Loads */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold">Recent Loads</span>
-            <button onClick={() => navigate(createPageUrl('Loads'))} className="text-primary text-xs flex items-center gap-0.5">
+            <span className="text-sm font-semibold text-foreground">Recent Loads</span>
+            <button onClick={() => navigate(createPageUrl('Loads'))} className="text-primary text-xs flex items-center gap-1">
               View all <ArrowRight className="w-3 h-3" />
             </button>
           </div>
-          <div className="space-y-2">
-            {displayLoads.map(load => (
-              <MobileLoadCard key={load.id} load={load} onNavigate={() => navigate(createPageUrl(`LoadDetail?id=${load.id}`))} />
-            ))}
-            {displayLoads.length === 0 && (
-              <p className="text-center py-8 text-sm text-muted-foreground">No loads yet.</p>
+          {displayLoads.length === 0 ? (
+            <div className="bg-card border border-border/60 rounded-lg p-6 text-center">
+              <p className="text-sm text-muted-foreground">No loads yet.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {displayLoads.map(load => (
+                <DesktopLoadCard
+                  key={load.id}
+                  load={load}
+                  onClick={() => navigate(createPageUrl(`LoadDetail?id=${load.id}`))}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Recent Activity */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-semibold text-foreground">Recent Activity</span>
+            <button onClick={() => navigate(createPageUrl('AuditLogPage'))} className="text-primary text-xs flex items-center gap-1">
+              View all <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
+          <div className="bg-card border border-border/60 rounded-lg p-3">
+            {auditLogs.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-6">No activity recorded yet</p>
+            ) : (
+              <div className="space-y-3">
+                {auditLogs.slice(0, 8).map(log => (
+                  <div key={log.id} className="flex items-start gap-2.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-foreground leading-snug">
+                        <span className="font-semibold capitalize">{log.action_type}</span>
+                        {' '}{log.entity_type}
+                        {log.entity_label && <span className="text-muted-foreground"> ({log.entity_label})</span>}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {log.user_name && `${log.user_name} · `}
+                        {log.created_date ? format(new Date(log.created_date), 'MMM d, h:mm a') : ''}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
+
       </div>
 
       {/* ══════════════ DESKTOP LAYOUT ══════════════ */}
