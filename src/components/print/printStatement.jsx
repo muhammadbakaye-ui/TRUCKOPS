@@ -313,7 +313,7 @@ export function printStatement({ company, statement, allLines }) {
   </div>
 
   <div class="page-footer" style="display:flex;align-items:center;justify-content:space-between;margin-top:28px;font-size:9px;color:#d1d5db;">
-    <span style="font-size:7.5px;color:#1D6BD7;letter-spacing:0.04em;">&#x1F69A; Powered by TruckOps</span>
+    <span style="font-size:8px;color:#1D6BD7 !important;letter-spacing:0.04em;display:flex;align-items:center;gap:4px;"><img src="https://media.base44.com/images/public/6a0409fc37a632ab53db20fd/801fc9751_image.png" style="height:13px;width:auto;vertical-align:middle;" /> Powered by TruckOps</span>
     <span>Page 1 of 1</span>
   </div>
     <span>Page 1 of 1</span>
