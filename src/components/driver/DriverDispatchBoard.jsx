@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Loader2, MapPin, Calendar, Handshake, Truck } from 'lucide-react';
+import { Loader2, MapPin, Calendar, Handshake, Truck, Download } from 'lucide-react';
 import { normalizeDispatchStatus } from '../../lib/dispatchStatus';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { getLoadHTML } from '../print/printLoad';
+import MobilePDFViewer from '../print/MobilePDFViewer';
 
 const COLUMNS = [
   { key: 'available',  label: 'Available',  color: 'border-purple-500', headerColor: 'bg-purple-500/10 text-purple-400', emptyMsg: 'No loads posted yet' },
@@ -13,7 +15,7 @@ const COLUMNS = [
   { key: 'delivered',  label: 'Delivered',   color: 'border-green-500',  headerColor: 'bg-green-500/10 text-green-600', emptyMsg: 'No delivered loads yet' },
 ];
 
-function LoadCard({ load, driverId, onRequest, isPending }) {
+function LoadCard({ load, driverId, onRequest, isPending, onDownload }) {
   const [requestError, setRequestError] = useState(null);
   const isRequested = (load.requested_by_driver_ids || []).includes(driverId);
 
@@ -35,16 +37,31 @@ function LoadCard({ load, driverId, onRequest, isPending }) {
     <div style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '10px', boxSizing: 'border-box', width: '100%', overflow: 'hidden' }}>
       <div style={{ padding: '10px 12px' }}>
 
-        {/* Row 1: Load # | Amount */}
+        {/* Row 1: Load # | Amount | Download */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '5px' }}>
           <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '13px', color: 'hsl(var(--primary))', whiteSpace: 'nowrap' }}>
             {load.internal_load_number}
           </span>
-          {load.invoice_amount > 0 && (
-            <span style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-              ${load.invoice_amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-            </span>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {load.invoice_amount > 0 && (
+              <span style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                ${load.invoice_amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              </span>
+            )}
+            {onDownload && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onDownload(load); }}
+                title="Download invoice PDF"
+                style={{ background: 'none', border: 'none', padding: '3px', cursor: 'pointer', color: 'hsl(var(--muted-foreground))', borderRadius: '4px', display: 'flex', alignItems: 'center', opacity: 0.45, transition: 'opacity 0.15s' }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '0.45'}
+                onTouchStart={e => e.currentTarget.style.opacity = '1'}
+                onTouchEnd={e => e.currentTarget.style.opacity = '0.45'}
+              >
+                <Download style={{ width: '13px', height: '13px' }} />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Row 2: Customer */}
@@ -109,7 +126,13 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, d
   const driverName = driverNameProp || session?.driver_name || driverId;
   const tenantId   = tenantIdProp || session?.tenant_id;
   const [pending, setPending] = useState(false);
+  const [pdfHtml, setPdfHtml] = useState(null);
   const queryClient = useQueryClient();
+
+  const handleDownload = (load) => {
+    const html = getLoadHTML({ company: { company_name: session?.company_name || '' }, load, stops: [] });
+    setPdfHtml(html);
+  };
 
   const { data: loads1 = [], isLoading: l1 } = useQuery({
     queryKey: ['driver-loads1', driverId, tenantId],
@@ -199,7 +222,8 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, d
   }
 
   return (
-    <div className="p-4 space-y-4">
+    <>
+      <div className="p-4 space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {COLUMNS.map(col => {
           const colLoads = getColumnLoads(col.key);
@@ -222,6 +246,7 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, d
                       driverId={driverId}
                       onRequest={col.key === 'available' ? handleRequest : null}
                       isPending={pending}
+                      onDownload={col.key === 'delivered' ? handleDownload : null}
                     />
                   ))
                 )}
@@ -231,5 +256,7 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, d
         })}
       </div>
     </div>
+    {pdfHtml && <MobilePDFViewer html={pdfHtml} onClose={() => setPdfHtml(null)} />}
+    </>
   );
 }
