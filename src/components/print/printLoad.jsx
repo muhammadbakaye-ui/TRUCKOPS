@@ -1,4 +1,4 @@
-export function printLoad({ company, load, stops, drivers = [], trucks = [], trailers = [] }) {
+export function getLoadHTML({ company, load, stops, drivers = [], trucks = [], trailers = [] }) {
   const fmt = (n) => `$${(Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const allStops = [...stops].sort((a, b) => (a.stop_order || 0) - (b.stop_order || 0));
   const lineItems = load.charge_line_items?.length
@@ -217,9 +217,11 @@ function doPrint(filename) {
 </body>
 </html>`;
 
+  return html;
+}
+
+export function printLoad(args) {
+  const html = getLoadHTML(args);
   const win = window.open('', '_blank');
-  if (win) {
-    win.document.write(html);
-    win.document.close();
-  }
+  if (win) { win.document.write(html); win.document.close(); }
 }

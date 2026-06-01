@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 
-export function printStatement({ company, statement, allLines }) {
+export function getStatementHTML({ company, statement, allLines }) {
   const tripLines = allLines.filter(l => l.line_type === 'trip' || l.line_type === 'adjustment');
   const creditLines = allLines.filter(l => l.line_type === 'credit');
   const deductionLines = allLines.filter(l => l.line_type === 'deduction' || l.line_type === 'advance');
@@ -341,9 +341,11 @@ function doPrint(filename) {
 </body>
 </html>`;
 
+  return html;
+}
+
+export function printStatement(args) {
+  const html = getStatementHTML(args);
   const win = window.open('', '_blank');
-  if (win) {
-    win.document.write(html);
-    win.document.close();
-  }
+  if (win) { win.document.write(html); win.document.close(); }
 }

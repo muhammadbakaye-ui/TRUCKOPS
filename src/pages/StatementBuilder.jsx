@@ -17,7 +17,8 @@ import { Loader2, Save, ArrowLeft, Plus, Trash2, CheckCircle, Fuel, Truck, Downl
 import { logAudit } from '../components/shared/AuditLogger';
 import LoadPickerModal from '../components/print/LoadPickerModal';
 import { toast } from 'sonner';
-import { printStatement } from '../components/print/printStatement';
+import { printStatement, getStatementHTML } from '../components/print/printStatement';
+import MobilePDFViewer from '../components/print/MobilePDFViewer';
 import { format, parse } from 'date-fns';
 import { getPeriodByDueDate, getAllDueDates, DAY_NAMES } from '@/components/shared/statementCalendar';
 import { useStatementSettings } from '@/hooks/useStatementSettings';
@@ -133,7 +134,12 @@ export default function StatementBuilder() {
     const allLines = [...tripLines, ...deductionLines, ...fuelLines];
     const driver = drivers.find(d => d.id === form.driver_id);
     const statementWithGross = { ...form, gross_total: (driver?.ytd_gross_legacy || 0) + (tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0)) };
-    printStatement({ company, statement: statementWithGross, allLines });
+    if (window.innerWidth < 768) {
+      const html = getStatementHTML({ company, statement: statementWithGross, allLines });
+      setMobileViewer(html);
+    } else {
+      printStatement({ company, statement: statementWithGross, allLines });
+    }
   };
 
   useQuery({
@@ -292,6 +298,7 @@ export default function StatementBuilder() {
   };
 
   const [autoLoading, setAutoLoading] = useState(false);
+  const [mobileViewer, setMobileViewer] = useState(null);
 
   const fetchTakenLoadIds = async () => {
     const currentId = savedIdRef.current;
@@ -412,6 +419,20 @@ export default function StatementBuilder() {
   return (
     <>
       {showDialog && <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />}
+      {mobileViewer && (
+        <MobilePDFViewer
+          htmlContent={mobileViewer}
+          title="Driver Statement"
+          onClose={() => setMobileViewer(null)}
+          onDownload={() => {
+            const company = carrierCompany[0] || { company_name: session?.company_name || '' };
+            const allLines = [...tripLines, ...deductionLines, ...fuelLines];
+            const driver = drivers.find(d => d.id === form.driver_id);
+            const statementWithGross = { ...form, gross_total: (driver?.ytd_gross_legacy || 0) + tripLines.reduce((s, l) => s + (Number(l.amount) || 0), 0) };
+            printStatement({ company, statement: statementWithGross, allLines });
+          }}
+        />
+      )}
       
       {/* MOBILE VIEW */}
       <div className="md:hidden p-3 space-y-2" style={{ boxSizing: 'border-box' }}>

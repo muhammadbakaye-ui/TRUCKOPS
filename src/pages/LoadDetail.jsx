@@ -18,7 +18,8 @@ import { logAudit } from '../components/shared/AuditLogger';
 import { computeDispatchStatus, normalizeDispatchStatus } from '../lib/dispatchStatus';
 import { getTimezone } from '../lib/useTimezone';
 import { toast } from 'sonner';
-import { printLoad } from '../components/print/printLoad';
+import { printLoad, getLoadHTML } from '../components/print/printLoad';
+import MobilePDFViewer from '../components/print/MobilePDFViewer';
 
 function Field({ label, children }) {
   return (
@@ -63,6 +64,7 @@ export default function LoadDetail() {
   const [dispatchManuallyChanged, setDispatchManuallyChanged] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [confirmClearDriver, setConfirmClearDriver] = useState(false);
+  const [mobileViewer, setMobileViewer] = useState(null);
 
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
 
@@ -128,7 +130,12 @@ export default function LoadDetail() {
 
   const handlePrint = () => {
     const companyData = carrierCompany[0] || { company_name: session?.company_name || '' };
-    printLoad({ company: companyData, load: form, stops, drivers, trucks, trailers: trailers });
+    if (window.innerWidth < 768) {
+      const html = getLoadHTML({ company: companyData, load: form, stops, drivers, trucks, trailers });
+      setMobileViewer(html);
+    } else {
+      printLoad({ company: companyData, load: form, stops, drivers, trucks, trailers });
+    }
   };
 
   React.useEffect(() => {
@@ -297,6 +304,17 @@ export default function LoadDetail() {
    return (
      <div className="w-full bg-background">
        {showDialog && <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />}
+       {mobileViewer && (
+         <MobilePDFViewer
+           htmlContent={mobileViewer}
+           title="Load Invoice"
+           onClose={() => setMobileViewer(null)}
+           onDownload={() => {
+             const companyData = carrierCompany[0] || { company_name: session?.company_name || '' };
+             printLoad({ company: companyData, load: form, stops, drivers, trucks, trailers });
+           }}
+         />
+       )}
        <AlertDialog open={confirmClearDriver} onOpenChange={(open) => !open && setConfirmClearDriver(false)}>
          <AlertDialogContent>
            <AlertDialogHeader>
