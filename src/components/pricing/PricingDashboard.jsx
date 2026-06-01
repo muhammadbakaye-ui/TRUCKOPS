@@ -139,6 +139,9 @@ export default function PricingDashboard() {
               <div className="mb-6">
                 <span className="text-3xl font-extrabold text-foreground">${plan.price}</span>
                 <span className="text-muted-foreground text-sm">{plan.oneTime ? ' one-time' : '/mo'}</span>
+                {!plan.oneTime && (
+                  <p className="text-green-500 text-xs font-medium mt-1">3-day free trial included</p>
+                )}
               </div>
 
               <div className="mb-6 pb-6 border-b border-border">

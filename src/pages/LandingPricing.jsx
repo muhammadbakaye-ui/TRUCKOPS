@@ -1,149 +1,164 @@
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import LandingNav from '@/components/landing/LandingNav';
 import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 
 const plans = [
   {
+    key: 'basic',
     name: 'Basic',
-    price: '$16',
+    price: '$39',
     period: '/month',
-    description: 'Perfect for small operations',
+    description: 'Owner operators / tiny fleets',
     features: [
-      'Up to 5 trucks',
-      'Up to 10 drivers',
-      'Basic load tracking',
-      'Monthly reporting',
-      'Email support'
-    ]
-  },
-  {
-    name: 'Professional',
-    price: '$49',
-    period: '/month',
-    description: 'Ideal for growing fleets',
-    features: [
-      'Unlimited trucks & trailers',
-      'Unlimited drivers',
-      'Real-time GPS tracking',
-      'Fuel import integration',
-      'Driver pay statements',
-      'Advanced reporting',
-      'Priority support'
+      'Up to 3 drivers & 3 trucks',
+      'Max 8 document uploads at a time',
+      'Load management',
+      'Invoicing',
+      'Company & driver directory',
+      'Document uploads',
+      'Driver portal',
     ],
-    highlighted: true
   },
   {
-    name: 'Enterprise',
-    price: '$99',
+    key: 'professional',
+    name: 'Professional',
+    price: '$79',
     period: '/month',
-    description: 'For large-scale operations',
+    description: 'Small trucking companies',
+    highlighted: true,
+    includedFrom: 'Basic',
     features: [
-      'Everything in Professional',
-      'Multi-location support',
-      'Custom integrations',
-      'API access',
-      'White-label options',
-      'Dedicated support'
-    ]
+      'Up to 10 drivers & 10 trucks',
+      'Max 16 document uploads at a time',
+      'Supports all current & future features',
+    ],
   },
   {
-    name: 'Lifetime',
-    price: '$199',
-    period: 'one-time',
-    description: 'Own it forever',
+    key: 'enterprise',
+    name: 'Enterprise',
+    price: '$149',
+    period: '/month',
+    description: 'Growing companies',
+    includedFrom: 'Professional',
     features: [
-      'All features included',
-      'Lifetime updates',
-      'No recurring fees',
-      'Priority support',
-      'Custom training included'
-    ]
-  }
+      'Unlimited drivers & trucks',
+      'Max 30 document uploads at a time',
+    ],
+  },
+  {
+    key: 'lifetime',
+    name: 'Lifetime',
+    price: '$499',
+    period: 'one-time',
+    description: 'Pay once, use forever',
+    oneTime: true,
+    includedFrom: 'Enterprise',
+    features: [
+      'Max 60 document uploads at a time',
+      'All future features & updates forever',
+      'Lifetime priority support',
+    ],
+  },
 ];
 
 const useCases = [
   {
+    key: 'basic',
     plan: 'Basic',
-    usecase: 'You\'re running a small trucking operation with a few trucks and want to start digitizing your workflow without heavy investment. Ideal for getting comfortable with fleet management software.'
+    usecase: "You're an owner-operator or running a tiny fleet of 1–3 trucks and want to digitize your loads, invoicing, and driver management without overpaying. Great for getting started.",
   },
   {
+    key: 'professional',
     plan: 'Professional',
-    usecase: 'You\'re managing a growing fleet and need comprehensive tools for driver management, invoicing, fuel tracking, and detailed reports. The sweet spot for most mid-sized operations.'
+    usecase: "You're managing a small trucking company with up to 10 drivers and trucks. You need comprehensive tools for dispatch, invoicing, fuel tracking, and payroll — plus access to every feature we release.",
   },
   {
+    key: 'enterprise',
     plan: 'Enterprise',
-    usecase: 'You operate a large, multi-location fleet with complex needs. Requires custom integrations, API access, and dedicated support to streamline operations at scale.'
+    usecase: "You run a growing operation with more than 10 trucks and need unlimited scale, higher document throughput, and all the power of the Professional plan without any driver or truck caps.",
   },
   {
+    key: 'lifetime',
     plan: 'Lifetime',
-    usecase: 'You want to own your fleet management platform outright without recurring monthly fees. Perfect for operators who plan to use TruckOps long-term.'
-  }
+    usecase: "You want to own your fleet management platform outright — no monthly fees, ever. Pay once and get every current and future feature forever, with lifetime priority support.",
+  },
 ];
 
-function PlanCard({ plan, index, onSelectPlan }) {
-   const { ref, inView } = useInView({ threshold: 0.1, triggerOnce: false });
+function PlanCard({ plan, index, onLearnMore }) {
+  const { ref, inView } = useInView({ threshold: 0.1, triggerOnce: false });
 
-   return (
-     <motion.div
-       ref={ref}
-       initial={{ opacity: 0, y: 30 }}
-       animate={inView ? { opacity: 1, y: 0 } : {}}
-       transition={{ delay: (index % 2) * 0.1, duration: 0.6 }}
-       className={`rounded-xl border p-8 transition-all ${
-         plan.highlighted
-           ? 'bg-sidebar-primary/10 border-sidebar-primary shadow-xl'
-           : 'bg-sidebar-accent border-sidebar-border'
-       }`}
-     >
-       {plan.highlighted && (
-         <div className="text-sidebar-primary text-sm font-semibold mb-4">MOST POPULAR</div>
-       )}
-       <h3 className="text-2xl font-bold text-sidebar-primary-foreground mb-2">{plan.name}</h3>
-       <p className="text-sidebar-foreground/70 text-sm mb-6">{plan.description}</p>
-       <div className="mb-6">
-         <span className="text-4xl font-bold text-sidebar-primary-foreground">{plan.price}</span>
-         <span className="text-sidebar-foreground/60 ml-2">{plan.period}</span>
-       </div>
-       <ul className="space-y-3 mb-8">
-         {plan.features.map((feature, i) => (
-           <li key={i} className="flex items-center gap-3 text-sidebar-foreground/80">
-             <Check className="w-5 h-5 text-sidebar-primary flex-shrink-0" />
-             {feature}
-           </li>
-         ))}
-       </ul>
-       <button 
-         onClick={() => onSelectPlan(plan.name)}
-         className="w-full py-2 px-4 rounded-lg bg-sidebar-primary hover:bg-sidebar-primary/90 text-white font-semibold transition-colors"
-       >
-         Learn More
-       </button>
-     </motion.div>
-   );
- }
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ delay: (index % 2) * 0.1, duration: 0.6 }}
+      className={`rounded-xl border p-8 flex flex-col transition-all ${
+        plan.highlighted
+          ? 'bg-sidebar-primary/10 border-sidebar-primary shadow-xl relative'
+          : 'bg-sidebar-accent border-sidebar-border'
+      }`}
+    >
+      {plan.highlighted && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-sidebar-primary text-white text-xs font-bold px-3 py-1 rounded-full shadow">
+          MOST POPULAR
+        </div>
+      )}
+      <h3 className="text-2xl font-bold text-sidebar-primary-foreground mb-2">{plan.name}</h3>
+      <p className="text-sidebar-foreground/70 text-sm mb-6">{plan.description}</p>
+      <div className="mb-1">
+        <span className="text-4xl font-bold text-sidebar-primary-foreground">{plan.price}</span>
+        <span className="text-sidebar-foreground/60 ml-2">{plan.period}</span>
+      </div>
+      {!plan.oneTime && (
+        <p className="text-green-400 text-xs font-medium mb-6">3-day free trial included</p>
+      )}
+      {plan.oneTime && <div className="mb-6" />}
+      {plan.includedFrom && (
+        <div className="flex items-center gap-2 text-sm font-semibold text-sidebar-primary bg-sidebar-primary/10 rounded-lg px-3 py-2 mb-3">
+          <Check className="w-4 h-4 shrink-0" />
+          Everything in {plan.includedFrom}
+        </div>
+      )}
+      <ul className="space-y-3 mb-8 flex-1">
+        {plan.features.map((feature, i) => (
+          <li key={i} className="flex items-center gap-3 text-sidebar-foreground/80">
+            <Check className="w-5 h-5 text-sidebar-primary flex-shrink-0" />
+            {feature}
+          </li>
+        ))}
+      </ul>
+      <button
+        onClick={() => onLearnMore(plan.key)}
+        className="w-full py-2 px-4 rounded-lg bg-sidebar-primary hover:bg-sidebar-primary/90 text-white font-semibold transition-colors"
+      >
+        Learn More
+      </button>
+    </motion.div>
+  );
+}
 
 export default function LandingPricingPage() {
-   const navigate = useNavigate();
-   const { ref: headerRef, inView: headerInView } = useInView({ threshold: 0.1, triggerOnce: false });
-   const { ref: usecaseRef, inView: usecaseInView } = useInView({ threshold: 0.1, triggerOnce: false });
+  const navigate = useNavigate();
+  const { ref: headerRef, inView: headerInView } = useInView({ threshold: 0.1, triggerOnce: false });
+  const comparisonRef = useRef(null);
+  const [highlightedPlan, setHighlightedPlan] = useState(null);
 
-   const handleSelectPlan = (planName) => {
-     const planKeyMap = {
-       'Basic': 'basic',
-       'Professional': 'professional',
-       'Enterprise': 'enterprise',
-       'Lifetime': 'lifetime'
-     };
-     navigate(`/pricing?plan=${planKeyMap[planName]}`);
-   };
+  const handleLearnMore = (planKey) => {
+    setHighlightedPlan(planKey);
+    setTimeout(() => {
+      comparisonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+    setTimeout(() => setHighlightedPlan(null), 3000);
+  };
 
   return (
     <div className="min-h-screen bg-very-dark">
       <LandingNav onContinue={() => navigate('/Dashboard')} />
-      
+
       {/* Header */}
       <div className="pt-32 pb-16 px-4 border-b border-sidebar-border">
         <motion.div
@@ -166,42 +181,45 @@ export default function LandingPricingPage() {
       <div className="py-20 px-4">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {plans.map((plan, index) => (
-            <PlanCard key={index} plan={plan} index={index} onSelectPlan={handleSelectPlan} />
+            <PlanCard key={plan.key} plan={plan} index={index} onLearnMore={handleLearnMore} />
           ))}
         </div>
       </div>
 
-      {/* Use Cases */}
-      <div className="py-20 px-4 border-t border-sidebar-border">
-        <motion.div
-          ref={usecaseRef}
-          initial={{ opacity: 0 }}
-          animate={usecaseInView ? { opacity: 1 } : {}}
-          transition={{ duration: 0.8 }}
-          className="max-w-6xl mx-auto"
-        >
+      {/* "Which plan is right for you?" comparison section */}
+      <div ref={comparisonRef} className="py-20 px-4 border-t border-sidebar-border scroll-mt-8">
+        <div className="max-w-6xl mx-auto">
           <h2 className="text-4xl font-bold text-sidebar-primary-foreground mb-4 text-center">
             Which Plan Is Right for You?
           </h2>
           <p className="text-lg text-sidebar-foreground/70 text-center mb-12">
             Here's how to pick the right plan for your operation
           </p>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             {useCases.map((item, i) => (
-               <motion.div
-                 key={i}
-                 initial={{ opacity: 0, y: 20 }}
-                 animate={usecaseInView ? { opacity: 1, y: 0 } : {}}
-                 transition={{ delay: i * 0.1, duration: 0.6 }}
-                 className="bg-sidebar-accent border border-sidebar-border rounded-xl p-6"
-               >
-                 <h3 className="text-lg font-semibold text-sidebar-primary mb-3">{item.plan}</h3>
-                 <p className="text-sidebar-foreground/80 leading-relaxed">{item.usecase}</p>
-               </motion.div>
-             ))}
-           </div>
-        </motion.div>
+            {useCases.map((item, i) => {
+              const isHighlighted = highlightedPlan === item.key;
+              return (
+                <motion.div
+                  key={item.key}
+                  animate={
+                    isHighlighted
+                      ? { scale: [1, 1.03, 1], transition: { duration: 0.6 } }
+                      : {}
+                  }
+                  className={`border rounded-xl p-6 transition-all duration-300 ${
+                    isHighlighted
+                      ? 'border-sidebar-primary shadow-2xl shadow-sidebar-primary/30 ring-2 ring-sidebar-primary/40 bg-sidebar-primary/10'
+                      : 'bg-sidebar-accent border-sidebar-border'
+                  }`}
+                >
+                  <h3 className="text-lg font-semibold text-sidebar-primary mb-3">{item.plan}</h3>
+                  <p className="text-sidebar-foreground/80 leading-relaxed">{item.usecase}</p>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
