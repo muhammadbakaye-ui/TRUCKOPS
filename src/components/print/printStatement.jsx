@@ -312,7 +312,13 @@ export function printStatement({ company, statement, allLines }) {
     </div>
   </div>
 
-  <div class="page-footer">Page 1 of 1</div>
+  <div class="page-footer" style="display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:5px;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect x="9" y="11" width="14" height="10" rx="1"/><circle cx="12" cy="21" r="1"/><circle cx="20" cy="21" r="1"/></svg>
+      <span style="font-size:7.5px;color:#d1d5db;letter-spacing:0.04em;">Powered by TruckOps</span>
+    </div>
+    <span>Page 1 of 1</span>
+  </div>
 
 </div>
 </div>
