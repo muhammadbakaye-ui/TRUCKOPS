@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Share2, Download, MoreVertical } from 'lucide-react';
+import { ArrowLeft, Share2, Download } from 'lucide-react';
 
 export default function MobilePDFViewer({ htmlContent, title, onClose, onDownload }) {
   // Strip the floating download-bar from the embedded HTML so our action bar is the only CTA
@@ -7,6 +7,13 @@ export default function MobilePDFViewer({ htmlContent, title, onClose, onDownloa
     /<div class="download-bar">[\s\S]*?<\/div>/,
     ''
   );
+
+  const handleDownload = () => {
+    const blob = new Blob([iframeHtml], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  };
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -49,15 +56,7 @@ export default function MobilePDFViewer({ htmlContent, title, onClose, onDownloa
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
           padding: '0 8px',
         }}>{title}</span>
-        <div style={{ minWidth: '70px', display: 'flex', justifyContent: 'flex-end' }}>
-          <button style={{
-            color: 'rgba(255,255,255,0.45)', background: 'none', border: 'none',
-            cursor: 'pointer', padding: '8px', minHeight: '44px',
-            display: 'flex', alignItems: 'center',
-          }}>
-            <MoreVertical style={{ width: 18, height: 18 }} />
-          </button>
-        </div>
+        <div style={{ minWidth: '70px' }} />
       </div>
 
       {/* Document Area — scrollable iframe */}
@@ -94,7 +93,7 @@ export default function MobilePDFViewer({ htmlContent, title, onClose, onDownloa
           Share
         </button>
         <button
-          onClick={onDownload}
+          onClick={handleDownload}
           style={{
             flex: 1, height: '52px',
             background: '#166534', color: '#fff',
