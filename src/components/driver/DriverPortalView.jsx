@@ -18,7 +18,6 @@ import { printStatement } from '../print/printStatement';
 import StatementLoadDetails from './StatementLoadDetails';
 import AppTour, { DRIVER_TOUR_STEPS } from '../tutorial/AppTour';
 import TourButton from '../tutorial/TourButton';
-import DriverDeliveredLoads from './DriverDeliveredLoads';
 
 const DOC_TYPES = [
   { value: 'bol', label: 'BOL' },
@@ -140,7 +139,6 @@ export default function DriverPortalView() {
     { key: 'dispatch', label: 'My Loads', icon: LayoutGrid, tourAttr: 'driver-dispatch-tab' },
     { key: 'documents', label: 'My Documents', icon: FileText, tourAttr: 'driver-documents-tab' },
     { key: 'statements', label: 'My Statements', icon: Calendar, tourAttr: 'driver-statements-tab' },
-    { key: 'delivered', label: 'Delivered', icon: Truck, tourAttr: 'driver-delivered-tab' },
     { key: 'profile', label: 'My Profile', icon: User, tourAttr: 'driver-profile-tab' },
   ];
 
@@ -304,11 +302,6 @@ export default function DriverPortalView() {
                 </CardContent>
               </Card>
             </>
-          )}
-
-          {/* DELIVERED LOADS TAB */}
-          {activeTab === 'delivered' && (
-            <DriverDeliveredLoads session={session} company={carrierCompanies[0]} />
           )}
 
           {/* PROFILE TAB */}
