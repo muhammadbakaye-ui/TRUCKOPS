@@ -190,7 +190,7 @@ export function getLoadHTML({ company, load, stops, drivers = [], trucks = [], t
 
   <!-- FOOTER -->
   <div style="margin-top:20px;padding-top:10px;border-top:1px solid #1a1a2e;background:#f9fafb;margin-left:-48px;margin-right:-48px;margin-bottom:-36px;padding-left:48px;padding-right:48px;padding-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
-    <span style="font-size:8px;color:#1D6BD7 !important;letter-spacing:0.04em;display:flex;align-items:center;gap:4px;"><img src="https://media.base44.com/images/public/6a0409fc37a632ab53db20fd/801fc9751_image.png" style="height:13px;width:auto;vertical-align:middle;" /> Powered by TruckOps</span>
+    <span style="font-size:8px;color:#1D6BD7 !important;letter-spacing:0.04em;display:flex;flex-direction:column;align-items:flex-start;gap:1px;"><span style="display:flex;align-items:center;gap:4px;"><img src="https://media.base44.com/images/public/6a0409fc37a632ab53db20fd/801fc9751_image.png" style="height:13px;width:auto;vertical-align:middle;" /> Powered by TruckOps</span><span style="font-size:7.5px;color:#6b7280;padding-left:17px;">www.mytruckops.com</span></span>
     <span style="font-size:9px;color:#9ca3af;">${company.company_name || 'Your Company'}</span>
     <span style="font-size:9px;color:#9ca3af;">Load # L-${load.internal_load_number || '—'}</span>
     <span style="font-size:9px;color:#9ca3af;">Printed ${new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</span>
