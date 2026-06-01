@@ -89,8 +89,10 @@ export default function TopBar({ pageTitle, currentPageName }) {
               <ChevronLeft className="w-5 h-5" />
             </button>
           )}
-          <h1 className="text-sm font-semibold text-foreground leading-none truncate">{pageTitle}</h1>
+          <h1 className="hidden lg:block text-sm font-semibold text-foreground leading-none truncate">{pageTitle}</h1>
         </div>
+        {/* Mobile: title absolutely centered regardless of left/right content */}
+        <h1 className="lg:hidden absolute left-0 right-0 text-center text-sm font-semibold text-foreground leading-none pointer-events-none px-24">{pageTitle}</h1>
 
         {/* Right: Icons */}
         <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0">

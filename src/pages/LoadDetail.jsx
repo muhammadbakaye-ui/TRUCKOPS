@@ -762,29 +762,29 @@ export default function LoadDetail() {
                    )}
                  </div>
                  <div className="space-y-2">
-                   <div className="flex gap-2">
-                     <div style={{ width: '80px' }}>
+                   <div className="space-y-2">
+                     <div>
                        <Label className="text-[10px] uppercase text-muted-foreground">Type</Label>
                        <Sel value={stop.stop_type} onChange={(v) => setStop(i, 'stop_type', v)} options={[{value:'pickup',label:'Pickup'},{value:'delivery',label:'Delivery'},{value:'stop',label:'Stop'}]} />
                      </div>
-                     <div className="flex-1">
+                     <div>
                        <Label className="text-[10px] uppercase text-muted-foreground">Company</Label>
                        <TextInput value={stop.company_name} onChange={(v) => setStop(i, 'company_name', v)} />
                      </div>
                    </div>
-                   <div className="grid grid-cols-2 gap-2">
+                   <div className="space-y-2">
                      <div><Label className="text-[10px] uppercase text-muted-foreground">Date</Label>
                        <Input type="date" value={stop.appointment_date || ''} onChange={(e) => setStop(i, 'appointment_date', e.target.value)} className="h-8 text-xs" /></div>
                      <div><Label className="text-[10px] uppercase text-muted-foreground">Time</Label>
                        <TextInput value={stop.time_from} onChange={(v) => setStop(i, 'time_from', v)} placeholder="08:00" /></div>
                    </div>
-                   <div className="grid grid-cols-2 gap-2">
+                   <div className="space-y-2">
                      <div><Label className="text-[10px] uppercase text-muted-foreground">City</Label>
                        <TextInput value={stop.city} onChange={(v) => setStop(i, 'city', v)} /></div>
                      <div><Label className="text-[10px] uppercase text-muted-foreground">State</Label>
                        <TextInput value={stop.state} onChange={(v) => setStop(i, 'state', v)} /></div>
                    </div>
-                   <div className="grid grid-cols-2 gap-2">
+                   <div className="space-y-2">
                      <div><Label className="text-[10px] uppercase text-muted-foreground">Ref / BOL</Label>
                        <TextInput value={stop.reference_number} onChange={(v) => setStop(i, 'reference_number', v)} /></div>
                      <div><Label className="text-[10px] uppercase text-muted-foreground">Notes</Label>
