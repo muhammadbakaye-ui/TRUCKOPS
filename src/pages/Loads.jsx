@@ -825,17 +825,17 @@ export default function Loads() {
                     <React.Fragment key={dateKey}>
                       {/* Spacer row between date groups */}
                       {dateIndex > 0 && (
-                        <tr style={{ height: '12px' }}>
+                        <tr style={{ height: '20px' }}>
                           <td colSpan={12} style={{ padding: 0, background: 'transparent', border: 'none' }} />
                         </tr>
                       )}
                       {/* Date group header row */}
                       <tr
-                        className="bg-muted/30 border-b border-t border-border/50 cursor-pointer hover:bg-muted/50 transition-colors"
-                        style={{ borderTop: '2px solid hsl(var(--border) / 0.4)' }}
+                        className="bg-muted/30 border-b cursor-pointer hover:bg-muted/50 transition-colors"
+                        style={{ borderTop: '2px solid hsl(var(--border))' }}
                         onClick={() => toggleDate(dateKey, sortedDateKeys)}
                       >
-                        <td colSpan={12} className="px-3 py-2.5">
+                        <td colSpan={12} style={{ padding: '10px 12px' }}>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
