@@ -55,7 +55,21 @@ Deno.serve(async (req) => {
       // Idempotency guard: check if account already exists for this email
       const existingAdmins = await base44.asServiceRole.entities.Admin.filter({ email: admin_email.toLowerCase().trim() });
       if (existingAdmins.length > 0) {
-        console.log(`Account already exists for ${admin_email}, skipping creation (idempotent)`);
+        // Account exists — update their subscription (handles upgrades/resubscribes)
+        const existingAdmin = existingAdmins[0];
+        const existingSubs = await base44.asServiceRole.entities.Subscription.filter({ tenant_id: existingAdmin.tenant_id });
+        if (existingSubs.length > 0) {
+          await base44.asServiceRole.entities.Subscription.update(existingSubs[0].id, {
+            plan: plan || existingSubs[0].plan || 'basic',
+            status: isLifetime ? 'active' : (stripeSub?.status || 'active'),
+            stripe_customer_id: session.customer,
+            stripe_subscription_id: session.subscription || null,
+            stripe_price_id: stripeSub?.items?.data[0]?.price?.id || null,
+            trial_ends_at: stripeSub?.trial_end ? new Date(stripeSub.trial_end * 1000).toISOString() : null,
+            current_period_end: stripeSub?.current_period_end ? new Date(stripeSub.current_period_end * 1000).toISOString() : null,
+          });
+          console.log(`Subscription upgraded for existing account: ${admin_email} -> ${plan}`);
+        }
         return Response.json({ received: true });
       }
 

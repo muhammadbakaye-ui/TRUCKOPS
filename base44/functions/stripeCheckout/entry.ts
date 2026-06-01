@@ -4,10 +4,10 @@ import Stripe from 'npm:stripe@14';
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
 const PLANS = {
-  basic:        { price_id: 'price_1TWX4zAVTDsGyJQn5XGTK66o', name: 'Basic Plan',        amount: 1600,  mode: 'subscription' },
-  professional: { price_id: 'price_1TWWjlAVTDsGyJQnlC9PFxDL', name: 'Professional Plan', amount: 4900,  mode: 'subscription' },
-  enterprise:   { price_id: 'price_1TWWjlAVTDsGyJQnA6RopREh', name: 'Enterprise Plan',   amount: 9900,  mode: 'subscription' },
-  lifetime:     { price_id: 'price_1TWX52AVTDsGyJQnQKTbPbGH', name: 'Lifetime Plan',     amount: 19900, mode: 'payment' },
+  basic:        { price_id: 'price_1TdT2rAVTDsGyJQnyk8niysE', name: 'Basic Plan',        amount: 3900,  mode: 'subscription' },
+  professional: { price_id: 'price_1TdT2rAVTDsGyJQnhVAzOGU3', name: 'Professional Plan', amount: 7900,  mode: 'subscription' },
+  enterprise:   { price_id: 'price_1TdT2rAVTDsGyJQnVnJSQCZE', name: 'Enterprise Plan',   amount: 14900, mode: 'subscription' },
+  lifetime:     { price_id: 'price_1TdT2rAVTDsGyJQnM6YmU6h0', name: 'Lifetime Plan',     amount: 49900, mode: 'payment' },
 };
 
 Deno.serve(async (req) => {

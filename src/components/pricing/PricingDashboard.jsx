@@ -2,21 +2,24 @@ import { useState } from 'react';
 import { Check, Loader2, ChevronDown } from 'lucide-react';
 import { PLANS } from '@/lib/pricingPlans';
 import { base44 } from '@/api/base44Client';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 
 /**
- * PricingDashboard - LOGGED IN USERS ONLY (dashboard page + subscribe popup)
- * - "Select Plan" buttons expand checkout inline
- * - "Checkout" button goes directly to Stripe
- * - No scroll, no localStorage, no Learn More, no Get Started
- * - Card divs have NO onClick handlers
- * - Only button handlers have e.stopPropagation()
- * - Same component used in both dashboard pricing page and once-per-visit popup
+ * PricingDashboard — LOGGED-IN USERS ONLY (dedicated pricing page + subscribe popup).
+ *
+ * Rules:
+ *  - Card divs have NO onClick handlers — only button elements do
+ *  - Every button handler calls e.stopPropagation() first
+ *  - "Select Plan" expands inline checkout; only one card expanded at a time
+ *  - "Checkout" goes DIRECTLY to the Stripe checkout URL
+ *  - Cards animate in with a stagger on load; hover scales; button press scales
+ *  - Animations skip/minimize when prefers-reduced-motion is set
  */
 export default function PricingDashboard() {
   const [expandedPlan, setExpandedPlan] = useState(null);
   const [loadingPlan, setLoadingPlan] = useState(null);
   const [error, setError] = useState('');
+  const prefersReduced = useReducedMotion();
 
   const getAccountInfo = () => {
     try {
@@ -32,34 +35,30 @@ export default function PricingDashboard() {
 
   const handleSelectPlan = (e, planKey) => {
     e.stopPropagation();
-    if (expandedPlan === planKey) {
-      setExpandedPlan(null);
-    } else {
-      setExpandedPlan(planKey);
-      setError('');
-    }
+    setExpandedPlan(prev => (prev === planKey ? null : planKey));
+    setError('');
   };
 
   const handleCheckout = async (e, plan) => {
     e.stopPropagation();
-    
+
     try {
       const isInIframe = window.self !== window.top;
       if (isInIframe) {
         alert('Checkout must be completed from the published app. Please open the app directly to subscribe.');
         return;
       }
-    } catch (e) {
-      // Can't detect iframe in some cross-origin scenarios, proceed anyway
+    } catch {
+      // Cross-origin iframe detection failed — proceed anyway
     }
 
     setLoadingPlan(plan.key);
     setError('');
-    
+
     try {
-      const accountInfo = getAccountInfo();
-      if (!accountInfo.email || !accountInfo.company) {
-        setError('Unable to retrieve account information.');
+      const { email, company } = getAccountInfo();
+      if (!email || !company) {
+        setError('Unable to retrieve account information. Please refresh and try again.');
         setLoadingPlan(null);
         return;
       }
@@ -67,50 +66,65 @@ export default function PricingDashboard() {
       const res = await base44.functions.invoke('stripeCheckout', {
         action: 'create_checkout',
         plan: plan.key,
-        company_name: accountInfo.company,
-        admin_email: accountInfo.email,
+        company_name: company,
+        admin_email: email,
         success_url: `${window.location.origin}/SubscriptionSuccess?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${window.location.origin}/pricing`,
       });
+
       if (res.data?.url) {
         window.location.href = res.data.url;
       } else {
         setError('Failed to start checkout. Please try again.');
       }
     } catch (err) {
-      setError(err.message || 'Something went wrong.');
+      setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoadingPlan(null);
     }
   };
 
+  // Card entrance animation variants
+  const cardVariants = {
+    hidden: prefersReduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 },
+    visible: (i) => ({
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, delay: prefersReduced ? 0 : i * 0.1, ease: 'easeOut' },
+    }),
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-16">
       <div className="text-center mb-16">
-        <h2 className="text-4xl font-extrabold mb-4 text-foreground">Upgrade your plan</h2>
+        <h2 className="text-4xl font-extrabold mb-4 text-foreground">Upgrade Your Plan</h2>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Select a plan to upgrade your account and unlock more features.
+          Select a plan to unlock more features for your trucking operation.
         </p>
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {PLANS.map((plan) => {
+        {PLANS.map((plan, i) => {
           const Icon = plan.icon;
           const isExpanded = expandedPlan === plan.key;
 
           return (
             <motion.div
               key={plan.key}
+              custom={i}
+              variants={cardVariants}
+              initial="hidden"
+              animate="visible"
               layout
-              onClick={(e) => e.stopPropagation()}
-              className={`relative rounded-2xl border-2 p-6 flex flex-col cursor-default ${
+              whileHover={prefersReduced ? {} : { scale: 1.02, transition: { duration: 0.2 } }}
+              className={`relative rounded-2xl border-2 p-6 flex flex-col cursor-default transition-shadow ${
                 plan.popular
-                  ? `${plan.border} ${plan.bg}`
-                  : 'border-border bg-card'
+                  ? `${plan.border} ${plan.bg} shadow-md`
+                  : 'border-border bg-card hover:shadow-md hover:border-primary/30'
               }`}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full shadow">
                   MOST POPULAR
                 </div>
               )}
@@ -147,14 +161,19 @@ export default function PricingDashboard() {
                 ))}
               </ul>
 
-              <button
+              {/* Select Plan button */}
+              <motion.button
                 onClick={(e) => handleSelectPlan(e, plan.key)}
+                whileTap={prefersReduced ? {} : { scale: 0.97 }}
                 className="w-full py-2 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-colors flex items-center justify-between"
               >
                 Select Plan
-                <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-              </button>
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                />
+              </motion.button>
 
+              {/* Inline checkout expansion */}
               <AnimatePresence>
                 {isExpanded && (
                   <motion.div
@@ -169,20 +188,21 @@ export default function PricingDashboard() {
                         {error}
                       </div>
                     )}
-                    <button
+                    <motion.button
                       onClick={(e) => handleCheckout(e, plan)}
-                      disabled={loadingPlan === plan.key}
+                      disabled={!!loadingPlan}
+                      whileTap={prefersReduced ? {} : { scale: 0.97 }}
                       className="w-full py-2 px-4 rounded-lg bg-green-600 hover:bg-green-700 disabled:bg-green-600/50 text-white font-semibold transition-colors flex items-center justify-center gap-2"
                     >
                       {loadingPlan === plan.key ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          Processing...
+                          Processing…
                         </>
                       ) : (
-                        'Checkout'
+                        `Checkout — $${plan.price}${plan.oneTime ? ' one-time' : '/mo'}`
                       )}
-                    </button>
+                    </motion.button>
                   </motion.div>
                 )}
               </AnimatePresence>

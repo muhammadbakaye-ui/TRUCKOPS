@@ -126,6 +126,24 @@ function AppShell({ children, currentPageName }) {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
 
+  const hasSubscription = useHasSubscription();
+  const [subModalDismissed, setSubModalDismissed] = useState(() =>
+    sessionStorage.getItem('sub_modal_dismissed') === '1'
+  );
+  const showSubModal =
+    !hasSubscription &&
+    !subModalDismissed &&
+    !validating &&
+    onboardingChecked &&
+    !!session &&
+    !showOnboarding &&
+    session.role !== 'driver';
+
+  const handleSubModalDismiss = () => {
+    sessionStorage.setItem('sub_modal_dismissed', '1');
+    setSubModalDismissed(true);
+  };
+
   // Check if onboarding is needed for this session (only once per session)
   useEffect(() => {
     if (validating) { setOnboardingChecked(false); return; }
@@ -189,6 +207,7 @@ function AppShell({ children, currentPageName }) {
   return (
     <>
       <GlobalBroadcastListener />
+      <SubscriptionModal isOpen={showSubModal} onDismiss={handleSubModalDismiss} />
       <div className="flex overflow-hidden bg-background" style={{ height: '100dvh', paddingTop: 'env(safe-area-inset-top)' }}>
         {/* Sidebar: hidden on mobile, visible on md+ */}
         <div className="hidden md:flex" ref={sidebarRef}>

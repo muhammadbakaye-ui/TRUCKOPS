@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { usePreviewGate, PreviewFeatureDialog } from '../components/shared/PreviewFeatureGate';
+import { usePlanLimits } from '../components/shared/SubscriptionGate';
 import { useSession } from '../components/shared/AppSession';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -198,7 +199,7 @@ export default function Drivers() {
   const queryClient = useQueryClient();
   const { session } = useSession();
   const { showDialog, setShowDialog, checkFeatureAccess, handleDismiss, navigate } = usePreviewGate();
-  const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
+  const planLimits = usePlanLimits();
 
   const handleShowPortalQR = async (driver, e) => {
     e.stopPropagation();
@@ -236,6 +237,21 @@ export default function Drivers() {
     } finally {
       setGeneratingToken(null);
     }
+  };
+
+  // Limit check — block adding new drivers once the plan limit is reached
+  const handleAddDriver = () => {
+    if (drivers.length >= planLimits.driverLimit) {
+      toast.error(
+        planLimits.driverLimit === Infinity
+          ? 'Unable to add driver at this time.'
+          : `Your plan allows up to ${planLimits.driverLimit} driver${planLimits.driverLimit !== 1 ? 's' : ''}. Upgrade your plan to add more.`,
+        { action: { label: 'Upgrade', onClick: () => navigate('/pricing') }, duration: 6000 }
+      );
+      return;
+    }
+    setEditing(null);
+    setDialogOpen(true);
   };
 
   const { data: drivers = [], isLoading } = useQuery({
@@ -277,9 +293,8 @@ export default function Drivers() {
       queryClient.invalidateQueries({ queryKey: ['trucks'] });
       setDialogOpen(false);
       setEditing(null);
-      if (result.isNewDriver && isInPreview) {
-        setShowDialog(true);
-      }
+      // isInPreview removed — plan limit check now happens before dialog opens
+      void result;
     }
   });
 
@@ -367,7 +382,7 @@ export default function Drivers() {
             <h2 className="text-lg font-bold">Drivers</h2>
             <p className="text-xs text-muted-foreground mt-0.5">{drivers.length} total drivers</p>
           </div>
-          <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { setEditing(null); setDialogOpen(true); }}>
+          <Button size="sm" className="h-8 text-xs gap-1" onClick={handleAddDriver}>
             <Plus className="w-3.5 h-3.5" /> Add Driver
           </Button>
         </div>
@@ -480,7 +495,7 @@ export default function Drivers() {
 
         {/* FAB Button */}
         <button
-          onClick={() => { setEditing(null); setDialogOpen(true); }}
+          onClick={handleAddDriver}
           className="fixed right-4 bottom-20 w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors flex-shrink-0"
         >
           <Plus className="w-5 h-5" />

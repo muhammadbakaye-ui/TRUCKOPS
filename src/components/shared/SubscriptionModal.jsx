@@ -1,26 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Crown, Play, X } from 'lucide-react';
+import { Crown, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PricingDashboard from '@/components/pricing/PricingDashboard';
 
 /**
- * Modal shown when users first log in/sign up without an active subscription.
- * Shows PricingDashboard component inside a modal, or Preview Mode option.
+ * Once-per-session modal shown to logged-in users with no active subscription.
+ * Shows a quick pitch first; expands to full PricingDashboard on request.
+ * isOpen and onDismiss are controlled by layout.jsx (AppShell).
  */
 export default function SubscriptionModal({ isOpen, onDismiss }) {
-  // Subscription wall temporarily disabled for live user testing
-  return null;
-  /* eslint-disable no-unreachable */
   const [showPricing, setShowPricing] = useState(false);
-
-  const handleShowPricing = () => {
-    setShowPricing(true);
-  };
-
-  const handlePreviewMode = () => {
-    onDismiss();
-  };
 
   return (
     <AnimatePresence>
@@ -28,7 +18,7 @@ export default function SubscriptionModal({ isOpen, onDismiss }) {
         <>
           {/* Backdrop */}
           <motion.div
-            key="backdrop"
+            key="sub-backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -39,85 +29,74 @@ export default function SubscriptionModal({ isOpen, onDismiss }) {
 
           {/* Modal */}
           <motion.div
-            key="modal"
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            key="sub-modal"
+            initial={{ opacity: 0, scale: 0.95, y: 24 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            exit={{ opacity: 0, scale: 0.95, y: 24 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            className="fixed inset-0 z-50 flex items-center justify-center px-4 pointer-events-none"
           >
             {!showPricing ? (
-              // Initial modal - choose subscribe or preview
-              <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
-                {/* Header with gradient accent */}
-                <div className="bg-gradient-to-r from-primary/20 to-primary/10 px-6 pt-6 pb-4 border-b border-border flex items-center justify-between">
+              <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-md w-full overflow-hidden pointer-events-auto">
+                <div className="bg-gradient-to-r from-primary/20 to-primary/10 px-6 pt-6 pb-4 border-b border-border flex items-start justify-between gap-4">
                   <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Crown className="w-6 h-6 text-primary" />
-                      <h2 className="text-2xl font-bold text-foreground">Welcome to TruckOps</h2>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Crown className="w-5 h-5 text-primary" />
+                      <h2 className="text-xl font-bold text-foreground">Unlock Full Access</h2>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Get started with a 3-day free trial — no credit card required to preview.
+                      Subscribe to get everything your trucking operation needs.
                     </p>
                   </div>
+                  <button
+                    onClick={onDismiss}
+                    className="p-1.5 hover:bg-secondary rounded-full transition-colors shrink-0 mt-0.5"
+                    aria-label="Close"
+                  >
+                    <X className="w-4 h-4 text-muted-foreground" />
+                  </button>
                 </div>
 
-                {/* Content */}
-                <div className="px-6 py-6 space-y-4">
-                  <div className="space-y-3 text-sm text-foreground">
-                    <div className="flex items-start gap-3">
-                      <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold shrink-0 mt-0.5">
+                <div className="px-6 py-5 space-y-2.5">
+                  {[
+                    'Load management and invoicing',
+                    'Driver pay statements and fuel imports',
+                    'Document uploads and OCR extraction',
+                    'Driver portal with QR access',
+                    'Unlimited drivers and trucks (on higher plans)',
+                  ].map((f) => (
+                    <div key={f} className="flex items-center gap-2.5 text-sm text-foreground">
+                      <div className="w-4 h-4 rounded-full bg-primary/15 flex items-center justify-center text-primary text-[10px] font-bold shrink-0">
                         ✓
                       </div>
-                      <span>Start your <strong>3-day free trial</strong> to try all features</span>
+                      {f}
                     </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold shrink-0 mt-0.5">
-                        ✓
-                      </div>
-                      <span>Or preview the app with <strong>limited access</strong></span>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-bold shrink-0 mt-0.5">
-                        ✓
-                      </div>
-                      <span>Cancel anytime before your trial ends — <strong>no charges</strong></span>
-                    </div>
-                  </div>
+                  ))}
                 </div>
 
-                {/* Actions */}
                 <div className="px-6 pb-6 space-y-3">
                   <Button
-                    onClick={handleShowPricing}
-                    className="w-full h-11 font-semibold flex items-center justify-center gap-2 bg-primary hover:bg-primary/90"
+                    onClick={() => setShowPricing(true)}
+                    className="w-full h-11 font-semibold gap-2"
                   >
                     <Crown className="w-4 h-4" />
-                    Start 3-Day Free Trial
+                    View Plans and Subscribe
                   </Button>
-
                   <Button
-                    onClick={handlePreviewMode}
-                    variant="outline"
-                    className="w-full h-10 font-medium flex items-center justify-center gap-2"
+                    onClick={onDismiss}
+                    variant="ghost"
+                    className="w-full h-9 text-muted-foreground text-sm"
                   >
-                    <Play className="w-4 h-4" />
-                    Preview Mode (Limited Access)
+                    Continue in preview mode
                   </Button>
-                </div>
-
-                {/* Footer note */}
-                <div className="px-6 pb-4 text-xs text-muted-foreground text-center">
-                  <p>You can upgrade or switch plans anytime from your dashboard.</p>
                 </div>
               </div>
             ) : (
-              // Pricing modal - PricingDashboard component
-              <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative">
+              <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto relative pointer-events-auto">
                 <button
                   onClick={() => setShowPricing(false)}
                   className="absolute top-4 right-4 z-10 p-1.5 hover:bg-secondary rounded-full transition-colors"
-                  aria-label="Close"
+                  aria-label="Close pricing"
                 >
                   <X className="w-5 h-5 text-muted-foreground hover:text-foreground" />
                 </button>

@@ -1,21 +1,35 @@
 import { Check } from 'lucide-react';
 import { PLANS } from '@/lib/pricingPlans';
 import { useNavigate } from 'react-router-dom';
+import { motion, useReducedMotion } from 'framer-motion';
 
 /**
- * PricingPreLogin - SIGNUP/LOGIN PAGE ONLY
- * - "Get Started" buttons save plan to localStorage and redirect to signup
- * - No checkout, no scroll, no Learn More, no Select Plan
- * - Card divs have NO onClick handlers
- * - Only button handlers have e.stopPropagation()
+ * PricingPreLogin — SIGNUP / LOGIN PAGE ONLY.
+ *
+ * Rules:
+ *  - Card divs have NO onClick handlers
+ *  - Only "Get Started" buttons are interactive; they call e.stopPropagation()
+ *  - "Get Started" saves the selected plan to localStorage and redirects to signup
+ *  - NO checkout, NO Stripe, NO scroll animations, NO Select Plan
+ *  - Cards animate in with a stagger on load; hover scale; reduced-motion respected
  */
 export default function PricingPreLogin() {
   const navigate = useNavigate();
+  const prefersReduced = useReducedMotion();
 
   const handleGetStarted = (e, planKey) => {
     e.stopPropagation();
     localStorage.setItem('selectedPlan', planKey);
     navigate('/login?plan=' + planKey);
+  };
+
+  const cardVariants = {
+    hidden: prefersReduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 },
+    visible: (i) => ({
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, delay: prefersReduced ? 0 : i * 0.1, ease: 'easeOut' },
+    }),
   };
 
   return (
@@ -28,20 +42,24 @@ export default function PricingPreLogin() {
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {PLANS.map((plan) => {
+        {PLANS.map((plan, i) => {
           const Icon = plan.icon;
           return (
-            <div
+            <motion.div
               key={plan.key}
-              onClick={(e) => e.stopPropagation()}
-              className={`relative rounded-2xl border-2 p-6 flex flex-col cursor-default ${
+              custom={i}
+              variants={cardVariants}
+              initial="hidden"
+              animate="visible"
+              whileHover={prefersReduced ? {} : { scale: 1.02, transition: { duration: 0.2 } }}
+              className={`relative rounded-2xl border-2 p-6 flex flex-col cursor-default transition-shadow hover:shadow-md ${
                 plan.popular
                   ? `${plan.border} ${plan.bg}`
-                  : 'border-border bg-card'
+                  : 'border-border bg-card hover:border-primary/30'
               }`}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full shadow">
                   MOST POPULAR
                 </div>
               )}
@@ -78,13 +96,14 @@ export default function PricingPreLogin() {
                 ))}
               </ul>
 
-              <button
+              <motion.button
                 onClick={(e) => handleGetStarted(e, plan.key)}
+                whileTap={prefersReduced ? {} : { scale: 0.97 }}
                 className="w-full py-2 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-colors"
               >
                 Get Started
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           );
         })}
       </div>

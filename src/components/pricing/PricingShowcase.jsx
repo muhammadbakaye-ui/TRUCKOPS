@@ -1,26 +1,39 @@
 import { useState, useRef } from 'react';
 import { Check } from 'lucide-react';
 import { PLANS } from '@/lib/pricingPlans';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 /**
- * PricingShowcase - PUBLIC LANDING PAGE ONLY
- * - "Learn More" buttons scroll to comparison section
- * - No checkout, no redirects, no Select Plan, no Get Started
- * - Card divs have NO onClick handlers
- * - Only button handlers have e.stopPropagation()
+ * PricingShowcase — PUBLIC LANDING PAGE ONLY.
+ *
+ * Rules:
+ *  - Card divs have NO onClick handlers
+ *  - Only the "Learn More" button is interactive; it calls e.stopPropagation()
+ *  - "Learn More" smoothly scrolls to the comparison section below and pulses the target card
+ *  - NO checkout, NO Stripe, NO redirects, NO Select Plan
+ *  - Cards animate in with a stagger; hover scale; reduced-motion respected
  */
 export default function PricingShowcase() {
   const [highlightedPlan, setHighlightedPlan] = useState(null);
   const comparisonRef = useRef(null);
+  const prefersReduced = useReducedMotion();
 
   const handleLearnMore = (e, planKey) => {
     e.stopPropagation();
     setHighlightedPlan(planKey);
     setTimeout(() => {
-      comparisonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      comparisonRef.current?.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth', block: 'start' });
     }, 50);
     setTimeout(() => setHighlightedPlan(null), 3000);
+  };
+
+  const cardVariants = {
+    hidden: prefersReduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 },
+    visible: (i) => ({
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, delay: prefersReduced ? 0 : i * 0.1, ease: 'easeOut' },
+    }),
   };
 
   return (
@@ -29,26 +42,30 @@ export default function PricingShowcase() {
       <div className="text-center mb-16">
         <h2 className="text-4xl font-extrabold mb-4 text-foreground">Simple, transparent pricing</h2>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Everything your trucking operation needs, in one platform. Start free for 3 days — cancel anytime.
+          Everything your trucking operation needs, in one platform. Plans start at $39/month.
         </p>
       </div>
 
-      {/* Plans Grid */}
+      {/* Plan cards grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
-        {PLANS.map((plan) => {
+        {PLANS.map((plan, i) => {
           const Icon = plan.icon;
           return (
-            <div
+            <motion.div
               key={plan.key}
-              onClick={(e) => e.stopPropagation()}
-              className={`relative rounded-2xl border-2 p-6 flex flex-col cursor-default ${
+              custom={i}
+              variants={cardVariants}
+              initial="hidden"
+              animate="visible"
+              whileHover={prefersReduced ? {} : { scale: 1.02, transition: { duration: 0.2 } }}
+              className={`relative rounded-2xl border-2 p-6 flex flex-col cursor-default transition-shadow hover:shadow-md ${
                 plan.popular
                   ? `${plan.border} ${plan.bg}`
-                  : 'border-border bg-card'
+                  : 'border-border bg-card hover:border-primary/30'
               }`}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full shadow">
                   MOST POPULAR
                 </div>
               )}
@@ -85,23 +102,25 @@ export default function PricingShowcase() {
                 ))}
               </ul>
 
-              <button
+              <motion.button
                 onClick={(e) => handleLearnMore(e, plan.key)}
+                whileTap={prefersReduced ? {} : { scale: 0.97 }}
                 className="w-full py-2 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-colors"
               >
                 Learn More
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           );
         })}
       </div>
 
-      {/* Comparison Section */}
+      {/* "Which plan is right for you?" comparison section */}
       <div ref={comparisonRef} className="border-t border-border pt-20">
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={prefersReduced ? { opacity: 1 } : { opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
         >
           <h2 className="text-4xl font-bold text-foreground mb-4 text-center">Which Plan Is Right for You?</h2>
           <p className="text-lg text-muted-foreground text-center mb-12">
@@ -109,27 +128,23 @@ export default function PricingShowcase() {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {PLANS.map((plan) => {
+            {PLANS.map((plan, i) => {
               const isHighlighted = highlightedPlan === plan.key;
               return (
                 <motion.div
                   key={plan.key}
-                  onClick={(e) => e.stopPropagation()}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1, duration: 0.6 }}
-                  className={`bg-card border rounded-xl p-6 transition-all cursor-default ${
-                    isHighlighted ? 'border-primary shadow-2xl shadow-primary/50' : 'border-border'
+                  custom={i}
+                  variants={cardVariants}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  animate={isHighlighted ? (prefersReduced ? {} : { scale: [1, 1.03, 1], transition: { duration: 0.6 } }) : {}}
+                  className={`relative bg-card border rounded-xl p-6 cursor-default transition-all duration-300 ${
+                    isHighlighted
+                      ? 'border-primary shadow-2xl shadow-primary/30 ring-2 ring-primary/40'
+                      : 'border-border'
                   }`}
                 >
-                  {isHighlighted && (
-                    <motion.div
-                      initial={{ scale: 0.95, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.4 }}
-                      className="absolute inset-0 rounded-xl bg-primary/5 pointer-events-none"
-                    />
-                  )}
                   <h3 className="text-lg font-semibold text-primary mb-3">{plan.name}</h3>
                   <p className="text-foreground/80 leading-relaxed">{plan.bestFor}</p>
                 </motion.div>

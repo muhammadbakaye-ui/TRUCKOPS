@@ -46,8 +46,16 @@ export function UploadProvider({ children }) {
 
   // Main processing function — enqueues job for serial FIFO execution
   const submitUpload = useCallback(({
-    bundle, docType, selectedDriverId, selectedTruckId, tripNumber, manualAmount, driverAmount, drivers, trucks, tenantId,
+    bundle, docType, selectedDriverId, selectedTruckId, tripNumber, manualAmount, driverAmount, drivers, trucks, tenantId, maxUploads,
   }) => {
+    // Enforce per-session upload limit based on subscription plan
+    if (maxUploads && bundle.length > maxUploads) {
+      toast.error(
+        `Your plan allows a maximum of ${maxUploads} document upload${maxUploads !== 1 ? 's' : ''} at a time. Please upgrade your plan to upload more at once.`,
+        { duration: 6000 }
+      );
+      return;
+    }
     const id = ++jobIdCounter;
     cancelRefs.current[id] = false;
 

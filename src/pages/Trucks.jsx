@@ -16,7 +16,7 @@ import DataTable from '../components/shared/DataTable';
 import StatusBadge from '../components/shared/StatusBadge';
 import PageHeader from '../components/shared/PageHeader';
 import { logAudit } from '../components/shared/AuditLogger';
-import { useHasSubscription } from '../components/shared/SubscriptionGate';
+import { useHasSubscription, usePlanLimits } from '../components/shared/SubscriptionGate';
 import { usePreviewGate, PreviewFeatureDialog } from '../components/shared/PreviewFeatureGate';
 import { useSession } from '../components/shared/AppSession';
 import { useEntitySubscription } from '../hooks/useEntitySubscription';
@@ -126,7 +126,21 @@ export default function Trucks() {
    const { session } = useSession();
    const navigate = useNavigate();
    const { showDialog, setShowDialog, checkFeatureAccess, handleDismiss, navigate: previewNavigate } = usePreviewGate();
-   const isInPreview = session?.subscription_status !== 'active' && session?.subscription_status !== 'trialing';
+   const planLimits = usePlanLimits();
+
+   const handleAddTruck = () => {
+     if (trucks.length >= planLimits.truckLimit) {
+       toast.error(
+         planLimits.truckLimit === Infinity
+           ? 'Unable to add truck at this time.'
+           : `Your plan allows up to ${planLimits.truckLimit} truck${planLimits.truckLimit !== 1 ? 's' : ''}. Upgrade your plan to add more.`,
+         { action: { label: 'Upgrade', onClick: () => navigate('/pricing') }, duration: 6000 }
+       );
+       return;
+     }
+     setEditing(null);
+     setDialogOpen(true);
+   };
 
   useEntitySubscription('Truck', ['trucks', session?.tenant_id], !!session?.tenant_id);
 
@@ -162,10 +176,6 @@ export default function Trucks() {
   const saveMutation = useMutation({
     mutationFn: async (data) => {
       const isNewTruck = !editing;
-      // Block creation of new truck in preview mode
-      if (isNewTruck && isInPreview) {
-        throw new Error('preview_mode');
-      }
 
       let truckId;
       if (editing) {
@@ -234,7 +244,7 @@ export default function Trucks() {
           title="Trucks"
           description={`${trucks.length} total trucks`}
           actions={
-            <Button size="sm" className="h-8 text-xs gap-1" onClick={() => { if (!checkFeatureAccess(isInPreview)) return; setEditing(null); setDialogOpen(true); }}>
+            <Button size="sm" className="h-8 text-xs gap-1" onClick={handleAddTruck}>
               <Plus className="w-3.5 h-3.5" /> Add Truck
             </Button>
           }
@@ -331,7 +341,7 @@ export default function Trucks() {
 
         {/* FAB Button */}
         <button
-          onClick={() => { if (!checkFeatureAccess(isInPreview)) return; setEditing(null); setDialogOpen(true); }}
+          onClick={handleAddTruck}
           className="fixed right-4 bottom-20 w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors flex-shrink-0"
         >
           <Plus className="w-5 h-5" />
