@@ -256,7 +256,7 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, d
         })}
       </div>
     </div>
-    {pdfHtml && <MobilePDFViewer html={pdfHtml} onClose={() => setPdfHtml(null)} />}
+    {pdfHtml && <MobilePDFViewer htmlContent={pdfHtml} onClose={() => setPdfHtml(null)} />}
     </>
   );
 }

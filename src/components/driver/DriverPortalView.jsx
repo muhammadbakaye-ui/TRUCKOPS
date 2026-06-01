@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Truck, Upload, FileText, LogOut, Download, Loader2, Calendar, Printer, User, LayoutGrid } from 'lucide-react';
-import NotificationBell from '../layout/NotificationBell';
+import DriverNotificationBell from './DriverNotificationBell';
 import DriverMyProfile from './DriverMyProfile';
 import DriverDispatchBoard from './DriverDispatchBoard';
 import { toast } from 'sonner';
@@ -179,7 +179,7 @@ export default function DriverPortalView() {
             <p className="text-[11px] md:text-xs font-semibold text-sidebar-primary-foreground leading-tight">{session?.driver_name}</p>
             <p className="text-[10px] md:text-[11px] text-sidebar-foreground/60 leading-tight">Truck #{session?.truck_number}</p>
           </div>
-          <NotificationBell recipientId={session?.driver_id ? `driver:${session.driver_id}` : undefined} />
+          <DriverNotificationBell driverId={session?.driver_id} tenantId={session?.tenant_id} />
           <TourButton onClick={() => setShowTour(true)} />
           <Button
             variant="ghost"
