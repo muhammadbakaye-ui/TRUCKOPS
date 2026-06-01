@@ -11,8 +11,13 @@ export default function MobilePDFViewer({ htmlContent, title, onClose, onDownloa
   const handleDownload = () => {
     const blob = new Blob([iframeHtml], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (title || 'document') + '.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
   };
 
   const handleShare = async () => {
