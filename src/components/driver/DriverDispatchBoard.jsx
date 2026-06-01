@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { getLoadHTML } from '../print/printLoad';
 import MobilePDFViewer from '../print/MobilePDFViewer';
+import { useEntitySubscription } from '../../hooks/useEntitySubscription';
 
 const COLUMNS = [
   { key: 'available',  label: 'Available',  color: 'border-purple-500', headerColor: 'bg-purple-500/10 text-purple-400', emptyMsg: 'No loads posted yet' },
@@ -128,6 +129,13 @@ export default function DriverDispatchBoard({ session, driverId: driverIdProp, d
   const [pending, setPending] = useState(false);
   const [pdfHtml, setPdfHtml] = useState(null);
   const queryClient = useQueryClient();
+
+  // Real-time: invalidate all three load query keys on any Load change
+  useEntitySubscription('Load', [
+    ['driver-loads1'],
+    ['driver-loads2'],
+    ['driver-available'],
+  ], !!tenantId);
 
   const { data: ownerCompany } = useQuery({
     queryKey: ['owner-company-dispatch', tenantId],

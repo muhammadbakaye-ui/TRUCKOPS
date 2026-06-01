@@ -16,6 +16,7 @@ import RevenueCharts from '../components/dashboard/RevenueCharts';
 import MobilePullRefresh from '../components/mobile/MobilePullRefresh';
 import MobileLoadCard from '../components/mobile/MobileLoadCard';
 import { format } from 'date-fns';
+import { useEntitySubscription } from '../hooks/useEntitySubscription';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -82,6 +83,15 @@ export default function Dashboard() {
     queryFn: () => tenantId ? base44.entities.AuditLog.filter({ tenant_id: tenantId }, '-created_date', 10) : Promise.resolve([]),
     enabled: !!tenantId,
   });
+
+  // Real-time subscriptions — each invalidates its dashboard-specific query key
+  useEntitySubscription('Load',            ['loads-dash-recent',   tenantId], !!tenantId);
+  useEntitySubscription('Invoice',         ['invoices-dash-all',   tenantId], !!tenantId);
+  useEntitySubscription('Driver',          ['drivers-dash',        tenantId], !!tenantId);
+  useEntitySubscription('Truck',           ['trucks-dash',         tenantId], !!tenantId);
+  useEntitySubscription('Company',         ['companies-dash',      tenantId], !!tenantId);
+  useEntitySubscription('DriverStatement', ['statements-dash',     tenantId], !!tenantId);
+  useEntitySubscription('AuditLog',        ['audit-dash',          tenantId], !!tenantId);
 
   const unpaidInvoices = unpaidInvoicesData;
   const displayLoads = recentLoads.slice(0, 8);

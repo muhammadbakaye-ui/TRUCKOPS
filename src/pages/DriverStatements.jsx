@@ -22,6 +22,7 @@ import BulkDeleteBar from '../components/shared/BulkDeleteBar';
 import { format } from 'date-fns';
 import { STATEMENT_PERIODS_2026 } from '../components/shared/statementCalendar';
 import { printStatement } from '../components/print/printStatement';
+import { useEntitySubscription } from '../hooks/useEntitySubscription';
 
 const fmt = (dateStr) => format(new Date(dateStr + 'T12:00:00'), 'MMM d');
 const fmtFull = (dateStr) => format(new Date(dateStr + 'T12:00:00'), 'MMM d, yyyy');
@@ -54,6 +55,8 @@ export default function DriverStatements() {
     queryFn: () => session?.tenant_id ? base44.entities.DriverStatement.filter({ tenant_id: session.tenant_id }, '-statement_date', 300) : Promise.resolve([]),
     enabled: !!session?.tenant_id,
   });
+
+  useEntitySubscription('DriverStatement', ['statements', session?.tenant_id], !!session?.tenant_id);
 
   const deleteMutation = useMutation({
     mutationFn: async (stmts) => {
