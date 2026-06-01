@@ -2,6 +2,10 @@
   "name": "Notification",
   "type": "object",
   "properties": {
+    "recipient_id": {
+      "type": "string",
+      "description": "Scoped recipient identifier: 'admin:<tenant_id>' for owner op inbox, 'driver:<driver_id>' for a specific driver's inbox"
+    },
     "tenant_id": {
       "type": "string",
       "description": "Tenant/account identifier for multi-tenancy"

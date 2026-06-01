@@ -182,6 +182,7 @@ function DocUploadTab({ driver }) {
       try {
         await base44.entities.Notification.create({
           tenant_id: driver.tenant_id,
+          recipient_id: `admin:${driver.tenant_id}`,
           notification_type: 'driver_document_upload',
           title: `${DOC_TYPE_LABELS[docType] || docType} uploaded — ${driver.full_name}`,
           message: `${driver.full_name} uploaded a ${DOC_TYPE_LABELS[docType] || docType}: ${file.name}`,

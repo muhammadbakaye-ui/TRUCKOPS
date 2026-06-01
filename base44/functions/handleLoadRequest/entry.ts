@@ -31,6 +31,7 @@ Deno.serve(async (req) => {
 
       await base44.asServiceRole.entities.Notification.create({
         tenant_id,
+        recipient_id: `admin:${tenant_id}`,
         notification_type: 'load_request',
         title: `${driver_name || driver_id} requested Load #${load.internal_load_number}`,
         message: `Driver wants to be assigned to this load`,
@@ -73,6 +74,7 @@ Deno.serve(async (req) => {
 
       await base44.asServiceRole.entities.Notification.create({
         tenant_id,
+        recipient_id: `driver:${driver_id}`,
         notification_type: 'request_accepted',
         title: `Your request for Load #${load.internal_load_number} was accepted`,
         message: `You have been assigned to this load`,
@@ -108,6 +110,7 @@ Deno.serve(async (req) => {
 
       await base44.asServiceRole.entities.Notification.create({
         tenant_id,
+        recipient_id: `driver:${driver_id}`,
         notification_type: 'request_denied',
         title: `Your request for Load #${load.internal_load_number} was not accepted`,
         message: `You can request other available loads`,

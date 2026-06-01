@@ -269,6 +269,20 @@ export default function LoadDetail() {
            else await base44.entities.LoadStop.create(s);
          }
          await logAudit({ action_type: 'update', entity_type: 'Load', entity_id: currentId, entity_label: form.internal_load_number });
+         // Notify driver if they were newly assigned
+         if (form.driver_1_id && form.driver_1_id !== load?.driver_1_id) {
+           base44.entities.Notification.create({
+             tenant_id: tenantId,
+             recipient_id: `driver:${form.driver_1_id}`,
+             notification_type: 'load_created',
+             title: `You've been assigned to Load #${form.internal_load_number}`,
+             message: `You have been assigned to Load #${form.internal_load_number}${form.pickup_city ? ` — ${form.pickup_city}${form.pickup_state ? ', ' + form.pickup_state : ''} → ${form.delivery_city || ''}${form.delivery_state ? ', ' + form.delivery_state : ''}` : ''}`,
+             related_entity_type: 'load',
+             related_entity_id: currentId,
+             read: false,
+             metadata: { load_id: currentId, load_number: form.internal_load_number, driver_id: form.driver_1_id },
+           }).catch(() => {});
+         }
          queryClient.invalidateQueries({ queryKey: ['load', currentId] });
          toast.success('Load saved');
          if (!loadId) window.history.replaceState({}, '', `?id=${currentId}`);

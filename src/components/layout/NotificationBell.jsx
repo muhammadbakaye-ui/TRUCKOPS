@@ -37,6 +37,8 @@ export default function NotificationBell() {
   const [showDeleted, setShowDeleted] = useState(false);
   const { session } = useSession();
   const tenantId = session?.tenant_id;
+  // Admin bell always scoped to admin inbox — drivers have no bell in this app
+  const recipientId = `admin:${tenantId}`;
   const seenIdsRef = useRef(null);
 
   const { data: notifications = [] } = useQuery({
@@ -48,8 +50,10 @@ export default function NotificationBell() {
     refetchInterval: 30000,
   });
 
-  const active = notifications.filter(n => !n.deleted);
-  const deleted = notifications.filter(n => n.deleted);
+  // Filter to this user's notifications; legacy notifications with no recipient_id remain visible for backward compat
+  const userNotifications = notifications.filter(n => !n.recipient_id || n.recipient_id === recipientId);
+  const active = userNotifications.filter(n => !n.deleted);
+  const deleted = userNotifications.filter(n => n.deleted);
   const unreadCount = active.filter(n => !n.read).length;
 
   const markAsRead = useMutation({
@@ -91,7 +95,8 @@ export default function NotificationBell() {
   useEffect(() => {
     if (!tenantId) return;
     const unsubscribe = base44.entities.Notification.subscribe((event) => {
-      if (event.type === 'create' && event.data?.tenant_id === tenantId) {
+      if (event.type === 'create' && event.data?.tenant_id === tenantId &&
+          (!event.data?.recipient_id || event.data?.recipient_id === recipientId)) {
         queryClient.invalidateQueries({ queryKey: ['notifications', tenantId] });
       }
     });
