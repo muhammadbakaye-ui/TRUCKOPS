@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
-import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
+import axios from 'axios';
 
 const AuthContext = createContext();
 
@@ -37,17 +37,16 @@ export const AuthProvider = ({ children }) => {
       }
       
       // Check app public settings (with token if available)
-      const appClient = createAxiosClient({
-        baseURL: `/api/apps/public`,
+      const appClient = axios.create({        baseURL: `/api/apps/public`,
         headers: {
-          'X-App-Id': appParams.appId
+          'X-App-Id': appParams.appId,
+          ...(appParams.token ? { 'Authorization': `Bearer ${appParams.token}` } : {})
         },
-        token: appParams.token,
-        interceptResponses: true
       });
       
       try {
-        const publicSettings = await appClient.get(`/prod/public-settings/by-id/${appParams.appId}`);
+        const resp = await appClient.get(`/prod/public-settings/by-id/${appParams.appId}`);
+        const publicSettings = resp.data;
         setAppPublicSettings(publicSettings);
         
         if (appParams.token) {
@@ -60,8 +59,10 @@ export const AuthProvider = ({ children }) => {
       } catch (appError) {
         console.error('App state check failed:', appError);
         
-        if (appError.status === 403 && appError.data?.extra_data?.reason) {
-          const reason = appError.data.extra_data.reason;
+        const errStatus = appError.response?.status || appError.status;
+        const errData = appError.response?.data || appError.data;
+        if (errStatus === 403 && errData?.extra_data?.reason) {
+          const reason = errData.extra_data.reason;
           if (reason === 'auth_required') {
             setAuthError({
               type: 'auth_required',
