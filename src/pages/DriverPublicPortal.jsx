@@ -364,7 +364,7 @@ export default function DriverPublicPortal() {
       {/* Header */}
       <div className="h-13 bg-sidebar border-b border-sidebar-border flex items-center justify-between px-4 md:px-6 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <Truck className="w-4 h-4 text-sidebar-primary" />
+          <img src="https://media.base44.com/images/public/6a0409fc37a632ab53db20fd/34c5d2a43_TruckOpsLogo.png" alt="TruckOps" className="w-7 h-7 object-contain" />
           <div>
             <span className="font-bold text-sidebar-primary-foreground text-xs tracking-widest">TRUCKOPS</span>
             {companyName && (
