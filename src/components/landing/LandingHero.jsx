@@ -19,7 +19,7 @@ export default function LandingHero({ onContinue }) {
           transition={{ delay: 0.2, duration: 0.6 }}
           className="mb-6"
         >
-          <img src="https://media.base44.com/images/public/6a0409fc37a632ab53db20fd/5e47d1777_image.png" alt="TruckOps" className="h-20 w-20 object-contain mx-auto mb-6" />
+          <img src="https://media.base44.com/images/public/6a0409fc37a632ab53db20fd/34c5d2a43_TruckOpsLogo.png" alt="TruckOps" className="h-20 w-20 object-contain mx-auto mb-6" />
         </motion.div>
 
         <motion.h1
