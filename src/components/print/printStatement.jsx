@@ -80,8 +80,9 @@ export function printStatement({ company, statement, allLines }) {
   <title>${docTitle}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; user-select: text !important; -webkit-user-select: text !important; }
-    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; color: #111827; background: #fff; }
-    .page { width: 100%; padding: 36px 52px; max-width: 100%; background: #fff; }
+    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; color: #111827; background: #f3f4f6; }
+    .page-wrapper { padding: 24px; }
+    .page { width: 100%; padding: 36px 52px; max-width: 100%; background: #fff; border: 1.5px solid #0f1117; }
 
     /* HEADER */
     .header {
@@ -189,6 +190,7 @@ export function printStatement({ company, statement, allLines }) {
   </style>
 </head>
 <body>
+<div class="page-wrapper">
 <div class="page">
 
   <!-- HEADER -->
@@ -312,6 +314,7 @@ export function printStatement({ company, statement, allLines }) {
 
   <div class="page-footer">Page 1 of 1</div>
 
+</div>
 </div>
 
 <!-- DOWNLOAD BUTTON -->

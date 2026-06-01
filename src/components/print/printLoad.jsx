@@ -1,7 +1,6 @@
 export function printLoad({ company, load, stops, drivers = [], trucks = [], trailers = [] }) {
   const fmt = (n) => `$${(Number(n) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const allStops = [...stops].sort((a, b) => (a.stop_order || 0) - (b.stop_order || 0));
-  // Build line items: use charge_line_items if available, else fall back to legacy fields
   const lineItems = load.charge_line_items?.length
     ? load.charge_line_items
     : [
@@ -12,8 +11,6 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
       ];
   const subTotal = lineItems.reduce((sum, li) => sum + (Number(li.amount) || 0), 0);
   const total = load.invoice_amount || subTotal;
-  const pickups = allStops.filter(s => s.stop_type === 'pickup');
-  const deliveries = allStops.filter(s => s.stop_type === 'delivery');
   const firstStop = allStops[0];
   const lastStop = allStops[allStops.length - 1];
 
@@ -35,9 +32,46 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
     }
   }
 
-  const stopColor = { pickup: '#1a3a6b', delivery: '#166534', stop: '#7c3aed' };
-  const stopLabel = { pickup: 'PICKUP', delivery: 'DELIVERY', stop: 'STOP' };
-  const stopBg = { pickup: '#eff6ff', delivery: '#f0fdf4', stop: '#faf5ff' };
+  const ds = (load.dispatch_status || load.status || '').toLowerCase().replace(/_/g,' ');
+  const isDelivered = ds.includes('deliver') || ds.includes('completed');
+  const isInTransit = ds.includes('transit');
+  const statusLabel = (load.dispatch_status || load.status || 'DRAFT').toUpperCase().replace(/_/g, ' ');
+  const statusBorderColor = isDelivered ? '#16a34a' : isInTransit ? '#1d4ed8' : '#6b7280';
+  const statusTextColor = isDelivered ? '#16a34a' : isInTransit ? '#1d4ed8' : '#6b7280';
+
+  const stopRows = allStops.map((s, i) => {
+    const isPickup = s.stop_type === 'pickup';
+    const isDelivery = s.stop_type === 'delivery';
+    const hdrBg = isPickup ? '#eff6ff' : isDelivery ? '#f0fdf4' : '#f9fafb';
+    const hdrColor = isPickup ? '#1d4ed8' : isDelivery ? '#16a34a' : '#374151';
+    const hdrBorderColor = isPickup ? '#bfdbfe' : isDelivery ? '#bbf7d0' : '#e5e7eb';
+    const label = isPickup ? 'PICKUP' : isDelivery ? 'DELIVERY' : 'STOP';
+    const addr = [s.street, s.city, s.state, s.zip].filter(Boolean).join(', ') || '—';
+    const clean = (v) => { const sv = v && String(v).trim().toLowerCase(); return sv && sv !== 'none' && sv !== 'null' ? v : null; };
+    const ref = clean(s.reference_number) || clean(s.bol_number) || clean(load.customer_reference_number) || '—';
+    const dateTime = [s.appointment_date, s.time_from].filter(Boolean).join(' · ');
+    return `
+    <div style="border:1px solid #e5e7eb;border-radius:5px;margin-bottom:8px;overflow:hidden;">
+      <div style="background:${hdrBg};border-bottom:1px solid ${hdrBorderColor};padding:5px 12px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:9px;font-weight:700;color:${hdrColor};text-transform:uppercase;letter-spacing:0.06em;">${label} #${i+1}${s.company_name ? ' \u2014 ' + s.company_name : ''}</span>
+        <span style="font-size:9px;color:#6b7280;">${dateTime}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;padding:8px 12px;">
+        <div>
+          <div style="font-size:7.5px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;">Address</div>
+          <div style="font-size:9.5px;color:#111827;font-weight:500;">${addr}</div>
+        </div>
+        <div>
+          <div style="font-size:7.5px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;">Ref / BOL #</div>
+          <div style="font-size:9.5px;color:#111827;font-weight:500;">${ref}</div>
+        </div>
+        <div>
+          <div style="font-size:7.5px;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;">Notes</div>
+          <div style="font-size:9.5px;color:#374151;">${s.memo || '—'}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 
   const html = `<!DOCTYPE html>
 <html>
@@ -46,171 +80,127 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
   <title>${load.external_load_number || load.internal_load_number || 'Load'} - Load Invoice</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; user-select: text !important; -webkit-user-select: text !important; }
-    body { font-family: Arial, sans-serif; font-size: 10px; color: #111; background: #fff; }
-    .page { width: 100%; padding: 32px 48px; display: flex; flex-direction: column; }
-
-    /* HEADER */
-    .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 10px; border-bottom: 3px solid #1a3a6b; margin-bottom: 10px; }
-    .co-name { font-size: 14px; font-weight: bold; color: #1a3a6b; text-transform: uppercase; }
-    .co-sub { font-size: 9.5px; color: #444; margin-top: 3px; line-height: 1.7; }
-    .header-right { text-align: right; }
-    .doc-title { font-size: 38px; font-weight: 900; color: #1a3a6b; letter-spacing: 3px; line-height: 1; }
-    .load-num { font-size: 10px; font-weight: bold; color: #333; margin-top: 3px; }
-    .broker-num { font-size: 9.5px; color: #333; margin-top: 2px; }
-    .status-badge { display: inline-block; margin-top: 4px; padding: 2px 8px; background: #1a3a6b; color: #fff; font-size: 8px; font-weight: bold; border-radius: 3px; letter-spacing: 1px; }
-
-    /* ROUTE BAR */
-    .route-bar { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 5px 12px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-size: 9.5px; }
-    .city-tag { font-weight: bold; color: #1a3a6b; }
-    .route-arrow { color: #1a3a6b; font-weight: bold; }
-    .route-meta { color: #555; margin-left: auto; }
-
-    /* INFO GRID */
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-    .info-box { border: 1px solid #d1d5db; border-radius: 3px; overflow: hidden; }
-    .info-box-hdr { background: #1a3a6b; color: #fff; font-size: 8px; font-weight: bold; padding: 3px 10px; letter-spacing: 1px; text-transform: uppercase; }
-    .info-box-body { padding: 5px 10px; line-height: 1.7; }
-    .irow { display: flex; }
-    .ilbl { color: #555; width: 85px; flex-shrink: 0; font-size: 9.5px; }
-    .ival { font-weight: 600; color: #111; font-size: 9.5px; }
-
-    /* STOPS */
-    .stops-title { font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: #555; margin-bottom: 5px; }
-    .stop-card { border: 1px solid #d1d5db; border-radius: 3px; margin-bottom: 5px; overflow: hidden; }
-    .stop-hdr { display: flex; align-items: center; justify-content: space-between; padding: 4px 10px; font-size: 9px; font-weight: bold; }
-    .stop-hdr-date { font-size: 9px; font-weight: normal; color: #444; }
-    .stop-body { display: grid; grid-template-columns: 2.2fr 1fr 1fr; gap: 8px; padding: 5px 10px 6px; }
-    .sf-lbl { font-size: 7.5px; color: #999; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
-    .sf-val { font-size: 9.5px; font-weight: 600; color: #111; }
-
-    /* FINANCIALS */
-    .fin-wrap { margin-top: 16px; display: flex; justify-content: flex-end; align-items: stretch; }
-    .fin-inner { display: flex; align-items: stretch; border: 2px solid #1a3a6b; }
-    table.fin-tbl { border-collapse: collapse; font-size: 9.5px; width: 250px; }
-    table.fin-tbl thead tr { border-bottom: 2px solid #1a3a6b; }
-    table.fin-tbl th { padding: 5px 12px; text-align: left; font-weight: bold; background: #fff; }
-    table.fin-tbl th:last-child { text-align: right; }
-    table.fin-tbl td { padding: 4px 12px; background: #fff; font-weight: 600; }
-    table.fin-tbl td:last-child { text-align: right; font-weight: 600; }
-    table.fin-tbl .sub-row td { border-top: 1px solid #bbb; font-weight: bold; }
-    .total-box { border-left: 2px solid #1a3a6b; padding: 0 24px; display: flex; align-items: center; gap: 20px; font-size: 10.5px; font-weight: bold; white-space: nowrap; background: #fff; min-width: 180px; }
-
-    /* FOOTER */
-    .page-footer { margin-top: auto; padding-top: 10px; border-top: 1px solid #d1d5db; display: flex; justify-content: space-between; font-size: 8px; color: #999; }
-
-    /* DOWNLOAD BAR */
-    .download-bar { position: fixed; bottom: 24px; right: 32px; display: flex; gap: 10px; z-index: 9999; }
+    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; color: #111827; background: #f3f4f6; }
+    .page-wrapper { padding: 24px; }
+    .page { width: 100%; padding: 36px 48px; background: #fff; border: 1.5px solid #0f1117; }
+    .download-bar { position: fixed; bottom: 24px; right: 32px; z-index: 9999; }
     .btn-print { background: #166534; color: #fff; border: none; padding: 10px 22px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.25); letter-spacing: 0.5px; }
-    .btn-pdf { background: #166534; color: #fff; border: none; padding: 10px 22px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.25); letter-spacing: 0.5px; }
     .btn-print:hover { background: #14532d; }
-    .btn-pdf:hover { background: #14532d; }
-    @media print { .download-bar { display: none !important; } }
-
-    @page {
-      size: letter;
-      margin: 0.4in 0.5in;
-    }
+    @page { size: letter; margin: 0.4in 0.5in; }
     @media print {
-      .status-badge { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-      .info-box-hdr { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-      .page { padding: 0; margin: 0; }
+      body { background: #fff; }
+      .page-wrapper { padding: 0; }
+      .page { border: 1.5px solid #0f1117; padding: 0; }
+      .download-bar { display: none !important; }
     }
   </style>
 </head>
 <body>
+<div class="page-wrapper">
 <div class="page">
 
   <!-- HEADER -->
-  <div class="header">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;border-bottom:2px solid #0f1117;margin-bottom:14px;">
     <div>
-      <div class="co-name">${(company.company_name || 'Your Company').toUpperCase()}</div>
-      <div class="co-sub">${[company.address_1, [company.city, company.state, company.zip].filter(Boolean).join(', '), company.phone ? 'Phone #: ' + company.phone : ''].filter(Boolean).join('<br>')}</div>
+      <div style="font-size:18px;font-weight:800;color:#111827;line-height:1.2;margin-bottom:5px;">${company.company_name || 'Your Company'}</div>
+      <div style="font-size:10px;color:#6b7280;line-height:1.7;">
+        ${company.address_1 ? company.address_1 + '<br>' : ''}
+        ${[company.city, company.state, company.zip].filter(Boolean).join(', ')}
+        ${company.phone ? '<br>Phone: ' + company.phone : ''}
+      </div>
     </div>
-    <div class="header-right">
-      <div class="doc-title">LOAD INVOICE</div>
-      <div class="load-num">Load # ${load.internal_load_number || '—'}</div>
-      ${load.external_load_number ? `<div class="broker-num">Broker Load #: ${load.external_load_number}</div>` : ''}
-      <div><span class="status-badge">${(load.dispatch_status || load.status || 'DRAFT').toUpperCase().replace(/_/g, ' ')}</span></div>
+    <div style="text-align:right;">
+      <div style="font-size:26px;font-weight:900;color:#111827;letter-spacing:1px;line-height:1;margin-bottom:6px;">LOAD INVOICE</div>
+      <div style="font-size:10px;color:#6b7280;margin-bottom:2px;">Load # <strong style="color:#111827;">L-${load.internal_load_number || '—'}</strong>${load.external_load_number ? ' &nbsp;·&nbsp; Broker Load # <strong style="color:#111827;">' + load.external_load_number + '</strong>' : ''}</div>
+      <div style="margin-top:6px;">
+        <span style="display:inline-block;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:${statusTextColor};border:1.5px solid ${statusBorderColor};border-radius:4px;padding:2px 8px;">${statusLabel}</span>
+      </div>
     </div>
   </div>
 
   <!-- ROUTE BAR -->
   ${allStops.length >= 2 ? `
-  <div class="route-bar">
-    <span style="color:#c00;">📍</span><span class="city-tag"> ${firstStop.city || ''}${firstStop.state ? ', ' + firstStop.state : ''}</span>
-    <span class="route-arrow"> → </span>
-    <span style="color:#c00;">📍</span><span class="city-tag"> ${lastStop.city || ''}${lastStop.state ? ', ' + lastStop.state : ''}</span>
-    ${firstStop.appointment_date ? `<span class="route-meta">Pickup: ${firstStop.appointment_date}</span>` : ''}
+  <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:5px;padding:8px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+    <span style="width:8px;height:8px;background:#111827;border-radius:50%;display:inline-block;flex-shrink:0;"></span>
+    <span style="font-size:11px;font-weight:700;color:#111827;">${firstStop.city || ''}${firstStop.state ? ', ' + firstStop.state : ''}</span>
+    <span style="flex:1;height:1px;background:#d1d5db;max-width:60px;"></span>
+    <span style="font-size:10px;color:#9ca3af;font-weight:500;">→</span>
+    <span style="flex:1;height:1px;background:#d1d5db;max-width:60px;"></span>
+    <span style="width:8px;height:8px;background:#111827;border-radius:50%;display:inline-block;flex-shrink:0;"></span>
+    <span style="font-size:11px;font-weight:700;color:#111827;">${lastStop.city || ''}${lastStop.state ? ', ' + lastStop.state : ''}</span>
+    ${firstStop.appointment_date ? `<span style="margin-left:auto;font-size:10px;color:#6b7280;white-space:nowrap;">Pickup: ${firstStop.appointment_date}</span>` : ''}
   </div>` : ''}
 
-  <!-- INFO GRID -->
-  <div class="info-grid">
-    <div class="info-box">
-      <div class="info-box-hdr">Load Information</div>
-      <div class="info-box-body">
-        <div class="irow"><span class="ilbl">Customer:</span><span class="ival">${load.customer_name || '—'}</span></div>
-        ${load.external_load_number ? `<div class="irow"><span class="ilbl">Load #:</span><span class="ival">${load.external_load_number}</span></div>` : ''}
-        ${load.trip_number || tripNum ? `<div class="irow"><span class="ilbl">Trip #:</span><span class="ival">${load.trip_number || tripNum}</span></div>` : ''}
-        ${load.customer_reference_number ? `<div class="irow"><span class="ilbl">Ref #:</span><span class="ival">${load.customer_reference_number}</span></div>` : ''}
-        ${load.billable_miles ? `<div class="irow"><span class="ilbl">Miles:</span><span class="ival">${load.billable_miles.toLocaleString()}</span></div>` : ''}
+  <!-- INFO SECTION -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;border:1px solid #e5e7eb;border-radius:5px;margin-bottom:14px;overflow:hidden;">
+    <div style="padding:10px 14px;border-right:1px solid #e5e7eb;">
+      <div style="font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;margin-bottom:8px;">Load Information</div>
+      <div style="display:grid;grid-template-columns:80px 1fr;row-gap:4px;font-size:10px;">
+        <span style="color:#9ca3af;">Customer</span><span style="color:#111827;font-weight:600;">${load.customer_name || '—'}</span>
+        <span style="color:#9ca3af;">Load #</span><span style="color:#111827;font-weight:600;">${load.external_load_number || load.internal_load_number || '—'}</span>
+        ${load.trip_number || tripNum ? `<span style="color:#9ca3af;">Trip #</span><span style="color:#111827;font-weight:600;">${load.trip_number || tripNum}</span>` : ''}
+        ${load.customer_reference_number ? `<span style="color:#9ca3af;">Ref #</span><span style="color:#111827;font-weight:600;">${load.customer_reference_number}</span>` : ''}
       </div>
     </div>
-    <div class="info-box">
-      <div class="info-box-hdr">Assignment</div>
-      <div class="info-box-body">
-        <div class="irow"><span class="ilbl">Driver:</span><span class="ival">${load.driver_1_name || '—'}</span></div>
-        ${load.driver_2_name ? `<div class="irow"><span class="ilbl">Driver 2:</span><span class="ival">${load.driver_2_name}</span></div>` : ''}
-        <div class="irow"><span class="ilbl">Truck #:</span><span class="ival">${truckNum || '—'}</span></div>
-        <div class="irow"><span class="ilbl">Trailer #:</span><span class="ival">${trailerNum || '—'}</span></div>
+    <div style="padding:10px 14px;">
+      <div style="font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;margin-bottom:8px;">Assignment</div>
+      <div style="display:grid;grid-template-columns:70px 1fr;row-gap:4px;font-size:10px;">
+        <span style="color:#9ca3af;">Driver</span><span style="color:#111827;font-weight:600;">${load.driver_1_name || '—'}</span>
+        <span style="color:#9ca3af;">Truck #</span><span style="color:#111827;font-weight:600;">${truckNum || '—'}</span>
+        <span style="color:#9ca3af;">Trailer #</span><span style="color:#111827;font-weight:600;">${trailerNum || '—'}</span>
       </div>
     </div>
   </div>
 
   <!-- STOPS -->
-  <div class="stops-title">Stops (${allStops.length})</div>
-  ${allStops.map((s, i) => `
-  <div class="stop-card" style="border-left:4px solid ${stopColor[s.stop_type] || '#555'};">
-    <div class="stop-hdr" style="background:${stopBg[s.stop_type] || '#f9f9f9'}; color:${stopColor[s.stop_type] || '#333'};">
-      <span>${stopLabel[s.stop_type] || 'STOP'} #${i + 1}${s.company_name ? ' — ' + s.company_name : ''}</span>
-      <span class="stop-hdr-date">${s.appointment_date || ''}${s.time_from ? ' · ' + s.time_from : ''}${s.time_to ? ' – ' + s.time_to : ''}</span>
-    </div>
-    <div class="stop-body">
-      <div><div class="sf-lbl">Address</div><div class="sf-val">${[s.street, s.city, s.state, s.zip].filter(Boolean).join(', ') || '—'}</div></div>
-      <div><div class="sf-lbl">Ref / BOL #</div><div class="sf-val">${(() => { const clean = (v) => { const s = v && String(v).trim().toLowerCase(); return s && s !== 'none' && s !== 'null' ? v : null; }; return clean(s.reference_number) || clean(s.bol_number) || clean(load.customer_reference_number) || '—'; })()}</div></div>
-      <div><div class="sf-lbl">Notes</div><div class="sf-val" style="font-weight:normal;">${s.memo || '—'}</div></div>
-    </div>
-  </div>`).join('')}
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+    <span style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#111827;white-space:nowrap;">STOPS (${allStops.length})</span>
+    <div style="flex:1;height:1px;background:#e5e7eb;"></div>
+  </div>
+  ${stopRows}
 
-  <!-- FINANCIALS -->
-  <div class="fin-wrap">
-    <div class="fin-inner">
-      <table class="fin-tbl">
-        <thead><tr><th>Description</th><th>Amount</th></tr></thead>
-        <tbody>
-          ${lineItems.map(li => `<tr><td>${li.description || '—'}</td><td>${fmt(li.amount)}</td></tr>`).join('')}
-          <tr class="sub-row"><td>Sub Total :</td><td>${fmt(subTotal)}</td></tr>
-        </tbody>
-      </table>
-      <div class="total-box">
-        <span>Total Due:</span>
-        <span>${fmt(total)}</span>
-      </div>
-    </div>
+  <!-- CHARGES -->
+  <div style="display:flex;align-items:center;gap:10px;margin-top:16px;margin-bottom:10px;">
+    <span style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#111827;white-space:nowrap;">CHARGES</span>
+    <div style="flex:1;height:1px;background:#e5e7eb;"></div>
+  </div>
+  <div style="display:flex;justify-content:flex-end;">
+    <table style="border-collapse:collapse;width:280px;font-size:10px;">
+      <thead>
+        <tr style="background:#f9fafb;">
+          <th style="padding:6px 12px;text-align:left;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#9ca3af;border:1px solid #e5e7eb;">Description</th>
+          <th style="padding:6px 12px;text-align:right;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#9ca3af;border:1px solid #e5e7eb;">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${lineItems.map(li => `<tr><td style="padding:5px 12px;border:1px solid #e5e7eb;color:#374151;">${li.description || '—'}</td><td style="padding:5px 12px;border:1px solid #e5e7eb;text-align:right;color:#111827;font-weight:500;">${fmt(li.amount)}</td></tr>`).join('')}
+        <tr style="background:#f9fafb;">
+          <td style="padding:6px 12px;border:1px solid #e5e7eb;border-top:1.5px solid #d1d5db;font-weight:700;color:#111827;">Sub Total</td>
+          <td style="padding:6px 12px;border:1px solid #e5e7eb;border-top:1.5px solid #d1d5db;text-align:right;font-weight:700;color:#111827;">${fmt(subTotal)}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TOTAL DUE -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:14px;border-top:2px solid #0f1117;">
+    <span style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#9ca3af;">Total Due</span>
+    <span style="font-size:26px;font-weight:900;color:#111827;line-height:1;">${fmt(total)}</span>
   </div>
 
   <!-- FOOTER -->
-  <div class="page-footer">
-    <span>${company.company_name || 'Your Company'}</span>
-    <span>Load # ${load.internal_load_number || '—'}</span>
-    <span>Printed ${new Date().toLocaleDateString()}</span>
+  <div style="margin-top:20px;padding-top:10px;border-top:1px solid #e5e7eb;background:#f9fafb;margin-left:-48px;margin-right:-48px;margin-bottom:-36px;padding-left:48px;padding-right:48px;padding-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+    <span style="font-size:9px;color:#9ca3af;">${company.company_name || 'Your Company'}</span>
+    <span style="font-size:9px;color:#9ca3af;">Load # L-${load.internal_load_number || '—'}</span>
+    <span style="font-size:9px;color:#9ca3af;">Printed ${new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</span>
   </div>
 
 </div>
+</div>
 
-  <!-- DOWNLOAD BUTTON -->
-  <div class="download-bar">
-    <button class="btn-print" onclick="doPrint('${pdfFilename}')">⬇ Download PDF</button>
-  </div>
+<div class="download-bar">
+  <button class="btn-print" onclick="doPrint('${pdfFilename}')">⬇ Download PDF</button>
+</div>
 
 <script>
 function doPrint(filename) {

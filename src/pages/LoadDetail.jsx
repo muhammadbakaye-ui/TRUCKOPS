@@ -99,7 +99,7 @@ export default function LoadDetail() {
 
   const stopsSetRef = useRef(false);
 
-  const { data: loadStops = [] } = useQuery({
+  const { data: loadStops = [], isSuccess: stopsLoaded } = useQuery({
     queryKey: ['load-stops', loadId],
     queryFn: async () => {
       if (!loadId || isNew) return [];
@@ -111,12 +111,13 @@ export default function LoadDetail() {
 
   useEffect(() => {
     if (isNew) return;
-    if (!stopsSetRef.current && loadId) {
+    // Only set stops once we have confirmed data from the DB (stopsLoaded = query succeeded)
+    if (!stopsSetRef.current && loadId && stopsLoaded) {
       stopsSetRef.current = true;
       setStops(loadStops);
       initialLoadRef.current = true;
     }
-  }, [loadStops]);
+  }, [loadStops, stopsLoaded]);
 
   const tenantId = session?.tenant_id;
   const { data: drivers = [] } = useQuery({ queryKey: ['drivers', tenantId], queryFn: () => base44.entities.Driver.filter({ status: 'active', tenant_id: tenantId }, 'full_name', 200), enabled: !!tenantId });
