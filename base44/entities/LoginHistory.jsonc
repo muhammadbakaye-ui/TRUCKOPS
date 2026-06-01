@@ -1,0 +1,40 @@
+{
+  "name": "LoginHistory",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "login_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ip_address": {
+      "type": "string"
+    },
+    "browser": {
+      "type": "string"
+    },
+    "os": {
+      "type": "string"
+    },
+    "device_type": {
+      "type": "string",
+      "enum": [
+        "mobile",
+        "tablet",
+        "desktop"
+      ],
+      "default": "desktop"
+    },
+    "location": {
+      "type": "string"
+    },
+    "user_agent": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_email"
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "name": "StatementLine",
+  "type": "object",
+  "properties": {
+    "statement_id": {
+      "type": "string"
+    },
+    "line_type": {
+      "type": "string",
+      "enum": [
+        "trip",
+        "deduction",
+        "credit",
+        "fuel",
+        "advance",
+        "adjustment"
+      ],
+      "default": "trip"
+    },
+    "source_type": {
+      "type": "string"
+    },
+    "source_id": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "route": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "card_number": {
+      "type": "string",
+      "description": "Fuel card number (for fuel line_type)"
+    },
+    "location_name": {
+      "type": "string",
+      "description": "Fuel location name (for fuel line_type)"
+    },
+    "city_state": {
+      "type": "string",
+      "description": "City, State for fuel transactions (for fuel line_type)"
+    }
+  },
+  "required": [
+    "statement_id",
+    "line_type",
+    "amount"
+  ]
+}

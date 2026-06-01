@@ -1,0 +1,61 @@
+{
+  "name": "Document",
+  "type": "object",
+  "properties": {
+    "related_type": {
+      "type": "string",
+      "enum": [
+        "load",
+        "invoice",
+        "company",
+        "driver",
+        "fuel_batch",
+        "statement",
+        "truck",
+        "trailer"
+      ]
+    },
+    "related_id": {
+      "type": "string"
+    },
+    "document_type": {
+      "type": "string",
+      "enum": [
+        "bol",
+        "rate_confirmation",
+        "pod",
+        "carrier_tender",
+        "insurance",
+        "license",
+        "fuel_file",
+        "invoice",
+        "statement",
+        "photo",
+        "other"
+      ],
+      "default": "other"
+    },
+    "file_name": {
+      "type": "string"
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "parsed_text": {
+      "type": "string"
+    },
+    "extraction_json": {
+      "type": "string"
+    },
+    "extraction_confidence": {
+      "type": "number"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "file_name",
+    "file_url"
+  ]
+}

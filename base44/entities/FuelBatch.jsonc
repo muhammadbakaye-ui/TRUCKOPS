@@ -1,0 +1,51 @@
+{
+  "name": "FuelBatch",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant/account identifier for multi-tenancy"
+    },
+    "file_name": {
+      "type": "string"
+    },
+    "file_hash": {
+      "type": "string"
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "import_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "total_records": {
+      "type": "number",
+      "default": 0
+    },
+    "successful_records": {
+      "type": "number",
+      "default": 0
+    },
+    "exception_records": {
+      "type": "number",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "processing",
+        "completed",
+        "failed"
+      ],
+      "default": "pending"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "file_name"
+  ]
+}

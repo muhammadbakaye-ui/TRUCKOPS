@@ -1,0 +1,32 @@
+{
+  "name": "DeletedItem",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant/account identifier for multi-tenancy"
+    },
+    "entity_type": {
+      "type": "string"
+    },
+    "entity_id": {
+      "type": "string"
+    },
+    "entity_label": {
+      "type": "string"
+    },
+    "deleted_by": {
+      "type": "string"
+    },
+    "deleted_date": {
+      "type": "string"
+    },
+    "original_data": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "entity_type",
+    "entity_id"
+  ]
+}

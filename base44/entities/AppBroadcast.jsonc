@@ -1,0 +1,28 @@
+{
+  "name": "AppBroadcast",
+  "type": "object",
+  "properties": {
+    "message": {
+      "type": "string",
+      "description": "Broadcast message to show to all users"
+    },
+    "version": {
+      "type": "string",
+      "description": "App version string e.g. v1.2"
+    },
+    "active": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the broadcast is currently active"
+    },
+    "broadcast_type": {
+      "type": "string",
+      "enum": [
+        "message",
+        "update"
+      ],
+      "default": "message"
+    }
+  },
+  "required": []
+}

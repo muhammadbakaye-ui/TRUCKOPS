@@ -1,0 +1,50 @@
+{
+  "name": "LoadCharge",
+  "type": "object",
+  "properties": {
+    "load_id": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "charge_type": {
+      "type": "string",
+      "enum": [
+        "line_haul",
+        "fuel_surcharge",
+        "detention",
+        "layover",
+        "lumper",
+        "stop_off",
+        "tarp",
+        "hazmat",
+        "team_driver",
+        "deadhead",
+        "other"
+      ],
+      "default": "line_haul"
+    },
+    "quantity": {
+      "type": "number",
+      "default": 1
+    },
+    "rate": {
+      "type": "number"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "driver_id": {
+      "type": "string"
+    },
+    "truck_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "load_id",
+    "description",
+    "amount"
+  ]
+}

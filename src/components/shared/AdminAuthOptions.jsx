@@ -12,7 +12,7 @@ async function hashPassword(password) {
 }
 
 const inputClass =
-  'w-full bg-[#0e1016] border border-[#2a2f3d] text-white placeholder-white/25 rounded-md px-3 py-2 text-sm outline-none focus:border-blue-500 transition-colors';
+  'w-full bg-[#0e1016] border border-[#2a2f3d] text-white placeholder-white/25 rounded-md px-3.5 py-2.5 text-sm outline-none focus:border-blue-500 transition-colors h-[42px]';
 
 const labelClass = 'block text-xs font-medium text-white/50 mb-1';
 
@@ -151,12 +151,11 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour, initia
 
   return (
     <div className="flex items-center justify-center min-h-screen" style={{ background: '#0e1016' }}>
-      <div className="w-full max-w-sm px-4">
+      <div className="w-full max-w-[440px] px-4">
 
         {/* Logo + App Name */}
-        <div className="flex items-center justify-center gap-3 mb-6">
-          <Logo showCompanyName={false} />
-          <span className="text-xl font-bold text-white tracking-tight">TruckOps</span>
+        <div className="flex items-center justify-center mb-6">
+          <Logo showCompanyName={true} />
         </div>
 
         {/* Card */}
@@ -189,7 +188,7 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour, initia
 
               {/* ── Forgot Password Form ── */}
               {mode === 'forgot' && (
-                <div className="p-6 space-y-4">
+                <div className="p-6 space-y-5">
                   <div>
                     <h2 className="text-base font-semibold text-white">Forgot your password?</h2>
                     <p className="text-xs text-white/40 mt-1">Enter your email and we'll send you a reset link.</p>
@@ -232,7 +231,7 @@ export default function AdminAuthOptions({ onBack, onSuccess, onShowTour, initia
                     })}
                   </div>
 
-                  <div className="p-5">
+                  <div className="p-6">
 
                     {/* ── Sign In ── */}
                     {mode === 'login' && (

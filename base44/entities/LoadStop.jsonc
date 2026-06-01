@@ -1,0 +1,72 @@
+{
+  "name": "LoadStop",
+  "type": "object",
+  "properties": {
+    "load_id": {
+      "type": "string"
+    },
+    "stop_order": {
+      "type": "number"
+    },
+    "stop_type": {
+      "type": "string",
+      "enum": [
+        "pickup",
+        "delivery",
+        "stop"
+      ],
+      "default": "pickup"
+    },
+    "company_name": {
+      "type": "string"
+    },
+    "street": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "zip": {
+      "type": "string"
+    },
+    "appointment_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "time_from": {
+      "type": "string"
+    },
+    "time_to": {
+      "type": "string"
+    },
+    "reference_number": {
+      "type": "string"
+    },
+    "bol_number": {
+      "type": "string"
+    },
+    "po_number": {
+      "type": "string"
+    },
+    "contact": {
+      "type": "string"
+    },
+    "directions": {
+      "type": "string"
+    },
+    "memo": {
+      "type": "string"
+    },
+    "completed": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "load_id",
+    "stop_type"
+  ]
+}

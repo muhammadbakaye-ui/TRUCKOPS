@@ -1,0 +1,80 @@
+{
+  "name": "DriverStatement",
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant/account identifier for multi-tenancy"
+    },
+    "driver_id": {
+      "type": "string"
+    },
+    "driver_name": {
+      "type": "string"
+    },
+    "truck_id": {
+      "type": "string"
+    },
+    "truck_number": {
+      "type": "string"
+    },
+    "statement_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "period_start": {
+      "type": "string",
+      "format": "date"
+    },
+    "period_end": {
+      "type": "string",
+      "format": "date"
+    },
+    "gross_total": {
+      "type": "number",
+      "default": 0
+    },
+    "deductions_total": {
+      "type": "number",
+      "default": 0
+    },
+    "credits_total": {
+      "type": "number",
+      "default": 0
+    },
+    "fuel_total": {
+      "type": "number",
+      "default": 0
+    },
+    "final_check_amount": {
+      "type": "number",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "finalized",
+        "paid",
+        "void"
+      ],
+      "default": "draft"
+    },
+    "published": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this statement is visible to the driver in their portal"
+    },
+    "pdf_url": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "driver_id",
+    "period_start",
+    "period_end"
+  ]
+}
