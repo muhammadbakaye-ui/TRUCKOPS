@@ -36,9 +36,7 @@ export default function LandingNav({ onContinue }) {
             onClick={handleLogoClick}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
           >
-            <div className="h-8 w-8 bg-sidebar-primary rounded-lg flex items-center justify-center text-white font-bold">
-              T
-            </div>
+            <img src="https://media.base44.com/images/public/6a0409fc37a632ab53db20fd/5e47d1777_image.png" alt="TruckOps" className="h-8 w-8 object-contain" />
             <span className="text-xl font-bold text-sidebar-primary-foreground">TruckOps</span>
           </button>
 

@@ -1,4 +1,3 @@
-import { Truck } from 'lucide-react';
 import { useSession } from './AppSession';
 
 export default function Logo({ className = '', showCompanyName = true }) {
@@ -8,9 +7,7 @@ export default function Logo({ className = '', showCompanyName = true }) {
   return (
     <div className={`text-center ${className}`}>
       <div className="flex items-center justify-center mb-3">
-        <div className="h-14 w-14 bg-sidebar-accent rounded-2xl flex items-center justify-center shadow-lg">
-          <Truck className="w-8 h-8 text-sidebar-primary" />
-        </div>
+        <img src="https://media.base44.com/images/public/6a0409fc37a632ab53db20fd/5e47d1777_image.png" alt="TruckOps" className="h-14 w-14 object-contain" />
       </div>
       <h1 className="text-2xl font-bold text-sidebar-primary-foreground tracking-widest">TRUCKOPS</h1>
       {showCompanyName && companyName && (
