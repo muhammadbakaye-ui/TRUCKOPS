@@ -44,14 +44,14 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
     const isDelivery = s.stop_type === 'delivery';
     const hdrBg = isPickup ? '#eff6ff' : isDelivery ? '#f0fdf4' : '#f9fafb';
     const hdrColor = isPickup ? '#1d4ed8' : isDelivery ? '#16a34a' : '#374151';
-    const hdrBorderColor = isPickup ? '#bfdbfe' : isDelivery ? '#bbf7d0' : '#e5e7eb';
+    const hdrBorderColor = isPickup ? '#bfdbfe' : isDelivery ? '#bbf7d0' : '#1a1a2e';
     const label = isPickup ? 'PICKUP' : isDelivery ? 'DELIVERY' : 'STOP';
     const addr = [s.street, s.city, s.state, s.zip].filter(Boolean).join(', ') || '—';
     const clean = (v) => { const sv = v && String(v).trim().toLowerCase(); return sv && sv !== 'none' && sv !== 'null' ? v : null; };
     const ref = clean(s.reference_number) || clean(s.bol_number) || clean(load.customer_reference_number) || '—';
     const dateTime = [s.appointment_date, s.time_from].filter(Boolean).join(' · ');
     return `
-    <div style="border:1px solid #e5e7eb;border-radius:5px;margin-bottom:8px;overflow:hidden;">
+    <div style="border:1px solid #1a1a2e;border-radius:5px;margin-bottom:8px;overflow:hidden;">
       <div style="background:${hdrBg};border-bottom:1px solid ${hdrBorderColor};padding:5px 12px;display:flex;align-items:center;justify-content:space-between;">
         <span style="font-size:9px;font-weight:700;color:${hdrColor};text-transform:uppercase;letter-spacing:0.06em;">${label} #${i+1}${s.company_name ? ' \u2014 ' + s.company_name : ''}</span>
         <span style="font-size:9px;color:#6b7280;">${dateTime}</span>
@@ -120,20 +120,20 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 
   <!-- ROUTE BAR -->
   ${allStops.length >= 2 ? `
-  <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:5px;padding:8px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+  <div style="background:#f9fafb;border:1px solid #1a1a2e;border-radius:5px;padding:8px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
     <span style="width:8px;height:8px;background:#111827;border-radius:50%;display:inline-block;flex-shrink:0;"></span>
     <span style="font-size:11px;font-weight:700;color:#111827;">${firstStop.city || ''}${firstStop.state ? ', ' + firstStop.state : ''}</span>
-    <span style="flex:1;height:1px;background:#d1d5db;max-width:60px;"></span>
+    <span style="flex:1;height:1px;background:#1a1a2e;max-width:60px;"></span>
     <span style="font-size:10px;color:#9ca3af;font-weight:500;">→</span>
-    <span style="flex:1;height:1px;background:#d1d5db;max-width:60px;"></span>
+    <span style="flex:1;height:1px;background:#1a1a2e;max-width:60px;"></span>
     <span style="width:8px;height:8px;background:#111827;border-radius:50%;display:inline-block;flex-shrink:0;"></span>
     <span style="font-size:11px;font-weight:700;color:#111827;">${lastStop.city || ''}${lastStop.state ? ', ' + lastStop.state : ''}</span>
     ${firstStop.appointment_date ? `<span style="margin-left:auto;font-size:10px;color:#6b7280;white-space:nowrap;">Pickup: ${firstStop.appointment_date}</span>` : ''}
   </div>` : ''}
 
   <!-- INFO SECTION -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;border:1px solid #e5e7eb;border-radius:5px;margin-bottom:14px;overflow:hidden;">
-    <div style="padding:10px 14px;border-right:1px solid #e5e7eb;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;border:1px solid #1a1a2e;border-radius:5px;margin-bottom:14px;overflow:hidden;">
+    <div style="padding:10px 14px;border-right:1px solid #1a1a2e;">
       <div style="font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9ca3af;margin-bottom:8px;">Load Information</div>
       <div style="display:grid;grid-template-columns:80px 1fr;row-gap:4px;font-size:10px;">
         <span style="color:#9ca3af;">Customer</span><span style="color:#111827;font-weight:600;">${load.customer_name || '—'}</span>
@@ -155,28 +155,28 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
   <!-- STOPS -->
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
     <span style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#111827;white-space:nowrap;">STOPS (${allStops.length})</span>
-    <div style="flex:1;height:1px;background:#e5e7eb;"></div>
+    <div style="flex:1;height:1px;background:#1a1a2e;"></div>
   </div>
   ${stopRows}
 
   <!-- CHARGES -->
   <div style="display:flex;align-items:center;gap:10px;margin-top:16px;margin-bottom:10px;">
     <span style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#111827;white-space:nowrap;">CHARGES</span>
-    <div style="flex:1;height:1px;background:#e5e7eb;"></div>
+    <div style="flex:1;height:1px;background:#1a1a2e;"></div>
   </div>
   <div style="display:flex;justify-content:flex-end;">
     <table style="border-collapse:collapse;width:280px;font-size:10px;">
       <thead>
         <tr style="background:#f9fafb;">
-          <th style="padding:6px 12px;text-align:left;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#9ca3af;border:1px solid #e5e7eb;">Description</th>
-          <th style="padding:6px 12px;text-align:right;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#9ca3af;border:1px solid #e5e7eb;">Amount</th>
+          <th style="padding:6px 12px;text-align:left;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#9ca3af;border:1px solid #1a1a2e;">Description</th>
+          <th style="padding:6px 12px;text-align:right;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#9ca3af;border:1px solid #1a1a2e;">Amount</th>
         </tr>
       </thead>
       <tbody>
-        ${lineItems.map(li => `<tr><td style="padding:5px 12px;border:1px solid #e5e7eb;color:#374151;">${li.description || '—'}</td><td style="padding:5px 12px;border:1px solid #e5e7eb;text-align:right;color:#111827;font-weight:500;">${fmt(li.amount)}</td></tr>`).join('')}
+        ${lineItems.map(li => `<tr><td style="padding:5px 12px;border:1px solid #1a1a2e;color:#374151;">${li.description || '—'}</td><td style="padding:5px 12px;border:1px solid #1a1a2e;text-align:right;color:#111827;font-weight:500;">${fmt(li.amount)}</td></tr>`).join('')}
         <tr style="background:#f9fafb;">
-          <td style="padding:6px 12px;border:1px solid #e5e7eb;border-top:1.5px solid #d1d5db;font-weight:700;color:#111827;">Sub Total</td>
-          <td style="padding:6px 12px;border:1px solid #e5e7eb;border-top:1.5px solid #d1d5db;text-align:right;font-weight:700;color:#111827;">${fmt(subTotal)}</td>
+          <td style="padding:6px 12px;border:1px solid #1a1a2e;border-top:1.5px solid #1a1a2e;font-weight:700;color:#111827;">Sub Total</td>
+          <td style="padding:6px 12px;border:1px solid #1a1a2e;border-top:1.5px solid #1a1a2e;text-align:right;font-weight:700;color:#111827;">${fmt(subTotal)}</td>
         </tr>
       </tbody>
     </table>
@@ -189,7 +189,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
   </div>
 
   <!-- FOOTER -->
-  <div style="margin-top:20px;padding-top:10px;border-top:1px solid #e5e7eb;background:#f9fafb;margin-left:-48px;margin-right:-48px;margin-bottom:-36px;padding-left:48px;padding-right:48px;padding-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+  <div style="margin-top:20px;padding-top:10px;border-top:1px solid #1a1a2e;background:#f9fafb;margin-left:-48px;margin-right:-48px;margin-bottom:-36px;padding-left:48px;padding-right:48px;padding-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
     <span style="font-size:9px;color:#9ca3af;">${company.company_name || 'Your Company'}</span>
     <span style="font-size:9px;color:#9ca3af;">Load # L-${load.internal_load_number || '—'}</span>
     <span style="font-size:9px;color:#9ca3af;">Printed ${new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</span>

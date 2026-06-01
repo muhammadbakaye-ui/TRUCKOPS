@@ -114,7 +114,7 @@ export function printStatement({ company, statement, allLines }) {
     /* META ROW */
     .meta-row {
       display: flex;
-      border: 1px solid #e5e7eb;
+      border: 1px solid #1a1a2e;
       border-radius: 4px;
       overflow: hidden;
       margin-bottom: 6px;
@@ -123,7 +123,7 @@ export function printStatement({ company, statement, allLines }) {
     .meta-cell {
       flex: 1;
       padding: 9px 14px;
-      border-right: 1px solid #e5e7eb;
+      border-right: 1px solid #1a1a2e;
     }
     .meta-cell:last-child { border-right: none; }
     .meta-label { font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; margin-bottom: 3px; }
@@ -140,7 +140,7 @@ export function printStatement({ company, statement, allLines }) {
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.07em;
-      border-bottom: 1.5px solid #d1d5db;
+      border-bottom: 1.5px solid #1a1a2e;
     }
     th:last-child, td:last-child { text-align: right; }
     td {
@@ -154,7 +154,7 @@ export function printStatement({ company, statement, allLines }) {
       font-weight: 700;
       color: #111827;
       background: #f9fafb;
-      border-top: 1.5px solid #d1d5db;
+      border-top: 1.5px solid #1a1a2e;
       border-bottom: none;
       padding-top: 6px;
       padding-bottom: 6px;
