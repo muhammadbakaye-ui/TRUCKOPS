@@ -88,6 +88,13 @@ export default function StatementBuilder() {
   useEffect(() => { deductionLinesRef.current = deductionLines; }, [deductionLines]);
   useEffect(() => { fuelLinesRef.current = fuelLines; }, [fuelLines]);
 
+  const tenantIdRef = useRef(tenantId);
+  const driversRef = useRef(drivers);
+  const trucksRef = useRef(trucks);
+  useEffect(() => { tenantIdRef.current = tenantId; }, [tenantId]);
+  useEffect(() => { driversRef.current = drivers; }, [drivers]);
+  useEffect(() => { trucksRef.current = trucks; }, [trucks]);
+
   const updateTripLine = useCallback((index, key, value) => {
     setTripLines(prev => { const n = [...prev]; n[index] = { ...n[index], [key]: value }; return n; });
   }, []);
@@ -166,11 +173,13 @@ export default function StatementBuilder() {
   }, [tripLines, deductionLines, fuelLines, form.driver_id, drivers]);
 
   const persistStatement = useCallback(async (currentForm, currentTrips, currentDeductions, currentFuel, overrideStatus) => {
-    const driver = drivers.find(d => d.id === currentForm.driver_id);
-    const truck = trucks.find(t => t.id === currentForm.truck_id);
+    const tid = tenantIdRef.current;
+    if (!tid) throw new Error('Session not ready — please wait and try again');
+    const driver = driversRef.current.find(d => d.id === currentForm.driver_id);
+    const truck = trucksRef.current.find(t => t.id === currentForm.truck_id);
     const payload = {
       ...currentForm,
-      tenant_id: tenantId,
+      tenant_id: tid,
       status: overrideStatus || currentForm.status,
       driver_name: driver?.full_name || currentForm.driver_name,
       truck_number: truck?.unit_number || currentForm.truck_number,
@@ -195,7 +204,7 @@ export default function StatementBuilder() {
       await base44.entities.StatementLine.create({ ...lineData, statement_id: savedId });
     }
     return savedId;
-  }, [drivers, trucks]);
+  }, []);
 
   const scheduleAutoSave = useCallback(() => {
     if (isInPreview) return;
@@ -212,7 +221,7 @@ export default function StatementBuilder() {
         isSavingRef.current = false;
       }
     }, 2500);
-  }, [persistStatement]);
+  }, []);
 
   useEffect(() => {
     if (initialLoadRef.current) { initialLoadRef.current = false; return; }
