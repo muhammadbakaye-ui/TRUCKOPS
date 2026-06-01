@@ -173,8 +173,8 @@ export default function StatementBuilder() {
   }, [tripLines, deductionLines, fuelLines, form.driver_id, drivers]);
 
   const persistStatement = useCallback(async (currentForm, currentTrips, currentDeductions, currentFuel, overrideStatus) => {
-    const tid = tenantIdRef.current;
-    if (!tid) throw new Error('Session not ready — please wait and try again');
+    const tid = tenantIdRef.current || session?.tenant_id;
+    if (!tid) throw new Error('Session not ready — please try again in a moment');
     const driver = driversRef.current.find(d => d.id === currentForm.driver_id);
     const truck = trucksRef.current.find(t => t.id === currentForm.truck_id);
     const payload = {
@@ -204,7 +204,7 @@ export default function StatementBuilder() {
       await base44.entities.StatementLine.create({ ...lineData, statement_id: savedId });
     }
     return savedId;
-  }, []);
+  }, [session]);
 
   const scheduleAutoSave = useCallback(() => {
     if (isInPreview) return;

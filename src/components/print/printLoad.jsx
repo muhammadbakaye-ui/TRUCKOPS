@@ -190,10 +190,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 
   <!-- FOOTER -->
   <div style="margin-top:20px;padding-top:10px;border-top:1px solid #1a1a2e;background:#f9fafb;margin-left:-48px;margin-right:-48px;margin-bottom:-36px;padding-left:48px;padding-right:48px;padding-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
-    <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#c0c4cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect x="9" y="11" width="14" height="10" rx="1"/><circle cx="12" cy="21" r="1"/><circle cx="20" cy="21" r="1"/></svg>
-      <span style="font-size:7.5px;color:#c0c4cc;letter-spacing:0.04em;">Powered by TruckOps</span>
-    </div>
+    <span style="font-size:7.5px;color:#c0c4cc;letter-spacing:0.04em;">&#x1F69A; Powered by TruckOps</span>
     <span style="font-size:9px;color:#9ca3af;">${company.company_name || 'Your Company'}</span>
     <span style="font-size:9px;color:#9ca3af;">Load # L-${load.internal_load_number || '—'}</span>
     <span style="font-size:9px;color:#9ca3af;">Printed ${new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</span>
