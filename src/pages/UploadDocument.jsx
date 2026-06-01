@@ -23,10 +23,11 @@ export default function UploadDocument() {
   const { jobs, submitUpload, cancelJob, dismissJob } = useUploadContext();
   const [dragging, setDragging] = useState(false);
   const [primaryFile, setPrimaryFile] = useState(null);
-  const [extraSlots, setExtraSlots] = useState([]); // [{file: null, label: ''}] — bundle mode
-  const [separateFiles, setSeparateFiles] = useState([]); // Mode 2: multiple separate loads
+  const [extraSlots, setExtraSlots] = useState([]);
+  const [separateFiles, setSeparateFiles] = useState([]);
   const [docType, setDocType] = useState('rate_confirmation');
   const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
 
   const handleDropZoneClick = () => {
     if (!checkFeatureAccess(isInPreview)) return;
@@ -47,7 +48,6 @@ export default function UploadDocument() {
     base44.entities.Truck.filter({ status: 'active' }).then(setTrucks);
   }, []);
 
-  // Ctrl+V paste from clipboard
   useEffect(() => {
     const handlePaste = (e) => {
       const items = e.clipboardData?.items;
@@ -71,13 +71,11 @@ export default function UploadDocument() {
 
   const handleProcess = () => {
     if (separateFiles.length > 0) {
-      // Mode 2: each file → its own load
       separateFiles.forEach(file => {
         submitUpload({ bundle: [{ file, label: '' }], docType, selectedDriverId, selectedTruckId, tripNumber, manualAmount, driverAmount, drivers, trucks, tenantId: session?.tenant_id });
       });
       setSeparateFiles([]);
     } else if (primaryFile) {
-      // Mode 1: all docs → one combined load
       const bundle = [
         { file: primaryFile, label: '' },
         ...extraSlots.filter(s => s.file).map(s => ({ file: s.file, label: s.label })),
@@ -94,12 +92,10 @@ export default function UploadDocument() {
     const dropped = Array.from(e.dataTransfer.files);
     if (dropped.length === 0) return;
     if (dropped.length > 1) {
-      // Mode 2: multiple files → separate loads
       setSeparateFiles(dropped);
       setPrimaryFile(null);
       setExtraSlots([]);
     } else {
-      // Mode 1: single file → bundle mode
       setPrimaryFile(dropped[0]);
       setSeparateFiles([]);
     }
@@ -114,19 +110,17 @@ export default function UploadDocument() {
       <PreviewFeatureDialog open={showDialog} onSubscribe={handleSubscribe} onDismiss={handleDismiss} />
       {/* LEFT: Upload form */}
       <div className="w-full md:flex-1 md:min-w-0 md:space-y-5 md:max-w-2xl space-y-4 md:space-y-5">
-        {/* Mobile form - full spacing */}
+        {/* Mobile form */}
         <div className="md:hidden space-y-4">
           <div>
             <h1 className="text-base font-semibold text-foreground mb-1">Upload Document</h1>
             <p className="text-xs text-muted-foreground">Upload a rate confirmation or BOL to auto-create a load</p>
           </div>
 
-          {/* Line Item Rules */}
           <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 border border-border bg-transparent" onClick={() => setShowRulesSettings(true)}>
             <Settings className="w-3.5 h-3.5" /> Line Item Rules
           </Button>
 
-          {/* Document Type */}
           <div className="flex flex-col gap-2">
             <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Document Type</Label>
             <Select value={docType} onValueChange={setDocType}>
@@ -139,7 +133,6 @@ export default function UploadDocument() {
             </Select>
           </div>
 
-          {/* Driver & Truck - 2 column grid with labels above */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-2">
               <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -192,7 +185,7 @@ export default function UploadDocument() {
             </div>
           </div>
 
-          {/* Overrides button - full width */}
+          {/* Overrides button */}
           <button
             type="button"
             onClick={() => setShowOverrides(v => !v)}
@@ -203,7 +196,26 @@ export default function UploadDocument() {
             </span>
             {showOverrides ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
+
+          {/* Mobile override fields */}
+          {showOverrides && (
+            <div className="space-y-3 p-3 bg-muted/40 rounded-lg border border-border">
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-xs text-muted-foreground">Invoice Amount Override</Label>
+                <Input value={manualAmount} onChange={e => setManualAmount(e.target.value)} placeholder="Auto from document" type="number" className="h-10 text-sm" />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-xs text-muted-foreground">Driver Pay Override</Label>
+                <Input value={driverAmount} onChange={e => setDriverAmount(e.target.value)} placeholder="Auto from document" type="number" className="h-10 text-sm" />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label className="text-xs text-muted-foreground">Trip #</Label>
+                <Input value={tripNumber} onChange={e => setTripNumber(e.target.value)} placeholder="Optional" className="h-10 text-sm" />
+              </div>
+            </div>
+          )}
         </div>
+
         {/* Desktop header */}
         <div className="hidden md:block">
           <PageHeader
@@ -218,7 +230,7 @@ export default function UploadDocument() {
         </div>
         <LineItemRulesSettings open={showRulesSettings} onClose={() => setShowRulesSettings(false)} tenantId={session?.tenant_id} />
 
-        {/* Primary options */}
+        {/* Desktop primary options */}
         <div className="hidden md:flex md:flex-wrap gap-4 items-end">
           <div className="flex flex-col gap-1.5">
             <Label className="text-xs text-muted-foreground">Document Type</Label>
@@ -278,7 +290,6 @@ export default function UploadDocument() {
             </Select>
           </div>
 
-          {/* Overrides toggle button */}
           <button
             type="button"
             onClick={() => setShowOverrides(v => !v)}
@@ -291,9 +302,7 @@ export default function UploadDocument() {
           </button>
         </div>
 
-
-
-        {/* Override fields */}
+        {/* Desktop override fields */}
         {showOverrides && (
           <div className="hidden md:flex md:flex-wrap gap-4 items-end p-4 bg-muted/40 rounded-lg border border-border">
             <div className="flex flex-col gap-1.5">
@@ -328,7 +337,6 @@ export default function UploadDocument() {
         >
           <CardContent className="flex flex-col items-center justify-center py-10 md:py-8 gap-3 md:min-h-auto min-h-40">
             {separateFiles.length > 0 ? (
-              // Mode 2: separate loads
               <div className="w-full space-y-2" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
@@ -350,22 +358,17 @@ export default function UploadDocument() {
                 <p className="text-[10px] text-muted-foreground pt-1">Each file will be analyzed independently and create its own load.</p>
               </div>
             ) : primaryFile ? (
-              // Mode 1: bundle mode
               <div className="w-full space-y-2" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center gap-2 mb-1">
                   <FileText className="w-5 h-5 text-green-600" />
                   <span className="text-sm font-semibold text-green-700">Analyzing as 1 combined load</span>
                 </div>
-
-                {/* Primary file */}
                 <div className="flex items-center gap-2 bg-green-500/10 border border-green-200 rounded-md px-2.5 py-1.5 text-xs">
                   <span className="text-[10px] font-semibold text-green-700 uppercase tracking-wide w-16 flex-shrink-0">Doc 1</span>
                   <FileText className="w-3 h-3 text-green-600 flex-shrink-0" />
                   <span className="truncate flex-1 font-medium">{primaryFile.name}</span>
                   <button onClick={() => setPrimaryFile(null)} className="flex-shrink-0 text-muted-foreground hover:text-destructive"><X className="w-3 h-3" /></button>
                 </div>
-
-                {/* Extra document slots */}
                 {extraSlots.map((slot, i) => (
                   <div key={i} className="border border-dashed rounded-md p-2.5 space-y-2">
                     <div className="flex items-center justify-between">
@@ -405,8 +408,6 @@ export default function UploadDocument() {
                     />
                   </div>
                 ))}
-
-                {/* Add another slot (max 5 total) */}
                 {(1 + extraSlots.length) < 5 && (
                   <button
                     onClick={() => setExtraSlots(prev => [...prev, { file: null, label: '' }])}
@@ -443,7 +444,7 @@ export default function UploadDocument() {
           </CardContent>
         </Card>
 
-        {/* Divider and Take Photo (mobile only) */}
+        {/* Take Photo (mobile only) */}
         {!primaryFile && separateFiles.length === 0 && (
           <div className="md:hidden space-y-3">
             <div className="flex items-center gap-3">
@@ -452,13 +453,27 @@ export default function UploadDocument() {
               <div className="flex-1 h-px bg-border" />
             </div>
             <Button
-             onClick={() => handleDropZoneClick()}
-             variant="outline"
-             className="w-full h-12 gap-2 rounded-lg border border-border bg-secondary text-[13px] text-muted-foreground hover:text-foreground"
+              onClick={() => cameraInputRef.current?.click()}
+              variant="outline"
+              className="w-full h-12 gap-2 rounded-lg border border-border bg-secondary text-[13px] text-muted-foreground hover:text-foreground"
             >
-             <Camera className="w-4 h-4" />
-             Take Photo
+              <Camera className="w-4 h-4" />
+              Take Photo
             </Button>
+            <input
+              ref={cameraInputRef}
+              type="file"
+              className="hidden"
+              accept="image/*"
+              capture="environment"
+              onChange={(e) => {
+                if (checkFeatureAccess(isInPreview)) {
+                  const f = e.target.files?.[0];
+                  if (f) { setPrimaryFile(f); setSeparateFiles([]); }
+                  e.target.value = '';
+                }
+              }}
+            />
           </div>
         )}
 
