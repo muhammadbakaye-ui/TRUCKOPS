@@ -790,6 +790,24 @@
   pointer-events: none;
 }
 
+/* ─── MOBILE TAP CARD ANIMATION ─── */
+@media (max-width: 767px) {
+  .tap-card {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    will-change: transform;
+    transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.12s ease !important;
+  }
+  .tap-card:active {
+    transform: scale(0.97) !important;
+    filter: brightness(0.87) !important;
+  }
+}
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .tap-card { transition: none !important; transform: none !important; }
+  .tap-card:active { transform: none !important; filter: brightness(0.92) !important; }
+}
+
 /* Print styles */
 @media print {
   .no-print { display: none !important; }

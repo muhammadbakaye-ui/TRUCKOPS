@@ -220,7 +220,7 @@ export default function Companies() {
               <div
                 key={company.id}
                 onClick={() => { if (!checkFeatureAccess(isInPreview)) return; setEditing(company); setDialogOpen(true); }}
-                className="bg-card border border-border rounded-[10px] box-border overflow-hidden p-3 cursor-pointer active:opacity-80 transition-opacity relative"
+                className="tap-card bg-card border border-border rounded-[10px] box-border overflow-hidden p-3 relative"
               >
                 {/* Delete button - top right */}
                 <button

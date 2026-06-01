@@ -64,6 +64,7 @@ export default function MobileInvoiceCard({ invoice, selected, onToggleSelect, o
 
   return (
     <div
+      className="tap-card"
       style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '10px', boxSizing: 'border-box', width: '100%', overflow: 'hidden', marginBottom: '8px' }}
       onClick={() => onNavigate(invoice.id)}
     >

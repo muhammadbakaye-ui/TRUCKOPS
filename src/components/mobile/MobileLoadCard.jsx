@@ -92,6 +92,7 @@ export default function MobileLoadCard({ load, copiedId, onCopy, onNavigate, onD
 
   return (
     <div
+      className="tap-card"
       style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '10px', boxSizing: 'border-box', width: '100%', overflow: 'hidden' }}
       onClick={onNavigate}
     >

@@ -402,7 +402,7 @@ export default function Drivers() {
                 <div
                   key={driver.id}
                   onClick={() => { setEditing(driver); setDialogOpen(true); }}
-                  className="bg-card border border-border rounded-[10px] overflow-hidden box-border cursor-pointer active:opacity-80 transition-opacity"
+                  className="tap-card bg-card border border-border rounded-[10px] overflow-hidden box-border"
                 >
                   {/* Row 1: Avatar + Name + Phone + Status */}
                   <div className="flex items-start gap-3 px-3 py-2.5">

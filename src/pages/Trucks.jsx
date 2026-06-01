@@ -269,7 +269,7 @@ export default function Trucks() {
                 <div
                   key={truck.id}
                   onClick={() => { setEditing(truck); setDialogOpen(true); }}
-                  className="bg-card border border-border rounded-[10px] box-border overflow-hidden cursor-pointer active:opacity-80 transition-opacity"
+                  className="tap-card bg-card border border-border rounded-[10px] box-border overflow-hidden"
                 >
                   {/* Row 1: Icon + Unit # + Driver + Status */}
                   <div className="flex items-start gap-3 px-3 py-2.5">
