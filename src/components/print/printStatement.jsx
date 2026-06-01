@@ -67,6 +67,21 @@ export function getStatementHTML({ company, statement, allLines }) {
     </tr>`;
   }).join('');
 
+  const fuelMobileRows = fuelLines.map(l => {
+    const clean = (v) => (v && v !== 'null') ? v : '—';
+    const row = (label, val) => `<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:10.5px;"><span style="color:#9ca3af;flex-shrink:0;margin-right:8px">${label}</span><span style="color:#374151;text-align:right;word-break:break-word">${val}</span></div>`;
+    return `<div style="padding:10px 0;border-bottom:1px solid #e5e7eb;">
+      ${row('Fuel Card #', clean(l.card_number))}
+      ${row('Location', clean(l.location_name))}
+      ${row('Description', clean(l.description))}
+      ${row('Advance', '$0.00')}
+      ${row('Adv. Fee', '$0.00')}
+      ${row('Misc.', '$0.00')}
+      ${row('Date', clean(l.date))}
+      <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:10.5px;font-weight:700;"><span>Amount</span><span style="color:#dc2626">${fmtNeg(l.amount)}</span></div>
+    </div>`;
+  }).join('');
+
   const sectionHeader = (title) => `
     <div style="display:flex;align-items:center;gap:10px;margin:22px 0 8px 0;">
       <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#111827;white-space:nowrap">${title}</span>
@@ -77,6 +92,7 @@ export function getStatementHTML({ company, statement, allLines }) {
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${docTitle}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; user-select: text !important; -webkit-user-select: text !important; }
@@ -183,6 +199,43 @@ export function getStatementHTML({ company, statement, allLines }) {
     .btn-print:hover { background: #14532d; }
 
     @page { size: letter; margin: 0.4in 0.5in; }
+
+    /* ── MOBILE FIXES ── */
+    @media (max-width: 600px) {
+      html, body {
+        overflow-x: hidden;
+        width: 100%;
+        max-width: 100%;
+      }
+      .page-wrapper {
+        padding: 0 !important;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        box-sizing: border-box;
+      }
+      .page {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box !important;
+        padding: 14px 12px !important;
+        border-left: none !important;
+        border-right: none !important;
+        border-top: none !important;
+      }
+      * { box-sizing: border-box; max-width: 100%; }
+      .header { flex-direction: column; gap: 8px; }
+      .header-right { text-align: left; }
+      .meta-row { flex-direction: column; }
+      .meta-cell { border-right: none; border-bottom: 1px solid #e5e7eb; padding: 7px 10px; }
+      .meta-cell:last-child { border-bottom: none; }
+      .footer { flex-direction: column; gap: 10px; }
+      .check-label, .check-amount { text-align: left; }
+      .fuel-table-desktop { display: none !important; }
+      .fuel-list-mobile { display: block !important; }
+    }
+
     @media print {
       .page { padding: 0; }
       .download-bar { display: none !important; }
@@ -280,6 +333,7 @@ export function getStatementHTML({ company, statement, allLines }) {
 
   ${fuelLines.length > 0 ? `
   ${sectionHeader('Fuel Card')}
+  <div class="fuel-table-desktop">
   <table>
     <thead><tr>
       <th>Fuel Card #</th>
@@ -298,7 +352,15 @@ export function getStatementHTML({ company, statement, allLines }) {
         <td style="text-align:right;color:#dc2626">${fmtNeg(fuelTotal)}</td>
       </tr>
     </tbody>
-  </table>` : ''}
+  </table>
+  </div>
+  <div class="fuel-list-mobile" style="display:none;">
+    ${fuelMobileRows}
+    <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:11px;font-weight:700;border-top:1.5px solid #1a1a2e;">
+      <span>Total</span>
+      <span style="color:#dc2626">${fmtNeg(fuelTotal)}</span>
+    </div>
+  </div>` : ''}
 
   <!-- FOOTER -->
   <div class="footer">
