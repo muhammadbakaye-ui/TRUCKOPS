@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Loader2, MapPin, Calendar, DollarSign, Handshake } from 'lucide-react';
+import { Loader2, MapPin, Calendar, Handshake, Truck } from 'lucide-react';
 import { normalizeDispatchStatus } from '../../lib/dispatchStatus';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -17,67 +17,89 @@ function LoadCard({ load, driverId, onRequest, isPending }) {
   const [requestError, setRequestError] = useState(null);
   const isRequested = (load.requested_by_driver_ids || []).includes(driverId);
 
-  const handleClick = async () => {
+  const handleClick = async (e) => {
+    e.stopPropagation();
     setRequestError(null);
     const result = await onRequest(load.id);
-    if (!result?.success) {
-      setRequestError(result?.error || 'Request failed');
-    }
+    if (!result?.success) setRequestError(result?.error || 'Request failed');
   };
 
+  const pickupDate = load.pickup_date
+    ? new Date(load.pickup_date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    : null;
+  const hasRoute = load.pickup_city || load.delivery_city;
+  const originParts = [load.pickup_city, load.pickup_state].filter(Boolean);
+  const destParts = [load.delivery_city, load.delivery_state].filter(Boolean);
+
   return (
-    <div className="bg-card border border-border rounded-lg p-3 space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-mono font-semibold text-xs text-primary">{load.internal_load_number}</span>
-        {load.invoice_amount > 0 && (
-          <span className="text-[11px] font-semibold text-green-600 flex items-center gap-0.5">
-            <DollarSign className="w-3 h-3" />{load.invoice_amount.toLocaleString()}
+    <div style={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '10px', boxSizing: 'border-box', width: '100%', overflow: 'hidden' }}>
+      <div style={{ padding: '10px 12px' }}>
+
+        {/* Row 1: Load # | Amount */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '5px' }}>
+          <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '13px', color: 'hsl(var(--primary))', whiteSpace: 'nowrap' }}>
+            {load.internal_load_number}
           </span>
+          {load.invoice_amount > 0 && (
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+              ${load.invoice_amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            </span>
+          )}
+        </div>
+
+        {/* Row 2: Customer */}
+        <div style={{ fontSize: '13px', fontWeight: 500, color: 'hsl(var(--foreground))', marginBottom: '5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {load.customer_name || '—'}
+        </div>
+
+        {/* Row 3: Route */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'hsl(var(--muted-foreground))', marginBottom: '7px', overflow: 'hidden' }}>
+          <MapPin style={{ width: '11px', height: '11px', flexShrink: 0 }} />
+          {hasRoute ? (
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {originParts.join(', ')} → {destParts.join(', ')}
+            </span>
+          ) : <span>No route assigned</span>}
+        </div>
+
+        {/* Row 4: Chips */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: onRequest ? '8px' : '0' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: 'hsl(var(--secondary))', color: 'hsl(var(--muted-foreground))', fontSize: '11px', padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap' }}>
+            <Calendar style={{ width: '10px', height: '10px' }} />
+            <span>{pickupDate || 'No date'}{load.pickup_time ? ' ' + load.pickup_time : ''}</span>
+          </div>
+          {load.truck_number && (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: 'hsl(var(--secondary))', color: 'hsl(var(--muted-foreground))', fontSize: '11px', padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap' }}>
+              <Truck style={{ width: '10px', height: '10px' }} />
+              <span>{load.truck_number}</span>
+            </div>
+          )}
+          {load.commodity && (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', background: 'hsl(var(--secondary))', color: 'hsl(var(--muted-foreground))', fontSize: '11px', padding: '2px 7px', borderRadius: '4px', whiteSpace: 'nowrap' }}>
+              <span>📦 {load.commodity}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Request button */}
+        {onRequest && (
+          <>
+            <Button
+              size="sm"
+              variant={isRequested ? 'secondary' : 'default'}
+              className={`w-full h-9 text-xs gap-1.5 ${isRequested ? 'opacity-60' : ''}`}
+              onClick={handleClick}
+              disabled={isRequested || isPending}
+            >
+              <Handshake className="w-3.5 h-3.5" />
+              {isRequested ? 'Requested' : isPending ? 'Requesting…' : 'Request Load'}
+            </Button>
+            {requestError && (
+              <p className="text-[11px] text-red-500 text-center mt-1">{requestError}</p>
+            )}
+          </>
         )}
       </div>
-      {load.customer_name && (
-        <p className="text-xs text-muted-foreground truncate">{load.customer_name}</p>
-      )}
-      {(load.pickup_city || load.delivery_city) && (
-        <div className="flex items-start gap-1 text-xs text-foreground">
-          <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0 text-muted-foreground" />
-          <span>
-            {[load.pickup_city, load.pickup_state].filter(Boolean).join(', ')}
-            {load.pickup_city && load.delivery_city ? ' → ' : ''}
-            {[load.delivery_city, load.delivery_state].filter(Boolean).join(', ')}
-          </span>
-        </div>
-      )}
-      {(load.pickup_date || load.delivery_date) && (
-        <div className="flex gap-3 text-[11px] text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <Calendar className="w-3 h-3" />
-            {load.pickup_date && `PU: ${load.pickup_date}`}
-            {load.pickup_time ? ` ${load.pickup_time}` : ''}
-          </span>
-          {load.delivery_date && <span>DEL: {load.delivery_date}</span>}
-        </div>
-      )}
-      {load.commodity && (
-        <p className="text-[11px] text-muted-foreground">📦 {load.commodity}</p>
-      )}
-      {onRequest && (
-        <>
-          <Button
-            size="sm"
-            variant={isRequested ? 'secondary' : 'outline'}
-            className={`w-full h-7 text-xs ${isRequested ? 'opacity-50' : ''}`}
-            onClick={handleClick}
-            disabled={isRequested || isPending}
-          >
-            <Handshake className="w-3 h-3 mr-1" />
-            {isRequested ? 'Requested' : isPending ? 'Requesting…' : 'Request Load'}
-          </Button>
-          {requestError && (
-            <p className="text-[11px] text-red-500 text-center mt-1">{requestError}</p>
-          )}
-        </>
-      )}
     </div>
   );
 }
