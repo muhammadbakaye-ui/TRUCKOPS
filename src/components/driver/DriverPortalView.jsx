@@ -164,7 +164,7 @@ export default function DriverPortalView() {
       {/* Header */}
       <div className="h-12 md:h-14 bg-sidebar border-b border-sidebar-border flex items-center justify-between px-3 md:px-6 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <Truck className="w-4 h-4 md:w-5 md:h-5 text-sidebar-primary" />
+          <img src="https://media.base44.com/images/public/6a0409fc37a632ab53db20fd/34c5d2a43_TruckOpsLogo.png" alt="TruckOps" className="w-7 h-7 object-contain" />
           <div>
             <span className="font-bold text-sidebar-primary-foreground text-xs md:text-sm tracking-widest">TRUCKOPS</span>
             {(companyName || session?.company_name) && (
