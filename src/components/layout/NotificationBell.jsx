@@ -30,15 +30,14 @@ function playChime() {
   } catch (e) {}
 }
 
-export default function NotificationBell() {
+export default function NotificationBell({ recipientId: recipientIdProp } = {}) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [showDeleted, setShowDeleted] = useState(false);
   const { session } = useSession();
   const tenantId = session?.tenant_id;
-  // Admin bell always scoped to admin inbox — drivers have no bell in this app
-  const recipientId = `admin:${tenantId}`;
+  const recipientId = recipientIdProp || `admin:${tenantId}`;
   const seenIdsRef = useRef(null);
 
   const { data: notifications = [] } = useQuery({
