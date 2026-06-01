@@ -197,7 +197,7 @@ export default function Dashboard() {
   const loads = recentLoads;
   const invoices = allInvoices;
   const unpaidInvoices = unpaidInvoicesData;
-  const displayLoads = recentLoads.slice(0, 8);
+  const displayLoads = recentLoads.slice(0, 7);
   const mobileDisplayLoads = recentLoads.slice(0, 3);
   const draftStatements = statements.filter(s => s.status === 'draft');
   const activeDrivers = drivers.filter(d => d.status === 'active');
