@@ -334,8 +334,33 @@ export default function LoadDetail() {
          </AlertDialogContent>
        </AlertDialog>
        
-       {/* Header - single row (Desktop + Mobile) */}
-       <div className="flex items-center justify-between gap-4 px-4 py-3 border-b border-border/50 flex-wrap">
+       {/* Mobile Header — centered title, icon-only actions */}
+       <div className="md:hidden relative flex items-center h-14 px-3 border-b border-border/50">
+         <Button variant="ghost" size="sm" className="h-8 gap-1 flex-shrink-0 z-10" onClick={() => navigate(-1)}>
+           <ArrowLeft className="w-3.5 h-3.5" /><span className="text-xs">Loads</span>
+         </Button>
+         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+           <h2 className="text-sm font-semibold truncate max-w-[160px]">
+             {(isNew && !savedLoadIdRef.current) ? 'New Load' : `Load ${form.internal_load_number}`}
+           </h2>
+           {form.status === 'draft' && autoSaving && (
+             <span className="text-[10px] text-amber-600 flex items-center gap-0.5"><Loader2 className="w-2.5 h-2.5 animate-spin" /> Saving…</span>
+           )}
+         </div>
+         <div className="ml-auto flex gap-1 z-10 flex-shrink-0">
+           {(loadId || savedLoadIdRef.current) && (
+             <Button size="icon" className="h-8 w-8 bg-green-700 hover:bg-green-800 text-white flex-shrink-0" onClick={handlePrint} title="Download PDF">
+               <Download className="w-3.5 h-3.5" />
+             </Button>
+           )}
+           <Button size="icon" className="h-8 w-8 flex-shrink-0" onClick={handleSave} disabled={saving} title="Save">
+             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+           </Button>
+         </div>
+       </div>
+
+       {/* Desktop Header */}
+       <div className="hidden md:flex items-center justify-between gap-4 px-4 py-3 border-b border-border/50">
          <div className="flex items-center gap-3 min-w-0">
            <Button variant="ghost" size="sm" className="h-8 gap-1 flex-shrink-0" onClick={() => navigate(-1)}>
              <ArrowLeft className="w-3.5 h-3.5" /> Loads
@@ -674,7 +699,7 @@ export default function LoadDetail() {
          {/* Mobile Load Information */}
          <Card>
            <CardHeader className="py-3 px-4"><CardTitle className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Load Information</CardTitle></CardHeader>
-           <CardContent className="px-4 pb-4 grid grid-cols-3 gap-2">
+           <CardContent className="px-4 pb-4 grid grid-cols-1 gap-3">
              <Field label="Internal Load #"><TextInput value={form.internal_load_number} onChange={(v) => set('internal_load_number', v)} /></Field>
              <Field label="Ext / Broker #"><TextInput value={form.external_load_number} onChange={(v) => set('external_load_number', v)} /></Field>
              <Field label="Trip #"><TextInput value={form.trip_number} onChange={(v) => set('trip_number', v)} /></Field>
