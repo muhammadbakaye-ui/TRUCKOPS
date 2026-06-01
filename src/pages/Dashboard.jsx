@@ -20,7 +20,7 @@ import MobileLoadCard from '../components/mobile/MobileLoadCard';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { useEntitySubscription } from '../hooks/useEntitySubscription';
 
-// ─── Desktop-only helpers ────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const fmtDollar = (v) =>
   '$' + Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -62,7 +62,7 @@ function InvoiceStatusBadge({ status }) {
   );
 }
 
-function DesktopLoadCard({ load, onClick }) {
+function LoadCard({ load, onClick }) {
   const route =
     load.pickup_city && load.delivery_city
       ? `${load.pickup_city}, ${load.pickup_state || ''} → ${load.delivery_city}, ${load.delivery_state || ''}`
@@ -73,11 +73,10 @@ function DesktopLoadCard({ load, onClick }) {
 
   return (
     <div
-      className="bg-card border border-border/60 rounded-lg p-3.5 cursor-pointer hover:bg-muted/20 hover:border-border transition-colors"
+      className="bg-card border border-border/60 rounded-lg p-2.5 cursor-pointer hover:bg-muted/20 hover:border-border transition-colors"
       onClick={onClick}
     >
-      {/* Row 1: Load # / Broker # + Status badge */}
-      <div className="flex items-center justify-between mb-1.5">
+      <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-1.5 text-xs min-w-0">
           <span className="font-mono font-semibold text-primary shrink-0">{load.internal_load_number}</span>
           {load.external_load_number && (
@@ -90,39 +89,32 @@ function DesktopLoadCard({ load, onClick }) {
         <LoadStatusBadge status={load.status} />
       </div>
 
-      {/* Row 2: Customer name */}
-      <p className="font-bold text-sm text-foreground mb-1.5 leading-tight">
+      <p className="font-bold text-xs text-foreground mb-1 leading-tight">
         {load.customer_name || 'No customer'}
       </p>
 
-      {/* Row 3: Route */}
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
         <MapPin className="w-3 h-3 shrink-0" />
         <span className="truncate">{route || 'No route assigned'}</span>
       </div>
 
-      {/* Row 4: Date + Driver + Truck */}
-      <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+      <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
         {pickupDate && (
           <span className="flex items-center gap-1 shrink-0">
-            <Calendar className="w-3 h-3" />
-            {pickupDate}
+            <Calendar className="w-3 h-3" />{pickupDate}
           </span>
         )}
         <span className="flex items-center gap-1 truncate">
-          <User className="w-3 h-3 shrink-0" />
-          {load.driver_1_name || 'Unassigned'}
+          <User className="w-3 h-3 shrink-0" />{load.driver_1_name || 'Unassigned'}
         </span>
         {load.truck_number && (
           <span className="flex items-center gap-1 shrink-0">
-            <Truck className="w-3 h-3" />
-            {load.truck_number}
+            <Truck className="w-3 h-3" />{load.truck_number}
           </span>
         )}
       </div>
 
-      {/* Divider + Amount + Invoice status */}
-      <div className="border-t border-border/40 pt-2.5 flex items-center justify-between">
+      <div className="border-t border-border/40 pt-2 flex items-center justify-between">
         <span className="font-bold text-sm text-foreground">{fmtDollar(load.invoice_amount || 0)}</span>
         <InvoiceStatusBadge status={load.invoice_status || 'not_invoiced'} />
       </div>
@@ -142,7 +134,7 @@ function BarTooltip({ active, payload, label }) {
   );
 }
 
-// ─── Main Dashboard ──────────────────────────────────────────────────────────
+// ─── Main Dashboard ───────────────────────────────────────────────────────────
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -219,8 +211,6 @@ export default function Dashboard() {
   const activeDrivers = drivers.filter(d => d.status === 'active');
   const activeTrucks = trucks.filter(t => t.status === 'active');
 
-  // ── Desktop chart data ────────────────────────────────────────────────────
-
   const monthlyData = useMemo(() => {
     const months = [];
     for (let i = 5; i >= 0; i--) {
@@ -259,17 +249,17 @@ export default function Dashboard() {
   }, [loads]);
 
   const quickActions = [
-    { label: 'Upload BOL / Rate Con',  icon: Upload,       color: 'bg-blue-500/10 text-blue-400',   path: 'UploadDocument' },
-    { label: 'New Load',               icon: Container,    color: 'bg-green-500/10 text-green-400', path: 'Loads?action=new' },
-    { label: 'Import Fuel File',       icon: Fuel,         color: 'bg-orange-500/10 text-orange-400', path: 'FuelImport' },
-    { label: 'New Driver Statement',   icon: ClipboardList,color: 'bg-purple-500/10 text-purple-400', path: 'StatementBuilder' },
+    { label: 'Upload BOL / Rate Con', icon: Upload,        color: 'bg-blue-500/10 text-blue-400',    path: 'UploadDocument' },
+    { label: 'New Load',              icon: Container,     color: 'bg-green-500/10 text-green-400',  path: 'Loads?action=new' },
+    { label: 'Import Fuel File',      icon: Fuel,          color: 'bg-orange-500/10 text-orange-400',path: 'FuelImport' },
+    { label: 'New Driver Statement',  icon: ClipboardList, color: 'bg-purple-500/10 text-purple-400',path: 'StatementBuilder' },
   ];
 
   const statCards = [
     { label: 'Loads',            value: loads.length,           icon: Container,    color: 'bg-blue-500/10 text-blue-400',    path: 'Loads' },
-    { label: 'Unpaid Invoices',  value: unpaidInvoices.length,  icon: Receipt,      color: 'bg-orange-500/10 text-orange-400', path: 'Invoices' },
+    { label: 'Unpaid Invoices',  value: unpaidInvoices.length,  icon: Receipt,      color: 'bg-orange-500/10 text-orange-400',path: 'Invoices' },
     { label: 'Active Drivers',   value: activeDrivers.length,   icon: Users,        color: 'bg-green-500/10 text-green-400',  path: 'Drivers' },
-    { label: 'Active Trucks',    value: activeTrucks.length,    icon: Truck,        color: 'bg-purple-500/10 text-purple-400', path: 'Trucks' },
+    { label: 'Active Trucks',    value: activeTrucks.length,    icon: Truck,        color: 'bg-purple-500/10 text-purple-400',path: 'Trucks' },
     { label: 'Companies',        value: companies.length,       icon: Building2,    color: 'bg-teal-500/10 text-teal-400',    path: 'Companies' },
     { label: 'Draft Statements', value: draftStatements.length, icon: ClipboardList,color: 'bg-amber-500/10 text-amber-400',  path: 'DriverStatements' },
   ];
@@ -280,7 +270,7 @@ export default function Dashboard() {
       {/* ══════════════ MOBILE LAYOUT ══════════════ */}
       <div className="md:hidden p-3 space-y-3">
 
-        {/* Stat cards 2×3 */}
+        {/* Stat cards 2x3 */}
         <div className="grid grid-cols-2 gap-2">
           {statCards.map(({ label, value, icon: Icon, color, path }) => (
             <div
@@ -365,11 +355,7 @@ export default function Dashboard() {
           ) : (
             <div className="space-y-2">
               {displayLoads.map(load => (
-                <DesktopLoadCard
-                  key={load.id}
-                  load={load}
-                  onClick={() => navigate(createPageUrl(`LoadDetail?id=${load.id}`))}
-                />
+                <LoadCard key={load.id} load={load} onClick={() => navigate(createPageUrl(`LoadDetail?id=${load.id}`))} />
               ))}
             </div>
           )}
@@ -414,7 +400,7 @@ export default function Dashboard() {
       {/* ══════════════ DESKTOP LAYOUT ══════════════ */}
       <div className="hidden md:flex flex-col gap-4 p-4">
 
-        {/* ── Section 1: Stat cards row ── */}
+        {/* Section 1: Stat cards row */}
         <div className="grid grid-cols-6 gap-3">
           {statCards.map(({ label, value, icon: Icon, color, path }) => (
             <div
@@ -433,9 +419,8 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* ── Section 2: Revenue (left) + Invoice Status (right) ── */}
+        {/* Section 2: Revenue (left) + Invoice Status (right) */}
         <div className="flex gap-4">
-          {/* Monthly Gross Revenue */}
           <div className="flex-1 min-w-0 bg-card border border-border/60 rounded-lg p-4">
             <div className="flex items-start justify-between mb-4">
               <div>
@@ -458,12 +443,11 @@ export default function Dashboard() {
                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
                 <YAxis tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={44} />
                 <Tooltip content={<BarTooltip />} cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} />
-                <Bar dataKey="revenue" name="Revenue" fill="#3B82F6" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="revenue" fill="#3B82F6" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Invoice Status */}
           <div className="w-[320px] shrink-0 bg-card border border-border/60 rounded-lg p-4">
             <p className="text-sm font-semibold text-foreground mb-4">Invoice Status</p>
             {invoiceStatusData.length === 0 ? (
@@ -496,10 +480,10 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── Section 3: Bottom 3-column row ── */}
-        <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 295px 275px' }}>
+        {/* Section 3: Bottom 3-column row — 55% Recent Loads | 25% Top Drivers | 20% Activity + Actions */}
+        <div className="grid gap-4" style={{ gridTemplateColumns: '55fr 25fr 20fr' }}>
 
-          {/* ── Recent Loads ── */}
+          {/* Recent Loads */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-semibold text-foreground">Recent Loads</span>
@@ -517,24 +501,19 @@ export default function Dashboard() {
             ) : (
               <div className="space-y-2">
                 {displayLoads.map(load => (
-                  <DesktopLoadCard
-                    key={load.id}
-                    load={load}
-                    onClick={() => navigate(createPageUrl(`LoadDetail?id=${load.id}`))}
-                  />
+                  <LoadCard key={load.id} load={load} onClick={() => navigate(createPageUrl(`LoadDetail?id=${load.id}`))} />
                 ))}
               </div>
             )}
           </div>
 
-          {/* ── Top Drivers + Quick Actions ── */}
-          <div className="space-y-4">
-            {/* Top Drivers */}
+          {/* Top Drivers */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-semibold text-foreground">Top Drivers</span>
+              <span className="text-[10px] text-muted-foreground">Last 2 months</span>
+            </div>
             <div className="bg-card border border-border/60 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-semibold text-foreground">Top Drivers</span>
-                <span className="text-[10px] text-muted-foreground">Last 2 months</span>
-              </div>
               {topDriversData.length === 0 ? (
                 <p className="text-xs text-muted-foreground text-center py-6">No data yet</p>
               ) : (
@@ -563,8 +542,48 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
+          </div>
 
-            {/* Quick Actions */}
+          {/* Recent Activity + Quick Actions */}
+          <div className="space-y-4">
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-semibold text-foreground">Recent Activity</span>
+                <button
+                  onClick={() => navigate(createPageUrl('AuditLogPage'))}
+                  className="text-primary text-xs hover:text-primary/80 flex items-center gap-1 transition-colors"
+                >
+                  View all <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
+              <div className="bg-card border border-border/60 rounded-lg p-4">
+                {auditLogs.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-8">No activity recorded yet</p>
+                ) : (
+                  <div className="space-y-3">
+                    {auditLogs.slice(0, 8).map(log => (
+                      <div key={log.id} className="flex items-start gap-2.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs text-foreground leading-snug">
+                            <span className="font-semibold capitalize">{log.action_type}</span>
+                            {' '}{log.entity_type}
+                            {log.entity_label && (
+                              <span className="text-muted-foreground"> ({log.entity_label})</span>
+                            )}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            {log.user_name && `${log.user_name} · `}
+                            {log.created_date ? format(new Date(log.created_date), 'MMM d, h:mm a') : ''}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="bg-card border border-border/60 rounded-lg p-4">
               <p className="text-sm font-semibold text-foreground mb-3">Quick Actions</p>
               <div className="space-y-0.5">
@@ -581,45 +600,6 @@ export default function Dashboard() {
                   </button>
                 ))}
               </div>
-            </div>
-          </div>
-
-          {/* ── Recent Activity ── */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-semibold text-foreground">Recent Activity</span>
-              <button
-                onClick={() => navigate(createPageUrl('AuditLogPage'))}
-                className="text-primary text-xs hover:text-primary/80 flex items-center gap-1 transition-colors"
-              >
-                View all <ArrowRight className="w-3 h-3" />
-              </button>
-            </div>
-            <div className="bg-card border border-border/60 rounded-lg p-4">
-              {auditLogs.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-8">No activity recorded yet</p>
-              ) : (
-                <div className="space-y-3">
-                  {auditLogs.slice(0, 8).map(log => (
-                    <div key={log.id} className="flex items-start gap-2.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                      <div className="min-w-0">
-                        <p className="text-xs text-foreground leading-snug">
-                          <span className="font-semibold capitalize">{log.action_type}</span>
-                          {' '}{log.entity_type}
-                          {log.entity_label && (
-                            <span className="text-muted-foreground"> ({log.entity_label})</span>
-                          )}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">
-                          {log.user_name && `${log.user_name} · `}
-                          {log.created_date ? format(new Date(log.created_date), 'MMM d, h:mm a') : ''}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
 
