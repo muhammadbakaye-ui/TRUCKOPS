@@ -190,7 +190,7 @@ export function printLoad({ company, load, stops, drivers = [], trucks = [], tra
 
   <!-- FOOTER -->
   <div style="margin-top:20px;padding-top:10px;border-top:1px solid #1a1a2e;background:#f9fafb;margin-left:-48px;margin-right:-48px;margin-bottom:-36px;padding-left:48px;padding-right:48px;padding-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
-    <span style="font-size:7.5px;color:#c0c4cc;letter-spacing:0.04em;">&#x1F69A; Powered by TruckOps</span>
+    <span style="font-size:7.5px;color:#1D6BD7;letter-spacing:0.04em;">&#x1F69A; Powered by TruckOps</span>
     <span style="font-size:9px;color:#9ca3af;">${company.company_name || 'Your Company'}</span>
     <span style="font-size:9px;color:#9ca3af;">Load # L-${load.internal_load_number || '—'}</span>
     <span style="font-size:9px;color:#9ca3af;">Printed ${new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })}</span>

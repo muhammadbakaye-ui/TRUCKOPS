@@ -313,7 +313,7 @@ export function printStatement({ company, statement, allLines }) {
   </div>
 
   <div class="page-footer" style="display:flex;align-items:center;justify-content:space-between;margin-top:28px;font-size:9px;color:#d1d5db;">
-    <span style="font-size:7.5px;color:#d1d5db;letter-spacing:0.04em;">&#x1F69A; Powered by TruckOps</span>
+    <span style="font-size:7.5px;color:#1D6BD7;letter-spacing:0.04em;">&#x1F69A; Powered by TruckOps</span>
     <span>Page 1 of 1</span>
   </div>
     <span>Page 1 of 1</span>
