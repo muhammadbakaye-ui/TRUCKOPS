@@ -1,23 +1,38 @@
-import React from 'react';
-import { ArrowLeft, Share2, Download } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Share2, Download, Loader2 } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function MobilePDFViewer({ htmlContent, title, onClose, onDownload }) {
+  const [downloading, setDownloading] = useState(false);
   // Strip the floating download-bar from the embedded HTML so our action bar is the only CTA
   const iframeHtml = htmlContent.replace(
     /<div class="download-bar">[\s\S]*?<\/div>/,
     ''
   );
 
-  const handleDownload = () => {
-    const blob = new Blob([iframeHtml], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = (title || 'document') + '.html';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  const handleDownload = async () => {
+    setDownloading(true);
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:850px;height:1100px;border:none;visibility:hidden;';
+    document.body.appendChild(iframe);
+    try {
+      iframe.contentDocument.open();
+      iframe.contentDocument.write(iframeHtml);
+      iframe.contentDocument.close();
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      const body = iframe.contentDocument.body;
+      const canvas = await html2canvas(body, { scale: 1.5, useCORS: true, logging: false, backgroundColor: '#ffffff' });
+      const imgData = canvas.toDataURL('image/png');
+      const pxW = canvas.width / 1.5;
+      const pxH = canvas.height / 1.5;
+      const pdf = new jsPDF({ orientation: pxW > pxH ? 'landscape' : 'portrait', unit: 'px', format: [pxW, pxH] });
+      pdf.addImage(imgData, 'PNG', 0, 0, pxW, pxH);
+      pdf.save((title || 'document').replace(/\s+/g, '-') + '.pdf');
+    } finally {
+      document.body.removeChild(iframe);
+      setDownloading(false);
+    }
   };
 
   const handleShare = async () => {
@@ -108,7 +123,7 @@ export default function MobilePDFViewer({ htmlContent, title, onClose, onDownloa
           }}
         >
           <Download style={{ width: 18, height: 18 }} />
-          Download PDF
+          {downloading ? 'Generating PDF…' : 'Download PDF'}
         </button>
       </div>
     </div>
