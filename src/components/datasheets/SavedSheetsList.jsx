@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { base44 } from '@/api/base44Client';
 import { format, parseISO } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit2, Download, Trash2, TableProperties } from 'lucide-react';
+import { Edit2, Download, Trash2, TableProperties, FileSpreadsheet } from 'lucide-react';
+import { exportDataSheetXlsx } from '../../utils/exportXlsx';
 import { cn } from '@/lib/utils';
 import { buildDataSheetHtml, printDataSheet } from '../print/printDataSheet';
 import MobilePDFViewer from '../print/MobilePDFViewer';
@@ -27,13 +29,45 @@ function groupByMonth(sheets) {
 export default function SavedSheetsList({ sheets, editingSheetId, onEdit, onDelete }) {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [viewerSheet, setViewerSheet] = useState(null);
+  const [exportingId, setExportingId] = useState(null);
 
-  const handleExport = (sheet) => {
-    const isMobile = window.innerWidth < 768;
-    if (isMobile) {
-      setViewerSheet(sheet);
-    } else {
-      printDataSheet(sheet);
+  const fetchSheetLoads = async (sheet) => {
+    // Use existing snapshot if available (legacy), otherwise fetch by driver
+    if (sheet.loads_snapshot && sheet.loads_snapshot.length > 0) {
+      return sheet.loads_snapshot;
+    }
+    if (!sheet.load_ids?.length) return [];
+    const [l1, l2] = await Promise.all([
+      base44.entities.Load.filter({ tenant_id: sheet.tenant_id, driver_1_id: sheet.driver_id }),
+      base44.entities.Load.filter({ tenant_id: sheet.tenant_id, driver_2_id: sheet.driver_id }),
+    ]);
+    const all = [...new Map([...l1, ...l2].map(l => [l.id, l])).values()];
+    return all.filter(l => sheet.load_ids.includes(l.id));
+  };
+
+  const handleExport = async (sheet) => {
+    setExportingId(sheet.id);
+    try {
+      const loads = await fetchSheetLoads(sheet);
+      const sheetWithLoads = { ...sheet, loads_snapshot: loads };
+      const isMobile = window.innerWidth < 768;
+      if (isMobile) {
+        setViewerSheet(sheetWithLoads);
+      } else {
+        printDataSheet(sheetWithLoads);
+      }
+    } finally {
+      setExportingId(null);
+    }
+  };
+
+  const handleExportXlsx = async (sheet) => {
+    setExportingId(sheet.id + '_xlsx');
+    try {
+      const loads = await fetchSheetLoads(sheet);
+      exportDataSheetXlsx(loads, sheet.driver_name, sheet.sheet_name);
+    } finally {
+      setExportingId(null);
     }
   };
 
@@ -79,10 +113,9 @@ export default function SavedSheetsList({ sheets, editingSheetId, onEdit, onDele
           <div className="space-y-2">
             {monthSheets.map((sheet) => {
               const isEditing = sheet.id === editingSheetId;
-              const totalAmount = (sheet.loads_snapshot || []).reduce(
-                (sum, l) => sum + (l.freight_rate || 0),
-                0
-              );
+              const totalAmount = sheet.total_freight != null
+                ? sheet.total_freight
+                : (sheet.loads_snapshot || []).reduce((sum, l) => sum + (l.freight_rate || 0), 0);
               const loadCount = sheet.load_ids?.length || 0;
 
               return (
@@ -143,9 +176,20 @@ export default function SavedSheetsList({ sheets, editingSheetId, onEdit, onDele
                         variant="ghost"
                         className="h-7 px-2 text-xs gap-1 text-primary hover:text-primary"
                         onClick={() => handleExport(sheet)}
+                        disabled={exportingId === sheet.id}
                       >
                         <Download className="w-3 h-3" />
-                        <span className="hidden sm:inline">Download</span>
+                        <span className="hidden sm:inline">{exportingId === sheet.id ? '...' : 'Download'}</span>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 text-xs gap-1 text-green-600 hover:text-green-600"
+                        onClick={() => handleExportXlsx(sheet)}
+                        disabled={exportingId === sheet.id + '_xlsx'}
+                      >
+                        <FileSpreadsheet className="w-3 h-3" />
+                        <span className="hidden sm:inline">{exportingId === sheet.id + '_xlsx' ? '...' : '.xlsx'}</span>
                       </Button>
                       {confirmDelete === sheet.id ? (
                         <div className="flex items-center gap-1">

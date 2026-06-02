@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { X, Filter, TableProperties } from 'lucide-react';
+import { X, Filter, TableProperties, FileSpreadsheet } from 'lucide-react';
+import { exportDataSheetXlsx } from '../../utils/exportXlsx';
 import { format, isWithinInterval, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -197,7 +198,8 @@ export default function DataSheetBuilder({ session, ownerCompany, initialValues,
         truck_number: truck?.unit_number || '',
         customers,
         load_ids: [...selectedLoadIds],
-        loads_snapshot: selectedLoads,
+        loads_snapshot: [],
+        total_freight: selectedLoads.reduce((s, l) => s + (Number(l.freight_rate) || 0), 0),
         company_name: ownerCompany?.company_name || session?.company_name || '',
         company_address: addr,
         company_phone: ownerCompany?.phone || '',
@@ -213,6 +215,16 @@ export default function DataSheetBuilder({ session, ownerCompany, initialValues,
     } finally {
       setGenerating(false);
     }
+  };
+
+  const handleExportXlsx = () => {
+    const driver = drivers.find((d) => d.id === driverId);
+    const selectedLoads = driverLoads.filter((l) => selectedLoadIds.has(l.id));
+    exportDataSheetXlsx(
+      selectedLoads,
+      driver?.full_name || '',
+      sheetName || `Sheet ${format(new Date(), 'MMM d yyyy')}`
+    );
   };
 
   const locked = !driverId;
@@ -390,7 +402,7 @@ export default function DataSheetBuilder({ session, ownerCompany, initialValues,
       </div>
 
       {/* Generate button — sticky to bottom */}
-      <div className="sticky bottom-0 z-10 p-3 border-t border-border bg-card mt-2">
+      <div className="sticky bottom-0 z-10 p-3 border-t border-border bg-card mt-2 space-y-2">
         <Button
           className="w-full h-10 gap-2"
           disabled={!canGenerate || generating}
@@ -402,6 +414,15 @@ export default function DataSheetBuilder({ session, ownerCompany, initialValues,
             : initialValues
             ? 'Update Spreadsheet'
             : 'Generate Spreadsheet'}
+        </Button>
+        <Button
+          className="w-full h-9 gap-2 bg-green-700 hover:bg-green-600 text-white"
+          disabled={!driverId || selectedLoadIds.size === 0}
+          onClick={handleExportXlsx}
+          type="button"
+        >
+          <FileSpreadsheet className="w-4 h-4" />
+          Export as .xlsx
         </Button>
       </div>
     </div>
