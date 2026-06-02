@@ -1,58 +1,23 @@
-import { useState, useEffect } from 'react';
-import { RotateCcw } from 'lucide-react';
+import { useEffect } from 'react';
 
 /**
- * On mobile devices, renders a full-screen overlay whenever the device
- * is in landscape orientation, instructing the user to rotate back to portrait.
- * Has no effect on desktop (screens wider than 1024px in portrait).
+ * Silently locks the screen to portrait using the Screen Orientation API.
+ * No UI is rendered — if the user rotates their device, nothing happens.
+ * Gracefully no-ops on browsers/devices that don't support the API.
  */
 export default function PortraitLock() {
-  const [isLandscape, setIsLandscape] = useState(false);
-
   useEffect(() => {
-    const check = () => {
-      // Only apply on true mobile screen sizes
-      const mobile = window.innerWidth <= 932 || window.innerHeight <= 932;
-      setIsLandscape(mobile && window.innerWidth > window.innerHeight);
+    const lock = async () => {
+      try {
+        if (screen?.orientation?.lock) {
+          await screen.orientation.lock('portrait');
+        }
+      } catch {
+        // Browser may reject (e.g. desktop, or permission denied) — silently ignore
+      }
     };
-
-    check();
-    window.addEventListener('resize', check);
-    window.addEventListener('orientationchange', check);
-    return () => {
-      window.removeEventListener('resize', check);
-      window.removeEventListener('orientationchange', check);
-    };
+    lock();
   }, []);
 
-  if (!isLandscape) return null;
-
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 99999,
-        background: '#0a0e1a',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '1.5rem',
-      }}
-    >
-      <RotateCcw
-        style={{ width: 56, height: 56, color: '#4a9eff', animation: 'spin 2s linear infinite' }}
-      />
-      <div style={{ textAlign: 'center', padding: '0 2rem' }}>
-        <p style={{ color: '#ffffff', fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-          Please rotate your device
-        </p>
-        <p style={{ color: '#8b9db5', fontSize: '0.875rem' }}>
-          TruckOps works in portrait mode only
-        </p>
-      </div>
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }`}</style>
-    </div>
-  );
+  return null;
 }
