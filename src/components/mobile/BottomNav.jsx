@@ -4,35 +4,51 @@ import { createPageUrl } from '@/utils';
 import {
   LayoutDashboard, Container, MoreHorizontal, FileText, Users, Truck, Check,
   ChevronRight, Shield, Settings, BarChart2, Fuel, AlertTriangle, ClipboardList,
-  BookOpen, Wrench, MapPin, X,
+  BookOpen, Wrench, X, LayoutGrid, Upload, Building2, Receipt, FileSpreadsheet,
+  Banknote, Trash2, ShieldPlus, ScrollText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
+// Authoritative page order — mirrors desktop sidebar exactly
+const SIDEBAR_ORDER = [
+  'Dashboard',
+  'Loads', 'DispatchBoard', 'UploadDocument',
+  'Companies', 'Drivers', 'Trucks', 'Trailers',
+  'Invoices', 'FuelImport', 'DriverStatements', 'Taxes1099', 'Factoring',
+  'DriverQualifications', 'DriverViolations', 'DrugAlcoholTests', 'AccidentsClaims', 'LicenseExpirationWarnings',
+  'VehicleMaintenance', 'TruckInspections', 'EquipmentWarnings',
+  'IFTAReports', 'InsurancePolicies', 'PermitsLicenses', 'HighwayUseTax',
+  'AdminDriverDocuments',
+  'Reports', 'AuditLogPage', 'DeletedItems', 'SettingsPage',
+];
+
 const PAGE_GROUPS = {
   'OPERATIONS': [
     { label: 'Loads', page: 'Loads', icon: Container },
-    { label: 'Upload Document', page: 'UploadDocument', icon: FileText },
-    { label: 'Dispatch Board', page: 'DispatchBoard', icon: MapPin },
+    { label: 'Dispatch Board', page: 'DispatchBoard', icon: LayoutGrid },
+    { label: 'Upload Doc', page: 'UploadDocument', icon: Upload },
   ],
   'DIRECTORY': [
-    { label: 'Companies', page: 'Companies', icon: Users },
+    { label: 'Companies', page: 'Companies', icon: Building2 },
     { label: 'Drivers', page: 'Drivers', icon: Users },
     { label: 'Trucks', page: 'Trucks', icon: Truck },
-    { label: 'Trailers', page: 'Trailers', icon: Truck },
+    { label: 'Trailers', page: 'Trailers', icon: Container },
   ],
   'BILLING': [
-    { label: 'Invoices', page: 'Invoices', icon: FileText },
-    { label: 'Driver Statements', page: 'DriverStatements', icon: FileText },
+    { label: 'Invoices', page: 'Invoices', icon: Receipt },
     { label: 'Fuel Import', page: 'FuelImport', icon: Fuel },
+    { label: 'Statements', page: 'DriverStatements', icon: ClipboardList },
+    { label: '1099s', page: 'Taxes1099', icon: FileSpreadsheet },
+    { label: 'Factoring', page: 'Factoring', icon: Banknote },
   ],
   'SAFETY': [
     { label: 'Driver Qualifications', page: 'DriverQualifications', icon: Shield },
     { label: 'Driver Violations', page: 'DriverViolations', icon: AlertTriangle },
     { label: 'Drug & Alcohol Tests', page: 'DrugAlcoholTests', icon: ClipboardList },
     { label: 'Accidents & Claims', page: 'AccidentsClaims', icon: AlertTriangle },
-    { label: 'License Expiration Warnings', page: 'LicenseExpirationWarnings', icon: AlertTriangle },
+    { label: 'License Warnings', page: 'LicenseExpirationWarnings', icon: AlertTriangle },
   ],
   'MAINTENANCE': [
     { label: 'Vehicle Maintenance', page: 'VehicleMaintenance', icon: Wrench },
@@ -40,16 +56,19 @@ const PAGE_GROUPS = {
     { label: 'Equipment Warnings', page: 'EquipmentWarnings', icon: AlertTriangle },
   ],
   'COMPLIANCE': [
-    { label: 'IFTA Reporting', page: 'IFTAReports', icon: BookOpen },
-    { label: 'Highway Use Tax', page: 'HighwayUseTax', icon: BookOpen },
-    { label: 'Driver Docs', page: 'AdminDriverDocuments', icon: FileText },
+    { label: 'IFTA Reports', page: 'IFTAReports', icon: BookOpen },
+    { label: 'Insurance Policies', page: 'InsurancePolicies', icon: ShieldPlus },
+    { label: 'Permits & Licenses', page: 'PermitsLicenses', icon: ScrollText },
+    { label: 'Highway Use Tax', page: 'HighwayUseTax', icon: Banknote },
   ],
   'ADMIN': [
-    { label: 'Audit Log', page: 'AuditLogPage', icon: ClipboardList },
-    { label: 'Settings', page: 'SettingsPage', icon: Settings },
+    { label: 'Driver Docs', page: 'AdminDriverDocuments', icon: FileText },
   ],
-  'REPORTS': [
+  'SYSTEM': [
     { label: 'Reports', page: 'Reports', icon: BarChart2 },
+    { label: 'Audit Log', page: 'AuditLogPage', icon: ClipboardList },
+    { label: 'Deleted Items', page: 'DeletedItems', icon: Trash2 },
+    { label: 'Settings', page: 'SettingsPage', icon: Settings },
   ],
 };
 
@@ -287,8 +306,14 @@ export default function BottomNav({ currentPage }) {
   };
 
   const handleSaveCustomization = () => {
-    localStorage.setItem('bottomNav_customization', JSON.stringify(tempSelection));
-    setVisiblePages(tempSelection);
+    // Sort selected pages by their sidebar position
+    const sorted = [...tempSelection].sort((a, b) => {
+      const ai = SIDEBAR_ORDER.indexOf(a);
+      const bi = SIDEBAR_ORDER.indexOf(b);
+      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+    });
+    localStorage.setItem('bottomNav_customization', JSON.stringify(sorted));
+    setVisiblePages(sorted);
     setEditMode(false);
   };
 
