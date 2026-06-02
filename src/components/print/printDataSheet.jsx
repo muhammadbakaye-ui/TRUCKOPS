@@ -182,11 +182,7 @@ export function buildDataSheetHtml(sheet) {
       width:100%;
     }
     .doc-footer .logo-block { display:flex; align-items:center; gap:8px; }
-    .doc-footer .logo-box {
-      width:22px; height:22px; background:#0e1525; border-radius:4px;
-      display:inline-flex; align-items:center; justify-content:center;
-    }
-    .doc-footer .logo-box span { color:#4a9eff; font-size:9px; font-weight:900; }
+    .doc-footer .logo-img { width:22px; height:22px; display:inline-block; }
     .doc-footer .powered { color:#6b7280; }
     .doc-footer .powered strong { color:#4a9eff; }
     .doc-footer .center-meta { text-align:center; color:#9ca3af; }
@@ -257,7 +253,11 @@ export function buildDataSheetHtml(sheet) {
   <!-- FOOTER -->
   <div class="doc-footer">
     <div class="logo-block">
-      <div class="logo-box"><span>T</span></div>
+      <svg class="logo-img" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 5 C30 5 12 18 12 18 L12 55 C12 75 50 95 50 95 C50 95 88 75 88 55 L88 18 C88 18 70 5 50 5Z" fill="#fff"/>
+        <path d="M50 11 C32 11 18 22 18 22 L18 55 C18 73 50 90 50 90 C50 90 82 73 82 55 L82 22 C82 22 68 11 50 11Z" fill="#3b5998"/>
+        <path d="M50 22 L38 42 L44 42 L44 62 L48 62 L48 68 L52 68 L52 62 L56 62 L56 42 L62 42 Z" fill="#fff"/>
+      </svg>
       <span class="powered">Powered by <strong>TruckOps</strong></span>
     </div>
     <div class="center-meta">${company_name}${driver_name ? ' &middot; ' + driver_name : ''}${sheet_name ? ' &middot; ' + sheet_name : ''}</div>
