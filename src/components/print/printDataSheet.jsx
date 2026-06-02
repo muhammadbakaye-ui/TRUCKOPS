@@ -254,6 +254,7 @@ export function buildDataSheetHtml(sheet) {
   <div class="doc-footer">
     <div class="logo-block">
       <svg class="logo-img" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" fill="#0e1525" rx="8"/>
         <!-- White outer shield -->
         <path d="M50 4 C50 4 42 8 32 10 C22 12 10 14 10 14 L10 52 C10 72 50 96 50 96 C50 96 90 72 90 52 L90 14 C90 14 78 12 68 10 C58 8 50 4 50 4Z" fill="#fff"/>
         <!-- Top notch cut -->
