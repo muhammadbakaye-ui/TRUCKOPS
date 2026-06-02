@@ -145,7 +145,7 @@ export default function SavedSheetsList({ sheets, editingSheetId, onEdit, onDele
                         onClick={() => handleExport(sheet)}
                       >
                         <Download className="w-3 h-3" />
-                        <span className="hidden sm:inline">Export</span>
+                        <span className="hidden sm:inline">Download</span>
                       </Button>
                       {confirmDelete === sheet.id ? (
                         <div className="flex items-center gap-1">

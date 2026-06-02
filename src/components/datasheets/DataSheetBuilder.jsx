@@ -32,7 +32,6 @@ export default function DataSheetBuilder({ session, ownerCompany, initialValues,
   const [driverId, setDriverId] = useState(initialValues?.driver_id || '');
   const [truckId, setTruckId] = useState(initialValues?.truck_id || '');
   const [sheetName, setSheetName] = useState(initialValues?.sheet_name || '');
-  const [badgeLabel, setBadgeLabel] = useState(initialValues?.badge_label || '');
   const [periodFrom, setPeriodFrom] = useState(initialValues?.period_from || '');
   const [periodTo, setPeriodTo] = useState(initialValues?.period_to || '');
   const [filterByPeriod, setFilterByPeriod] = useState(false);
@@ -169,7 +168,7 @@ export default function DataSheetBuilder({ session, ownerCompany, initialValues,
       const data = {
         tenant_id: tenantId,
         sheet_name: sheetName || `Sheet ${format(new Date(), 'MMM d, yyyy')}`,
-        badge_label: badgeLabel,
+        badge_label: sheetName || `Sheet ${format(new Date(), 'MMM d, yyyy')}`,
         period_from: periodFrom,
         period_to: periodTo,
         driver_id: driverId,
@@ -238,15 +237,9 @@ export default function DataSheetBuilder({ session, ownerCompany, initialValues,
       <StepHeader num={2} label="Sheet Details" locked={locked} />
       <div className={cn('p-3 space-y-2 border-b border-border', locked && 'opacity-40 pointer-events-none')}>
         <Input
-          placeholder="eg. May 2026 Settlement"
+          placeholder="Sheet name (used as badge + footer label)"
           value={sheetName}
           onChange={(e) => setSheetName(e.target.value)}
-          className="h-9 text-sm"
-        />
-        <Input
-          placeholder="Badge label (eg. Week 1, Q2)"
-          value={badgeLabel}
-          onChange={(e) => setBadgeLabel(e.target.value)}
           className="h-9 text-sm"
         />
         <div className="pt-1">

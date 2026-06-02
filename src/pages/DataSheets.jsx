@@ -55,7 +55,7 @@ export default function DataSheets() {
   return (
     <div className="flex flex-col md:flex-row -mx-2 lg:-mx-4" style={{ minHeight: '100%' }}>
       {/* Left builder */}
-      <div className="md:w-64 md:flex-shrink-0 border-b md:border-b-0 md:border-r border-border">
+      <div className="md:w-96 md:flex-shrink-0 border-b md:border-b-0 md:border-r border-border">
         <DataSheetBuilder
           key={builderKey}
           session={session}

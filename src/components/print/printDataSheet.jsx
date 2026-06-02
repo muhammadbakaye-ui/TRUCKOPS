@@ -2,14 +2,14 @@
 // and opens it in a new window (desktop) or returns it as a string (mobile/viewer).
 
 const COL_DEFS = [
-  { key: 'external_load_number',      label: 'BROKER LOAD #', mono: true, blue: true },
-  { key: 'trip_number',               label: 'TRIP #',        mono: true, muted: true },
-  { key: 'customer_reference_number', label: 'REFERENCE #',   mono: true, blue: true },
-  { key: 'customer_name',             label: 'CUSTOMER',      bold: true },
+  { key: 'external_load_number',      label: 'BROKER LOAD',  mono: true, blue: true },
+  { key: 'trip_number',               label: 'TRIP',         mono: true, muted: true },
+  { key: 'customer_reference_number', label: 'REFERENCE',    mono: true, blue: true },
+  { key: 'customer_name',             label: 'CUSTOMER',     bold: true },
   { key: '__route',                   label: 'ROUTE' },
   { key: 'pickup_date',               label: 'PICKUP DATE' },
   { key: 'delivery_date',             label: 'DELIVERY DATE' },
-  { key: 'freight_rate',              label: 'AMOUNT',        mono: true, bold: true, right: true, amount: true },
+  { key: 'freight_rate',              label: 'AMOUNT',       mono: true, bold: true, right: true, amount: true },
 ];
 
 function hasVal(load, key) {
@@ -41,8 +41,6 @@ export function buildDataSheetHtml(sheet) {
     driver_name = '',
     truck_number = '',
     sheet_name = '',
-    period_from = '',
-    period_to = '',
     company_name = '',
     company_address = '',
     company_phone = '',
@@ -109,7 +107,7 @@ export function buildDataSheetHtml(sheet) {
     </tr>`;
   }).join('');
 
-  // Total row — colspan up to amount column, then amount
+  // Total row
   const tfootRow = amtColIdx >= 0
     ? `<tr>
         <td style="padding:9px 10px;border-top:2px solid #000;background:#f0f1f5;"></td>
@@ -129,19 +127,23 @@ export function buildDataSheetHtml(sheet) {
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family: Arial, Helvetica, sans-serif; background:#fff; color:#111; font-size:12px; }
-    .page { max-width:960px; margin:0 auto; background:#fff; }
+    .page { width:100%; background:#fff; }
 
     /* Header */
     .doc-header {
       background:#0e1525;
       display:flex; justify-content:space-between; align-items:flex-start;
       padding:24px 32px 22px;
+      width:100%;
     }
     .doc-header .co-name { font-size:15px; font-weight:700; color:#fff; letter-spacing:0.02em; margin-bottom:4px; }
     .doc-header .co-sub { font-size:11px; color:#8b9db5; line-height:1.7; }
-    .doc-header .right { text-align:right; }
+    .doc-header .right { text-align:right; max-width:55%; }
     .doc-header .eyebrow { font-size:9px; font-weight:600; color:#8b9db5; letter-spacing:0.12em; text-transform:uppercase; margin-bottom:6px; }
-    .doc-header .main-title { font-size:26px; font-weight:800; color:#fff; letter-spacing:0.04em; line-height:1; }
+    .doc-header .main-title {
+      font-size:18px; font-weight:800; color:#fff; letter-spacing:0.03em;
+      line-height:1.2; word-break:break-word;
+    }
     .doc-header .gen-date { font-size:10px; color:#8b9db5; margin-top:5px; }
 
     /* Driver band */
@@ -151,6 +153,7 @@ export function buildDataSheetHtml(sheet) {
       display:flex; align-items:center; justify-content:space-between;
       padding:12px 32px;
       gap:16px;
+      width:100%;
     }
     .driver-band .fields { display:flex; align-items:center; gap:0; flex-wrap:wrap; }
     .driver-band .field-block { padding:0 20px 0 0; border-right:1px solid #1e2a3a; margin-right:20px; }
@@ -165,8 +168,8 @@ export function buildDataSheetHtml(sheet) {
     }
 
     /* Table */
-    .table-wrap { padding:16px 32px 0; overflow-x:auto; }
-    table.loads-table { width:100%; border-collapse:collapse; }
+    .table-wrap { padding:16px 32px 0; width:100%; }
+    table.loads-table { width:100%; border-collapse:collapse; table-layout:auto; }
     table.loads-table thead tr { background:#fff; }
     table.loads-table thead th:first-child { width:28px; border-bottom:2px solid #000; }
 
@@ -176,6 +179,7 @@ export function buildDataSheetHtml(sheet) {
       border-top:1px solid #e5e7eb;
       display:flex; justify-content:space-between; align-items:center;
       font-size:10px; color:#9ca3af;
+      width:100%;
     }
     .doc-footer .logo-block { display:flex; align-items:center; gap:8px; }
     .doc-footer .logo-box {
@@ -190,7 +194,6 @@ export function buildDataSheetHtml(sheet) {
 
     @media print {
       .download-bar { display:none !important; }
-      .page { max-width:100%; }
       .doc-header { print-color-adjust:exact; -webkit-print-color-adjust:exact; }
       .driver-band { print-color-adjust:exact; -webkit-print-color-adjust:exact; }
       @page { size: letter landscape; margin:0.3in; }
