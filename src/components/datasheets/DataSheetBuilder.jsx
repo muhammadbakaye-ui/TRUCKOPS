@@ -33,7 +33,6 @@ export default function DataSheetBuilder({ session, ownerCompany, initialValues,
   const [truckId, setTruckId] = useState(initialValues?.truck_id || '');
   const [sheetName, setSheetName] = useState(initialValues?.sheet_name || '');
   const [badgeLabel, setBadgeLabel] = useState(initialValues?.badge_label || '');
-  const [periodLabel, setPeriodLabel] = useState(initialValues?.period_label || '');
   const [periodFrom, setPeriodFrom] = useState(initialValues?.period_from || '');
   const [periodTo, setPeriodTo] = useState(initialValues?.period_to || '');
   const [filterByPeriod, setFilterByPeriod] = useState(false);
@@ -171,7 +170,6 @@ export default function DataSheetBuilder({ session, ownerCompany, initialValues,
         tenant_id: tenantId,
         sheet_name: sheetName || `Sheet ${format(new Date(), 'MMM d, yyyy')}`,
         badge_label: badgeLabel,
-        period_label: periodLabel,
         period_from: periodFrom,
         period_to: periodTo,
         driver_id: driverId,
@@ -251,37 +249,34 @@ export default function DataSheetBuilder({ session, ownerCompany, initialValues,
           onChange={(e) => setBadgeLabel(e.target.value)}
           className="h-9 text-sm"
         />
-        <Input
-          placeholder="Period label (eg. Pay Period)"
-          value={periodLabel}
-          onChange={(e) => setPeriodLabel(e.target.value)}
-          className="h-9 text-sm"
-        />
-        <div className="flex gap-2">
-          <Input
-            type="date"
-            value={periodFrom}
-            onChange={(e) => setPeriodFrom(e.target.value)}
-            className="h-9 text-xs flex-1"
-          />
-          <Input
-            type="date"
-            value={periodTo}
-            onChange={(e) => setPeriodTo(e.target.value)}
-            className="h-9 text-xs flex-1"
-          />
-        </div>
-        {periodFrom && periodTo && (
+        <div className="pt-1">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1.5">Filter Loads by Period</p>
+          <div className="flex items-center gap-2">
+            <Input
+              type="date"
+              value={periodFrom}
+              onChange={(e) => setPeriodFrom(e.target.value)}
+              className="h-9 text-xs flex-1"
+            />
+            <span className="text-muted-foreground text-sm flex-shrink-0">→</span>
+            <Input
+              type="date"
+              value={periodTo}
+              onChange={(e) => setPeriodTo(e.target.value)}
+              className="h-9 text-xs flex-1"
+            />
+          </div>
           <Button
             variant={filterByPeriod ? 'default' : 'outline'}
             size="sm"
-            className="w-full h-8 text-xs gap-1"
+            className={cn('w-full h-8 text-xs gap-1 mt-2', !(periodFrom && periodTo) && 'opacity-40 cursor-not-allowed')}
+            disabled={!(periodFrom && periodTo)}
             onClick={() => setFilterByPeriod((f) => !f)}
           >
             <Filter className="w-3 h-3" />
             {filterByPeriod ? 'Showing period loads only' : 'Filter loads by this period'}
           </Button>
-        )}
+        </div>
       </div>
 
       {/* Step 3 — Customers */}
