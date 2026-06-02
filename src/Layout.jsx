@@ -11,6 +11,7 @@ import BottomNav from './components/mobile/BottomNav';
 import useAndroidBackButton from './hooks/useAndroidBackButton';
 import GlobalBroadcastListener from './components/shared/GlobalBroadcastListener';
 import { UploadProvider } from './context/UploadContext';
+import PortraitLock from './components/mobile/PortraitLock';
 import UploadProgressFloat from './components/shared/UploadProgressFloat';
 import { PreviewModeBanner, useHasSubscription } from './components/shared/SubscriptionGate';
 import SubscriptionModal from './components/shared/SubscriptionModal';
@@ -241,6 +242,7 @@ function AppShell({ children, currentPageName }) {
 export default function Layout({ children, currentPageName }) {
   return (
     <UploadProvider>
+      <PortraitLock />
       <AppShell currentPageName={currentPageName}>{children}</AppShell>
       <UploadProgressFloat />
     </UploadProvider>
