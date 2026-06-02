@@ -157,7 +157,27 @@ export default function DataSheetBuilder({ session, ownerCompany, initialValues,
     try {
       const driver = drivers.find((d) => d.id === driverId);
       const truck = allTrucks.find((t) => t.id === truckId);
-      const selectedLoads = driverLoads.filter((l) => selectedLoadIds.has(l.id));
+      const selectedLoads = driverLoads
+        .filter((l) => selectedLoadIds.has(l.id))
+        .map((l) => ({
+          id: l.id,
+          internal_load_number: l.internal_load_number,
+          external_load_number: l.external_load_number,
+          customer_load_number: l.customer_load_number,
+          customer_reference_number: l.customer_reference_number,
+          trip_number: l.trip_number,
+          customer_name: l.customer_name,
+          pickup_date: l.pickup_date,
+          delivery_date: l.delivery_date,
+          pickup_city: l.pickup_city,
+          pickup_state: l.pickup_state,
+          delivery_city: l.delivery_city,
+          delivery_state: l.delivery_state,
+          freight_rate: l.freight_rate,
+          driver_rate: l.driver_rate,
+          billable_miles: l.billable_miles,
+          invoice_status: l.invoice_status,
+        }));
 
       const addr = ownerCompany
         ? [ownerCompany.address_1, ownerCompany.city, ownerCompany.state, ownerCompany.zip]
