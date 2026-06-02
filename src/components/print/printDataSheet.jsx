@@ -182,7 +182,7 @@ export function buildDataSheetHtml(sheet) {
       width:100%;
     }
     .doc-footer .logo-block { display:flex; align-items:center; gap:8px; }
-    .doc-footer .logo-img { width:22px; height:22px; display:inline-block; }
+    .doc-footer .logo-img { width:22px; height:22px; display:inline-block; flex-shrink:0; }
     .doc-footer .powered { color:#6b7280; }
     .doc-footer .powered strong { color:#4a9eff; }
     .doc-footer .center-meta { text-align:center; color:#9ca3af; }
@@ -254,9 +254,18 @@ export function buildDataSheetHtml(sheet) {
   <div class="doc-footer">
     <div class="logo-block">
       <svg class="logo-img" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <path d="M50 5 C30 5 12 18 12 18 L12 55 C12 75 50 95 50 95 C50 95 88 75 88 55 L88 18 C88 18 70 5 50 5Z" fill="#fff"/>
-        <path d="M50 11 C32 11 18 22 18 22 L18 55 C18 73 50 90 50 90 C50 90 82 73 82 55 L82 22 C82 22 68 11 50 11Z" fill="#3b5998"/>
-        <path d="M50 22 L38 42 L44 42 L44 62 L48 62 L48 68 L52 68 L52 62 L56 62 L56 42 L62 42 Z" fill="#fff"/>
+        <!-- White outer shield -->
+        <path d="M50 4 C50 4 42 8 32 10 C22 12 10 14 10 14 L10 52 C10 72 50 96 50 96 C50 96 90 72 90 52 L90 14 C90 14 78 12 68 10 C58 8 50 4 50 4Z" fill="#fff"/>
+        <!-- Top notch cut -->
+        <path d="M35 10 Q50 18 65 10 Q58 14 50 13 Q42 14 35 10Z" fill="#fff"/>
+        <!-- Blue inner shield -->
+        <path d="M50 11 C50 11 43 15 34 17 C25 19 16 20 16 20 L16 52 C16 70 50 91 50 91 C50 91 84 70 84 52 L84 20 C84 20 75 19 66 17 C57 15 50 11 50 11Z" fill="#2d4a8a"/>
+        <!-- Top notch on blue -->
+        <path d="M36 17 Q50 26 64 17 Q57 21 50 20 Q43 21 36 17Z" fill="#2d4a8a"/>
+        <!-- White arrow head -->
+        <polygon points="50,30 36,50 44,50 44,68 56,68 56,50 64,50" fill="#fff"/>
+        <!-- White arrow base -->
+        <rect x="44" y="70" width="12" height="6" rx="1" fill="#fff"/>
       </svg>
       <span class="powered">Powered by <strong>TruckOps</strong></span>
     </div>
