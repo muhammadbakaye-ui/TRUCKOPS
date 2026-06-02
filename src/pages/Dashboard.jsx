@@ -150,7 +150,7 @@ export default function Dashboard() {
 
   const { data: recentLoads = [], isLoading: loadsLoading, isError: loadsError, refetch: refetchLoads } = useQuery({
     queryKey: ['loads-dash-recent', tenantId],
-    queryFn: () => tenantId ? base44.entities.Load.filter({ tenant_id: tenantId }, '-delivery_date', 50) : Promise.resolve([]),
+    queryFn: () => tenantId ? base44.entities.Load.filter({ tenant_id: tenantId }, '-updated_date', 50) : Promise.resolve([]),
     enabled: !!tenantId,
     refetchInterval: 60000,
   });
@@ -205,8 +205,19 @@ export default function Dashboard() {
   const loads = recentLoads;
   const invoices = allInvoices;
   const unpaidInvoices = unpaidInvoicesData;
-  const displayLoads = recentLoads.slice(0, 7);
-  const mobileDisplayLoads = recentLoads.slice(0, 3);
+  const sortedRecentLoads = useMemo(() =>
+    [...recentLoads].sort((a, b) => {
+      const ua = a.updated_date || a.created_date || '';
+      const ub = b.updated_date || b.created_date || '';
+      if (ub > ua) return 1;
+      if (ub < ua) return -1;
+      const ca = a.created_date || '';
+      const cb = b.created_date || '';
+      return cb > ca ? 1 : cb < ca ? -1 : 0;
+    })
+  , [recentLoads]);
+  const displayLoads = sortedRecentLoads.slice(0, 7);
+  const mobileDisplayLoads = sortedRecentLoads.slice(0, 3);
   const draftStatements = statements.filter(s => s.status === 'draft');
   const activeDrivers = drivers.filter(d => d.status === 'active');
   const activeTrucks = trucks.filter(t => t.status === 'active');
