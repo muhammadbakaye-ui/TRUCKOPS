@@ -24,26 +24,42 @@ import { getPeriodByDueDate, getAllDueDates, DAY_NAMES } from '@/components/shar
 import { useStatementSettings } from '@/hooks/useStatementSettings';
 
 const LineRow = React.memo(({ line, onChange, onRemove }) => (
-  <div className="grid grid-cols-12 gap-1 md:gap-2 items-center py-1.5 md:py-2 border-b last:border-0">
-    <div className="col-span-2">
-      <Input type="date" value={line.date || ''} onChange={(e) => onChange('date', e.target.value)} className="h-7 md:h-8 text-[10px] md:text-xs px-1 md:px-2" />
+  <>
+    {/* Mobile: stacked card per row */}
+    <div className="md:hidden border border-border/30 rounded-lg p-2.5 mb-2 bg-card/50">
+      <div className="flex justify-between items-center mb-1.5">
+        <Input type="date" value={line.date || ''} onChange={(e) => onChange('date', e.target.value)} className="h-8 text-xs w-36" />
+        <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={onRemove}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
+      </div>
+      <Input value={line.description || ''} onChange={(e) => onChange('description', e.target.value)} className="h-8 text-xs mb-1.5 w-full" placeholder="Desc / Load #" />
+      <Input value={line.route || ''} onChange={(e) => onChange('route', e.target.value)} className="h-8 text-xs mb-1.5 w-full" placeholder="Route (Origin → Dest)" />
+      <div className="flex items-center justify-end gap-2">
+        <span className="text-[11px] text-muted-foreground">Amount ($)</span>
+        <Input type="number" value={line.amount || ''} onChange={(e) => onChange('amount', Number(e.target.value))} className="h-8 text-xs text-right font-mono font-semibold w-32" placeholder="0.00" />
+      </div>
     </div>
-    <div className="col-span-4 flex items-center gap-0.5 md:gap-1 min-w-0">
-      <Input value={line.description || ''} onChange={(e) => onChange('description', e.target.value)} className="h-7 md:h-8 text-[10px] md:text-xs flex-1 min-w-0" placeholder="Desc / Load #" />
-      {line.internal_load_number && (
-        <span className="hidden md:inline text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded whitespace-nowrap">{line.internal_load_number}</span>
-      )}
+    {/* Desktop: grid row */}
+    <div className="hidden md:grid grid-cols-12 gap-2 items-center py-2 border-b last:border-0">
+      <div className="col-span-2">
+        <Input type="date" value={line.date || ''} onChange={(e) => onChange('date', e.target.value)} className="h-8 text-xs px-2" />
+      </div>
+      <div className="col-span-4 flex items-center gap-1 min-w-0">
+        <Input value={line.description || ''} onChange={(e) => onChange('description', e.target.value)} className="h-8 text-xs flex-1 min-w-0" placeholder="Desc / Load #" />
+        {line.internal_load_number && (
+          <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded whitespace-nowrap">{line.internal_load_number}</span>
+        )}
+      </div>
+      <div className="col-span-3">
+        <Input value={line.route || ''} onChange={(e) => onChange('route', e.target.value)} className="h-8 text-xs px-2" placeholder="Origin → Dest" />
+      </div>
+      <div className="col-span-2">
+        <Input type="number" value={line.amount || ''} onChange={(e) => onChange('amount', Number(e.target.value))} className="h-8 text-xs text-right font-mono font-semibold px-2" placeholder="0.00" />
+      </div>
+      <div className="col-span-1 flex justify-center">
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onRemove}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
+      </div>
     </div>
-    <div className="col-span-3">
-      <Input value={line.route || ''} onChange={(e) => onChange('route', e.target.value)} className="h-7 md:h-8 text-[10px] md:text-xs px-1 md:px-2" placeholder="Origin → Dest" />
-    </div>
-    <div className="col-span-2">
-      <Input type="number" value={line.amount || ''} onChange={(e) => onChange('amount', Number(e.target.value))} className="h-7 md:h-8 text-[10px] md:text-xs text-right font-mono font-semibold px-1 md:px-2" placeholder="0.00" />
-    </div>
-    <div className="col-span-1 flex justify-center">
-      <Button variant="ghost" size="icon" className="h-6 w-6 md:h-7 md:w-7" onClick={onRemove}><Trash2 className="w-3 h-3 md:w-3.5 md:h-3.5 text-destructive" /></Button>
-    </div>
-  </div>
+  </>
 ));
 
 export default function StatementBuilder() {
@@ -585,12 +601,6 @@ export default function StatementBuilder() {
               </Button>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 60px 55px', gap: '4px', paddingBottom: '6px', borderBottom: '0.5px solid', marginBottom: '8px' }}>
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase">Date</div>
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase">Desc / Load #</div>
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase">Route</div>
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase text-right">Amt ($)</div>
-          </div>
           {tripLines.map((line, i) => <LineRow key={line._key || i} line={line} onChange={(k, v) => updateTripLine(i, k, v)} onRemove={() => setTripLines(prev => prev.filter((_, idx) => idx !== i))} />)}
           {tripLines.length === 0 && <p className="text-xs text-muted-foreground text-left py-2">No trips. Select a driver and click "Pick Loads" to add.</p>}
         </Card>
@@ -615,12 +625,6 @@ export default function StatementBuilder() {
               </Button>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 60px 55px', gap: '4px', paddingBottom: '6px', borderBottom: '0.5px solid', marginBottom: '8px' }}>
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase">Date</div>
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase">Desc / Load #</div>
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase">Route</div>
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase text-right">Amt ($)</div>
-          </div>
           {deductionLines.map((line, i) => <LineRow key={line._key || i} line={line} onChange={(k, v) => updateDeductionLine(i, k, v)} onRemove={() => setDeductionLines(prev => prev.filter((_, idx) => idx !== i))} />)}
           {deductionLines.length === 0 && <p className="text-xs text-muted-foreground text-left py-2">No deductions. Use the quick-add buttons above.</p>}
         </Card>
@@ -639,12 +643,6 @@ export default function StatementBuilder() {
                 <span style={{ whiteSpace: 'nowrap' }}>Add</span>
               </Button>
             </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 60px 55px', gap: '4px', paddingBottom: '6px', borderBottom: '0.5px solid', marginBottom: '8px' }}>
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase">Date</div>
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase">Desc / Load #</div>
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase">Route</div>
-            <div className="text-[10px] font-semibold text-muted-foreground uppercase text-right">Amt ($)</div>
           </div>
           {fuelLines.map((line, i) => <LineRow key={line._key || i} line={line} onChange={(k, v) => updateFuelLine(i, k, v)} onRemove={() => setFuelLines(prev => prev.filter((_, idx) => idx !== i))} />)}
           {fuelLines.length === 0 && <p className="text-xs text-muted-foreground text-left py-2">No fuel. Select a driver and click "Load Fuel".</p>}

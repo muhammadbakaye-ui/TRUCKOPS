@@ -664,7 +664,51 @@ Return only the JSON with the transactions array.`,
               />
             </div>
           )}
-          <DataTable columns={batchColumns} data={batches} isLoading={batchesLoading} onRowClick={(r) => setSelectedBatch(r.id)} emptyMessage="No imports yet" />
+          {/* Desktop table */}
+          <div className="hidden md:block">
+            <DataTable columns={batchColumns} data={batches} isLoading={batchesLoading} onRowClick={(r) => setSelectedBatch(r.id)} emptyMessage="No imports yet" />
+          </div>
+          {/* Mobile cards */}
+          <div className="md:hidden p-3 space-y-2">
+            {batchesLoading ? (
+              <div className="flex items-center justify-center py-6"><div className="w-6 h-6 border-2 border-border border-t-primary rounded-full animate-spin" /></div>
+            ) : batches.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-6">No imports yet</p>
+            ) : batches.map(b => (
+              <div key={b.id} onClick={() => setSelectedBatch(b.id)}
+                className="tap-card bg-card border border-border rounded-[10px] p-3 cursor-pointer">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex-1 min-w-0 mr-2">
+                    <p className="text-sm font-semibold text-foreground break-words">{b.file_name}</p>
+                    <p className="text-xs text-muted-foreground">{b.import_date ? format(new Date(b.import_date), 'MMM d, yyyy') : '—'}</p>
+                  </div>
+                  <StatusBadge status={b.status} />
+                </div>
+                <div className="grid grid-cols-3 gap-2 mb-2">
+                  <div><p className="text-[10px] text-muted-foreground uppercase font-semibold mb-0.5">Total</p><p className="text-xs">{b.total_records || 0}</p></div>
+                  <div><p className="text-[10px] text-muted-foreground uppercase font-semibold mb-0.5">Matched</p><p className="text-xs text-green-600">{b.successful_records || 0}</p></div>
+                  <div><p className="text-[10px] text-muted-foreground uppercase font-semibold mb-0.5">Exceptions</p><p className="text-xs text-orange-600">{b.exception_records || 0}</p></div>
+                </div>
+                <div className="flex justify-end border-t border-border/40 pt-2" onClick={e => e.stopPropagation()}>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button className="p-2 text-destructive hover:bg-destructive/10 rounded transition-colors"><Trash2 className="w-4 h-4" /></button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Entire Import Batch?</AlertDialogTitle>
+                        <AlertDialogDescription>This will delete all {b.total_records} transactions from “{b.file_name}”. They can be recovered within 30 days.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDeleteBatch(b)}>Delete All</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
@@ -700,7 +744,54 @@ Return only the JSON with the transactions array.`,
                />
              </div>
            )}
-           <DataTable columns={txColumns} data={transactions} isLoading={txLoading} emptyMessage="No transactions in this batch" />
+           {/* Desktop table */}
+           <div className="hidden md:block">
+             <DataTable columns={txColumns} data={transactions} isLoading={txLoading} emptyMessage="No transactions in this batch" />
+           </div>
+           {/* Mobile cards */}
+           <div className="md:hidden p-3 space-y-2">
+             {txLoading ? (
+               <div className="flex items-center justify-center py-6"><div className="w-6 h-6 border-2 border-border border-t-primary rounded-full animate-spin" /></div>
+             ) : transactions.length === 0 ? (
+               <p className="text-xs text-muted-foreground text-center py-6">No transactions in this batch</p>
+             ) : transactions.map(tx => (
+               <div key={tx.id} className="bg-card border border-border rounded-[10px] p-3">
+                 <div className="flex justify-between items-start mb-2">
+                   <div className="flex-1 min-w-0 mr-2">
+                     <p className="text-sm font-semibold text-foreground">{tx.matched_driver_name || tx.driver_name_raw || '—'}</p>
+                     <p className="text-xs text-muted-foreground">{tx.transaction_date || '—'}</p>
+                   </div>
+                   <div className="flex items-center gap-2 flex-shrink-0">
+                     <StatusBadge status={tx.import_status} />
+                     <AlertDialog>
+                       <AlertDialogTrigger asChild onClick={e => e.stopPropagation()}>
+                         <button className="p-1.5 text-destructive hover:bg-destructive/10 rounded"><Trash2 className="w-3.5 h-3.5" /></button>
+                       </AlertDialogTrigger>
+                       <AlertDialogContent>
+                         <AlertDialogHeader>
+                           <AlertDialogTitle>Delete Fuel Transaction?</AlertDialogTitle>
+                           <AlertDialogDescription>This will move the transaction to deleted items.</AlertDialogDescription>
+                         </AlertDialogHeader>
+                         <AlertDialogFooter>
+                           <AlertDialogCancel>Cancel</AlertDialogCancel>
+                           <AlertDialogAction onClick={() => handleDelete(tx)}>Delete</AlertDialogAction>
+                         </AlertDialogFooter>
+                       </AlertDialogContent>
+                     </AlertDialog>
+                   </div>
+                 </div>
+                 <p className="text-xs text-muted-foreground mb-2">{tx.location_name || '—'}{tx.city ? ` · ${tx.city}${tx.state ? `, ${tx.state}` : ''}` : ''}</p>
+                 <div className="grid grid-cols-3 gap-2">
+                   <div><p className="text-[10px] text-muted-foreground uppercase font-semibold mb-0.5">Truck</p><p className="text-xs">{tx.matched_truck_number || tx.truck_number_raw || '—'}</p></div>
+                   <div><p className="text-[10px] text-muted-foreground uppercase font-semibold mb-0.5">Gallons</p><p className="text-xs">{tx.gallons || '—'}</p></div>
+                   <div><p className="text-[10px] text-muted-foreground uppercase font-semibold mb-0.5">Fuel $</p><p className="text-xs font-semibold">{tx.fuel_amount ? `$${tx.fuel_amount.toFixed(2)}` : '—'}</p></div>
+                 </div>
+                 {tx.exception_reason && (
+                   <p className="text-[11px] text-orange-600 mt-2 break-words">{tx.exception_reason}</p>
+                 )}
+               </div>
+             ))}
+           </div>
           </CardContent>
         </Card>
       )}
