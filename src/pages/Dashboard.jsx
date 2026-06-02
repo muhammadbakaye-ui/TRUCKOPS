@@ -14,6 +14,14 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
 import MobilePullRefresh from '../components/mobile/MobilePullRefresh';
+import {
+  MobileSkeletonStatGrid,
+  MobileSkeletonChart,
+  MobileSkeletonList,
+  MobileSkeletonDriverList,
+  MobileSkeletonActivityList,
+  MobileErrorState,
+} from '../components/mobile/MobileSkeleton';
 import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { useEntitySubscription } from '../hooks/useEntitySubscription';
 
@@ -140,7 +148,7 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const handleRefresh = () => queryClient.invalidateQueries();
 
-  const { data: recentLoads = [] } = useQuery({
+  const { data: recentLoads = [], isLoading: loadsLoading, isError: loadsError, refetch: refetchLoads } = useQuery({
     queryKey: ['loads-dash-recent', tenantId],
     queryFn: () => tenantId ? base44.entities.Load.filter({ tenant_id: tenantId }, '-delivery_date', 50) : Promise.resolve([]),
     enabled: !!tenantId,
@@ -262,56 +270,69 @@ export default function Dashboard() {
       {/* ══════════════ MOBILE LAYOUT ══════════════ */}
       <div className="md:hidden p-3 space-y-3">
 
+        {/* Error state */}
+        {loadsError && (
+          <MobileErrorState onRetry={refetchLoads} message="Failed to load dashboard data. Tap to retry." />
+        )}
+
         {/* Stat cards 2x3 */}
-        <div className="grid grid-cols-2 gap-2">
-          {statCards.map(({ label, value, icon: Icon, color, path }) => (
-            <div
-              key={label}
-              className="bg-card border border-border/60 rounded-lg p-3 flex items-center justify-between cursor-pointer active:bg-muted/30 transition-colors"
-              onClick={() => navigate(createPageUrl(path))}
-            >
-              <div>
-                <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">{label}</p>
-                <p className="text-2xl font-bold text-foreground leading-none">{value}</p>
+        {loadsLoading ? (
+          <MobileSkeletonStatGrid count={6} />
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            {statCards.map(({ label, value, icon: Icon, color, path }) => (
+              <div
+                key={label}
+                className="bg-card border border-border/60 rounded-lg p-3 flex items-center justify-between cursor-pointer active:bg-muted/30 transition-colors"
+                onClick={() => navigate(createPageUrl(path))}
+              >
+                <div>
+                  <p className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">{label}</p>
+                  <p className="text-2xl font-bold text-foreground leading-none">{value}</p>
+                </div>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${color}`}>
+                  <Icon className="w-4 h-4" />
+                </div>
               </div>
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${color}`}>
-                <Icon className="w-4 h-4" />
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Monthly Gross Revenue */}
-        <div className="bg-card border border-border/60 rounded-lg p-3">
-          <div className="flex items-start justify-between mb-3">
-            <div>
-              <p className="text-sm font-semibold text-foreground">Monthly Gross Revenue</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Last 6 months</p>
+        {loadsLoading ? (
+          <MobileSkeletonChart />
+        ) : (
+          <div className="bg-card border border-border/60 rounded-lg p-3">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Monthly Gross Revenue</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Last 6 months</p>
+              </div>
+              <div className="text-right">
+                <p className="text-lg font-bold text-foreground">{fmtShort(curMonthRevenue)}</p>
+                {pctChange !== null && (
+                  <div className={`flex items-center justify-end gap-1 text-[11px] font-medium mt-0.5 ${pctChange > 0 ? 'text-green-500' : pctChange < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                    {pctChange > 0 ? <TrendingUp className="w-3 h-3" /> : pctChange < 0 ? <TrendingDown className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
+                    {pctChange > 0 ? '+' : ''}{pctChange.toFixed(1)}% vs last month
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="text-right">
-              <p className="text-lg font-bold text-foreground">{fmtShort(curMonthRevenue)}</p>
-              {pctChange !== null && (
-                <div className={`flex items-center justify-end gap-1 text-[11px] font-medium mt-0.5 ${pctChange > 0 ? 'text-green-500' : pctChange < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
-                  {pctChange > 0 ? <TrendingUp className="w-3 h-3" /> : pctChange < 0 ? <TrendingDown className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
-                  {pctChange > 0 ? '+' : ''}{pctChange.toFixed(1)}% vs last month
-                </div>
-              )}
+            <div style={{ overflowX: 'auto' }}>
+              <div style={{ minWidth: 280 }}>
+                <ResponsiveContainer width="100%" height={150}>
+                  <BarChart data={monthlyData} margin={{ top: 2, right: 4, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                    <YAxis tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={36} />
+                    <Tooltip content={<BarTooltip />} cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} />
+                    <Bar dataKey="revenue" fill="#3B82F6" radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
-          <div style={{ overflowX: 'auto' }}>
-            <div style={{ minWidth: 280 }}>
-              <ResponsiveContainer width="100%" height={150}>
-                <BarChart data={monthlyData} margin={{ top: 2, right: 4, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                  <YAxis tickFormatter={v => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`} tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={36} />
-                  <Tooltip content={<BarTooltip />} cursor={{ fill: 'hsl(var(--muted) / 0.4)' }} />
-                  <Bar dataKey="revenue" fill="#3B82F6" radius={[3, 3, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* Invoice Status */}
         <div className="bg-card border border-border/60 rounded-lg p-3">
@@ -370,35 +391,39 @@ export default function Dashboard() {
             <span className="text-sm font-semibold text-foreground">Top Drivers</span>
             <span className="text-[10px] text-muted-foreground">Last 2 months</span>
           </div>
-          <div className="bg-card border border-border/60 rounded-lg p-3">
-            {topDriversData.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-4">No data yet</p>
-            ) : (
-              <div className="space-y-3">
-                {topDriversData.slice(0, 3).map((d) => {
-                  const max = topDriversData[0].revenue;
-                  const pct = max > 0 ? (d.revenue / max) * 100 : 0;
-                  const initials = d.name.split(' ').map(p => p[0] || '').join('').toUpperCase().slice(0, 2);
-                  return (
-                    <div key={d.name} className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
-                        {initials}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-medium truncate">{d.name}</span>
-                          <span className="text-xs font-semibold text-foreground ml-2 shrink-0">{fmtShort(d.revenue)}</span>
+          {loadsLoading ? (
+            <MobileSkeletonDriverList count={3} />
+          ) : (
+            <div className="bg-card border border-border/60 rounded-lg p-3">
+              {topDriversData.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-4">No data yet</p>
+              ) : (
+                <div className="space-y-3">
+                  {topDriversData.slice(0, 3).map((d) => {
+                    const max = topDriversData[0].revenue;
+                    const pct = max > 0 ? (d.revenue / max) * 100 : 0;
+                    const initials = d.name.split(' ').map(p => p[0] || '').join('').toUpperCase().slice(0, 2);
+                    return (
+                      <div key={d.name} className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+                          {initials}
                         </div>
-                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-medium truncate">{d.name}</span>
+                            <span className="text-xs font-semibold text-foreground ml-2 shrink-0">{fmtShort(d.revenue)}</span>
+                          </div>
+                          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${pct}%` }} />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Recent Loads */}
@@ -409,7 +434,9 @@ export default function Dashboard() {
               View all <ArrowRight className="w-3 h-3" />
             </button>
           </div>
-          {mobileDisplayLoads.length === 0 ? (
+          {loadsLoading ? (
+            <MobileSkeletonList count={3} />
+          ) : mobileDisplayLoads.length === 0 ? (
             <div className="bg-card border border-border/60 rounded-lg p-6 text-center">
               <p className="text-sm text-muted-foreground">No loads yet.</p>
             </div>
@@ -430,30 +457,34 @@ export default function Dashboard() {
               View all <ArrowRight className="w-3 h-3" />
             </button>
           </div>
-          <div className="bg-card border border-border/60 rounded-lg p-3">
-            {auditLogs.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-6">No activity recorded yet</p>
-            ) : (
-              <div className="space-y-3">
-                {auditLogs.slice(0, 8).map(log => (
-                  <div key={log.id} className="flex items-start gap-2.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-xs text-foreground leading-snug">
-                        <span className="font-semibold capitalize">{log.action_type}</span>
-                        {' '}{log.entity_type}
-                        {log.entity_label && <span className="text-muted-foreground"> ({log.entity_label})</span>}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        {log.user_name && `${log.user_name} · `}
-                        {log.created_date ? format(new Date(log.created_date), 'MMM d, h:mm a') : ''}
-                      </p>
+          {loadsLoading ? (
+            <MobileSkeletonActivityList count={5} />
+          ) : (
+            <div className="bg-card border border-border/60 rounded-lg p-3">
+              {auditLogs.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-6">No activity recorded yet</p>
+              ) : (
+                <div className="space-y-3">
+                  {auditLogs.slice(0, 8).map(log => (
+                    <div key={log.id} className="flex items-start gap-2.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-xs text-foreground leading-snug">
+                          <span className="font-semibold capitalize">{log.action_type}</span>
+                          {' '}{log.entity_type}
+                          {log.entity_label && <span className="text-muted-foreground"> ({log.entity_label})</span>}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          {log.user_name && `${log.user_name} · `}
+                          {log.created_date ? format(new Date(log.created_date), 'MMM d, h:mm a') : ''}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
       </div>

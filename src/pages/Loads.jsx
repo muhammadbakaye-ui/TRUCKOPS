@@ -29,6 +29,7 @@ import { chunkAsync } from '../utils/chunkAsync';
 import MobileLoadCard from '../components/mobile/MobileLoadCard';
 import MobileLoadsHeader from '../components/mobile/MobileLoadsHeader';
 import MobilePullRefresh from '../components/mobile/MobilePullRefresh';
+import { MobileSkeletonList, MobileErrorState } from '../components/mobile/MobileSkeleton';
 import MobileSelect from '@/components/ui/MobileSelect';
 
 const INVOICE_STATUS_STYLES = {
@@ -180,12 +181,12 @@ export default function Loads() {
   useEffect(() => { localStorage.setItem('loads_date_filter_type', dateFilterType); }, [dateFilterType]);
   useEffect(() => { sessionStorage.setItem('loads_selected', JSON.stringify([...selected])); }, [selected]);
 
-  const { data: loads = [], isLoading, isFetching } = useQuery({
+  const { data: loads = [], isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: ['loads', session?.tenant_id],
     queryFn: () => session?.tenant_id ? base44.entities.Load.filter({ tenant_id: session.tenant_id }, '-created_date', 1000) : Promise.resolve([]),
     refetchInterval: 60000,
   });
-  
+
   const showLoading = isLoading && loads.length === 0;
 
   const { data: drivers = [] } = useQuery({
@@ -722,7 +723,11 @@ export default function Loads() {
 
       {/* ── MOBILE ONLY ── */}
       <div className="md:hidden space-y-3">
-        {sortedDateKeys.map(dateKey => {
+        {showLoading && <MobileSkeletonList count={6} />}
+        {isError && !showLoading && (
+          <MobileErrorState onRetry={refetch} message="Failed to load loads. Tap to retry." />
+        )}
+        {!showLoading && !isError && sortedDateKeys.map(dateKey => {
           const dateLoads = groupedByDate[dateKey];
           const isExpanded = expandedDates === null || expandedDates.has(dateKey);
           const totalAmount = dateLoads.reduce((sum, l) => sum + (l.invoice_amount || 0), 0);
@@ -763,7 +768,7 @@ export default function Loads() {
             </div>
           );
         })}
-        {sortedDateKeys.length === 0 && !isLoading && (
+        {!showLoading && !isError && sortedDateKeys.length === 0 && (
           <div className="text-center py-12 text-muted-foreground text-sm">No loads found.</div>
         )}
       </div>
