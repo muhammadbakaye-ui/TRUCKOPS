@@ -1,0 +1,25 @@
+{
+  "name": "TruckOps",
+  "short_name": "TruckOps",
+  "description": "Fleet management software for trucking companies.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a2235",
+  "theme_color": "#1a2235",
+  "orientation": "portrait",
+  "version": "2.0.0",
+  "icons": [
+    {
+      "src": "https://media.base44.com/images/public/6a0409fc37a632ab53db20fd/e1645f7ac_IMG_0839.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://media.base44.com/images/public/6a0409fc37a632ab53db20fd/e1645f7ac_IMG_0839.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
