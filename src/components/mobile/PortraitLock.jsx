@@ -1,23 +1,35 @@
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 /**
  * Silently locks the screen to portrait using the Screen Orientation API.
- * No UI is rendered — if the user rotates their device, nothing happens.
- * Gracefully no-ops on browsers/devices that don't support the API.
+ * Also applies a CSS transform fallback for browsers that block the API.
+ * Fires on mount, every route change, and on every orientationchange event.
  */
 export default function PortraitLock() {
+  const location = useLocation();
   useEffect(() => {
-    const lock = async () => {
+    const lockPortrait = async () => {
       try {
         if (screen?.orientation?.lock) {
           await screen.orientation.lock('portrait');
         }
       } catch {
-        // Browser may reject (e.g. desktop, or permission denied) — silently ignore
+        // API rejected (desktop, or permission denied) — CSS transform fallback handles it
       }
     };
-    lock();
-  }, []);
+
+    lockPortrait();
+
+    const handleOrientationChange = () => {
+      lockPortrait();
+    };
+
+    window.addEventListener('orientationchange', handleOrientationChange);
+    return () => {
+      window.removeEventListener('orientationchange', handleOrientationChange);
+    };
+  }, [location.pathname]);
 
   return null;
 }

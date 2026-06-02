@@ -808,6 +808,20 @@
   .tap-card:active { transform: none !important; filter: brightness(0.92) !important; }
 }
 
+/* ─── PORTRAIT-ONLY ORIENTATION LOCK (mobile CSS fallback) ─── */
+@media screen and (orientation: landscape) and (max-width: 1024px) {
+  html, body {
+    transform: rotate(-90deg);
+    transform-origin: left top;
+    width: 100vh;
+    height: 100vw;
+    overflow-x: hidden;
+    position: absolute;
+    top: 100%;
+    left: 0;
+  }
+}
+
 /* Print styles */
 @media print {
   .no-print { display: none !important; }
