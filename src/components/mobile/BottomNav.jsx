@@ -73,94 +73,128 @@ const TAB_CHILD_PAGES = {
 
 function DraggableSheet({ open, onClose, children }) {
   const sheetRef = useRef(null);
-  const dragState = useRef(null);
-  const [dragY, setDragY] = useState(0);
-  const [animating, setAnimating] = useState(false);
+  const overlayRef = useRef(null);
+  const touchState = useRef(null);
   const [visible, setVisible] = useState(false);
+  const isClosingRef = useRef(false);
 
-  // Open/close animation
   useEffect(() => {
     if (open) {
-      setDragY(0);
+      isClosingRef.current = false;
       setVisible(true);
-      setAnimating(false);
-    } else {
-      // Animate out
-      setAnimating(true);
-      setDragY(window.innerHeight);
-      const t = setTimeout(() => { setVisible(false); setAnimating(false); }, 300);
-      return () => clearTimeout(t);
+      // Animate in next frame
+      requestAnimationFrame(() => {
+        const el = sheetRef.current;
+        if (!el) return;
+        el.style.transition = 'none';
+        el.style.transform = 'translateY(100%)';
+        requestAnimationFrame(() => {
+          el.style.transition = 'transform 280ms cubic-bezier(0.22,1,0.36,1)';
+          el.style.transform = 'translateY(0)';
+        });
+      });
+    } else if (visible) {
+      animateClose();
     }
   }, [open]);
 
-  const doClose = useCallback(() => {
-    setAnimating(true);
-    setDragY(window.innerHeight);
+  const animateClose = useCallback(() => {
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
+    const el = sheetRef.current;
+    if (el) {
+      el.style.transition = 'transform 280ms cubic-bezier(0.22,1,0.36,1)';
+      el.style.transform = 'translateY(100%)';
+    }
+    const ov = overlayRef.current;
+    if (ov) {
+      ov.style.transition = 'opacity 280ms ease-out';
+      ov.style.opacity = '0';
+    }
     setTimeout(() => {
       setVisible(false);
-      setAnimating(false);
+      isClosingRef.current = false;
       onClose();
-    }, 300);
+    }, 285);
   }, [onClose]);
 
   const onTouchStart = useCallback((e) => {
     if (e.touches.length !== 1) return;
-    const touch = e.touches[0];
-    dragState.current = {
-      startY: touch.clientY,
-      lastY: touch.clientY,
+    const el = sheetRef.current;
+    if (!el) return;
+    // Remove transition so drag is instant
+    el.style.transition = 'none';
+    touchState.current = {
+      startY: e.touches[0].clientY,
+      lastY: e.touches[0].clientY,
       lastTime: Date.now(),
       velocity: 0,
     };
-    setAnimating(false);
   }, []);
 
   const onTouchMove = useCallback((e) => {
-    if (!dragState.current) return;
-    const touch = e.touches[0];
-    const now = Date.now();
-    const dt = now - dragState.current.lastTime || 16;
-    dragState.current.velocity = (touch.clientY - dragState.current.lastY) / dt;
-    dragState.current.lastY = touch.clientY;
-    dragState.current.lastTime = now;
+    const ts = touchState.current;
+    const el = sheetRef.current;
+    const ov = overlayRef.current;
+    if (!ts || !el) return;
 
-    const dy = Math.max(0, touch.clientY - dragState.current.startY);
-    setDragY(dy);
+    const now = Date.now();
+    const currentY = e.touches[0].clientY;
+    const dt = Math.max(now - ts.lastTime, 1);
+    ts.velocity = (currentY - ts.lastY) / dt;
+    ts.lastY = currentY;
+    ts.lastTime = now;
+
+    const delta = Math.max(0, currentY - ts.startY); // only downward
+    el.style.transform = `translateY(${delta}px)`;
+
+    // Fade backdrop proportionally
+    if (ov) {
+      const sheetH = el.offsetHeight || window.innerHeight * 0.85;
+      const opacity = Math.max(0, 1 - delta / (sheetH * 0.7));
+      ov.style.opacity = String(opacity);
+    }
   }, []);
 
   const onTouchEnd = useCallback(() => {
-    if (!dragState.current) return;
-    const sheetH = sheetRef.current?.offsetHeight || window.innerHeight * 0.85;
-    const threshold = sheetH * 0.4;
-    const velocity = dragState.current.velocity;
+    const ts = touchState.current;
+    const el = sheetRef.current;
+    if (!ts || !el) return;
+    touchState.current = null;
 
-    // Flick down (velocity > 0.4 px/ms) OR dragged past 40% → close
-    if (velocity > 0.4 || dragY > threshold) {
-      doClose();
+    const sheetH = el.offsetHeight || window.innerHeight * 0.85;
+    // Read current translateY from inline style
+    const match = el.style.transform.match(/translateY\(([\d.]+)px\)/);
+    const currentDelta = match ? parseFloat(match[1]) : 0;
+    const threshold = sheetH * 0.4;
+
+    if (ts.velocity > 0.4 || currentDelta > threshold) {
+      animateClose();
     } else {
-      // Snap back to open
-      setAnimating(true);
-      setDragY(0);
-      setTimeout(() => setAnimating(false), 300);
+      // Snap back open
+      el.style.transition = 'transform 280ms cubic-bezier(0.22,1,0.36,1)';
+      el.style.transform = 'translateY(0)';
+      const ov = overlayRef.current;
+      if (ov) {
+        ov.style.transition = 'opacity 280ms ease-out';
+        ov.style.opacity = '1';
+      }
     }
-    dragState.current = null;
-  }, [dragY, doClose]);
+  }, [animateClose]);
 
   if (!visible) return null;
-
-  const translateY = dragY;
-  const backdropOpacity = Math.max(0, 1 - dragY / (window.innerHeight * 0.5));
 
   return (
     <>
       {/* Backdrop */}
       <div
+        ref={overlayRef}
         style={{
           position: 'fixed', inset: 0, zIndex: 60,
-          background: `rgba(0,0,0,${backdropOpacity * 0.5})`,
-          transition: animating ? 'opacity 280ms ease-out' : 'none',
+          background: 'rgba(0,0,0,0.5)',
+          opacity: 1,
         }}
-        onPointerDown={doClose}
+        onPointerDown={animateClose}
       />
 
       {/* Sheet panel */}
@@ -170,8 +204,7 @@ function DraggableSheet({ open, onClose, children }) {
           position: 'fixed', bottom: 0, left: 0, right: 0,
           zIndex: 61,
           height: '85vh',
-          transform: `translateY(${translateY}px)`,
-          transition: animating ? 'transform 280ms cubic-bezier(0.22,1,0.36,1)' : 'none',
+          transform: 'translateY(100%)',
           borderRadius: '16px 16px 0 0',
           overflow: 'hidden',
           display: 'flex',
@@ -185,12 +218,12 @@ function DraggableSheet({ open, onClose, children }) {
           <div style={{ width: 36, height: 4, borderRadius: 2, background: 'hsl(var(--sidebar-foreground) / 0.2)' }} />
         </div>
 
-        {/* Draggable header row */}
+        {/* Draggable header row — touch handlers here, direct DOM manipulation */}
         <div
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
-          style={{ touchAction: 'none', flexShrink: 0 }}
+          style={{ touchAction: 'none', flexShrink: 0, cursor: 'grab' }}
         >
           {children[0]}
         </div>
@@ -326,29 +359,29 @@ export default function BottomNav({ currentPage }) {
             </span>
             <div className="flex items-center gap-2">
               {editMode ? (
-                <Button
-                  size="sm"
+                <button
                   onClick={handleSaveCustomization}
-                  className="bg-green-600 hover:bg-green-700 text-white h-8 text-xs"
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-sidebar-accent transition-colors focus:outline-none"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                  aria-label="Done"
                 >
-                  <Check className="w-3.5 h-3.5 mr-1" />
-                  Done
-                </Button>
+                  <Check className="w-5 h-5 text-green-500" />
+                </button>
               ) : (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent h-8 text-xs border border-sidebar-border"
+                <button
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-sidebar-accent text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors focus:outline-none"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                   onClick={() => {
                     setEditMode(true);
                     setTempSelection(visiblePages.length > 0 ? visiblePages : DEFAULT_PAGES);
                     setOverLimit(false);
                   }}
+                  aria-label="Customize"
                 >
-                  Customize
-                </Button>
+                  <Settings className="w-4 h-4" />
+                </button>
               )}
-              {/* X button — Fix 1: blur on tap */}
+              {/* X button — blur on tap */}
               <button
                 ref={closeButtonRef}
                 onClick={() => {
