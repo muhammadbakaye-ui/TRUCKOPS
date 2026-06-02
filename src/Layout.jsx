@@ -51,6 +51,7 @@ const pageTitles = {
   PermitsLicenses: 'Permits & Licenses',
   AdminDriverDocuments: 'Driver Documents',
   DeletedItems: 'Deleted Items',
+  DataSheets: 'Data Sheets',
 };
 
 function useMainScrollRestoration() {

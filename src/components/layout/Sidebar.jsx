@@ -8,7 +8,7 @@ import {
   LayoutGrid, FileSpreadsheet, Banknote,
   ShieldCheck, AlertTriangle, FlaskConical, ShieldAlert, Bell,
   Wrench, ClipboardCheck, CircleAlert,
-  Map, ShieldPlus, ScrollText
+  Map, ShieldPlus, ScrollText, TableProperties
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSession } from '../shared/AppSession';
@@ -20,6 +20,7 @@ const navItems = [
   { label: 'Loads', icon: Container, page: 'Loads', tourAttr: 'loads-nav' },
   { label: 'Dispatch Board', icon: LayoutGrid, page: 'DispatchBoard' },
   { label: 'Upload Doc', icon: Upload, page: 'UploadDocument', tourAttr: 'upload-doc-nav' },
+  { label: 'Data Sheets', icon: TableProperties, page: 'DataSheets' },
   { type: 'divider', label: 'DIRECTORY' },
   { label: 'Companies', icon: Building2, page: 'Companies' },
   { label: 'Drivers', icon: Users, page: 'Drivers' },

@@ -4,7 +4,8 @@ import { createPageUrl } from '@/utils';
 import { 
   X, LogOut, FolderOpen, Users, Truck, ClipboardList, Shield, Wrench, 
   FileText, Settings, BarChart3, Upload, ChevronRight, Container, 
-  Package, FileCheck, AlertTriangle, Calendar, CheckCircle, AlertCircle, Grid3x3
+  Package, FileCheck, AlertTriangle, Calendar, CheckCircle, AlertCircle, Grid3x3,
+  TableProperties
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -22,6 +23,7 @@ const MENU_SECTIONS = [
       { label: 'Loads', page: 'Loads', icon: Container },
       { label: 'Upload Document', page: 'UploadDocument', icon: Upload },
       { label: 'Dispatch Board', page: 'DispatchBoard', icon: ClipboardList },
+      { label: 'Data Sheets', page: 'DataSheets', icon: TableProperties },
     ],
   },
   {

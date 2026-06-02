@@ -1,5 +1,6 @@
 import { Toaster } from "@/components/ui/toaster"
 import Landing from './pages/Landing';
+import DataSheets from './pages/DataSheets';
 import DispatchBoard from './pages/DispatchBoard';
 import Taxes1099 from './pages/Taxes1099';
 import Factoring from './pages/Factoring';
@@ -86,6 +87,7 @@ const AuthenticatedApp = () => {
         <Route path="/HighwayUseTax" element={<PageTransition><LayoutWrapper currentPageName="HighwayUseTax"><HighwayUseTax /></LayoutWrapper></PageTransition>} />
         <Route path="/InsurancePolicies" element={<PageTransition><LayoutWrapper currentPageName="InsurancePolicies"><InsurancePolicies /></LayoutWrapper></PageTransition>} />
         <Route path="/PermitsLicenses" element={<PageTransition><LayoutWrapper currentPageName="PermitsLicenses"><PermitsLicenses /></LayoutWrapper></PageTransition>} />
+        <Route path="/DataSheets" element={<PageTransition><LayoutWrapper currentPageName="DataSheets"><DataSheets /></LayoutWrapper></PageTransition>} />
         <Route path="/DriverPublicPortal" element={<PageTransition><DriverPublicPortal /></PageTransition>} />
         <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
         <Route path="*" element={<PageNotFound />} />
@@ -138,6 +140,7 @@ const AuthenticatedApp = () => {
       <Route path="/HighwayUseTax" element={<PageTransition><LayoutWrapper currentPageName="HighwayUseTax"><HighwayUseTax /></LayoutWrapper></PageTransition>} />
       <Route path="/InsurancePolicies" element={<PageTransition><LayoutWrapper currentPageName="InsurancePolicies"><InsurancePolicies /></LayoutWrapper></PageTransition>} />
       <Route path="/PermitsLicenses" element={<PageTransition><LayoutWrapper currentPageName="PermitsLicenses"><PermitsLicenses /></LayoutWrapper></PageTransition>} />
+      <Route path="/DataSheets" element={<PageTransition><LayoutWrapper currentPageName="DataSheets"><DataSheets /></LayoutWrapper></PageTransition>} />
 
       <Route path="/DriverPublicPortal" element={<PageTransition><DriverPublicPortal /></PageTransition>} />
       <Route path="/handleLoadRequest" element={<PageTransition><DriverPublicPortal /></PageTransition>} />
